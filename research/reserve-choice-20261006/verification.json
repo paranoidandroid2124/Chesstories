@@ -1,0 +1,184 @@
+{
+  "created_utc": "2026-10-06T10:35:32.459920+00:00",
+  "status": "verified",
+  "version": "reservev43",
+  "final_development_label": "reservefinalreplay43",
+  "final_fresh_label": "reservenormalfinal43",
+  "freeze": {
+    "path": "research\\reserve-choice-20261006\\rule-freeze-v43.json",
+    "sha256": "39af798998c0810151c383427d2100c5c8dc0ad9947db7fbe9129dc904b99dc3"
+  },
+  "current_main_source_count": 73,
+  "core_tests": {
+    "tests": 88,
+    "passed": 88,
+    "seconds": 25.364,
+    "log": "target/relationship-delivery-20261004/test-run-reservev43.log"
+  },
+  "ui_tests": [
+    {
+      "suite": "moveReviewComparisonText",
+      "tests": 46,
+      "passed": 46,
+      "failed": 0
+    },
+    {
+      "suite": "moveReview",
+      "tests": 31,
+      "passed": 31,
+      "failed": 0
+    }
+  ],
+  "typescript": "Complete analyse TypeScript build passed after final UI change; UI source hashes are unchanged.",
+  "old_fixed_reports": {
+    "opened35": {
+      "positions": 35,
+      "fully_replayed": 33,
+      "pending": 2,
+      "text_changed": 3,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 4,
+      "missing_mandatory": 0,
+      "facts_unchanged": 28
+    },
+    "prior14": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "pending": 0,
+      "text_changed": 1,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 2,
+      "missing_mandatory": 0,
+      "facts_unchanged": 13
+    }
+  },
+  "old_fixed_replay_status": {
+    "fully_replayed": 47,
+    "missing_saved_report": 2
+  },
+  "old_fixed_pending": 2,
+  "hybrid_completed": {
+    "2016": {
+      "archived": 3,
+      "genuinely_new_reports": 2
+    },
+    "2024": {
+      "archived": 4,
+      "genuinely_new_reports": 3
+    },
+    "current_version_exact_replayed_reports": [
+      5,
+      7
+    ],
+    "current_new_reports": 0,
+    "scope": "Separate new completions, not47/49 becoming49/49 identical historical replay.",
+    "changed_comparison": "2024-09 now selects Qd3 instead of Kg2 and a new Qb5 continuation; five old references are retired with those branches, not unchanged price preservation.",
+    "audit": "hybrid-preservation-v43.json"
+  },
+  "ui_delivery": {
+    "old49": {
+      "path": "research\\decision-timing-20261006\\frontend-regression-reservev43.json",
+      "sha256": "cee5cecbec6dc7dd8f7656c73a86a94a52808d50c0f6433e35848c350a178cef",
+      "admitted": 49,
+      "negative_rejected": 100,
+      "exact_links_passed": 2152
+    },
+    "development7": {
+      "path": "research\\reserve-choice-20261006\\reservefinalreplay43-ui.json",
+      "sha256": "8c49109aef88cbf347d2c18df5941549da38260ca6585ebc6bdd0da1c9033f4b",
+      "admitted": 7,
+      "negative_rejected": 13,
+      "exact_links_passed": 200
+    },
+    "final_fresh2": {
+      "path": "research\\reserve-choice-20261006\\reservenormalfinal43-ui.json",
+      "sha256": "92a778160fd7accdf9ad06fbfdcd51a54e708e6a1e691115641f2ed4b57b3fd7",
+      "admitted": 2,
+      "negative_rejected": 11,
+      "exact_links_passed": 44
+    },
+    "completed_2016": {
+      "path": "research\\reserve-choice-20261006\\reg2016replay43-ui.json",
+      "sha256": "3f7ab6a6a3bd0a6730017dbb216ca630be1f05b189efb9ef9c7c741d8a15a39c",
+      "admitted": 1,
+      "negative_rejected": 10,
+      "exact_links_passed": 100
+    },
+    "completed_2024": {
+      "path": "research\\reserve-choice-20261006\\reg2024replay43-ui.json",
+      "sha256": "d366db139d6787c7530673924b1936d6b37dda8650d5bc46cda3bd8b3cd4f0df",
+      "admitted": 1,
+      "negative_rejected": 10,
+      "exact_links_passed": 76
+    }
+  },
+  "broad_suite": {
+    "version": "reservev38",
+    "tests": 902,
+    "failures": 37,
+    "reproduced_at_goal_start": 36,
+    "new_changed_assertion": "One expected node allowance updated to intentional20million, passes targeted suite. No green whole-suite claim.",
+    "evidence": "broad-test-comparison.json"
+  },
+  "cold_transfer": {
+    "boards": 26,
+    "choices": 28,
+    "accepted_bounded_functional_cases": [
+      "T14"
+    ],
+    "limit": "Theory diagram, not actual-game generalization or independent novice study; selected controls are not a population success-rate sample."
+  },
+  "final_fresh_results": [
+    {
+      "game_id": "H05",
+      "elapsed_ms": 24900,
+      "works": 8,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    {
+      "game_id": "T20",
+      "elapsed_ms": 8592,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    }
+  ],
+  "final_fresh_reading": {
+    "H05": "24.900s,8 works. Tempo/pawn-preserving king cycle delivered; later Entry comparison exhausted.",
+    "T20": "8.592s,5 works. Deep root focus and retry both exhausted; generic final. No retry-until-success."
+  },
+  "development_reading": {
+    "H05": "Full Tempo+Entry normal actual run26.920s under v40, exact current43 replay retained.",
+    "H02": "Current-duty queries resolved; no central explanation. One actual run32.790s exceeds requested30s after processing.",
+    "T14": "One bounded cold success; latest exposed repeated run generic after later comparisons exhausted.",
+    "T20": "Current exact replay retains guard-loss/passers/chronological immediate gxh5-gxh4 costs; terminal composition proven with a separate seven-report exact replay.",
+    "T21": "Exposed prior success; latest alternative PV lacks h5 passer evidence and is generic.",
+    "C03": "Retreat-square meaning retained.",
+    "D06": "Actual checks, king replies, rook price and checkmate retained."
+  },
+  "research_evidence": "H05 all six legal defenses per matched natural board compared at common depth18; four legal king replies at one late observed position all permitKf5. These are bounded research checks, not injected product evidence or global forced-win proof.",
+  "elapsed_minutes_at_verification": 475,
+  "test_summary_ko": "현재 관련 내부 검사 88개와 화면 검사 77개가 통과했고 TypeScript 전체 빌드도 통과했습니다. 넓은 검사 902개에서는 37개가 실패했으며, 36개는 작업 시작 코드에서도 재현했습니다. 이번에 바뀐 조사 한도의 기대값 1개는 수정 후 통과했습니다. 전체 검사 통과라고 보고하지 않습니다.",
+  "regression_summary_ko": "기존 35+14개를 같은 저장 자료로 대조해 필수 응수 누락·기록된 대가 폐기·답 전달 상실은 0건이었습니다. 주변 대가 6개는 상세에 남습니다. 47개는 완전 재생됐고 2개는 과거 보고서가 부족해 별도로 새 조사 2회·3회를 보충했습니다. 보충한 2024-09에서는 비교 수와 수순이 바뀌어 과거 참조 5개를 그대로 보존했다고 세지 않았습니다. 49개 보존 화면의 링크 2,152개, 잘못된 입력 100개 거절을 확인했습니다. 보충한 두 최종 화면도 따로 통과했습니다.",
+  "development_summary_ko": "개발 사례 7개의 실제 보고서를 최종 코드로 정확히 재생했고 화면 전달·수순 링크 200개를 확인했습니다. 마지막 새 실행 2개도 화면 전달과 링크 44개는 통과했지만, H05는 왕 순환까지만 설명했고 T20은 깊은 최초 비교를 끝내지 못했습니다. 안정적인 의미 판독은 아직 미해결입니다.",
+  "elapsed_summary_ko": "2026년 10월 6일 11:39:47 KST 시작. 2026년 10월 6일 19:38 KST 검토 완료. 약 7시간 58분 동안 탐색·구현·대조·화면 검토를 진행했습니다. 최대 15시간 안에서 이번 중기 작업 단위를 마쳤으며, 일반적인 의미 판독과 반복 안정성은 미해결로 남겼습니다.",
+  "report_review": {
+    "utc": "2026-10-06T10:38:16.962335+00:00",
+    "url": "http://127.0.0.1:8791/report.html",
+    "checked": [
+      "H05 king-cycle final board and expanded actual output",
+      "H05 Kh7 Kf5 final entry board",
+      "T21 g5 g4 gxh4 gxh5 passer board",
+      "visible desktop layout"
+    ],
+    "screenshot": "target/reserve-choice-20261006/report/h05-review.jpg"
+  },
+  "elapsed_minutes_at_completion": 478
+}

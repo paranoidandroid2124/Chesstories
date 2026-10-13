@@ -1,0 +1,89 @@
+{
+  "schema_version": "tat.firstreply40a-basic-human-firstpass.v1",
+  "sealed_utc": "2026-10-08T09:35:46.360523+00:00",
+  "sources": {
+    "basic40a": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcTATFirstReplyMeaning40a-basic.json",
+      "sha256": "b0c323ae23c652887f7ed03390fe33cf84076a378b00d35abecb8a46ad1d6761",
+      "run": "mcTATFirstReplyMeaning40a",
+      "internal_traces_omitted": true,
+      "snapshot_sha256_as_export_metadata_only": "b95ef3dad4501f2c744806a5761cbc496b3f75beb972f987f4c596d9f140f298"
+    },
+    "basic39": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcPrior35Final39-basic.json",
+      "sha256": "243ac5f72d47997a7a8b198f3d979597a436500139207f5cfe13600a1d5680be",
+      "tat_text_sha256": "1272a25c86c0d5cb4e19efd6fc3296d5597db1980fcdbf383808df2ee51775c5"
+    },
+    "fixed_criteria": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\final39-newly-completed-basic-human-firstpass.json",
+      "sha256": "2b4e5f9a8d5476f3010f437752e21ccb8e98b0d2e849e3dfad6a7ca9c0ea09f8",
+      "criteria_text_sha256": "7eee76b841b1856c57d8fa6491abe7f29c7b960761214d1d022ec66108337ba3",
+      "unchanged_text": "Unchanged minimal human recovery: actual mover role/judgment, first consequential counter, necessary capture/recapture cost, scope of comparative conclusion; excessive unrelated relations recorded separately. Engine label/delta is not an explanation."
+    }
+  },
+  "input": {
+    "visible_descriptor": {
+      "id": "TAT25-10",
+      "current_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P2P2/3PPN2/PBQ1B1PP/R4RK1 w - - 7 16",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e3e4",
+        "resulting_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P1PP2/3P1N2/PBQ1B1PP/R4RK1 b - - 0 16"
+      }
+    },
+    "canonical_utf8_sorted_json_sha256": "f7d201efc981bbcb3ce930398c1ec92a345c08a1e827eefd23cbbd0a73c403ca",
+    "visible_current_fen_focus_resulting_fen_equal39": true,
+    "history_scope": "This hash covers only the exposed id/current_fen/focus descriptor. Complete request history was not read or independently hashed in this basic-only task.",
+    "original_knight_scope": "The root-position knight on e5 before the played e4; no game-start piece identity inferred from this limited export."
+  },
+  "protocol": {
+    "firstpass_basic_only": true,
+    "new_main_tests_hidden_proof_or_audits_read": false,
+    "new_engine_results_read": false,
+    "engine_or_numeric_validation_performed": false,
+    "main_tests_fixtures_ui_edited": false,
+    "previous_readings_or_fixed_criteria_modified": false,
+    "cohort_scope": "Exposed TAT25-10 development/regression input, not an independent novel cohort. The separate originalNC4/NB1/A5/EXF5 full utility result remains unchanged; no rescore."
+  },
+  "comparison": {
+    "default_question_unchanged": "first_target_response",
+    "exported_verdict_identical": true,
+    "basic_text_identical": false,
+    "characters39": 747,
+    "characters40a": 874,
+    "basic40a_text_sha256": "fba5443ac3c80a0ded80551a2ecc822b2e4a4062d6c1b1400cdd352b9137109c",
+    "sentence_diff": [
+      "--- basic39",
+      "+++ basic40a",
+      "@@ -1,5 +1,7 @@",
+      " After e4, White's pawn on e4 is under attack from Black's bishop on b7 and Black's knight on d6; it is supported by White's pawn on d3",
+      "-In the e4 line: The recorded continuation is f6 Ng4",
+      "+In the e4 line: After f6, Black's pawn on f6 now targets White's knight on e5",
+      "+The recorded continuation is f6 Ng4",
+      "+Ng4 moves the knight out of the attack from Black's pawn on f6",
+      " The compared root choices are Rae1 and e4",
+      " e4 clears e3; Ne3 later occupies that square in this line",
+      " In the Rae1 line, White's rook on e1 keeps supporting White's bishop on e2 after Qc1 ends the support from White's queen on c2"
+    ]
+  },
+  "human_findings": {
+    "f6_attack_now_recoverable": true,
+    "f6_attack_detail": "The basic prose explicitly says that after f6 Black's pawn on f6 targets White's knight on e5. This was only the named f6 Ng4 continuation in39.",
+    "Ng4_escape_now_recoverable": true,
+    "Ng4_escape_detail": "The prose explicitly says Ng4 moves that knight out of the attack from the f6 pawn. Together with the root input/continuation, the referent is the root Ne5.",
+    "bounded_first_reply_meaning_complete": true,
+    "bounded_scope": "The recorded response f6 threatens the root Ne5 and the shown Ng4 answers that threat. This is the explained reply-and-escape unit; it does not prove that Ng4 is forced/unique or that f6 is the strongest available response.",
+    "later_Nf3_trade_required_for_this_bounded_answer": false,
+    "later_trade_scope": "No later trade of another knight is needed to understand why f6 attacks Ne5 and Ng4 escapes. Neither basic39 nor40a uses such a trade as a premise of this selected unit. This is a relevance judgment for the bounded human answer, not permission to discard a required price from a different evaluated outcome or full root comparison.",
+    "important_price_policy": "The new two statements concern a threat and escape, not a capture price; the relevant point does not require importing an unrelated late Nxd4/cxd4 exchange. Existing Rae1 Nxe2+/Rxe2 and hxg6 statements remain, with their previous scope limits.",
+    "actual_e4_role_or_full_root_cause_complete": false,
+    "remaining_limits": [
+      "The actual e4 move still begins with attackers/support rather than a clear account of its intended purpose.",
+      "The Rae1 future bishop support/recapture facts remain, but this text does not yet establish why e4 loses the small original numerical comparison.",
+      "f6 may also be available against another root choice; explaining its recorded effect after e4 does not assert e4 uniquely enabled it.",
+      "Later vacancy, alternative support, pawn loss and check facts still make the body broader than the newly completed response unit."
+    ],
+    "numeric_judgment": "Exported playable_loss/delta unchanged; no numeric accuracy or causal validation performed."
+  },
+  "honest_conclusion": "The previously missing first-counter mechanism is now visibly recovered in basic40a: f6 attacks the root Ne5 and Ng4 escapes. This is a real, bounded explanatory improvement over39. It does not convert the whole e4 versus Rae1 comparison into a complete root cause, establish strongest defense, or improve the separate fixed0/4 functional-utility cohort."
+}

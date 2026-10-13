@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-13",
+  "status": "achieved_within_standalone_cleanup_scope",
+  "goal": "Retire the Lila application tree and unused compatibility code around the standalone app; preserve previous uncommitted changes and failure criteria.",
+  "branch": "codex/functional-choice-value",
+  "base_commit": "c73eb64117ae2fde3bde9267c935e092b6672d9b",
+  "commit_created": false,
+  "prior_records": [
+    "research/README.md",
+    "research/functional-judgment-20261009/duplication-audit-20261010.json",
+    "research/lila-exit-20261013.json",
+    "chesstory-runtime/PROVENANCE.md"
+  ],
+  "retirement": {
+    "tracked_files": 2628,
+    "all_files_with_ignored_dependencies": 4619,
+    "bytes": 55000171,
+    "original_tree": "target/research-runs/standalone-cleanup-20261013/retired-lila-docker",
+    "full_archive": "target/research-runs/standalone-cleanup-20261013/lila-working-tree.zip",
+    "full_archive_sha256": "613bac2432ba4eebce23e67ebf2743e2037e8da9ad7639e27a13427a9e10277a",
+    "original_files_hash_verified_after_move": true,
+    "deletion_auto_review": "Recursive removal was rejected with blocked by policy. No further deletion was attempted; a reversible move into the verified workspace archive succeeded.",
+    "disk_space_reclaimed_claim": false
+  },
+  "standalone_source": {
+    "before_files": 22,
+    "after_files": 20,
+    "before_lines": 20935,
+    "after_lines": 20540,
+    "removed_responsibilities": [
+      "unused legacy ordinary-search UCI branch; both active callers already use makeMoveReviewWork",
+      "unused Lila engine catalog and capability types",
+      "unused glyph icon adapter and helpers/icons",
+      "unreachable study-write UI, labels, styles and empty callbacks",
+      "unused imports; noUnusedLocals/noUnusedParameters now enforced"
+    ],
+    "preserved_guards": [
+      "closed engine profile",
+      "D18 browser executor and decoder ceilings",
+      "cancellation usage accounting without admitting late PVs",
+      "exact complete MultiPV batches",
+      "readiness barrier, clear hash and separate work ownership",
+      "before/after exact occurrence links"
+    ]
+  },
+  "duplicate_review": {
+    "scope": {
+      "chesstory-web/src": [
+        19,
+        19594
+      ],
+      "chesstory-runtime/src/main": [
+        85,
+        43670
+      ],
+      "judgment-evaluation/src": [
+        19,
+        19369
+      ]
+    },
+    "method": "8 whitespace-normalized significant lines, at least 250 characters; imports/package/comment lines excluded. Overlapping candidate windows, not a semantic duplication rate.",
+    "candidate_windows": 69,
+    "independent_runner_attestation_windows": 49,
+    "interpretation": "No attempt to zero this count. Producer/independent attestation and proof/state checks were reviewed and retained. This is not comparable to the October 10 scan of 846 different files."
+  },
+  "tests_preserved": {
+    "migration": "research/standalone-cleanup-20261013/test-migration.json",
+    "moved_test_suites": 24,
+    "moved_support_modules": 1,
+    "already_moved_suites": 1,
+    "legacy_or_historical_files_archived": 12,
+    "historical_failures": "Runtime 75 and UI 124 are the prior October 10 record, not current test results. They remain unresolved; none were silently declared obsolete.",
+    "test_execution_this_task": 0
+  },
+  "verification": {
+    "typescript": "passed, including unused locals/parameters",
+    "frontend_build": "passed; 66 source inputs, zero Lila or target-cache sources",
+    "migrated_tests": "25 modules bundle without Lila dependencies; not executed",
+    "actual_screen": {
+      "position": "Gelfand–Avrukh 14...Bd5, previously used development case",
+      "elapsed_ms": 1783,
+      "depths": [
+        12,
+        12
+      ],
+      "cross_origin_isolated": true,
+      "normal_analysis_depth": 16,
+      "http_statuses": [
+        201,
+        200,
+        200
+      ],
+      "observed": [
+        "PGN file import including both castlings",
+        "normal analysis and resumption after commentary",
+        "c6/Bd5 purpose and pawn-support distinction delivered",
+        "Nge4 link before/after and main-board inspection/return",
+        "board drag g5-e4 adds 15.Nge4",
+        "reload restores added move and English setting",
+        "download includes 15.Nge4"
+      ],
+      "result_note": "This run labels Bd5 playable and records c6 Rc1 Rb8 versus Bd5 Nge4 Rb8. The earlier inaccuracy/exchange continuation is not forced into this result; short-search variation is retained.",
+      "screens": [
+        "research/standalone-cleanup-20261013/review.png",
+        "research/standalone-cleanup-20261013/linked-board.png"
+      ],
+      "response_archive": "research/standalone-cleanup-20261013/screen-response.json.gz"
+    },
+    "fresh_launcher": "Start-Chesstories.cmd started on port 8788 after Lila retirement; HTTP 200; owned process stopped with Ctrl+C",
+    "not_checked": [
+      "full historical regression suites",
+      "all retained test runtime behavior",
+      "new chess-purpose generalization",
+      "cold installation on another machine",
+      "Lila server/study features that were retired",
+      "general latency or memory improvement"
+    ],
+    "temporary_launcher_ports_closed": [
+      8788,
+      65008
+    ]
+  },
+  "preservation": {
+    "baseline_entries": 450,
+    "unchanged_entries": 403,
+    "retired_entries_verified": 24,
+    "edited_entries_with_exact_before_copies": [
+      "README.md",
+      "chesstory-web/PROVENANCE.md",
+      "chesstory-web/README.md",
+      "chesstory-web/scripts/test.mjs",
+      "chesstory-web/src/engine/profiles.ts",
+      "chesstory-web/src/engine/protocol.ts",
+      "chesstory-web/src/engine/types.ts",
+      "chesstory-web/src/icons.ts",
+      "chesstory-web/src/licon.ts",
+      "chesstory-web/src/main.ts",
+      "chesstory-web/src/review/_move-review.scss",
+      "chesstory-web/src/review/moveReview.ts",
+      "chesstory-web/src/review/moveReviewCoordinator.ts",
+      "chesstory-web/src/review/moveReviewKorean.ts",
+      "chesstory-web/src/review/moveReviewRuntimeSource.ts",
+      "chesstory-web/src/review/moveReviewSelection.ts",
+      "chesstory-web/src/review/moveReviewText.ts",
+      "chesstory-web/src/review/types.ts",
+      "chesstory-web/src/review/view/moveReview.ts",
+      "chesstory-web/src/view/snabbdom.ts",
+      "chesstory-web/tests/preview.test.ts",
+      "chesstory-web/tsconfig.json",
+      "research/README.md"
+    ],
+    "unaccounted_entries": [],
+    "durable_archive": "research/standalone-cleanup-20261013/pre-cleanup-changes.zip",
+    "durable_archive_sha256": "c77da22a473100b3629e97a70acf74badb83ce0dc1182eeba6deaebf2b3c09ef",
+    "durable_source_files": 60,
+    "baseline_manifest": "target/research-runs/standalone-cleanup-20261013/baseline.json",
+    "previous_research_readme_exactly_retained": true
+  },
+  "development_notes": [
+    "An attempted CLI multiline paste delivered only a header; the app rejected it without replacing the game, then the complete PGN was imported through the file chooser.",
+    "Stale browser references after language change/reload were refreshed; these were automation errors, not accepted product results."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "chesstories-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:runtime": "node scripts/build-runtime.mjs",
+    "start": "node scripts/serve.mjs",
+    "check": "tsc --noEmit",
+    "test": "node scripts/test.mjs"
+  },
+  "dependencies": {
+    "@lichess-org/chessground": "9.9.0",
+    "@lichess-org/stockfish-web": "0.4.2",
+    "chessops": "0.15.0",
+    "snabbdom": "3.5.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11",
+    "sass": "1.93.2",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "schema_version": "chesstory.research.repeated-work-review.v1",
+  "date": "2026-10-11",
+  "branch": "codex/functional-choice-value",
+  "head": "c73eb64117ae2fde3bde9267c935e092b6672d9b",
+  "scope": {
+    "request": "이전 작업과 최근 개선의 중복, 반복 실패 유형, 장시간 투자에도 남은 문제를 확인한다.",
+    "method": "보존된 결론·실패·기준 기록, Git 이력, 현재 구현·테스트, 직전 실제 기본 해설을 대조했다. 전체 원시 실행을 다시 분석하지 않았다.",
+    "new_engine_queries": 0,
+    "new_test_runs": 0,
+    "product_sources_changed": false,
+    "book_sources_reread": false,
+    "independent_reader_study": false,
+    "preserved": "기존 미커밋 제품 코드, 중복 제거, 연구 자료 정리와 과거 실패 판정을 보존한다. 이번 파일은 별도 정정·재검토 기록이다."
+  },
+  "conclusion": {
+    "overlap_confirmed": true,
+    "statement": "최근 작업은 기존 실패 유형·국면·해결 패턴과 상당히 겹친다. 실제 증분은 있으나 핵심 의미 실패를 해결한 새로운 일반화 성과로 볼 수 없다.",
+    "recent_completion_correction": "직전 완료는 첫 응수 비교의 표시·구성 변경과 그 제한된 검사 완료에만 해당한다. 사용자가 요구한 새로운 국면의 충분한 목적·선택 이유 설명 완료로 확대할 수 없다.",
+    "not_a_new_diagnosis": "내용 선택·중요도·완료 범위 문제는 10월 5일 importance-expression 감사와 10월 6일 bottleneck-resolution 감사에서 이미 확인됐다. 문제는 진단의 부재보다 남은 의미 요구를 다음 작업의 완료 조건으로 계속 유지하지 못한 데 있다.",
+    "historical_fairness": "과거 기록들은 대부분 미해결을 명시했다. 모든 과거 테스트 통과가 품질 성공으로 허위 보고됐다고 판단하지 않는다. 국소 작업의 완료와 사용자 목표 미완료가 반복해서 병존했다."
+  },
+  "overlap_map": [
+    {
+      "recent_work": "Rd3의 짧은 목적 설명",
+      "previous_work": "2026-10-05 BasicPurposeReading 계열의 평범한 수 목적·상세 분리, 2026-10-09 동일 RD3 국면 판독",
+      "real_delta": "현재 압박과 대체 방어자를 짧게 남기는 허용 범위를 넓히고 긴 이력을 줄였다.",
+      "already_known": "e8 룩이 e2 폰을 지키는 동안 Rd3가 c3/Bb3를 압박한다는 즉시 목적은 이미 이전 본문에서 읽혔다.",
+      "still_missing": "고정 기준의 Rd2 이후 d2/b2 압박·진입 및 e2 폰의 지속적 억제 기능은 직전 축약만으로 설명되지 않는다.",
+      "sources": [
+        "research/basic-purpose-20261005/result.json",
+        "research/functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json"
+      ]
+    },
+    {
+      "recent_work": "Nb1/Nc4의 대표 응수·달라지는 선택을 앞에 배치",
+      "previous_work": "2026-10-08 final37 조건부 재포획 설명, 2026-10-09 native26의 응수별 Rd6 가치·가격 전달",
+      "real_delta": "두 원래 수의 대표 응수와 가치가 바뀌는 응수 하나를 묶고 긴 별도 이력을 상세로 내려 기본 해설을 집중시켰다.",
+      "already_known": "이전 10s 본문에도 Nc4의 d6 통제, Nb1-Nc3 경로, Nef6 아래 Rd6의 가치 차이, Qc7의 회피와 조건부 재포획이 있었다.",
+      "still_missing": "다른 유효한 실현과 바뀐 방어 조건을 원래 선택의 가치에 연결하는 전체 질문. 익숙한 native26 재생은 신규 일반화 검증이 아니다.",
+      "sources": [
+        "research/meaning-conditions-20261008/nb1-final37-basic-only-human-reading.json",
+        "research/functional-judgment-20261009/nb1-produced10s-basic-human-firstpass.json"
+      ]
+    },
+    {
+      "recent_work": "Ne4와 Qxd7의 첫 잡기/비잡기 응수 비교",
+      "previous_work": "동일 두 국면이 before40a, after8b, current10s에서 계속 부분 판정을 받았고, 기존 FirstTarget가 이미 첫 응수·교환·회피를 구성했다.",
+      "real_delta": "같은 작업에서 얻은 응수 우열을 본문에 명시하고, 다른 응수도 본문에서 설명하며, 직후 공격과 방어 변화를 붙였다.",
+      "overlap_verification": "새 fixture의 두 source_sha256을 10월 9일 실제 원본 파일과 대조해 모두 일치했다. Nb1 밖의 사례이지만 연구 전체에서 새로 보지 않은 국면은 아니다.",
+      "still_missing": "Ne4의 성급한 교환과 e3 압박·선택 보존, Qxd7의 왕 안전·활동성·보상과 Bxf4의 방어 기능 차이.",
+      "sources": [
+        "research/functional-judgment-20261009/source-scene-before40a-human-firstpass.json",
+        "research/functional-judgment-20261009/source-scene-after8b-human-firstpass.json",
+        "research/functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json",
+        "judgment-evaluation/fixtures/public-commentary-v6/first-reply-purpose-produced.json.gz"
+      ]
+    },
+    {
+      "recent_work": "기존 설명 묶음을 상세로 이동하고 선택한 수의 교환·체크를 보존",
+      "previous_work": "2026-10-02부터 질문을 먼저 정하고 필요한 사실·가격만 본문에 남기자는 연구가 있었다. selectionv3은 중요한 지원 설명을 밀어냈고 selectionv5의 전역 가격 축소는 네 가지 실제 회귀를 냈다.",
+      "real_delta": "현재는 제한된 완성 답 전체를 교체하고 기존 이력과 그 가격을 상세에 함께 남기는 경로가 추가됐다.",
+      "risk_remaining": "상세에 보존됐다는 사실은 기본 본문에서 중요한 질문을 생략해도 된다는 증명이 아니다. 새 짧은 답이 원래 질문보다 덜 중요하면 같은 종류의 의미 퇴행이 남는다.",
+      "sources": [
+        "research/content-selection-20261002/result.json",
+        "research/answer-selection-20261004/development-decisions.json",
+        "research/selection-cause-audit-20261005/result.json"
+      ]
+    }
+  ],
+  "recent_two_case_reassessment": [
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "old_minimum": "왜 f6 나이트를 지금 e4에서 교환하는 것이 성급한지, e3 압박과 Nd6가 남기는 선택이 어떻게 달라지는지 설명한다.",
+      "latest_basic_gain": "Bxe4가 Qe2보다 강하다는 비교, fxe4의 d3 퀸 공격, Qe2-Ncd6의 나이트 방어를 연결한다.",
+      "latest_basic_missing": "원래 대안 Nd6는 비교 대상으로만 명명된다. Ne4와 그 대안의 교환 시점·e3 압박·남겨 둔 선택의 가치는 설명하지 않는다.",
+      "original_minimum_complete": false,
+      "test_boundary": "FirstReplyPurposeTest는 새 응수·역할 문장을 확인한다. 위의 기존 최소 요구를 검사하지 않는다.",
+      "current_output": "target/research-runs/first-reply-purpose-20261011/FJ-SG35-LATE-NE4-verified.json"
+    },
+    {
+      "id": "FJ-SG17-QXD7",
+      "old_minimum": "룩을 얻은 교환 이득보다 백의 안전한 캐슬링·비숍 활동·폰 보상이 중요한 이유와 Bxf4가 바꾸는 방어 과제를 설명한다.",
+      "latest_basic_gain": "Qxe5가 Qxd7+보다 강하다는 비교, 회피와 비숍 포획, 양쪽 퀸 교환을 함께 제시한다.",
+      "latest_basic_missing": "Qxd7 이후 어느 백 응수가 강한지는 말하지만 원래 Qxd7이 왜 blunder인지는 여전히 설명하지 않는다. Bxf4도 다른 기물을 잡는 수로만 남는다.",
+      "original_minimum_complete": false,
+      "test_boundary": "교환·회피 문장의 존재와 비교 순서를 검사한다. 왕 안전·활동성·보상의 의미는 검사하지 않는다.",
+      "current_output": "target/research-runs/first-reply-purpose-20261011/FJ-SG17-QXD7-verified.json"
+    }
+  ],
+  "long_work_records": [
+    {
+      "work": "reserve-choice, 2026-10-06",
+      "elapsed": "7시간 58분",
+      "gain": "대기 수·왕 순환과 관련 근거·화면 전달 개선",
+      "remaining": "H05는 왕 순환까지만 설명, 진입 비교는 소진. T20은 깊은 최초 비교 미완료. 일반 의미 판독과 반복 안정성 미해결.",
+      "source": "research/reserve-choice-20261006/verification.json"
+    },
+    {
+      "work": "meaning-conditions, 2026-10-07~08",
+      "elapsed_seconds": 51922.098,
+      "elapsed": "약 14시간 25분",
+      "gain": "조건부 기능·첫 응수·가격·전달 경로 강화, 다수 실제 조사와 재생",
+      "remaining": "원래 네 기능 질문은 0/4. 379/382 검사 통과와 별개로 의미 성공은 성립하지 않음.",
+      "source": "research/meaning-conditions-20261008/final-medium-goal-outcome.json"
+    },
+    {
+      "work": "functional-judgment, 2026-10-08~09",
+      "elapsed": "시작부터 인계 기록 시점까지 약 14시간 20분",
+      "gain": "깊이 18 상한, 국면·작업별 가치와 가격 보존, 관련 runtime210/UI72 확인",
+      "remaining": "당시 고정 기준으로 신규 두 사례 0/2, 출처 여덟 사례 0/8, 원래 네 사례 0/4. 조사 완료와 원래 선택 이유 설명은 분리됨.",
+      "source": "research/functional-judgment-20261009/bounded-medium-goal-partial-outcome-and-depth18-handoff.json"
+    }
+  ],
+  "time_interpretation": "서로 다른 세 작업의 기록만 합쳐 약 36시간 44분의 작업 경과시간이다. 전체 개발시간·사람의 노동시간·엔진 순수 계산시간은 아니다. H05 28개 조사 실행의 140분 57초는 meaning-conditions 작업 안의 부분 기록이므로 다시 더하지 않는다. 서로 다른 기준의 품질 분모도 합치지 않는다.",
+  "persistent_failure_types": [
+    {
+      "id": "function_to_choice",
+      "problem": "합법·통제·교환 사실과 그 기능이 선택에 유용하다는 판단 사이의 연결",
+      "examples": "Ne4의 e3 압박/교환 시점, Qxd7의 보상/왕 안전, H05의 대기 수 보존",
+      "why_old_fixes_missed": "사실과 점수는 각각 더 정확해졌지만, 그 사실이 이 비교의 이유라는 근거가 추가되지 않았다. 점수 순서 뒤에 사실을 붙여도 인과 연결은 자동으로 생기지 않는다.",
+      "current_evidence": "TargetResponseInvestigation.withAnswer는 공격받는 원래 기물, 첫 응수 둘, 직후 수의 역할을 고른다. 해당 위치의 응수 비교가 원래 두 수의 기능 차이를 직접 설명하는 증명은 아니다."
+    },
+    {
+      "id": "relevant_question",
+      "problem": "답해야 할 질문을 자동으로 만들고 먼저 조사하는 단계",
+      "examples": "H02는 현재 방어 비교보다 먼 비숍 계획 방해를 조사. H05는 g4의 보존 가치 대신 g4가 나중 Ke3를 준비하는지 묻는 경로가 있었다.",
+      "why_old_fixes_missed": "후보·수순을 늘리거나 순위를 조정해도 핵심 질문이 생성되지 않았으면 그 답은 나오지 않는다.",
+      "current_boundary": "최근 수정은 이미 완료된 FirstTarget의 전달 단계다. 누락된 질문의 발견·탐색 배분을 바꾸지 않았다."
+    },
+    {
+      "id": "alternative_realizations",
+      "problem": "상대 응수가 바뀌어도 같은 기능이 다른 수·기물·경로로 유지되는지 판단",
+      "examples": "Nb1-Nc3와 나중 대체 방어자, H05에서 기록된 왕 진입 수가 다른 유효한 수로 바뀌는 경우",
+      "why_old_fixes_missed": "한 기록 수순의 합법성과 비용을 증명하는 것은 유효한 선택 전체를 증명하는 것보다 좁다. 반대로 경로·기물 검사를 제거하면 다른 국면의 점수나 가격을 잘못 빌릴 위험이 있다.",
+      "sources": ["research/option-validation-20261007/findings.json", "research/critical-comparison-20261007/completion.json", "research/meaning-conditions-20261008/final-theory-functional-synthesis.json"]
+    },
+    {
+      "id": "answer_scope_and_cost",
+      "problem": "핵심 설명을 줄이면서 그 주장에 필요한 응수·손실은 보존",
+      "examples": "selectionv3의 중요한 지원 설명 대체, selectionv5의 네 가격 회귀, 후속 보호 묶음과 반복 문장",
+      "why_old_fixes_missed": "부분 절삭은 필요한 손실을 지웠고, 이를 막는 넓은 보호는 주변 이력을 다시 본문으로 끌어들였다. 새 짧은 질문으로 바꾸는 것만으로 중요도 문제가 해결되지는 않는다.",
+      "current_boundary": "최근 전체 묶음의 상세 이동은 실제 전달 개선이다. 원래 핵심 질문도 함께 상세로 밀렸는지는 별도로 판단해야 한다."
+    },
+    {
+      "id": "finite_value_verification",
+      "problem": "필요한 가치 비교가 반복 갱신되며 끝나지 않거나 예산 안에 완료되지 않음",
+      "examples": "H05의 깊이 16 비교 갱신 다섯 번에서 g4가 열세라는 상대 순서는 유지됐지만 절대 평가 충돌로 기존 선택 근거를 다시 요구함",
+      "why_old_fixes_missed": "깊이·시간을 늘리는 것과 주장에 필요한 증거를 정하는 것은 다른 문제다. 하위 국면 검증 후 상위 재검증이 새 작업 기준을 만들면 이전 하위 답이 다시 오래된 근거가 된다.",
+      "current_boundary": "깊이 18 상한은 현재 코드에 있다. 상대 우열만 말하기 위한 조건과 절대 수치 일관성·최고 수 주장에 필요한 조건을 분리하는 설계는 최근 전달 수정에서 구현하지 않았다. 이번에는 반복 발생 여부를 새 실행으로 측정하지 않았다.",
+      "sources": ["research/functional-judgment-20261009/final-qualitative-conflict-handoff-addendum.json", "research/functional-judgment-20261009/parent-child-horizon-and-finite-conflict-design-audit10r.json", "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryComparisonConflict.scala", "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala"]
+    }
+  ],
+  "process_finding": {
+    "repeated_pattern": "좁은 의미·표시 개선 → 근거/가격/전달 보호 → 관련 검사 통과 → 제한된 구현 완료. 그 뒤 원래 선택 이유의 미해결이 다음 목표로 재등장했다.",
+    "latest_instance": "이번 두 사례의 테스트도 새 문장과 가격을 검사하지만 과거부터 빠졌던 교환 시점·지속적 압박·보상은 요구하지 않았다. 사례 수를 하나에서 둘로 늘려도 같은 의미 공백을 검사하지 않으면 통제가 되지 않는다.",
+    "not_required": "모든 소수점 평가의 인과관계, 책과 동일한 긴 수순, 모든 합법 응수의 완전 증명을 요구할 필요는 없다. 이전 기준도 짧은 정상 목적과 다른 유효한 실현을 인정했다.",
+    "required": "짧게 말하더라도 원래 선택의 이유로 제시한 핵심 기능과, 그 설명을 바꾸는 실제 상대 응수·필요한 대가를 연결해야 한다."
+  },
+  "decisions_for_next_work": [
+    "직전 두 사례는 기존 실패 사례의 재사용으로 분류한다. 자동 요청이었다는 것과 처음 보는 국면이었다는 것을 구분한다.",
+    "첫 응수 순위 표시·공격/방어 문장 추가·기존 이력 상세 이동을 다시 새로운 핵심 해결 목표로 삼지 않는다. 필요한 보조 수정이면 기존 구현을 재사용한다.",
+    "다음 구현 전에 이전 missing 항목 중 정확히 하나를 고르고, 이번 변경으로 어떤 체스 판단을 새로 말할 수 있어야 하는지 먼저 적는다. 구현 편의 때문에 다른 질문으로 바꾸면 원래 항목은 계속 미해결로 둔다.",
+    "우선 연구 대상으로는 Ne4류의 교환 전후 지속 기능·남겨 둔 선택을 좁게 잡는다. Qxd7의 종합 보상·왕 안전까지 같은 목표에 한꺼번에 넣지 않는다. 이는 다음 구현 후보이며 이번에 해결한 내용이 아니다.",
+    "기존 Fact/CompareMoves로 필요한 기능 증거가 이미 있는지 먼저 판별한다. 있으면 선택·구성을 고치고, 없으면 정확히 그 국면의 비교만 깊이 18 이내에서 조사한다. 같은 질문의 추가 조사·재조사는 한 번으로 제한하고 계속 미완료면 미확정으로 남긴다.",
+    "검증은 원래 빠졌던 의미를 읽는 기존 사례 하나와 별도 국면 하나, 필요한 경우 반례 하나에 한정한다. 기존 사례 재생의 개선과 새 국면으로의 적용을 따로 보고한다. 기계적 검사 수를 의미 성공 기준으로 쓰지 않는다.",
+    "기술적 구현 완료, 기존 핵심 질문 해결, 새 국면 적용 확인을 따로 기록한다. 원래 실패 항목이 그대로면 짧은 본문이나 두 사례 통과만으로 사용자 목표를 완료하지 않는다."
+  ],
+  "primary_history_sources": [
+    "research/importance-expression-audit-20261005/result.json",
+    "research/bottleneck-resolution-20261006/audit.json",
+    "research/meaning-conditions-20261008/final-medium-goal-outcome.json",
+    "research/functional-judgment-20261009/bounded-medium-goal-partial-outcome-and-depth18-handoff.json"
+  ],
+  "limits": [
+    "저장된 현재 출력과 과거 기준의 재판독이다. 직전 출력 이후 제품을 다시 실행하지 않았다.",
+    "원래 두 사례의 최소 답은 현재 본문에도 없다고 판정했지만, 전체 여덟 사례를 현재 코드로 재평가하거나 과거 0/8 판정을 현재 성공률로 환산하지 않았다.",
+    "시간 기록으로 실패 원인의 존재와 반복은 확인할 수 있으나 모든 시간의 세부 사용 비율이나 가상 대안의 절약 시간을 계산할 수는 없다.",
+    "보존된 결론·실패 기록 중심의 검토이며 원본 1,339개와 보관된 940개를 전수 재검토한 것은 아니다."
+  ]
+}

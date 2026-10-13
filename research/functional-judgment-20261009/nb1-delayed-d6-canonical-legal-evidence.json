@@ -1,0 +1,1450 @@
+{
+  "request": {
+    "schema_version": "chesstory.position-commentary.job-request.v6",
+    "request_id": "human-evaluation-FC-SG45-NB1",
+    "variant": "standard",
+    "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "move_prefix_uci": [
+      "e2e4",
+      "c7c6",
+      "d2d3",
+      "d7d5",
+      "b1d2",
+      "g7g6",
+      "g1f3",
+      "f8g7",
+      "g2g3",
+      "g8f6",
+      "f1g2",
+      "e8g8",
+      "e1g1",
+      "c8g4",
+      "h2h3",
+      "g4f3",
+      "d1f3",
+      "b8d7",
+      "f3e2",
+      "d5e4",
+      "d3e4",
+      "d8c7",
+      "a2a4",
+      "a8d8",
+      "d2b3",
+      "b7b6",
+      "c1e3",
+      "c6c5",
+      "a4a5",
+      "e7e5",
+      "b3d2",
+      "f6e8",
+      "a5b6",
+      "a7b6",
+      "f1d1",
+      "c7c6"
+    ],
+    "current_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "d2b1",
+      "resulting_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 b - - 3 19"
+    },
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "remaining_budget_ms": 180000
+  },
+  "request_sha256": "2200072b25f1efa78dd3c28d91f0c4cae4caf386b2c3c2c954b7d466f7880550",
+  "compact_sha256": "5d0595d782c0f47499e17d8d3193b8e0598d34f94c122fb0b77d2a55ad6c8b2d",
+  "work7": {
+    "issued_work": {
+      "work_id": "work:7",
+      "purpose": "response_comparison",
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "execution_key_sha256": "e88c1d6ba45c7fd997e99634ba921c31cb288f6899dd5502fc56196ed25245b5",
+      "variant": "standard",
+      "engine_position_initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "engine_position_moves_uci": [
+        "e2e4",
+        "c7c6",
+        "d2d3",
+        "d7d5",
+        "b1d2",
+        "g7g6",
+        "g1f3",
+        "f8g7",
+        "g2g3",
+        "g8f6",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "b8d7",
+        "f3e2",
+        "d5e4",
+        "d3e4",
+        "d8c7",
+        "a2a4",
+        "a8d8",
+        "d2b3",
+        "b7b6",
+        "c1e3",
+        "c6c5",
+        "a4a5",
+        "e7e5",
+        "b3d2",
+        "f6e8",
+        "a5b6",
+        "a7b6",
+        "f1d1",
+        "c7c6",
+        "d2b1",
+        "e8c7"
+      ],
+      "search_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 w - - 4 20",
+      "root_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "d1d6",
+          "e2d3"
+        ]
+      },
+      "search_limits": {
+        "depth": 16,
+        "nodes": 20000000,
+        "movetime_ms": 5000,
+        "multi_pv": 2
+      },
+      "max_search_elapsed_ms": 6000,
+      "search_anchor": {
+        "root_move": "d2b1",
+        "root_occurrence_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:evidence:transition:2c3ceca390d34cd8a61409c2b2d21c81fed1354ddd1182326d7641b902329c74",
+        "position_id": "c772126b4aa6d752b3891d2ec68e2fc4c644e10dd11f3bfbda0beb02cbde6acc",
+        "prefix_moves_uci": [
+          "d2b1",
+          "e8c7"
+        ]
+      }
+    },
+    "depth": 16,
+    "white_score": {
+      "kind": "cp",
+      "value": 118
+    },
+    "whole_root_relative_moves": [
+      "d2b1",
+      "e8c7",
+      "e2d3",
+      "c5c4",
+      "d3d2",
+      "c7b5",
+      "b1c3",
+      "b5c3",
+      "d2c3",
+      "d8a8",
+      "a1a8",
+      "f8a8",
+      "c3d2",
+      "d7c5",
+      "d2b4",
+      "c5e6",
+      "d1d6",
+      "c6c8",
+      "d6b6"
+    ],
+    "whole_root_relative_san": [
+      "Nb1",
+      "Nc7",
+      "Qd3",
+      "c4",
+      "Qd2",
+      "Nb5",
+      "Nc3",
+      "Nxc3",
+      "Qxc3",
+      "Ra8",
+      "Rxa8",
+      "Rxa8",
+      "Qd2",
+      "Nc5",
+      "Qb4",
+      "Ne6",
+      "Rd6",
+      "Qc8",
+      "Rxb6"
+    ]
+  },
+  "review_root_to_game_original": {
+    "h7": "black_pawn_game_h7",
+    "f7": "black_pawn_game_f7",
+    "f2": "white_pawn_game_f2",
+    "c2": "white_pawn_game_c2",
+    "b2": "white_pawn_game_b2",
+    "a1": "white_rook_game_a1",
+    "g6": "black_pawn_game_g7",
+    "g7": "black_bishop_game_f8",
+    "g3": "white_pawn_game_g2",
+    "g2": "white_bishop_game_f1",
+    "f8": "black_rook_game_h8",
+    "g8": "black_king_game_e8",
+    "g1": "white_king_game_e1",
+    "h3": "white_pawn_game_h2",
+    "d7": "black_knight_game_b8",
+    "e2": "white_queen_game_d1",
+    "e4": "white_pawn_game_d2",
+    "d8": "black_rook_game_a8",
+    "e3": "white_bishop_game_c1",
+    "c5": "black_pawn_game_c7",
+    "e5": "black_pawn_game_e7",
+    "d2": "white_knight_game_b1",
+    "e8": "black_knight_game_g8",
+    "b6": "black_pawn_game_a7",
+    "d1": "white_rook_game_h1",
+    "c6": "black_queen_game_d8"
+  },
+  "critical_positions": [
+    {
+      "prefix_ply_count": 0,
+      "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        },
+        {
+          "game_original": "black_knight_game_g8",
+          "review_root_square": "e8",
+          "current_square": "e8",
+          "current_role": "knight"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_queen_game_d1": "e2",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_c7": "c5",
+        "black_pawn_game_e7": "e5",
+        "white_knight_game_b1": "d2",
+        "black_knight_game_g8": "e8",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6"
+      }
+    },
+    {
+      "prefix_ply_count": 2,
+      "fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN1R2K1 w - - 4 20",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": true,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_rook_game_h1",
+          "review_root_square": "d1",
+          "current_square": "d1",
+          "current_role": "rook"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_queen_game_d1": "e2",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_c7": "c5",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "white_knight_game_b1": "b1",
+        "black_knight_game_g8": "c7"
+      }
+    },
+    {
+      "prefix_ply_count": 3,
+      "fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/3QB1PP/1PP2PB1/RN1R2K1 b - - 5 20",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d3",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_c7": "c5",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "white_knight_game_b1": "b1",
+        "black_knight_game_g8": "c7",
+        "white_queen_game_d1": "d3"
+      }
+    },
+    {
+      "prefix_ply_count": 4,
+      "fen": "3r1rk1/2nn1pbp/1pq3p1/4p3/2p1P3/3QB1PP/1PP2PB1/RN1R2K1 w - - 0 21",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d3",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "white_knight_game_b1": "b1",
+        "black_knight_game_g8": "c7",
+        "white_queen_game_d1": "d3",
+        "black_pawn_game_c7": "c4"
+      }
+    },
+    {
+      "prefix_ply_count": 5,
+      "fen": "3r1rk1/2nn1pbp/1pq3p1/4p3/2p1P3/4B1PP/1PPQ1PB1/RN1R2K1 b - - 1 21",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "white_knight_game_b1": "b1",
+        "black_knight_game_g8": "c7",
+        "black_pawn_game_c7": "c4",
+        "white_queen_game_d1": "d2"
+      }
+    },
+    {
+      "prefix_ply_count": 6,
+      "fen": "3r1rk1/3n1pbp/1pq3p1/1n2p3/2p1P3/4B1PP/1PPQ1PB1/RN1R2K1 w - - 2 22",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_knight_game_g8",
+          "review_root_square": "e8",
+          "current_square": "b5",
+          "current_role": "knight"
+        },
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "white_knight_game_b1": "b1",
+        "black_pawn_game_c7": "c4",
+        "white_queen_game_d1": "d2",
+        "black_knight_game_g8": "b5"
+      }
+    },
+    {
+      "prefix_ply_count": 7,
+      "fen": "3r1rk1/3n1pbp/1pq3p1/1n2p3/2p1P3/2N1B1PP/1PPQ1PB1/R2R2K1 b - - 3 22",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_knight_game_g8",
+          "review_root_square": "e8",
+          "current_square": "b5",
+          "current_role": "knight"
+        },
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "white_queen_game_d1": "d2",
+        "black_knight_game_g8": "b5",
+        "white_knight_game_b1": "c3"
+      }
+    },
+    {
+      "prefix_ply_count": 8,
+      "fen": "3r1rk1/3n1pbp/1pq3p1/4p3/2p1P3/2n1B1PP/1PPQ1PB1/R2R2K1 w - - 0 23",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "white_queen_game_d1": "d2",
+        "black_knight_game_g8": "c3"
+      }
+    },
+    {
+      "prefix_ply_count": 9,
+      "fen": "3r1rk1/3n1pbp/1pq3p1/4p3/2p1P3/2Q1B1PP/1PP2PB1/R2R2K1 b - - 0 23",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_rook_game_h1",
+          "review_root_square": "d1",
+          "current_square": "d1",
+          "current_role": "rook"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "white_rook_game_a1": "a1",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_rook_game_h8": "f8",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "black_rook_game_a8": "d8",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "white_queen_game_d1": "c3"
+      }
+    },
+    {
+      "prefix_ply_count": 13,
+      "fen": "r5k1/3n1pbp/1pq3p1/4p3/2p1P3/4B1PP/1PPQ1PB1/3R2K1 b - - 1 25",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "black_knight_game_b8": "d7",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "d2"
+      }
+    },
+    {
+      "prefix_ply_count": 14,
+      "fen": "r5k1/5pbp/1pq3p1/2n1p3/2p1P3/4B1PP/1PPQ1PB1/3R2K1 w - - 2 26",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "d2",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "d2",
+        "black_knight_game_b8": "c5"
+      }
+    },
+    {
+      "prefix_ply_count": 15,
+      "fen": "r5k1/5pbp/1pq3p1/2n1p3/1Qp1P3/4B1PP/1PP2PB1/3R2K1 b - - 3 26",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_rook_game_h1",
+          "review_root_square": "d1",
+          "current_square": "d1",
+          "current_role": "rook"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "black_knight_game_b8": "c5",
+        "white_queen_game_d1": "b4"
+      }
+    },
+    {
+      "prefix_ply_count": 16,
+      "fen": "r5k1/5pbp/1pq1n1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/3R2K1 w - - 4 27",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": true,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_rook_game_h1",
+          "review_root_square": "d1",
+          "current_square": "d1",
+          "current_role": "rook"
+        },
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "b4",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "white_rook_game_h1": "d1",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "b4",
+        "black_knight_game_b8": "e6"
+      }
+    },
+    {
+      "prefix_ply_count": 17,
+      "fen": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "b4",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [
+        {
+          "game_original": "black_queen_game_d8",
+          "review_root_square": "c6",
+          "current_square": "c6",
+          "current_role": "queen"
+        }
+      ],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "black_queen_game_d8": "c6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "b4",
+        "black_knight_game_b8": "e6",
+        "white_rook_game_h1": "d6"
+      }
+    },
+    {
+      "prefix_ply_count": 18,
+      "fen": "r1q3k1/5pbp/1p1Rn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 6 28",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": false,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "b4",
+          "current_role": "queen"
+        }
+      ],
+      "black_geometric_d6_controllers": [],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_a7": "b6",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "b4",
+        "black_knight_game_b8": "e6",
+        "white_rook_game_h1": "d6",
+        "black_queen_game_d8": "c8"
+      }
+    },
+    {
+      "prefix_ply_count": 19,
+      "fen": "r1q3k1/5pbp/1R2n1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 0 28",
+      "in_check": false,
+      "same_Rd1_to_d6_legal_if_white_to_move": null,
+      "white_geometric_d6_controllers": [
+        {
+          "game_original": "white_queen_game_d1",
+          "review_root_square": "e2",
+          "current_square": "b4",
+          "current_role": "queen"
+        },
+        {
+          "game_original": "white_rook_game_h1",
+          "review_root_square": "d1",
+          "current_square": "b6",
+          "current_role": "rook"
+        }
+      ],
+      "black_geometric_d6_controllers": [],
+      "identity_current": {
+        "black_pawn_game_h7": "h7",
+        "black_pawn_game_f7": "f7",
+        "white_pawn_game_f2": "f2",
+        "white_pawn_game_c2": "c2",
+        "white_pawn_game_b2": "b2",
+        "black_pawn_game_g7": "g6",
+        "black_bishop_game_f8": "g7",
+        "white_pawn_game_g2": "g3",
+        "white_bishop_game_f1": "g2",
+        "black_king_game_e8": "g8",
+        "white_king_game_e1": "g1",
+        "white_pawn_game_h2": "h3",
+        "white_pawn_game_d2": "e4",
+        "white_bishop_game_c1": "e3",
+        "black_pawn_game_e7": "e5",
+        "black_pawn_game_c7": "c4",
+        "black_rook_game_h8": "a8",
+        "white_queen_game_d1": "b4",
+        "black_knight_game_b8": "e6",
+        "black_queen_game_d8": "c8",
+        "white_rook_game_h1": "b6"
+      }
+    }
+  ],
+  "actual_capture_ledger": [
+    {
+      "uci": "b5c3",
+      "san": "Nxc3",
+      "actor": "black_knight_game_g8",
+      "victim": "white_knight_game_b1",
+      "capture_square": "c3",
+      "check": false,
+      "before_in_check": false,
+      "root_ply_offset": 7
+    },
+    {
+      "uci": "d2c3",
+      "san": "Qxc3",
+      "actor": "white_queen_game_d1",
+      "victim": "black_knight_game_g8",
+      "capture_square": "c3",
+      "check": false,
+      "before_in_check": false,
+      "root_ply_offset": 8
+    },
+    {
+      "uci": "a1a8",
+      "san": "Rxa8",
+      "actor": "white_rook_game_a1",
+      "victim": "black_rook_game_a8",
+      "capture_square": "a8",
+      "check": false,
+      "before_in_check": false,
+      "root_ply_offset": 10
+    },
+    {
+      "uci": "f8a8",
+      "san": "Rxa8",
+      "actor": "black_rook_game_h8",
+      "victim": "white_rook_game_a1",
+      "capture_square": "a8",
+      "check": false,
+      "before_in_check": false,
+      "root_ply_offset": 11
+    },
+    {
+      "uci": "d6b6",
+      "san": "Rxb6",
+      "actor": "white_rook_game_h1",
+      "victim": "black_pawn_game_a7",
+      "capture_square": "b6",
+      "check": false,
+      "before_in_check": false,
+      "root_ply_offset": 18
+    }
+  ],
+  "early_immediate_rook_transaction": {
+    "arrival": {
+      "uci": "d1d6",
+      "san": "Rd6",
+      "actor": "white_rook_game_h1",
+      "victim": null,
+      "capture_square": null,
+      "check": false,
+      "before_in_check": false
+    },
+    "after_arrival_fen": "3r1rk1/2nn1pbp/1pqR2p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 b - - 5 20",
+    "all_legal_black_captures_of_d6_rook": [
+      {
+        "uci": "c6d6",
+        "san": "Qxd6",
+        "actor": "black_queen_game_d8",
+        "actor_review_root_square": "c6",
+        "captured_original": "white_rook_game_h1",
+        "after_fen": "3r1rk1/2nn1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN4K1 w - - 0 21",
+        "all_immediate_white_recaptures_on_d6": []
+      }
+    ],
+    "other_legal_black_replies_uci": [
+      "g8h8",
+      "f8e8",
+      "d8e8",
+      "d8c8",
+      "d8b8",
+      "d8a8",
+      "g7h8",
+      "g7h6",
+      "g7f6",
+      "d7b8",
+      "d7f6",
+      "c7e8",
+      "c7a8",
+      "c7e6",
+      "c7a6",
+      "c7d5",
+      "c7b5",
+      "c6a8",
+      "c6b7",
+      "c6d5",
+      "c6b5",
+      "c6e4",
+      "c6a4",
+      "h7h6",
+      "f7f6",
+      "g6g5",
+      "b6b5",
+      "c5c4",
+      "h7h5",
+      "f7f5"
+    ],
+    "in_check": false
+  },
+  "late_observed_rook_arrival_conditional_capture_transaction": {
+    "arrival": {
+      "uci": "d1d6",
+      "san": "Rd6",
+      "actor": "white_rook_game_h1",
+      "victim": null,
+      "capture_square": null,
+      "check": false,
+      "before_in_check": false
+    },
+    "after_arrival_fen": "r5k1/5pbp/1pqRn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 5 27",
+    "all_legal_black_captures_of_d6_rook": [
+      {
+        "uci": "c6d6",
+        "san": "Qxd6",
+        "actor": "black_queen_game_d8",
+        "actor_review_root_square": "c6",
+        "captured_original": "white_rook_game_h1",
+        "after_fen": "r5k1/5pbp/1p1qn1p1/4p3/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 0 28",
+        "all_immediate_white_recaptures_on_d6": [
+          {
+            "uci": "b4d6",
+            "san": "Qxd6",
+            "actor": "white_queen_game_d1",
+            "actor_review_root_square": "e2",
+            "captured_original": "black_queen_game_d8",
+            "after_fen": "r5k1/5pbp/1p1Qn1p1/4p3/2p1P3/4B1PP/1PP2PB1/6K1 b - - 0 28",
+            "all_immediate_opponent_recaptures_on_d6": []
+          }
+        ]
+      }
+    ],
+    "other_legal_black_replies_uci": [
+      "g8h8",
+      "g8f8",
+      "a8f8",
+      "a8e8",
+      "a8d8",
+      "a8c8",
+      "a8b8",
+      "a8a7",
+      "a8a6",
+      "a8a5",
+      "a8a4",
+      "a8a3",
+      "a8a2",
+      "a8a1",
+      "g7h8",
+      "g7f8",
+      "g7h6",
+      "g7f6",
+      "e6f8",
+      "e6d8",
+      "e6c7",
+      "e6g5",
+      "e6c5",
+      "e6f4",
+      "e6d4",
+      "c6e8",
+      "c6c8",
+      "c6d7",
+      "c6c7",
+      "c6b7",
+      "c6d5",
+      "c6c5",
+      "c6b5",
+      "c6e4",
+      "c6a4",
+      "h7h6",
+      "f7f6",
+      "g6g5",
+      "b6b5",
+      "c4c3",
+      "h7h5",
+      "f7f5"
+    ],
+    "in_check": false
+  },
+  "counterexample_held_c5_knight": {
+    "branch_kind": "constructed legal counter, not an engine-best claim",
+    "original_prefix": [
+      "d2b1",
+      "e8c7",
+      "e2d3",
+      "c5c4",
+      "d3d2",
+      "c7b5",
+      "b1c3",
+      "b5c3",
+      "d2c3",
+      "d8a8",
+      "a1a8",
+      "f8a8",
+      "c3d2",
+      "d7c5",
+      "d2b4"
+    ],
+    "different_black_reply": {
+      "uci": "h7h5",
+      "san": "h5",
+      "actor": "black_pawn_game_h7",
+      "victim": null,
+      "capture_square": null,
+      "check": false,
+      "before_in_check": false
+    },
+    "transaction": {
+      "arrival": {
+        "uci": "d1d6",
+        "san": "Rd6",
+        "actor": "white_rook_game_h1",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      },
+      "after_arrival_fen": "r5k1/5pb1/1pqR2p1/2n1p2p/1Qp1P3/4B1PP/1PP2PB1/6K1 b - - 1 27",
+      "all_legal_black_captures_of_d6_rook": [
+        {
+          "uci": "c6d6",
+          "san": "Qxd6",
+          "actor": "black_queen_game_d8",
+          "actor_review_root_square": "c6",
+          "captured_original": "white_rook_game_h1",
+          "after_fen": "r5k1/5pb1/1p1q2p1/2n1p2p/1Qp1P3/4B1PP/1PP2PB1/6K1 w - - 0 28",
+          "all_immediate_white_recaptures_on_d6": []
+        }
+      ],
+      "other_legal_black_replies_uci": [
+        "g8h8",
+        "g8f8",
+        "g8h7",
+        "a8f8",
+        "a8e8",
+        "a8d8",
+        "a8c8",
+        "a8b8",
+        "a8a7",
+        "a8a6",
+        "a8a5",
+        "a8a4",
+        "a8a3",
+        "a8a2",
+        "a8a1",
+        "g7h8",
+        "g7f8",
+        "g7h6",
+        "g7f6",
+        "c6e8",
+        "c6c8",
+        "c6d7",
+        "c6c7",
+        "c6b7",
+        "c6d5",
+        "c6b5",
+        "c6e4",
+        "c6a4",
+        "c5d7",
+        "c5b7",
+        "c5e6",
+        "c5a6",
+        "c5e4",
+        "c5a4",
+        "c5d3",
+        "c5b3",
+        "f7f6",
+        "g6g5",
+        "b6b5",
+        "h5h4",
+        "c4c3",
+        "f7f5"
+      ],
+      "in_check": false
+    }
+  },
+  "counterexample_open_dfile_recapture": {
+    "branch_kind": "constructed legal counter, not an engine-best claim",
+    "original_prefix": [
+      "d2b1",
+      "e8c7",
+      "e2d3",
+      "c5c4",
+      "d3d2"
+    ],
+    "different_following_moves": [
+      "c7e6",
+      "d2b4",
+      "d7f6"
+    ],
+    "following_events": [
+      {
+        "uci": "c7e6",
+        "san": "Ne6",
+        "actor": "black_knight_game_g8",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      },
+      {
+        "uci": "d2b4",
+        "san": "Qb4",
+        "actor": "white_queen_game_d1",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      },
+      {
+        "uci": "d7f6",
+        "san": "Nf6",
+        "actor": "black_knight_game_b8",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      }
+    ],
+    "transaction": {
+      "arrival": {
+        "uci": "d1d6",
+        "san": "Rd6",
+        "actor": "white_rook_game_h1",
+        "victim": null,
+        "capture_square": null,
+        "check": false,
+        "before_in_check": false
+      },
+      "after_arrival_fen": "3r1rk1/5pbp/1pqRnnp1/4p3/1Qp1P3/4B1PP/1PP2PB1/RN4K1 b - - 5 23",
+      "all_legal_black_captures_of_d6_rook": [
+        {
+          "uci": "d8d6",
+          "san": "Rxd6",
+          "actor": "black_rook_game_a8",
+          "actor_review_root_square": "d8",
+          "captured_original": "white_rook_game_h1",
+          "after_fen": "5rk1/5pbp/1pqrnnp1/4p3/1Qp1P3/4B1PP/1PP2PB1/RN4K1 w - - 0 24",
+          "all_immediate_white_recaptures_on_d6": [
+            {
+              "uci": "b4d6",
+              "san": "Qxd6",
+              "actor": "white_queen_game_d1",
+              "actor_review_root_square": "e2",
+              "captured_original": "black_rook_game_a8",
+              "after_fen": "5rk1/5pbp/1pqQnnp1/4p3/2p1P3/4B1PP/1PP2PB1/RN4K1 b - - 0 24",
+              "all_immediate_opponent_recaptures_on_d6": [
+                {
+                  "uci": "c6d6",
+                  "san": "Qxd6",
+                  "actor": "black_queen_game_d8",
+                  "actor_review_root_square": "c6"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "uci": "c6d6",
+          "san": "Qxd6",
+          "actor": "black_queen_game_d8",
+          "actor_review_root_square": "c6",
+          "captured_original": "white_rook_game_h1",
+          "after_fen": "3r1rk1/5pbp/1p1qnnp1/4p3/1Qp1P3/4B1PP/1PP2PB1/RN4K1 w - - 0 24",
+          "all_immediate_white_recaptures_on_d6": [
+            {
+              "uci": "b4d6",
+              "san": "Qxd6",
+              "actor": "white_queen_game_d1",
+              "actor_review_root_square": "e2",
+              "captured_original": "black_queen_game_d8",
+              "after_fen": "3r1rk1/5pbp/1p1Qnnp1/4p3/2p1P3/4B1PP/1PP2PB1/RN4K1 b - - 0 24",
+              "all_immediate_opponent_recaptures_on_d6": [
+                {
+                  "uci": "d8d6",
+                  "san": "Rxd6",
+                  "actor": "black_rook_game_a8",
+                  "actor_review_root_square": "d8"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "other_legal_black_replies_uci": [
+        "g8h8",
+        "f8e8",
+        "d8e8",
+        "d8c8",
+        "d8b8",
+        "d8a8",
+        "d8d7",
+        "g7h8",
+        "g7h6",
+        "f6e8",
+        "f6d7",
+        "f6h5",
+        "f6d5",
+        "f6g4",
+        "f6e4",
+        "e6c7",
+        "e6g5",
+        "e6c5",
+        "e6f4",
+        "e6d4",
+        "c6e8",
+        "c6c8",
+        "c6a8",
+        "c6d7",
+        "c6c7",
+        "c6b7",
+        "c6d5",
+        "c6c5",
+        "c6b5",
+        "c6e4",
+        "c6a4",
+        "h7h6",
+        "g6g5",
+        "b6b5",
+        "c4c3",
+        "h7h5"
+      ],
+      "in_check": false
+    }
+  },
+  "alternate_owned_Qd3_realization": {
+    "work_id": "work:6",
+    "key": "bac4d81ea451512738bc86b288fbaafa88c413f59a5b7e7b6163471dea317e57",
+    "depth": 16,
+    "white_score": {
+      "kind": "cp",
+      "value": 121
+    },
+    "moves": [
+      "d2b1",
+      "e8c7",
+      "e2d3",
+      "c5c4",
+      "d3d2",
+      "c7e6",
+      "b1c3",
+      "e6d4",
+      "c3d5",
+      "g8h8",
+      "a1a7",
+      "d7c5",
+      "a7c7",
+      "c6e6",
+      "c2c3",
+      "c5b3",
+      "d2e1",
+      "d4c2",
+      "e1e2",
+      "c2e3",
+      "d5e3"
+    ],
+    "contains_same_rook_Rd6": false
+  },
+  "new_engine_queries": 0
+}

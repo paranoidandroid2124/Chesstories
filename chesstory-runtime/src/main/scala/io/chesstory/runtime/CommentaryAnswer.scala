@@ -21,6 +21,35 @@ private[runtime] object CommentaryAnswer:
   final case class Action(move: MoveRef, detail: Detail) extends Statement:
     def references = List(move)
 
+  final case class ReferencePurpose(value: ReferencePurposeReading.Reading) extends Statement:
+    def references = value.arms.map(arm => MoveRef(arm.path, 0))
+
+  final case class ReferencePosition(value: ReferencePurposeReading.Reading,
+      arm: ReferencePurposeReading.Arm) extends Statement:
+    def references = List(MoveRef(arm.path, arm.through))
+    override def actionReferences = Nil
+
+  final case class FunctionPurpose(value: MovePurpose.Reading) extends Statement:
+    override def actionReferences = List(MoveRef(value.question.path, 0)) ++ value.question.plan.toList.flatMap(plan =>
+      (0 to plan.through).map(MoveRef(plan.path, _)) ++
+        (0 until plan.join).map(MoveRef(value.question.path, _)))
+    def references = actionReferences ++
+      (if value.activityContinuity.nonEmpty then value.branches.map(branch => MoveRef(branch.path, branch.through)) else Nil)
+
+  final case class FunctionReply(value: MovePurpose.Reading, branch: MovePurpose.Branch) extends Statement:
+    def references = List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.use), MoveRef(branch.path, branch.through)).distinct
+
+  final case class ChoicePurpose(value: PurposeChoice.Reading) extends Statement:
+    def references = value.arms.map(arm => MoveRef(arm.path, 0))
+  final case class ChoiceReply(value: PurposeChoice.Reading, arm: PurposeChoice.Arm) extends Statement:
+    def references = (List(MoveRef(arm.path, 0), MoveRef(arm.path, arm.through)) ++
+      arm.constrained.toList.map((offset, _) => MoveRef(arm.path, offset))).distinct
+    override def actionReferences = Nil
+  final case class ChoiceNeutralization(value: PurposeChoice.Neutralization) extends Statement:
+    def references = List(MoveRef(value.alternative.path, value.alternative.through),
+      MoveRef(value.reply.path, 1), MoveRef(value.reply.path, value.reply.through)).distinct
+    override def actionReferences = Nil
+
   final case class Material(path: PreparedPath, cost: CommentaryMaterialAccount.Cost) extends Statement:
     def references = cost.offsets.map(MoveRef(path, _))
     override def covered = cost.events.map(event => MoveRef(path, event.plyOffset))
@@ -183,7 +212,21 @@ private[runtime] object CommentaryAnswer:
 
   final case class ResourceDecision(value: FunctionalChoiceReading.Decision) extends Statement:
     def references = (value.sequence ++ value.other.toList ++
-      value.conditions.flatMap(_.references) ++ value.replyRoles.flatMap(_.references)).distinct
+      value.conditions.flatMap(_.references) ++ value.useRoles.flatMap(_.references) ++
+      value.replyRoles.flatMap(_.references)).distinct
+
+  final case class FirstReplyChoice(root: MoveRef, preferred: MoveRef, alternative: MoveRef,
+      quality: PrincipalVariationComparison.QualityBand) extends Statement:
+    def references = List(root, preferred, alternative)
+    override def actionReferences = Nil
+
+  final case class ExchangeFunction(value: ExchangeFunctionReading.Checked) extends Statement:
+    def references = (List(0, 1, 2).map(MoveRef(value.capture, _)) ++ value.access.toList.map(_.after) ++
+      value.pawnFile.toList.map(file => MoveRef(file.decline, 1))).distinct
+
+  final case class RetainedExchangeFunction(value: ExchangeFunctionReading.Checked) extends Statement:
+    def references = value.references
+    override def actionReferences = value.kept.toList.flatMap(role => (0 to role.use).map(MoveRef(role.path, _)))
 
   /** A later observed use has its own current supporters and a complete local
     * conditional capture price. This is factual detail, not another score or

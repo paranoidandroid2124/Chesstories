@@ -1,0 +1,1511 @@
+{
+  "schema_version": 1,
+  "title": "Chesstories 관계 구성요소의 현재 코드 능력 지도",
+  "date": "2026-10-04",
+  "source_root": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "scope": {
+    "mode": "read_only_current_product_sources",
+    "purpose": "전술 이름 목록이 아니라 기존 관계 원자·변화·시간 연결·질문/답 구성·표현 능력과 빠진 의미 연결을 구분한다.",
+    "artifact_only": "research/relation-coverage-map-20261004/code-inventory.json",
+    "excluded": [
+      "현재 다른 연구 작업의 WIP 자료",
+      "sealed/blind/confirm/migration 보호 자료",
+      "새 국면/최종 평가 prose",
+      "제품 변경·컴파일·테스트·출력 재생",
+      "새 엔진·Docker·브라우저·HTTP"
+    ],
+    "independent_human_reader_evaluation": "not_performed",
+    "model_in_product": "not_used_or_introduced"
+  },
+  "reading_rules": {
+    "presence": "자료형·producer·검증 함수·표현 경로가 현재 소스에 존재한다는 뜻이며 실제 기본 본문 사용이나 품질 확인과 같지 않다.",
+    "automatic_use": "현재 caller/selector/policy에서 실행 가능한 입구와 제한을 적는다. 이번 조사는 실행하지 않았으므로 런타임이 실제 그 입구를 선택한 비율을 말하지 않는다.",
+    "quality": "전체/범주별 품질 점수·커버율은 만들지 않는다. 코드의 존재와 불변식만으로 자연스러움·유용성·일반화 성공을 판정할 수 없다.",
+    "known_false_vs_unknown": "완전한 실제 인벤토리와 정확한 정체성의 부재만 false/absent다. 추적/자원 불명과 실제 제거, not-turn, 불법 행동은 각각 다르다.",
+    "legality_vs_geometry_vs_forcing": "기하학적 제어, 실제 차례의 합법수, 제공 수순의 실제 사용, 모든 관련 응수를 검증한 강제성은 별개의 주장 수준이다.",
+    "source_anchor_format": "각 anchor는 읽은 실제 현재 소스의 절대 경로와 1-based 줄 범위를 보존한다."
+  },
+  "big_conclusions": [
+    "현재의 부족함을 전술 이름의 수 부족으로 요약할 수 없다. 제어·레이·폰 위상·합법수·원래 기물 정체성·실제 포획/응수의 기반은 이미 존재한다.",
+    "특히 지원 존재, 합법적인 되잡기, 실제 되잡기에 사용된 지원, 끝에 남은 provider 가격은 서로 다른 검증 단계다. false/unknown/제거를 합치면 사실성과 완결성이 동시에 깨진다.",
+    "관계 변화의 canonical ownership과 닫힌 proof는 강하다. 그 사실을 어느 질문의 답으로 묶어 보여줄지, 평가차의 원인을 무엇으로 설명할지는 다른 책임이다.",
+    "역할 인계는 실제 replacement_after_capture의 지원 변화와 선택된 SupportTransfer/Retention/Use로 일부 읽을 수 있다. 임의 전략 역할 승계 또는 전체 동적 지원 의무 관리가 있는 것으로 확대하면 안 된다.",
+    "실제 사건의 temporal data가 본문보다 넓다. CaptureLink/OtherTargetGain/ActorEnd가 있어도 질문의 가격 episode에 사건을 귀속하는 Arm.account/selected-price 규칙은 아직 좁고 일부 간격·role-vector 규칙을 사용한다.",
+    "승격·종결은 기존 material/history의 실제 사실이다. selected capture victim의 승격 맥락과 confirmed terminal은 보존할 경로가 있지만 승격 포함 모든 비교가 한 일반 selector로 해결된 것은 아니다.",
+    "패스 위협 조사는 후보 발견용 opt-in 입구다. counterfactual report를 버리고 실제 legal comparison으로 다시 검사하며, 현재 위협 본문 reader는 즉시 균형 되잡기/공격자 제거 비교의 좁은 범위를 갖는다.",
+    "typed core/details, expression receipt와 proof/SAN 위치 연결은 사실 전달 보존에 도움이 된다. 좋은 질문 선정·자연스러운 영어·독자의 이해·실제 UX 품질은 이 코드 조사로 증명되지 않는다."
+  ],
+  "responsibility_boundaries": [
+    {
+      "layer": "관계 원자와 한 이동 변화",
+      "owners": [
+        "PositionRelationExtractor",
+        "ClosedRelationTransitionInventory",
+        "VerticalRelationContracts"
+      ],
+      "responsibility": "정확한 보드/차례/edge의 존재·부재·변화를 증명한다.",
+      "does_not_decide": "기본 질문의 중요도, 엔진 평가차 원인, 장기 전략 가치"
+    },
+    {
+      "layer": "실제 수순 시간 자료",
+      "owners": [
+        "ObservedLineProtocol",
+        "LineContinuationInvestigation",
+        "CommentaryFactReader"
+      ],
+      "responsibility": "원래 기물·현재 역할·구간 상태·실제 포획/제거·관측된 use를 source 안에서 읽는다.",
+      "does_not_decide": "그 전체 자료가 현재 질문에 필수인지 또는 force된 결과인지"
+    },
+    {
+      "layer": "조사 질문과 우선순위",
+      "owners": [
+        "CommentaryDiscovery",
+        "CommentaryInvestigation",
+        "CommentaryIdea",
+        "CommentaryJobReducer"
+      ],
+      "responsibility": "현재 근거의 조건/행동 차이를 검사할 실제 pair와 bounded continuation을 요청한다.",
+      "does_not_decide": "모든 국면의 최적 핵심 질문이나 모든 답 후보의 일반 중요도"
+    },
+    {
+      "layer": "선택한 답과 가격 구간",
+      "owners": [
+        "RootQuestionSummary.choose/selectedAnswer/Arm.account",
+        "MoveWorkProjection investigated/completeSelectedConditions/completeSelectedPrices",
+        "CommentaryMaterialAccount"
+      ],
+      "responsibility": "선택한 관계의 조건·사용·응수·실제 가격·확인된 끝을 같은 typed core에 귀속하고 details를 구성한다.",
+      "does_not_decide": "중요도 문제를 solved로 선언하거나 모든 나중 포획을 현재 대가로 승격"
+    },
+    {
+      "layer": "영어 표현과 전달 검사",
+      "owners": [
+        "CommentaryEnglish",
+        "RootQuestionSummary.realize/fromUnits",
+        "RuntimeProtocol",
+        "moveReviewSelection.ts",
+        "view/moveReview.ts"
+      ],
+      "responsibility": "선택한 typed 의미를 표현하고 expressed receipt·증명·발생 위치·기본/상세·화면 frame을 보존한다.",
+      "does_not_decide": "기본 내용의 새 선택이나 독자 품질의 자동 보증"
+    }
+  ],
+  "categories": [
+    {
+      "id": "occurrence_and_closed_truth",
+      "name": "정확한 발생 위치·근거 소유·확인된 부재",
+      "layers": [
+        "relation_atom",
+        "transition",
+        "verification"
+      ],
+      "presence": "위치 원자와 변화 결과는 semantic ID, 실제 replay edge, before/after 소유를 가진다. 닫힌 transition/vertical 결과와 부재·상태 증명은 기존 그래프에 정확히 한 번 materialize된다.",
+      "verified": "합법 수 또는 기하학적 제어의 부재는 그 인벤토리가 완전하고 정확한 질의 소유를 만족할 때 인증한다. 반환 자료가 없다는 사실 자체는 부재 증명이 아니다.",
+      "temporal_link": "정확한 법적 replay step과 발생 위치를 묶는다. 같은 FEN이나 같은 semantic 내용이 다른 수순의 occurrence/history를 합치지 않는다.",
+      "automatic_use": "그래프·position reader의 공통 자료 기반으로 사용된다. 모든 인증 사실을 자동으로 중요한 질문이나 본문으로 올리는 기능은 아니다.",
+      "expression": "source/evidence/line/occurrence 참조로 보존되며, 선택된 문장에는 필요한 참조만 포함할 수 있다.",
+      "missing_meaning": [
+        "인증된 사실이 지금 설명할 질문에 중요한지는 이 층이 결정하지 않는다.",
+        "근거 부모 관계는 원인 설명의 논리적 전제가 될 수 있지만 평가 차이의 원인을 분리해서 증명하지 않는다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 95,
+          "end_line": 112,
+          "symbol": "inventoryDomain"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1744,
+          "end_line": 1803,
+          "symbol": "absenceHolds/certifyAbsence/certifyState"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/ClosedRelationTransitionInventory.scala",
+          "start_line": 12,
+          "end_line": 46,
+          "symbol": "ClosedRelationTransitionInventory"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/ClosedRelationTransitionInventory.scala",
+          "start_line": 132,
+          "end_line": 193,
+          "symbol": "materializeOccurrence"
+        }
+      ]
+    },
+    {
+      "id": "physical_identity_and_current_role",
+      "name": "원래 기물·현재 위치/역할·확인된 제거",
+      "layers": [
+        "relation_atom",
+        "temporal_link"
+      ],
+      "presence": "원래의 side/role/square 정체성과 수순의 현재 위치·역할을 구분한다. 이동 변화는 beforeRole/afterRole를 보존하고, 포획 사건에는 original actor/victim과 ActorEnd가 있다.",
+      "verified": "pieceAfter의 바깥 None은 추적 불명, Some(None)은 확인된 제거다. 현재 위치에서 기물이 보인다고 같은 역할의 다른 원래 기물로 바꾸지 않는다.",
+      "temporal_link": "path/count별 identity snapshot을 읽고 실제 material event의 움직인 기물과 피포획 기물을 원래 정체성으로 역연결한다.",
+      "automatic_use": "Fact의 presence/location/role, 지원·공격·포획 연결, 승격 맥락에서 재사용한다.",
+      "expression": "PiecePresence/PieceRoute/MaterialEvents와 현재 역할을 보존하는 typed 설명으로 전달 가능하다.",
+      "missing_meaning": [
+        "기물 정체성 연결은 전략적 역할, 장기 배치 목적, 기물의 좋고 나쁨을 자동으로 뜻하지 않는다.",
+        "현재 정체성 자료가 불명이면 제거 또는 지원 종료로 추정할 수 없다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 143,
+          "end_line": 166,
+          "symbol": "RelationMoveTransitionWitness"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+          "start_line": 131,
+          "end_line": 167,
+          "symbol": "identitySnapshot/pieceAfter/supportAt"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 57,
+          "end_line": 68,
+          "symbol": "ActorEnd/Event"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 743,
+          "end_line": 770,
+          "symbol": "material identities and physical CaptureLink"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+          "start_line": 56,
+          "end_line": 65,
+          "symbol": "withSubject/withTarget"
+        }
+      ]
+    },
+    {
+      "id": "geometric_contacts",
+      "name": "빈칸·적 기물·아군 기물에 대한 기하학적 제어",
+      "layers": [
+        "relation_atom",
+        "verification"
+      ],
+      "presence": "GeometricControl은 controller/side/target square를 읽고 현재 target을 empty/friendly/enemy로 구분할 수 있다. 고정 이동 패턴과 슬라이더의 실제 ray 점유를 사용한다.",
+      "verified": "같은 위치의 완전한 기하학적 제어 인벤토리에서 present와 absent를 구별한다. 공격자 제거와 불명도 별도다.",
+      "temporal_link": "여러 위치에서 같은 원래 기물의 대상 제어를 비교하거나 연속성을 검사할 수 있다.",
+      "automatic_use": "공격/지원/회피 후보와 ControlState/ControlContrast를 만드는 입력이다. 접촉 사실만으로 포획 가능성·위협의 강제성·이득을 인정하지 않는다.",
+      "expression": "현재/유지/철회한 제어와 원래 대상의 위치를 표현할 수 있다.",
+      "missing_meaning": [
+        "같은 공격자의 여러 접촉만으로 피할 수 없는 두 대상 손실을 증명할 수 없다.",
+        "킹 이동 가능성이나 합법적인 포획 여부는 합법수 인벤토리를 추가로 확인해야 한다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 168,
+          "end_line": 177,
+          "symbol": "RelationControlTarget"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 245,
+          "end_line": 251,
+          "symbol": "GeometricControl"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1980,
+          "end_line": 2045,
+          "symbol": "static geometric production"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+          "start_line": 83,
+          "end_line": 110,
+          "symbol": "control/check atom"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3596,
+          "end_line": 3628,
+          "symbol": "PieceControl to local attack/support/evasion"
+        }
+      ]
+    },
+    {
+      "id": "legal_actions_and_king_exposure",
+      "name": "실제 합법수와 자기 킹 노출에 따른 제약",
+      "layers": [
+        "relation_atom",
+        "verification",
+        "transition"
+      ],
+      "presence": "LegalMove는 실제 차례의 mover/destination/capture를 갖는다. geometric resource가 합법수 목록에 없을 때 정확한 pseudo-move 후 킹을 공격하는 controller를 읽을 수 있다.",
+      "verified": "legal_move/legal_capture는 not_turn, actor/target removed, 불완전한 인벤토리를 구분한다. ordinaryCaptureKeepsKingSafe는 차례와 무관한 일부 일반 포획의 동결 보드 안전성 질의이며 합법 연속 수순을 생산하지 않는다.",
+      "temporal_link": "정확한 실제 수 뒤의 board effect와 제한된 포획·체크 응수 자료를 묶는다.",
+      "automatic_use": "조사 후보와 실제 수순 입증에 사용한다. Arm.covers는 기하 제어와 absolute ray pin 배제를 함께 쓰는 별도 보수적 guard다.",
+      "expression": "가능한 되잡기, 제한된 기물, 킹 노출, ReleasedCapture/체크 응수의 근거를 전달할 타입이 있다.",
+      "missing_meaning": [
+        "기하학적 제어는 합법 포획과 다르다.",
+        "ordinaryCaptureKeepsKingSafe는 킹 포획·앙파상·승격의 범용 안전성 판정이 아니며 실제 차례나 후속 상대 응수를 증명하지 않는다.",
+        "covers의 ray-pin 배제는 모든 합법 수를 대체하는 일반 합법성 해석기가 아니다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1581,
+          "end_line": 1603,
+          "symbol": "ordinaryCaptureKeepsKingSafe"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1612,
+          "end_line": 1639,
+          "symbol": "legalRestrictionFor/legal inventory"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 2187,
+          "end_line": 2213,
+          "symbol": "legalMoveRelations"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+          "start_line": 68,
+          "end_line": 104,
+          "symbol": "legal predicates"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 508,
+          "end_line": 518,
+          "symbol": "unpinned/covers"
+        }
+      ]
+    },
+    {
+      "id": "owned_relation_changes",
+      "name": "이동에 귀속된 관계 변화와 낮은 층 근거 결합",
+      "layers": [
+        "transition",
+        "verification"
+      ],
+      "presence": "GeometricControlSetDelta는 before/after target/controller와 removed/established controller를 보존한다. vertical 결과는 포획 후 되잡기, 체크 응수, 폰 변화, 스테일메이트를 낮은 층 증명으로 결합한다.",
+      "verified": "같은 canonical transition에서 나온 증명·부재·상태 전제가 모두 해소되고 proof stage가 맞아야 발생 위치의 결과로 인정한다.",
+      "temporal_link": "한 이동의 전후 변화는 소유하지만, 여러 후속 선택이 달라진 긴 PV의 평가 원인을 한 전후 변화에 환원하지 않는다.",
+      "automatic_use": "MoveObservation/Fact 비교와 local condition 후보에 사용된다. vertical producer도 실제 해당 kind가 활성화된 수에만 결과를 만든다.",
+      "expression": "Action, ChangedLines, ControlContrast, CheckingMove 및 구조 변화 자료로 전달 가능하다.",
+      "missing_meaning": [
+        "관계가 생겼다/사라졌다는 인증은 그 관계가 실제 이후에 쓰였다는 증명과 별개다.",
+        "변화가 여러 개일 때 무엇을 질문의 조건으로 고를지는 별도의 선택 책임이다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 260,
+          "end_line": 310,
+          "symbol": "control-set delta and vertical details"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+          "start_line": 1107,
+          "end_line": 1140,
+          "symbol": "resultsFor proof validation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+          "start_line": 1731,
+          "end_line": 1758,
+          "symbol": "vertical producer kinds"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3609,
+          "end_line": 3616,
+          "symbol": "group changed stationary-piece lines"
+        }
+      ]
+    },
+    {
+      "id": "geometric_support_states",
+      "name": "지원의 존재·부재·제거·불명",
+      "layers": [
+        "relation_atom",
+        "verification"
+      ],
+      "presence": "원래 provider와 target의 현재 정체성에 대해 같은 편의 기하학적 지원을 읽는다. SupportPoint는 unknown, actor_removed, target_removed, present, absent를 분리한다.",
+      "verified": "positive에는 실제 control source가 필요하고 negative에는 완전한 control/identity 인벤토리가 필요하다. Predicate는 같은 편의 서로 다른 기물만 지원 질의로 받는다.",
+      "temporal_link": "root 전후 또는 제공 구간에서 지원 상태 유지/변화를 검사할 수 있다.",
+      "automatic_use": "위험한 아군의 TargetSupport 후보, Support/SupportRetention/ControlContrast 조건에서 사용된다. legal supportCandidates는 새 provider의 제어를 찾는 후보 투영이다.",
+      "expression": "지원 추가/유지와 현재 적의 접촉은 말할 수 있다. 지원이 실제로 유효한 되잡기였다는 주장은 별도 use/legality 증거가 있어야 한다.",
+      "missing_meaning": [
+        "support present는 합법적인 되잡기 보장이 아니다.",
+        "공격받는 대상이라는 기하학만으로 반드시 지켜야 할 대상 또는 좋은 방어라고 결론내릴 수 없다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFact.scala",
+          "start_line": 65,
+          "end_line": 100,
+          "symbol": "support value domain/validPredicate"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 1091,
+          "end_line": 1102,
+          "symbol": "SupportPoint.support"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1647,
+          "end_line": 1674,
+          "symbol": "supportCandidates"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3621,
+          "end_line": 3626,
+          "symbol": "Support local candidate"
+        }
+      ]
+    },
+    {
+      "id": "support_use_retention_transfer_price",
+      "name": "실제로 사용된 지원·지원 인계/유지·provider의 가격",
+      "layers": [
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "DirectSupportUse는 대상 포획→같은 실제 포획자 제거를 원래 provider가 수행한 사건으로 읽는다. SupportTransfer/SupportedCapture/SupportRetention/SupportRecapture는 조건과 실제 사용을 typed 내용으로 보존한다.",
+      "verified": "actual CaptureLink, target square의 지원, provider/capturer의 동일 정체성 및 필요한 구간 위치 유지가 필요하다. bounded negative direct_support_use에는 구간 전체의 material/identity/support 완전성이 필요하다.",
+      "temporal_link": "현재 선택한 root 지원의 대상/공격자/지원 상태를 양쪽 arm에서 읽고, 선택된 provider 손실과 사용 이후 제거를 실제 연속 공격·역할 관계로 닫는다.",
+      "automatic_use": "이미 선택한 root Support 또는 명시된 SupportUse/Retention에서만 추가 가격을 구성한다. 전역의 모든 지원 또는 provider의 전체 기물 생애는 seed가 되지 않는다.",
+      "expression": "지원이 실제로 되잡기에 쓰였거나 다른 provider의 출발 뒤 남았다는 내용과 해당 provider 손실을 함께 전달할 수 있다.",
+      "missing_meaning": [
+        "actual use는 유일한/강제적인 방어였다는 증명이 아니다.",
+        "움직여서 관계가 끊기거나 역할이 바뀐 provider의 뒤쪽 손실은 현재 가격 episode로 자동 확대하지 않는다.",
+        "선택되지 않은 중요 지원을 처음 발견·우선 배치하는 정책은 별도 문제다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 925,
+          "end_line": 992,
+          "symbol": "DirectSupportUse/query positive and bounded negative"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 68,
+          "end_line": 90,
+          "symbol": "typed support statements"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3109,
+          "end_line": 3120,
+          "symbol": "cross-arm selected Support target ownership"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3145,
+          "end_line": 3195,
+          "symbol": "selected support/actual-use price continuity"
+        }
+      ],
+      "role_replacement": {
+        "present": "replacement_after_capture는 잃은 원래 아군과 실제 되잡은 replacement의 before/after 지원을 비교한다. KingCaptureOpportunity의 actual legal unavailable 또는 DirectSupportRecapture 사용을 기존 질문 premise로 만들 수 있다.",
+        "not_present": "같은 역할 기물이 되잡았다는 이유로 모든 임무를 승계했다는 판정, 전략적으로 좋은 기물 교환/나쁜 기물 교환의 일반 가치 판단은 아니다.",
+        "anchors": [
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+            "start_line": 308,
+            "end_line": 347,
+            "symbol": "replacement support premises and observed alternatives"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+            "start_line": 833,
+            "end_line": 843,
+            "symbol": "actual physical replacement_after_capture"
+          }
+        ]
+      },
+      "dynamic_duty_change": {
+        "present": "새 provider의 gained support와 old provider의 첫 확인된 departure를 연결하고, 그동안 같은 original target의 지원이 유지된 SupportRetention을 읽는다. actual use와 선택된 provider 가격도 별도다.",
+        "not_present": "기물 이동·복수 provider 추가/제거·대상 이동·새 공격 생성이 얽힌 전체 지원 의무를 최적 배분하거나, 떠날 자유/희생의 필요성을 일반적으로 판단하지 않는다.",
+        "anchors": [
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "start_line": 500,
+            "end_line": 532,
+            "symbol": "selected gained support and old-provider first departure"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start_line": 615,
+            "end_line": 635,
+            "symbol": "lostDuty sole-provider/stationary target/capturer guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blocked_and_cleared_corridors",
+      "name": "레이의 막힘·열림과 실제 사용",
+      "layers": [
+        "relation_atom",
+        "transition",
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "RayBarrier는 슬라이더 방향과 순서가 있는 점유 기물을 읽는다. BlockedAttack/BlockedLineTransfer/ClearedRoute/RelativeAlignment/ReleasedCapture 타입이 있다.",
+      "verified": "ClearedRoute는 비워진 칸과 corridor가 실제 다음 user의 이동 경로 또는 실제 대상에 대한 새 선에 쓰였고 중간 재점유가 없었는지 검사한다. BlockedLineTransfer는 동일 blocker/slider 및 ray 관계 유지가 필요하다.",
+      "temporal_link": "root가 비운 칸, 정확한 user의 실제 사용, 이후 blocker 교체·선 개방을 같은 source 안에서 연결한다.",
+      "automatic_use": "projection의 corridor/blocker/relative-alignment reader와 선택한 use의 조건 보완에 들어온다. 상대적 전후 선형 배치는 실제 포획/행동 효과와 별도다.",
+      "expression": "통로를 비워 실제 이동을 허용한 것, 공격 선을 막아 다른 기물이 들어온 것, 정렬과 종료를 표현할 수 있다.",
+      "missing_meaning": [
+        "같은 선이나 같은 수순에 등장했다는 이유만으로 clearance의 목적을 부여하지 않는다.",
+        "선형 배치만으로 상대 기물이 움직일 수 없거나 중요한 기물을 잃는다고 주장할 수 없다.",
+        "현재 reader의 stationary/corridor 조건을 벗어난 실제 이동하는 선의 장기 활용은 일반적으로 포괄하지 않는다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 325,
+          "end_line": 330,
+          "symbol": "RayBarrier"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 92,
+          "end_line": 102,
+          "symbol": "blocked/cleared typed statements"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 121,
+          "end_line": 127,
+          "symbol": "alignment/released capture"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 535,
+          "end_line": 613,
+          "symbol": "blocker handoff and corridor use"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 930,
+          "end_line": 958,
+          "symbol": "alignment ending separate from later exchange"
+        }
+      ]
+    },
+    {
+      "id": "vacation_reoccupation_and_routes",
+      "name": "칸을 비운 행동·첫 재점유·같은 기물의 실제 경로",
+      "layers": [
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "PieceRoute/RouteUse/SquareReoccupation으로 원래 기물의 이동 경로와 다른 아군의 재점유를 표현할 수 있다.",
+      "verified": "첫 재점유에서 빈칸 episode를 닫고 unknown 위치도 연결을 막는다. 다른 원래 기물이 실제로 그 칸에 도착해야 한다.",
+      "temporal_link": "같은 원래 mover의 다음 실제 이동과 확인된 기능, 또는 비운 칸의 첫 실제 entrant를 연결한다.",
+      "automatic_use": "projection의 실제 경로·재점유 reader에 사용된다. 다음 이동의 사실과 원래 이동의 전략적 목적은 구별한다.",
+      "expression": "이 칸을 비운 뒤 제공 수순에서 어떤 기물이 들어와 어떤 확인된 기능을 했는지 전달 가능하다.",
+      "missing_meaning": [
+        "다음 수를 최초 수의 강제 계획이나 의도로 자동 해석하지 않는다.",
+        "독립적인 평범한 이동들의 전체 경로를 설명할 가치가 있다는 중요도 판단은 이 관계 자체에 없다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 53,
+          "end_line": 55,
+          "symbol": "RouteUse"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 104,
+          "end_line": 106,
+          "symbol": "SquareReoccupation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 147,
+          "end_line": 149,
+          "symbol": "PieceRoute"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 614,
+          "end_line": 625,
+          "symbol": "next actual mover route"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 730,
+          "end_line": 761,
+          "symbol": "first reoccupation boundary"
+        }
+      ]
+    },
+    {
+      "id": "attack_evasion_and_other_targets",
+      "name": "공격·회피의 같은 대상과 다른 대상의 실제 가격",
+      "layers": [
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "Attack/Evades/TargetResponse/ControlContrast와 원래 공격자·대상 정체성으로 공격 시작, 실제 회피, 이후 상태를 나타낸다.",
+      "verified": "이미 선택된 root Evades 또는 root-after TargetResponse가 공격 episode를 소유해야 한다. 같은 초기 공격자가 다른 원래 대상을 실제로 잡고 그 대상에 대한 covers 관계가 구간 동안 유지되어야 다른 target 가격을 추가한다.",
+      "temporal_link": "Evades는 root-before, TargetResponse는 root-after에서 시작한다. 늦게 처음 생긴 새 공격이나 다른 공격자의 포획은 이 episode의 가격이 아니다.",
+      "automatic_use": "completeSelectedPrices의 선택된 공격 내용 보완으로 사용된다. 현재 root 아닌 일반 후속 TargetResponse를 모두 새 중요 질문으로 확장하는 것은 아니다.",
+      "expression": "한 대상이 피한 뒤 같은 공격자가 실제로 다른 대상을 잡았다는 관측 내용을 전달할 수 있다.",
+      "missing_meaning": [
+        "동시에 두 기물을 제어한다는 기하학만으로 피할 수 없는 fork 또는 forced win을 말할 수 없다.",
+        "어느 공격/대응 질문을 기본에 먼저 둘지는 별도 선택 정책이다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 39,
+          "end_line": 51,
+          "symbol": "TargetResponse"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 555,
+          "end_line": 563,
+          "symbol": "singleEvasion"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3125,
+          "end_line": 3143,
+          "symbol": "same attacker other-target observed price"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3300,
+          "end_line": 3319,
+          "symbol": "targetResponseActions"
+        }
+      ]
+    },
+    {
+      "id": "actual_captures_and_recovery_links",
+      "name": "실제 포획·포획자 제거·회복 뒤 손실",
+      "layers": [
+        "temporal_link",
+        "verification"
+      ],
+      "presence": "Reading은 actual material 사건 전체와 original actor/victim, capturer의 ActorEnd, CaptureLink, OtherTargetGain, RecoveryLoss를 보존한다.",
+      "verified": "CaptureLink는 앞서 실제 포획한 원래 기물이 나중 실제 피포획 기물이라는 관계다. elapsed 수만으로 전술적 강제성이나 현재 질문과의 관련성을 증명하지 않는다.",
+      "temporal_link": "같은 capturer의 나중 제거와 회복 기물의 다시 발생한 손실을 추적할 수 있다. negative ledger interval의 다른 target gain은 원장상의 회복 연결이다.",
+      "automatic_use": "시간 자료는 조사 premise 생성과 Arm.account 및 선택된 관계 가격의 입력이다. 관계 전체를 기본 본문에 모두 포함하지 않는다.",
+      "expression": "PieceExchange/MaterialEvents 또는 정확한 가격 account로 실제 포획·되잡기·남은 기물 상태를 전달 가능하다.",
+      "missing_meaning": [
+        "나중 같은 기물을 잡았다는 사실은 처음 포획의 필연적 대가 또는 최초 수의 실수 원인을 뜻하지 않는다.",
+        "회복이 나타났어도 그 뒤 가격과 종결을 현재 주장이 필요로 하는지 결정해야 한다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 70,
+          "end_line": 79,
+          "symbol": "CaptureLink/OtherTargetGain/RecoveryLoss"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 747,
+          "end_line": 770,
+          "symbol": "actual identities and capturer removal"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 791,
+          "end_line": 814,
+          "symbol": "other-target ledger gain"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start_line": 864,
+          "end_line": 904,
+          "symbol": "response premise discovery and Reading completeness"
+        }
+      ]
+    },
+    {
+      "id": "scoped_material_accounts_and_compensation",
+      "name": "선택된 대가 구간·다른 칸 보상·물질 계산",
+      "layers": [
+        "answer_content",
+        "verification",
+        "temporal_link"
+      ],
+      "presence": "Cost는 공통 같은 역할 교환과 양쪽 추가 손실을 실제 source event와 함께 보존한다. 선택된 관계는 Arm.account와 공통 completeSelectedPrices를 사용한다.",
+      "verified": "calculate는 선택한 첫~마지막 capture 사이의 모든 material 변화가 포함되어야 인정하며 승격/비포획 사건은 일반 capture account로 계산하지 않는다. 같은 source의 실제 event가 겹칠 때만 가격 계정을 합친다.",
+      "temporal_link": "같은 포획자 제거, 체크 응수, 제한된 지원 의무 손실, 다른 target 보상 등을 계정 경계에 따라 보존한다. quiet 마지막 위치는 material interval 확장 anchor가 아니다.",
+      "automatic_use": "이미 선택된 공격/지원 episode의 실제 가격에 추가된다. sparse MaterialEvents 자체를 구간 선택 증명으로 보지 않고, 보완할 관계 가격이 없으면 임의 중간 material 전체를 끌어오지 않는다.",
+      "expression": "간결한 역할별 가격을 기본에 두고 정확한 event는 proof/detail에 보존할 수 있다.",
+      "missing_meaning": [
+        "Arm.account에는 elapsed==1, 바로 다음 offset 보상, 특정 체크-응수 간격, 같은 부호 role vector 등의 좁은 기존 정책이 남아 있다.",
+        "같은 공격자의 후속 대응이 독립 거래인지 현재 episode의 의미를 바꾸는 대가인지는 모든 경우에 해결되지 않는다.",
+        "역할 수에 따른 물질 변화량은 종결의 실제 우세나 엔진 평가의 원인을 대체하지 않는다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+          "start_line": 5,
+          "end_line": 47,
+          "symbol": "Cost/calculate"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 566,
+          "end_line": 599,
+          "symbol": "account/span and immediate root reply"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 602,
+          "end_line": 711,
+          "symbol": "checkReplies/lostDuty/capture links/otherTargetGains/grouping"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3197,
+          "end_line": 3226,
+          "symbol": "selected seeds/delayed recovery/RecordedEnd guard"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3227,
+          "end_line": 3259,
+          "symbol": "exact-event overlap and source interval"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 181,
+          "end_line": 193,
+          "symbol": "compact material wording"
+        }
+      ],
+      "narrow_existing_duty_rule": "lostDuty는 손실 직전 target의 유일 provider가 해당 defender인지 확인하고 target/capturer가 같은 위치에 남으며, 이후 아군 controller가 없는 연속 구간에서 실제 target 손실이 나타나는 경우에 한정된다. 새 provider 등장이나 target/capturer 이동이 의미를 바꾸면 이 규칙의 입구를 벗어난다."
+    },
+    {
+      "id": "promotion_context_and_role_changes",
+      "name": "승격한 원래 폰과 이후 포획의 맥락",
+      "layers": [
+        "relation_atom",
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "ObservedLineMaterialEvent에 before/after role와 promotionGainCp가 있고 identity tracking은 승격 이후에도 원래 폰을 보존한다. MaterialEvents는 포획과 승격을 같은 실제 이동으로 표현할 수 있다.",
+      "verified": "선택된 MaterialEvents 포획 피해자의 original identity와 앞선 promotion actor가 같고, 현재 피포획 role가 실제 승격 role와 맞아야 앞선 승격을 그 포획의 맥락으로 보완한다.",
+      "temporal_link": "앞선 실제 승격→그 새 기물의 실제 손실/되잡기를 같은 source로 연결한다. 원래 퀸과 승격한 퀸을 역할 이름만으로 혼동하지 않는다.",
+      "automatic_use": "completeSelectedConditions의 선택된 MaterialEvents context에는 공통 보완이 있다. 다른 selectedAnswer reader는 promotion-free gate를 유지하고 choose의 승격 비교는 매우 좁은 별도 패턴이다.",
+      "expression": "MaterialEvents가 승격 사건과 이후 가격을 전달한다. ordinary Cost의 승격 거부는 유지된다.",
+      "missing_meaning": [
+        "모든 승격 경주·promotion 앞뒤의 공격/교환 질문이 같은 일반 selector에서 해결되는 것은 아니다.",
+        "선택된 포획 victim 맥락을 넘어 같은 경기에 나오는 다른 폰들의 승격 사건 전체를 추가하지 않는다.",
+        "승격 role별 장기 우세나 강제 경주 결과는 추가 실제 비교가 필요하다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 1053,
+          "end_line": 1111,
+          "symbol": "ObservedLineMaterialEvent/LineMaterialSummary"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 244,
+          "end_line": 249,
+          "symbol": "selectedAnswer promotion gate"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 767,
+          "end_line": 799,
+          "symbol": "isolated narrow promotion reader"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3049,
+          "end_line": 3067,
+          "symbol": "selected captured original pawn promotion context"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 232,
+          "end_line": 238,
+          "symbol": "MaterialEvents promotion rendering"
+        }
+      ]
+    },
+    {
+      "id": "checks_and_actual_responses",
+      "name": "실제 체커·합법 체크 응수·체크 연속",
+      "layers": [
+        "relation_atom",
+        "transition",
+        "temporal_link",
+        "answer_content"
+      ],
+      "presence": "CreatedCheckResponseInventory는 실제 checkers와 킹 목적지 제어, 합법 응수, terminal을 갖는다. 응수는 king move/capture checker/interpose를 구분한다. RootCheckResponse와 CheckSequence가 있다.",
+      "verified": "checkingMoveSources는 이미 생성한 합법 수의 실제 after.check를 사용하여 움직인 기물 외의 discovered checker도 포함한다. 응수 모드는 정확한 legal resource로 증명된다.",
+      "temporal_link": "체크 사건과 다음 실제 응수의 참조를 함께 보존하고 마지막 미응답 체크는 실제 automatic terminal 또는 명시된 RecordedEnd가 있어야 제한된 설명으로 남긴다.",
+      "automatic_use": "transition producer, check-response 조사, 선택된 statement의 closure와 receipt 검사에서 쓰인다.",
+      "expression": "누가 체크하며 실제 응수가 킹 이동/체커 포획/차단인지를 typed statement와 보드 관계로 전달한다.",
+      "missing_meaning": [
+        "체크라는 이유만으로 현재 질문의 가장 중요한 선택 또는 엔진 평가 원인으로 올리지 않는다.",
+        "finite PV 마지막 체크의 다음 수가 없다고 메이트 또는 강제 종결로 말할 수 없다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 280,
+          "end_line": 297,
+          "symbol": "created/root check details"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+          "start_line": 47,
+          "end_line": 77,
+          "symbol": "check response modes/control witnesses"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+          "start_line": 1641,
+          "end_line": 1645,
+          "symbol": "legal checkingMoveSources"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 129,
+          "end_line": 139,
+          "symbol": "CheckingMove/CheckReply/CheckSequence"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 71,
+          "end_line": 87,
+          "symbol": "visibleAccount check reply duty"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3215,
+          "end_line": 3223,
+          "symbol": "bounded actual RecordedEnd"
+        }
+      ]
+    },
+    {
+      "id": "pawn_topology_passage_and_files",
+      "name": "폰 연결·구조 변화·전진 통로·파일 점유",
+      "layers": [
+        "relation_atom",
+        "transition",
+        "answer_content"
+      ],
+      "presence": "닫힌 폰 상태에는 doubled/isolated/passed, geometric protected passer, front occupant, connected component, phalanx/지원 방향, enemy pawn contact가 있다. 파일의 양쪽 폰 점유와 한/두 칸 전진 자원도 읽는다.",
+      "verified": "PawnTopologyTransition은 실제 전후 변경 facet을 갖는다. 공개 Fact의 pawn_property는 passed/isolated/doubled에 한정된다. pawn_advance는 빈 전방 통로이며 합법성·차례·킹 안전성과 독립이다.",
+      "temporal_link": "실제 전진, 앞칸 차단, 연결/긴장/통과폰 상태 변경과 해당 제공 수순의 사용을 연결할 자료가 있다.",
+      "automatic_use": "기본 후보는 doubled 변화, passed, pawn block, rook file 및 제한된 PawnAdvanceOption/PawnCaptureChoice/PawnAdvanceReply 경로를 사용한다. graph의 전체 topology facet가 모두 자동 기본 해설로 쓰이지 않는다.",
+      "expression": "전진 가능성을 남기는 차이, 실제 폰 응수, 같은 target의 다른 capturer, open/semi-open file 진입 등 제한된 내용을 표현한다.",
+      "missing_meaning": [
+        "빈 파일·빈 통로·geometrically protected passer 자체는 유리한 장기 전략이나 반드시 해야 할 전진을 뜻하지 않는다.",
+        "약한 칸·전초기지·폰 다수의 지속적 활용·장기 봉쇄 계획의 가치 판단은 이 Fact 도메인의 직접 답이 아니다.",
+        "현재 one-step-versus-two-step option 등 구체적인 구성 패턴을 모든 폰 운용 비교의 일반화로 확대할 수 없다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+          "start_line": 157,
+          "end_line": 243,
+          "symbol": "pawn connection/state/facets"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+          "start_line": 311,
+          "end_line": 324,
+          "symbol": "pawn base relations"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+          "start_line": 112,
+          "end_line": 142,
+          "symbol": "public pawn atoms and advance/legality distinction"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 812,
+          "end_line": 870,
+          "symbol": "narrow pawn option/capture choice"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3629,
+          "end_line": 3635,
+          "symbol": "doubled local meaning"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3703,
+          "end_line": 3713,
+          "symbol": "rook file occupancy candidate"
+        }
+      ]
+    },
+    {
+      "id": "confirmed_end_and_recorded_horizon",
+      "name": "확인된 종결과 단순 수순 끝의 구별",
+      "layers": [
+        "verification",
+        "answer_content"
+      ],
+      "presence": "현재 history의 AutomaticTerminal은 checkmate/stalemate/insufficient material/fivefold/75-move를 구별한다. draw claim의 available/unknown은 automatic terminal과 별도다. Answer에는 Terminal과 RecordedEnd가 구분된다.",
+      "verified": "Terminal은 정확한 source 마지막 수와 automaticTerminal 값이 맞아야 한다. RecordedEnd는 같은 실제 path 마지막이며 다음 응수 증거를 만들어 주지 않는다.",
+      "temporal_link": "실제 확인된 수순 종결은 그 앞의 물질 가격과 함께 남긴다. 같은 FEN이라도 repetition/history 소유가 다르면 종결 자료를 공유하지 않는다.",
+      "automatic_use": "root pair에 terminal이 있으면 terminal comparison을 먼저 구성하는 입구가 있다. 마지막 recorded check는 엄격한 bounded account와 참조 검사에 사용된다.",
+      "expression": "중간에 무엇을 얻었는지와 끝에 어떤 결과가 확인되었는지를 함께 전달할 수 있다.",
+      "missing_meaning": [
+        "제공 수순의 종결을 최초 수 뒤 모든 응수의 강제 결과로 확대하지 않는다.",
+        "finite horizon 자체를 승리/무승부 종결로 삼지 않는다.",
+        "부족한 repetition history는 반복 무승부 부재나 가능성의 확정이 아니다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/PositionRuleAssessment.scala",
+          "start_line": 7,
+          "end_line": 49,
+          "symbol": "AutomaticTerminal and rules"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/PositionRuleAssessment.scala",
+          "start_line": 52,
+          "end_line": 74,
+          "symbol": "history knowledge for draws"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 158,
+          "end_line": 174,
+          "symbol": "RecordedEnd/Terminal"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 152,
+          "end_line": 180,
+          "symbol": "terminal with preceding observed price"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 360,
+          "end_line": 363,
+          "symbol": "Terminal source check"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 2747,
+          "end_line": 2755,
+          "symbol": "terminal/legacy/threat summary entrance"
+        }
+      ]
+    },
+    {
+      "id": "matched_comparisons_and_mistake_attribution",
+      "name": "같은 국면·차례의 실제 선택 비교와 실수 판정의 범위",
+      "layers": [
+        "question",
+        "verification",
+        "answer_content"
+      ],
+      "presence": "CommentaryInvestigation.Answer는 같은 work의 실제 reference/alternative line, execution key, depth, evaluationRelation, occurrence 및 qualityBand를 보존한다. PV material/event/root-fact 차이와 convergence/divergence를 구별할 수 있다.",
+      "verified": "comparisonReady는 실제 두 평가의 depth/준비 상태와 동일 search 소유를 요구한다. 다른 work나 다른 차례의 평가를 임의 합쳐 비교하지 않는다. FEN convergence는 occurrence/history 공유를 뜻하지 않는다.",
+      "temporal_link": "후속 child 비교도 정확한 child anchor를 소유한 pair로 평가할 수 있다. root 책임과 수순 뒤쪽의 상대 선택 책임을 섞으면 안 된다.",
+      "automatic_use": "root alternative 조사, quiet functional contrast, selected pair의 설명 후보에 사용한다. engine의 Close/Separated는 해설 품질 점수가 아니다.",
+      "expression": "확인된 두 선택의 차이와 실제 수순의 결과·가격을 말할 수 있으며 기존 engine move-choice verdict와 연결할 자료가 있다.",
+      "missing_meaning": [
+        "엔진 평가가 갈렸다는 사실만으로 특정 relation이 그 차이의 원인이라고 말할 수 없다.",
+        "실수 라벨과 구체적으로 허용한 응수의 해설을 자동으로 한 교훈으로 합치는 일반 정책은 이 comparison receipt에 없다.",
+        "같은 미래 행동 또는 같은 FEN은 수순의 전략 목적·동등성을 무조건 보장하지 않는다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryInvestigation.scala",
+          "start_line": 149,
+          "end_line": 203,
+          "symbol": "same-owned comparison readiness and pairedAnswer"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/PrincipalVariationComparison.scala",
+          "start_line": 20,
+          "end_line": 39,
+          "symbol": "engine qualityBand/eligibleQuietFocus"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/PrincipalVariationComparison.scala",
+          "start_line": 150,
+          "end_line": 193,
+          "symbol": "owned PV material/event/root relations"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 1595,
+          "end_line": 1616,
+          "symbol": "same-FEN convergence with separate owners"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/TargetResponseInvestigation.scala",
+          "start_line": 21,
+          "end_line": 46,
+          "symbol": "child-owned pairAnswer"
+        }
+      ]
+    },
+    {
+      "id": "bounded_questions_and_threat_candidates",
+      "name": "구간 질의·조건 비교·추가 조사·패스 위협 후보",
+      "layers": [
+        "question",
+        "investigation",
+        "verification"
+      ],
+      "presence": "Fact는 declared/comparison/premise source와 point/event/interval을 갖고 FactComparison은 값/시간 비교, FactGroup은 all/any 조건 결합을 제공한다. discovery는 구체적 action destination·actual target과 변화 조건으로 질문을 만든다. 패스 가정 후보도 있다.",
+      "verified": "서로 양립 가능한 bound path의 proof만 결합한다. event absent와 unavailable/path-end를 구별한다. local probe는 후보 생성용이며 admission 없이 공개 fact sample/absence 결과로 쓰지 않는다.",
+      "temporal_link": "bounded interval에 관계 유지·위반, 실제 action event, 조건 차이를 질의하고 부족한 continuation을 요청할 수 있다.",
+      "automatic_use": "조사는 예산/requirement 한도 및 기존 질문 dependency role로 우선순위를 둔다. ThreatProbe는 investigateChoices와 probeThreats가 모두 켜져야 하며 policy 기본값은 false다. pass 결과 중 첫 capture/check 후보만 추출하고 점수/PV는 실제 packet에서 버린다.",
+      "expression": "검증된 질문의 condition/action/test를 QuestionFocus로 전달 가능하다. RootThreatSummary는 공격자 제거 대 root 지원 뒤 즉시 균형 recapture의 좁은 패턴을 typed answer로 연결한다.",
+      "missing_meaning": [
+        "일반적으로 모든 위협을 찾거나 모든 방어 선택을 완전히 비교하지 않는다.",
+        "pass 가정의 score/PV는 실제 수순·평가가 아니며 zugzwang/tempo 손실의 결론으로 쓰지 않는다.",
+        "Fact all/any와 before/after는 논리/시간 조건이지 모든 관계의 체스적 목적 또는 인과를 자동 구성하는 기능이 아니다.",
+        "조사 질문의 우선순위와 본문 내용의 중요도는 동일 정책이 아니다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFact.scala",
+          "start_line": 14,
+          "end_line": 63,
+          "symbol": "source/time/event question domain"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "start_line": 131,
+          "end_line": 189,
+          "symbol": "bounded event identity selection"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "start_line": 258,
+          "end_line": 299,
+          "symbol": "interval complete/refuted/partial semantics"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "start_line": 328,
+          "end_line": 392,
+          "symbol": "bound proof comparisons/all-any groups"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "start_line": 419,
+          "end_line": 435,
+          "symbol": "no unadmitted published probe"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "start_line": 43,
+          "end_line": 54,
+          "symbol": "bounded specific-action discovery"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "start_line": 117,
+          "end_line": 129,
+          "symbol": "bounded investigation choices"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "start_line": 150,
+          "end_line": 164,
+          "symbol": "dependency roles"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+          "start_line": 38,
+          "end_line": 45,
+          "symbol": "policy opt-in defaults"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+          "start_line": 900,
+          "end_line": 914,
+          "symbol": "pass candidates and discard counterfactual report"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+          "start_line": 1215,
+          "end_line": 1239,
+          "symbol": "bounded threat origins and actual investigation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryThreat.scala",
+          "start_line": 8,
+          "end_line": 47,
+          "symbol": "pass hypothesis and actual legal candidate compare"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+          "start_line": 18,
+          "end_line": 22,
+          "symbol": "promotion-free threat reader"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+          "start_line": 48,
+          "end_line": 93,
+          "symbol": "immediate balanced support/removal comparison"
+        }
+      ]
+    },
+    {
+      "id": "question_owned_core_detail_and_closure",
+      "name": "질문이 소유한 기본 내용·독립 상세·조건과 대가의 보존",
+      "layers": [
+        "question",
+        "answer_content",
+        "verification"
+      ],
+      "presence": "Answer는 question/core/details/evidence, Section은 typed statement/required/focus를 갖는다. SelectedQuestion은 문장 생성 전에 confirmedFacts를 보존한다. QuestionFocus는 exact Key·Mechanism·같은 pair answer를 참조한다.",
+      "verified": "investigated 경로는 root-owned changed condition과 exact actual action/use를 확인한다. completeSelectedConditions가 선택한 use에 필요한 기존 조건을 보완하고 선택된 관계 가격·promotion context를 공통 경로에 넣는다.",
+      "temporal_link": "조건→실제 사용→선택된 응수/가격→확인된 끝을 같은 source로 유지할 수 있다. quiet end 또는 주변 기능이 무조건 독립 중요 질문을 만들지는 않는다.",
+      "automatic_use": "answerChoice에는 terminal→convergence→exchange→investigated→legacy→threat/contact/physical의 기존 우선 입구가 있다. RootQuestionSummary.choose는 서로 다른 확정 후보가 하나일 때 선택하고 여러 후보의 일반 중요도를 점수로 해결하지 않는다.",
+      "expression": "같은 typed 선택에서 기본과 상세를 만들 수 있다. realization 실패는 선택을 지우거나 다른 쉬운 문장으로 바꾸지 않고 summary_unavailable로 보존한다.",
+      "missing_meaning": [
+        "독립적으로 완결된 여러 설명 중 무엇을 먼저 보여줄지 일반 중요도 정책은 여전히 미해결이다.",
+        "physical/fallback에는 bundle/history/function을 바탕으로 여러 사실을 본문에 모으는 잔존 경로와 로컬 priority 숫자가 있다.",
+        "same support/attack episode 보완은 현재 selected root/use에 한정되며 모든 후속 응수의 일반적인 귀속은 해결하지 않는다.",
+        "공통 completion과 source verification은 가능하지만 모든 관계 statement를 arbitrary input에서 다시 체스적으로 증명하는 범용 validator는 아니다; upstream reader guard를 신뢰한다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start_line": 187,
+          "end_line": 195,
+          "symbol": "Focus/Section/Answer"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "start_line": 19,
+          "end_line": 25,
+          "symbol": "Mechanism/QuestionFocus/Key"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "start_line": 68,
+          "end_line": 134,
+          "symbol": "narrow functionalEffect/mechanismWitness"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "start_line": 218,
+          "end_line": 244,
+          "symbol": "exact tested comparison focus"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 1556,
+          "end_line": 1582,
+          "symbol": "wire question ownership"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 2797,
+          "end_line": 2818,
+          "symbol": "physical bundle/history action content"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 2882,
+          "end_line": 2944,
+          "symbol": "investigated exact condition/action/account"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 2983,
+          "end_line": 2994,
+          "symbol": "one selection/common completion/unavailable"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3037,
+          "end_line": 3096,
+          "symbol": "selected condition/promotion/price completion"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start_line": 3321,
+          "end_line": 3346,
+          "symbol": "uses from selected core only"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 716,
+          "end_line": 765,
+          "symbol": "SelectedQuestion/one distinct choice"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 345,
+          "end_line": 364,
+          "symbol": "shared validator limited to material/source/end"
+        }
+      ]
+    },
+    {
+      "id": "typed_expression_receipts_and_board_links",
+      "name": "영어 표현·표현 소유·증명 참조·SAN/보드 연결",
+      "layers": [
+        "expression",
+        "delivery",
+        "verification"
+      ],
+      "presence": "CommentaryEnglish는 typed Statement를 문자열과 정확한 MoveRef 조각으로 표현하고 expressed receipt를 반환한다. Unit은 inline refs, proof_moves, covered/required/recorded-end/focus를 구별한다. front parser/view가 구조화된 basic/detail units를 읽는다.",
+      "verified": "선택된 required 참조와 material coverage는 typed expressed receipt가 소유해야 한다. source/path/occurrence와 actual capture/check reply를 재검사하며 inline SAN 전부 표기를 proof 유지의 대용으로 삼지 않는다.",
+      "temporal_link": "MoveRef의 line/occurrence가 정확한 보드 위치를 가리킨다. 기본과 상세가 같은 선택 답에서 만들어지고 확인된 단계만 frame으로 연결된다.",
+      "automatic_use": "summary_question은 이 경로로 전달된다. summary_unavailable일 때 frontend는 legacy 본문을 기본 답으로 대신 보여주지 않는다. legacy paragraphs에는 아직 문자열 SAN 토큰 해석 경로가 남아 있다.",
+      "expression": "표현에서 동일 actor의 action, actual support use, checking capture, 동일 presence를 병합할 수 있다. relation proof board에는 공격/지원 화살표와 대상 동그라미, 합법/제한 recapture·체크 응수 도형 코드가 있다.",
+      "missing_meaning": [
+        "typed receipt의 사실/참조 보존은 자연스러운 영어, 독자 이해, 핵심 질문의 좋은 선택을 증명하지 않는다.",
+        "compact Material 문장은 원장 구간 가격을 말해도 가격 episode의 범위나 여러 비용 설명의 관계를 독자에게 충분히 드러내지 못할 수 있다.",
+        "semantic 선택 책임이 완전히 제거된 것은 아니다; renderedSection의 typed 흡수와 legacy 문장/SAN 해석, 표현 형식 한도와 일부 결합이 남는다.",
+        "이번 코드 조사에서는 실제 hover/click 모바일 사용성이나 화면 성능을 확인하지 않았다."
+      ],
+      "quality": {
+        "status": "not_assessed_by_this_inventory",
+        "basis": "현재 소스의 표현·검증·호출 입구만 조사했다. 출력 재생, 독립 독자 평가, 새 국면 품질 판정을 하지 않았다."
+      },
+      "anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 15,
+          "end_line": 16,
+          "symbol": "Part/Rendered"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 181,
+          "end_line": 193,
+          "symbol": "compact interval price wording"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 219,
+          "end_line": 248,
+          "symbol": "typed statements/material/piece exchange"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start_line": 405,
+          "end_line": 494,
+          "symbol": "typed absorption and expressed receipts"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 16,
+          "end_line": 40,
+          "symbol": "Unit proof versus inline references"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 55,
+          "end_line": 109,
+          "symbol": "source/coverage/reply/focus checks"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start_line": 410,
+          "end_line": 451,
+          "symbol": "required statement receipts and bounded delivery units"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+          "start_line": 1366,
+          "end_line": 1396,
+          "symbol": "summary reference/proof parser"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+          "start_line": 2373,
+          "end_line": 2414,
+          "symbol": "typed SAN frames and residual legacy tokens"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+          "start_line": 2442,
+          "end_line": 2462,
+          "symbol": "selected core/detail and unavailable notice"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+          "start_line": 4091,
+          "end_line": 4119,
+          "symbol": "relationship proof shapes"
+        }
+      ]
+    }
+  ],
+  "failure_localization_without_scores": [
+    {
+      "boundary": "fact_or_identity_unavailable",
+      "meaning": "필요 원자/실제 path/현재 정체성 또는 complete inventory가 없어서 값을 못 읽는다. 실제 부재로 세지 않는다."
+    },
+    {
+      "boundary": "temporal_relation_not_proved",
+      "meaning": "사건은 있으나 같은 원래 기물·역할·연속 공격/지원/실제 제거 관계가 현재 guard를 만족하지 않는다."
+    },
+    {
+      "boundary": "question_not_selected",
+      "meaning": "근거가 있어도 질문 importance/selector 입구가 선택하지 않았다. 자료 부족이나 영어 실패와 분리한다."
+    },
+    {
+      "boundary": "selected_content_not_closed",
+      "meaning": "질문은 골랐지만 그 주장을 바꾸는 실제 응수·가격·승격/종결 맥락을 current account/condition completion이 보존하지 못한다."
+    },
+    {
+      "boundary": "delivery_not_preserved",
+      "meaning": "선택한 typed core의 required/covered/proof가 표현 receipt나 wire/front 검사에서 살아남지 못했다."
+    },
+    {
+      "boundary": "readability_or_usefulness_unassessed",
+      "meaning": "typed 내용과 참조가 전달되어도 핵심 이해·자연스러움·범위 명료성은 독자 판독이 필요하다. 이번 inventory에서는 시행하지 않았다."
+    }
+  ],
+  "claims_to_avoid": [
+    "코드 타입이 있으므로 해당 의미를 모든 국면에서 자동 설명한다.",
+    "기하학적으로 제어하므로 합법적으로 잡거나 반드시 얻는다.",
+    "같은 수순/같은 공격자가 뒤에 등장하므로 최초 이동의 인과적 가격이다.",
+    "같은 역할의 replacement가 되잡았으므로 원래 기물의 모든 전략 의무를 인계했다.",
+    "finite PV 또는 패스 가정의 결과를 실제 강제 승리/무승부로 말한다.",
+    "모든 물질 변화가 본문에 있으므로 핵심적이고 좋은 해설이다.",
+    "표현 receipt/참조 검사가 통과하므로 영어·UX·일반화가 완성되었다."
+  ],
+  "current_source_manifest": [
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+      "sha256": "e06ea16aca0eba0c0a3920b25159cd97eab779cd9a6ef883c2a30886db711bfd",
+      "line_count": 2310
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+      "sha256": "8c2b6ba1afa8409547d4986b48ae8def1d4c9486d26fc647b298ef26a7027747",
+      "line_count": 2863
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/ClosedRelationTransitionInventory.scala",
+      "sha256": "8fbb60a0b729900b70218f2a646ee4e19080fc80e5c4ca742fee6f19c5208102",
+      "line_count": 425
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+      "sha256": "9a13fefd8b3e59dfb96ef1c9e611a060ac2488927ed67eb427ebebabb01c56e6",
+      "line_count": 2399
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/CanonicalPositionHistory.scala",
+      "sha256": "41535bd06733be5884ee8d055a3806d67157f5dbf173c6669804b305330398d5",
+      "line_count": 433
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/PositionRuleAssessment.scala",
+      "sha256": "0cd89e6c5543f591dadcd391853d32f25c529b95305052321cb432ee992b8b29",
+      "line_count": 171
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFact.scala",
+      "sha256": "4631e62e6e5dc084f44e73936d6ede774b2b31a0ebbd0eb56c5c651e7cbfe760",
+      "line_count": 122
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+      "sha256": "3b5d76b710d50604e1d480836b20c2040f3e36f60d19dcfc9fb7980f2d59ef12",
+      "line_count": 150
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+      "sha256": "82a0f1e4d9db7235d3851b123a10b8c111629b255a9c20a4da88e252085cb0d6",
+      "line_count": 467
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+      "sha256": "cd9118520247d7ed94ec45ffaeca6fe13221b3c476f2f8714e215511d9b2d09a",
+      "line_count": 304
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+      "sha256": "5498b0208c7638f2405a880d465b0213e28ccd2e752eb3fb5cbed052003f3efd",
+      "line_count": 1106
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+      "sha256": "ea76a816672c746f2c08657491060fd26cf33b271d6e5604947ea269bfcff5b3",
+      "line_count": 47
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "sha256": "5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d",
+      "line_count": 195
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "aa8a2a46f6e008d7a8177976e5fffc0dc089219ff6bbf53ce4bbd783b6b8b268",
+      "line_count": 1977
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "d84ad623cd0a16229e04a5d283b5d492333bc9c8b205534e58f08434d0c0547b",
+      "line_count": 3720
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "4fde5c21db96898a8b93f9107bcd9ef59b0ba9de9c38e57a7f74cd36d866c83e",
+      "line_count": 524
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryInvestigation.scala",
+      "sha256": "447b72135c5e871bcb63b534a43a59dde8258d465140ff32cae34b069e7af44e",
+      "line_count": 237
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/TargetResponseInvestigation.scala",
+      "sha256": "a494b895a41d2ecbe13e8df257ad3c56a10abffe2371512a6127c9648ae0b434",
+      "line_count": 381
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "sha256": "cf64ef3cfdade4afff4f715d2fe1b4976220529346038aa79605d96f9cf9d977",
+      "line_count": 1489
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryThreat.scala",
+      "sha256": "192ee3e4cf2e06a305e63963a1e5fb2a17752ba73dc5558188b2bd0b65a73107",
+      "line_count": 50
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+      "sha256": "0c5eabc42c01d431701040c6a3150cb65bf434cc8bf0199d09682a8e8fbd1eb5",
+      "line_count": 93
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "sha256": "9a97e8a76f9e7c155323dd17f40e532d205419820ad46ffe1f4ce35aa9d65a8f",
+      "line_count": 3028
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/PrincipalVariationComparison.scala",
+      "sha256": "05aca472f02fce53a619e2c531977aaf28d9b3d202831342add172553f9a3c2f",
+      "line_count": 195
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "sha256": "4f63ebfa8143867149784268d71c0860ca4e446ecd789dadc7404672e257bcf0",
+      "line_count": 494
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "sha256": "cd0a6b4ca53a917a5c5bd05962baa57bb54924fadca13893e0a861c42555cd20",
+      "line_count": 847
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+      "line_count": 8144
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+      "sha256": "532a10bb52ca1aed8f390617287cac87e6e92e8a768c8719d62b4a8660daa39d",
+      "line_count": 4215
+    }
+  ]
+}

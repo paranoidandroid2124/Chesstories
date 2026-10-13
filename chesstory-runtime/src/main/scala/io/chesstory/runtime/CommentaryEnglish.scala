@@ -263,7 +263,306 @@ private[runtime] object CommentaryEnglish:
             capture.side != attacker.side && capture.capturedRole == attacker.role && capture.square == attacker.square))
       case _ => false
 
+  private def exchangeActivity(q: MovePurpose.Question, state: ExchangeActivity.State): String =
+    val task = q.activity.get
+    val successor = if state.mover.isEmpty then state.successor.fold(
+      " The original " + q.actor.role.name + " has been exchanged; its old square is no longer occupied by a friendly piece.")(piece =>
+      " " + piece.possessiveName + " has taken over " + q.square + " after the " + q.actor.role.name + " exchange.")
+    else " The original " + q.actor.role.name + " remains in play."
+    val file = state.file.map(work =>
+      " " + work.actor.possessiveName + " uses the open " + work.file + "-file" +
+        work.opponent.fold(".")(p => " to confront " + p.possessiveName + "; the file is still contested.")).getOrElse("")
+    val deployment = if state.retreats.nonEmpty && state.central.nonEmpty then
+      " " + state.central.map(_.possessiveName).mkString(" and ") +
+        (if state.central.size == 1 then " is" else " are") + " already active in the centre, while " +
+        state.retreats.map(r => r.current.possessiveName + " has returned from " + r.original.at +
+          (if r.exits.isEmpty then "" else " and needs another move to come forward, for example toward " + r.exits.take(2).mkString(" or ")) +
+          (if r.contested.isEmpty then "" else "; " + r.contested.flatMap(_._2).distinct.map(_.possessiveName).mkString(" and ") +
+            (if r.contested.flatMap(_._2).distinct.size == 1 then " controls " else " control ") +
+            r.contested.map(_._1).mkString(" and "))).mkString("; ") +
+        ". This is the deployment cost left by this continuation."
+    else ""
+    val pawn = state.pawn.map(work => " The pawn advance to " + work.actor.at + " brings it into contact with " +
+      work.targets.map(_.possessiveName).mkString(" and ") +
+      (if work.actor.side == q.actor.side then ", beginning the pawn confrontation." else
+        ", so the opponent has started the pawn confrontation first.") +
+      (if work.continuing && work.actor.side == q.actor.side && work.guards.nonEmpty then " " +
+        work.guards.map(_.possessiveName).mkString(" and ") + " control " + work.next +
+        " for a possible further advance; those pieces retain a role in the pawn plan." else "")).getOrElse("")
+    val queens = if task.openFile.nonEmpty && q.actor.role.name == "queen" then
+      if state.queensGone then " Both queens are gone: the opponent's queen can no longer use the open file or attack when the pawns open lines. The remaining pieces and pawns carry the plan."
+      else " Queens remain, so the opponent still has queen counterplay when pawn exchanges open lines; this is not the same result as exchanging queens."
+    else ""
+    val changed = state.targets.collect { case (old, Some(now)) if old.at != now.at =>
+      " The original " + old.at + " " + old.role.name + " has moved to " + now.at + "; pressure on its former square is no longer the same attack."
+    }.mkString
+    successor + file + deployment + pawn + queens + changed
+
   def statement(value: Statement): List[Part] = value match
+    case ReferencePurpose(value) =>
+      val ref = value.reference
+      val played = value.played
+      val occupation = if ref.moved.at == value.square then "places the " + ref.moved.role.name + " on "
+        else "prepares piece play on "
+      val shield = ref.shields.map((attacker, target) => " It also blocks " + attacker.possessiveName +
+        " from attacking " + target.possessiveName + ".").mkString
+      List[Part]("The evaluation compares ", MoveRef(ref.path, 0), " with ", MoveRef(played.path, 0),
+        (if value.referencePreferred then ". The reference move " else ". The engine ranks the played move first here; the alternative ") +
+        occupation + value.square +
+        " with support from " + ref.guards.map(_.possessiveName).mkString(" and ") + "." + shield +
+        " The played move instead uses " + played.moved.possessiveName + " to attack " +
+        played.attacks.map(_.possessiveName).mkString(" and ") + "; " + value.square +
+        " has no pawn support. The replies distinguish preparation from committing the piece or pawn now.")
+    case ReferencePosition(value, arm) =>
+      val supported = if arm.remainingGuards.nonEmpty then
+        value.square + " is still covered by " + arm.remainingGuards.map(_.possessiveName).mkString(" and ")
+      else value.square + " still has no pawn support"
+      val occupant = arm.occupant.map(p => "; " + p.possessiveName + " occupies it").getOrElse("")
+      val retained = if arm == value.reference then arm.retainedMover.map(p =>
+        if p.at == value.square then " The supported " + p.role.name + " remains on that post."
+        else "").getOrElse("") else if arm.retainedMover.isEmpty then
+        " The original " + arm.actor.at + " " + arm.actor.role.name + " has been exchanged away."
+      else ""
+      val reserve = if arm == value.reference && value.played.retainedMover.isEmpty then value.retainedChoice.map(p =>
+        " " + p.possessiveName + " is retained here; the played continuation gives that piece up.").getOrElse("")
+      else ""
+      val entry = arm.replyAt.filter(p => p.side != arm.actor.side && Set("knight", "bishop")(p.role.name) &&
+        p.at == arm.moved.at && arm.replyGuards.nonEmpty).map(p =>
+        " The reply leaves " + p.possessiveName + " on the square vacated by the captured " + arm.actor.role.name +
+          ", supported by " + arm.replyGuards.map(_.possessiveName).mkString(" and ") + ".").getOrElse("")
+      List[Part]("After ", MoveRef(arm.path, arm.through), ", " + supported + occupant + "." + retained + reserve + entry)
+    case ChoicePurpose(value) =>
+      val q = value.question
+      List[Part](MoveRef(value.arms.head.path, 0), " and ", MoveRef(value.arms.last.path, 0),
+        " both occupy " + q.square + "; the difference is what remains after the opponent exchanges or reorganizes.") ++
+        Option.when(value.escaped.nonEmpty)(List[Part](" ", MoveRef(value.arms.head.path, 0), " also moves the " +
+          q.actor.role.name + " out of the attack from " + value.escaped.map(_.possessiveName).mkString(" and ") + ".")).toList.flatten
+    case ChoiceNeutralization(value) =>
+      List[Part]("In the recorded ", MoveRef(value.alternative.path, 0), " line, exchanging the " + value.guard.at + " " +
+        value.guard.role.name + " removes the guard of " + value.post + ": the opposing " + value.target.role.name +
+        " reaches it without any " + value.guard.sideName + " piece controlling it. Against ", MoveRef(value.reply.path, 0),
+        ", the ", MoveRef(value.reply.path, 1), " continuation keeps " + value.retainedGuard.possessiveName +
+        " controlling " + value.post + "; that opposing " +
+        value.target.role.name + " instead ends on " + value.opponent.at + " after the exchange.")
+    case ChoiceReply(value, arm) =>
+      val q = value.question
+      val alternative = arm.actor != q.actor
+      val blocked = if arm.blocksRoute && arm.constrained.nonEmpty then " Moving the " + arm.actor.role.name + " there leaves the original " +
+        q.actor.role.name + " on " + q.actor.at + " and occupies its route to " + q.square + "." else ""
+      val retained = if !alternative then "" else arm.retained.current.fold(
+        " In this continuation that original " + q.actor.role.name + " is subsequently captured.")(p =>
+        " The original " + q.actor.role.name + " remains on " + p.at +
+          (if arm.retained.open.isEmpty then "; its unoccupied or enemy-occupied destinations are all controlled by the opponent." else "."))
+      val activeTargets = arm.state.targets.collect {
+        case (original, Some(current)) if original != current && Set("bishop", "knight")(current.role.name) &&
+            Set('c', 'd', 'e', 'f')(current.at.head) &&
+            (if current.side.white then Set('4', '5', '6')(current.at.last) else Set('3', '4', '5')(current.at.last)) =>
+          " The opposing " + original.at + " " + original.role.name + " reaches " + current.at +
+            " and retains a central post in this line."
+      }.mkString
+      val entries = arm.entry.map(entry => " After these exchanges, the earlier double attack via " + entry.square +
+        " no longer has both targets: " + (if entry.remaining.isEmpty then "neither remains" else
+          "only " + entry.remaining.map(_.possessiveName).mkString(" and ") + " remains") +
+        ". Legal entry alone does not prove a gain.").mkString
+      List[Part]("For ", MoveRef(arm.path, 0), ":" + blocked + retained +
+        exchangeActivity(q.copy(path = arm.path, actor = arm.actor), arm.state) + activeTargets + entries) ++
+        arm.constrained.toList.flatMap { (offset, _) => List[Part](" Before ", MoveRef(arm.path, offset),
+          ", its route to " + q.square + " is occupied by its own piece, and every available destination of that " +
+          q.actor.role.name + " is controlled by the opponent. The recorded continuation pays for this restricted deployment.") }
+    case FunctionPurpose(value) if value.question.activity.nonEmpty =>
+      val q = value.question
+      val task = q.activity.get
+      val purpose = task.openFile.fold(
+        " challenges " + task.targets.map(_.possessiveName).mkString(" and ") +
+          " while allowing an exchange on " + q.square +
+          ". The point is to preserve active pieces after simplification; the successor and the opponent's remaining deployment decide whether that works.")(
+        file => " contests the open " + file + "-file against " + task.targets.map(_.possessiveName).mkString(" and ") +
+          ", offering a " + q.actor.role.name + " exchange. Exchanging removes that opposing piece's counterplay; retreating keeps it for the later pawn struggle.")
+      val continuity = value.activityContinuity.filter(_ => value.choice.isEmpty).toList.map {
+        case ExchangeActivity.Continuity.Deployment(opponent) =>
+          " Both replies below leave the original " + opponent.at + " " + opponent.role.name +
+            " on the back ranks while " + q.actor.sideName.capitalize + " already has a minor piece in the centre." +
+            " They preserve that deployment idea through different exchanges, not the original " + q.actor.role.name + "'s exact attack."
+        case ExchangeActivity.Continuity.PawnPressure(square, targets, next) =>
+          " Both replies below retain the pawn plan: advance to " + square + " against " +
+            targets.map(_.possessiveName).mkString(" and ") + ", with pieces controlling " + next +
+            "." + (if value.branches.flatMap(_.activity).map(_.queensGone).distinct.size == 2 then
+              " The pawn plan matches, while queen counterplay differs." else "")
+      }
+      List[Part](MoveRef(q.path, 0), purpose) ++ continuity
+    case FunctionReply(value, branch) if value.question.activity.nonEmpty =>
+      List[Part]("After ", MoveRef(branch.path, 1), ", at the end of this continuation:" +
+        exchangeActivity(value.question, branch.activity.get))
+    case FunctionPurpose(value) if value.question.support.nonEmpty =>
+      val q = value.question
+      val task = q.support.get
+      val pending = task.post != q.rootMove.slice(2, 4)
+      val release = task.release
+      List[Part](MoveRef(q.path, 0),
+        (if pending then " brings the " + q.actor.role.name + " closer to " + task.post +
+          ", where it could help guard " else " adds a guard to ") + task.asset.possessiveName +
+          ". The plan is to keep this passed pawn supported while a rook becomes active elsewhere. " +
+          task.blockader.possessiveName + (if task.asset.at.last == (if task.asset.side.white then '7' else '2') then
+            " blocks its promotion; keeping the pawn keeps that " + task.blockader.role.name + " occupied with the blockade. " else
+            " blocks its advance; keeping the pawn maintains pressure on that blockade. ") +
+          task.guards.map(_.possessiveName).mkString(" and ") +
+          (if task.guards.size == 1 then " currently supports the pawn." else " currently support the pawn.") +
+          (if pending then " The king's takeover is still pending." else "") +
+          " A possible rook transfer is " + release.rook.at + "–" + release.move.slice(2, 4) +
+          ", aiming down the " + release.entry.head + "-file toward " + release.entry +
+          ". That move was already legal; the added support concerns who can keep guarding the pawn." +
+          (if release.clearance.isEmpty then "" else " Continuing down that file requires " +
+            release.clearance.map(_.possessiveName).mkString(" and ") + " to clear the way.") +
+          " This is a conditional plan, not a forced continuation.")
+    case FunctionReply(value, branch) if value.question.support.nonEmpty =>
+      val q = value.question
+      val task = q.support.get
+      val state = branch.support.get
+      val activity = state.activity.fold(
+        " continues the preparation; no rook transfer has yet been shown at this point.")(piece =>
+        " switches " + piece.possessiveName + " to the " + piece.at.head + "-file" +
+          (if branch.contacts.isEmpty then "." else ", targeting " + branch.contacts.map(_.possessiveName).mkString(" and ") + "."))
+      val duty = if state.sameDuty then
+        " The same pawn stays on " + task.asset.at + " with continuing support; here " +
+          state.guards.map(_.possessiveName).mkString(" and ") +
+          (if state.guards.size == 1 then " carries that duty." else " share that duty.")
+      else state.asset.fold(" The original pawn has been removed, so this is no longer the same guarding task.")(piece =>
+        if piece.at != task.asset.at then " The original pawn has advanced to " + piece.at + "; its old blockade is no longer the same task."
+        else " The pawn has not had continuous support in this line; its presence alone does not establish the same guarding function.")
+      val provider = if state.provider.nonEmpty then " The moved " + q.actor.role.name + " is contributing to that guard here."
+        else if task.post == q.rootMove.slice(2, 4) then " The moved " + q.actor.role.name + " no longer supplies its added guard here."
+        else " The planned " + q.actor.role.name + " support has not taken over here."
+      val blockade = if state.sameDuty && !state.blockaderRemains then
+        " The original blockader has left " + task.blockader.at + "; retaining the pawn's support does not retain the same restriction on that piece."
+      else ""
+      List[Part]("After ", MoveRef(branch.path, 1), ", ", MoveRef(branch.path, branch.use), activity + duty + provider + blockade)
+    case FunctionPurpose(value) if value.question.plan.nonEmpty =>
+      val q = value.question
+      val plan = q.plan.get
+      val meeting: List[Part] = if plan.path == q.path then Nil else
+        List(" The move orders ") ++ sequence((0 until plan.join).map(MoveRef(q.path, _)).toList) ++
+          List(" and ") ++ sequence((0 until plan.join).map(MoveRef(plan.path, _)).toList) ++
+          List(" reach the same arrangement; the second line shows the longer preparation.")
+      val cleared = (plan.start + 1 until plan.use).filter(offset => offset % 2 == 0 &&
+        !plan.route.contains(offset) && plan.route.exists(later => later > offset &&
+          plan.path.moves(later).slice(2, 4) == plan.path.moves(offset).take(2))).toList
+      val preparation = cleared.flatMap(offset => List[Part](" ", MoveRef(plan.path, offset),
+        " first clears " + plan.path.moves(offset).take(2) + " for that route.")) ++
+        plan.clearance.map(piece => " This requires " + piece.possessiveName + " to leave " + piece.at + " first.")
+      val retained = value.retained.flatMap(duty => List[Part](" This leaves " + duty.actor.possessiveName +
+        " attacking " + duty.targets.map(_.possessiveName).mkString(" and ") +
+        (if duty.actor.role.name == "rook" && duty.targets.exists(_.at.head == duty.actor.at.head) then
+          s" along the ${duty.actor.at.head}-file" else "") +
+        (if duty.guards.isEmpty then "." else ", while guarding " + duty.guards.map(_.possessiveName).mkString(" and ") + ".")))
+      val guards = value.released.flatMap(guard =>
+        List[Part](" The rearrangement gives up the original " + q.actor.role.name + "'s guard of " +
+          guard.target.possessiveName +
+          (if guard.remaining.isEmpty then ", leaving it without geometric support." else
+            "; " + guard.remaining.map(_.possessiveName).mkString(" and ") +
+              (if guard.remaining.size == 1 then " still provides support." else " still provide support."))) ++
+          guard.restored.toList.flatMap(offset => List[Part](" ", MoveRef(plan.path, offset), " restores that guard.")))
+          ++ value.released.filter(_.restored.isEmpty).flatMap(guard => guard.option.map(square =>
+            " A knight on " + square + " would restore the guard of " + guard.target.possessiveName + "."))
+      val route = if plan.potential then
+        List[Part](" A possible regrouping route is " + plan.squares.mkString("–") +
+          "; this is a plan whose execution depends on the replies.")
+      else List[Part](" The recorded route is ") ++ sequence(plan.route.map(MoveRef(plan.path, _))) ++ List(".")
+      val exchange = Option.when(q.exchangeTarget.nonEmpty)(
+        " From " + q.square + ", the knights would attack one another, offering an exchange.").toList
+      List[Part](MoveRef(q.path, 0), (if plan.potential then " opens a regrouping idea for the " else " starts redeploying the ") +
+        q.actor.role.name + " from " + q.actor.at +
+        " to create pressure on " + plan.targets.map(_.possessiveName).mkString(" and ") + ".") ++
+        retained ++ meeting ++ route ++ preparation ++ exchange ++ guards
+    case FunctionReply(value, branch) if value.question.plan.nonEmpty =>
+      val q = value.question
+      val contested = Option.when(branch.controllers.nonEmpty)(" The approach through " + q.square +
+        " is now controlled by " + branch.controllers.map(_.possessiveName).mkString(" and ") + ".").toList
+      val changed = branch.relocated.flatMap { (original, current) =>
+        List[Part](" The original " + original.at + " " + original.role.name + current.fold(
+          " has been removed, so it is no longer that plan's target.")(piece =>
+          " has left " + original.at + " for " + piece.at + ", so contesting its old post is no longer the same task."))
+      }
+      val realization: List[Part] = branch.pressure match
+        case Some(pressure) if !pressure.sameTask =>
+          List(MoveRef(branch.path, pressure.use), " adds pressure on " + pressure.targets.map(_.possessiveName).mkString(" and ") +
+            " with " + pressure.actor.possessiveName + ", but this does not offer the planned knight exchange.")
+        case Some(pressure) =>
+          List(MoveRef(branch.path, pressure.use), " carries out the pressure on " +
+            pressure.targets.map(_.possessiveName).mkString(" and ") + " with " + pressure.actor.possessiveName +
+            (if pressure.actor.role != q.actor.role then ", using a different piece for that task." else
+              (if pressure.actor.at != q.square then ", through a different square." else ".")))
+        case None =>
+          List(MoveRef(branch.path, branch.use), " instead continues with " + branch.actor.possessiveName +
+            (if branch.contacts.isEmpty then "." else ", targeting " + branch.contacts.map(_.possessiveName).mkString(" and ") + ".") +
+            (if branch.relocated.isEmpty then " The regrouping task remains pending in this continuation." else
+              " The target's departure changes the task; this is not the same attack merely moved to another square."))
+      val companions = value.companions(branch).map { (original, current) =>
+        " The other " + original.role.name + " from " + original.at + current.fold(
+          " has been captured in this line, giving up that extra piece's activity while the redeployed piece continues.")(
+          piece => " remains on " + piece.at + ", keeping a second piece available alongside the redeployed one.")
+      }
+      List[Part]("After ", MoveRef(branch.path, 1), ", ") ++ realization ++ contested ++ changed ++ companions
+    case FunctionPurpose(value) =>
+      val q = value.question
+      val task = if q.kind == "supported_advance" then
+        s" adds control of ${q.square}, supporting the ${q.user.role.name} advance to ${q.square}" +
+          (if value.entrants.isEmpty then "." else s" and contesting entry by ${value.entrants.map(_.possessiveName).mkString(" and ")}.")
+      else s" opens a route for the ${q.user.role.name} through ${q.square}, so its activity can continue beyond the immediate attack."
+      List[Part](MoveRef(q.path, 0), task) ++ value.pawn.toList.map { (pawn, blockader) =>
+        s" ${pawn.possessiveName} remains one step from promotion, in front of ${blockader.possessiveName}; preserving this pawn keeps that restriction while the other piece becomes active."
+      }
+    case FunctionReply(value, branch) =>
+      val q = value.question
+      val condition = branch.occupant.fold(
+        if branch.controllers.nonEmpty then
+          s" adds control of ${q.square} with ${branch.controllers.map(_.possessiveName).mkString(" and ")}. "
+        else s" adds no new opposing controller of ${q.square}. ")(piece =>
+        s" occupies ${q.square} with ${piece.possessiveName}, contesting that continuation. ")
+      val use = if branch.path.moves(branch.use).slice(2, 4) == q.square then
+        if q.kind == "supported_advance" then s" gains space with ${branch.actor.possessiveName} under that support"
+        else s" uses that square with ${branch.actor.possessiveName}"
+      else s" continues with ${branch.actor.possessiveName} instead of using ${q.square} in this line"
+      val contacts = if branch.contacts.isEmpty then "." else
+        s", targeting ${branch.contacts.map(_.possessiveName).mkString(" and ")}."
+      val lateral = if branch.entrySquares.isEmpty then "" else
+        s" From there the rook controls ${branch.entrySquares.mkString(" and ")}, extending its pressure along that rank."
+      List[Part](MoveRef(branch.path, 1), condition, MoveRef(branch.path, branch.use), use + contacts + lateral)
+    case ExchangeFunction(value) =>
+      value.closed.toList.flatMap { loss =>
+        List[Part]("The exchange leaves " + loss.blocker.possessiveName + " blocking the line from " +
+          loss.slider.possessiveName + " to " + loss.target.possessiveName +
+          ". The advanced piece has gone, but the recapturing pawn keeps that pressure closed.")
+      } ++ value.access.toList.flatMap { access =>
+        List[Part]("The exchange removes " + access.removed.possessiveName +
+          ", which controlled " + access.square + ". After ", access.after,
+          ", the recapturing rook can use " + access.square + " to attack " + access.target.possessiveName +
+          "; no opposing piece currently controls that entry square. This transfer is an available option.")
+      } ++ value.pawnFile.toList.flatMap { file =>
+        file.restrictedAdvance.toList.flatMap(pawn => List[Part](MoveRef(value.capture, 0),
+          " blocks the forward advance of " + pawn.possessiveName + ". ")) ++
+        List[Part]("The advance makes the pawn structure a choice: taking and recapturing opens the " +
+          file.file + "-file by removing its pawns. With ", MoveRef(file.decline, 1),
+          ", the opponent keeps that file closed: " + file.retained.possessiveName + " is blocked by " +
+          file.blocked.possessiveName + " and remains a target of " +
+          file.attackers.map(_.possessiveName).mkString(" and ") +
+          ". The exchange gives up that pawn target in return for the open file; the closed branch keeps it.")
+      }
+    case RetainedExchangeFunction(value) =>
+      value.kept.toList.flatMap { kept =>
+        List[Part](MoveRef(kept.path, 0), " preserves the original " + kept.retained.square.key + " " +
+          kept.retained.role.name + " while another can be offered on " + value.capture.moves.head.slice(2, 4) + ". Here ",
+          MoveRef(kept.path, kept.exchange), " uses the " + kept.exchanged.role.name + " originally on " +
+          kept.exchanged.square.key + ", leaving the " + kept.retained.role.name + " from " +
+          kept.retained.square.key + " for ", MoveRef(kept.path, kept.activation), ". After ",
+          MoveRef(kept.path, kept.use), ", from " +
+          kept.arrived.square.key + " it attacks " +
+          (kept.target :: kept.otherTargets).map(_.possessiveName).mkString(" and ") +
+          ", retaining another source of pressure on the pawn.") ++ kept.restored.toList.flatMap { (actor, target) =>
+          List[Part](" " + actor.possessiveName + " has restored pressure on " + target.possessiveName +
+            ", while the retained piece attacks its connected pawn.")
+        } ++ List[Part](" The immediate ", MoveRef(value.capture, 0),
+          " exchange gives up that piece and this way of continuing the pressure.")
+      }
     case FunctionRealization(value) =>
       val stage = value.stage
       val root = MoveRef(stage.path, 0)
@@ -298,13 +597,24 @@ private[runtime] object CommentaryEnglish:
         value.states.flatMap(value => statement(value) ++ List(" ")) ++
         Option.when(value.laterAdvanceUnestablished)(
           "A later advance of this pawn is not established by the examined continuation of this reply. ").toList
+    case FirstReplyChoice(root, preferred, alternative, quality) =>
+      val comparison: List[Part] = if quality == PrincipalVariationComparison.QualityBand.Close then
+        List(preferred, " and ", alternative, " are competitive replies.")
+      else List(preferred, " is the stronger tested reply than ", alternative, ".")
+      List("After ", root, ", ") ++ comparison
     case ResourceDecision(value) =>
       val introduction: List[Part] = List("After ", value.sequence.head, " ", value.sequence(1), ", ")
+      val condition: List[Part] = value.conditions.flatMap {
+        case ControlState(_, actor, _, square, present, _) =>
+          List(actor.possessiveName + (if present then " controls " else " does not control ") + square + ". ")
+        case claim => statement(claim) ++ List(" ")
+      }
       val choice: List[Part] = if value.use.refuted then
-        List("prefer ", value.other.get, " to an immediate ", value.sequence(2), ". ")
+        List("Prefer ", value.other.get, " to an immediate ", value.sequence(2), ". ")
       else List(value.sequence(2), " remains competitive") ++ value.other.toList.flatMap(move =>
         List(" alongside ", move)) ++ List(" here. ")
-      value.conditions.flatMap(statement) ++ List(" ") ++ introduction ++ choice ++ List("A leading tested reply to ", value.sequence(2),
+      introduction ++ condition ++ choice ++ value.useRoles.flatMap(claim => statement(claim) ++ List(" ")) ++
+        List("A leading tested reply to ", value.sequence(2),
         " is ", value.sequence(3), ".") ++ value.replyRoles.flatMap(value => List(" ") ++ statement(value))
     case value: LegalReplyOption =>
       val proof = value.proof

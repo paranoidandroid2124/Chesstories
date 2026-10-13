@@ -1,0 +1,492 @@
+{
+  "assessed_at_utc": "2026-10-04T03:40:48.752035+00:00",
+  "assessor": "Root research assistant LLM reasoning; not a product LLM and not an independent human reader",
+  "independent_human_reader_evaluation_performed": false,
+  "method": "18 pre-prose source obligations followed by full English basic-body reading. Different valid bounded questions are permitted. Proof/required coverage is checked separately from content usefulness. Omission-free empty answers and reduced character counts do not count as success.",
+  "judgment_limits": "Five price-context omission positions include three high-confidence response losses and two scope-sensitive paired-pawn fragments. A sixth price issue is separate ambiguous composition of two retained pawn-loss accounts. Even excluding both disputed omissions and the scope issue, the unchanged 14/18 and zero-important-omission threshold fails. No all-position human readability or universal tactical truth claim is made.",
+  "post_prose_adjudication": [
+    {
+      "game_id": "wch2024-01",
+      "change": "Reclassified initial c3 event omission to price-scope/composition ambiguity after examining exact proof ownership; no product or pre-prose gold edit."
+    },
+    {
+      "game_id": "candidates2018-03",
+      "gold_wording_erratum": "The original c6 pawn is captured on c5 by Rxc5 in both arms. Pre-prose wording captures c6 used the original identity as if it were the capture square. This does not charge the product with a square error."
+    }
+  ],
+  "readings_sha256": "9c8723584042dd22a16c42de7b536088ea15669708a540f05708fd6ac0122c1d",
+  "summary": {
+    "positions": 18,
+    "basic_available": 17,
+    "useful_and_complete": 5,
+    "important_price_omission_positions": 5,
+    "high_confidence_price_omission_positions": 3,
+    "claim_scope_sensitive_price_omission_positions": 2,
+    "price_scope_confusion_positions": 1,
+    "no_answer": 1,
+    "selected_episode_closed_positions": 11,
+    "needs_refresh": 1,
+    "unsupported_threat_or_attack_resolution_observed": 0,
+    "quality_threshold": {
+      "useful_and_complete_min": 14,
+      "important_price_omissions_max": 0,
+      "unsupported_threat_or_attack_resolution_max": 0
+    },
+    "quality_threshold_met": false
+  },
+  "positions": [
+    {
+      "game_id": "wch2016-01",
+      "question": "contested_pair_response",
+      "basic_length": 521,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": true,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The initial support-negation is unnecessary and g4 is repeated, but the h-pawn versus rook recapture and equal pawn price are understandable in one comparison.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:evidence:candidate-comparison:cbe1ef847f93f64947b063f25b53d0c5c95eef0adde0eef2f5c95c1891ead626",
+          "reference_line_id": "move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:line:7d6ef387b9755a01187549f6c0f2052757928ba40517a061ee5e96d1dd57af25",
+          "candidate_line_id": "move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:line:6afadce83043d880f256e438f1e20dfc7c660e8eeea9a14590cdb6ab49db267f"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2016-02",
+      "question": "selected_comparison",
+      "basic_length": 71,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": true,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "A short exact move-order convergence answer; later unrelated trades are appropriately omitted.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:evidence:candidate-comparison:11f154d7f63347dcf6663c6d633a49d025383a93d2e71688b8ac6d4f94ae46bb",
+          "reference_line_id": "move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:line:bdc67f9b6768a0e02e198b50339b67d45f47a2529debad4c128980a8b0ed6fb8",
+          "candidate_line_id": "move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:line:033af146c52153329575e71c59a7718a0b36eb5bdea54c62d21122781ca613f8"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2016-03",
+      "question": "selected_comparison",
+      "basic_length": 1240,
+      "basic_available": true,
+      "assessment_state": "needs_refresh",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "partial",
+      "important_price_omissions": [
+        {
+          "claim": "Rxb6 captures the b6 pawn in the Ne5 arm",
+          "missing": "Prior Rxc2 loss of the c2 pawn",
+          "offsets": [
+            9,
+            10
+          ],
+          "arm": "candidate_line_id",
+          "confidence": "high"
+        }
+      ],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "A broad target/support history ends with the b6 gain but omits its paired c2 price. The stopped follow-up investigation is separately recorded; this is not a clean fully-investigated answer.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:evidence:candidate-comparison:3c4f3a1b6bad16f20024c94f83367209ae48b240d8a64743169616225ead4b07",
+          "reference_line_id": "move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:line:abf15f961573ea0e8694771ce16d4afa18bcfdf2d0fd1350fbae4bb701b7b213",
+          "candidate_line_id": "move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:line:109f2194fbac53f1ee580511e0e15c72b8fb86e9db53d1ae200627297b229017"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2016-04",
+      "question": "selected_comparison",
+      "basic_length": 1802,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "partial",
+      "important_price_omissions": [
+        {
+          "claim": "Rxe4 recaptures Black knight in c5",
+          "missing": "Subsequent fxe4 captures that same White rook",
+          "offsets": [
+            7,
+            12
+          ],
+          "arm": "reference_line_id",
+          "confidence": "high"
+        }
+      ],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The c5 exchange narrative stops at the apparent knight gain, amid repeated dxe4/support statements. This loses the rook price of that actual response.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:evidence:candidate-comparison:b37f4acfc2e24109172b685aa6821552217609f942d9fa9817b9a4050237f1fb",
+          "reference_line_id": "move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:line:9fcc5a3ef2b3bd8602a33ae6a64f268b421189abe74089037fe4223f54fbf082",
+          "candidate_line_id": "move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:line:f272f59c76697e594ea80ffd69f2980acf5b6f99dbb3fde8a03cf9182c3e0f92"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2016-05",
+      "question": "observed_route_use",
+      "basic_length": 961,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The chosen f5-clearance/rook-exchange episode is closed in both arms. It repeats the same route and unused attacks, however, and does not turn these into a useful short comparison of Rf3 and Kh2. The later Kh2 bishop price is outside this selected route episode, so its omission is recorded as a missed more consequential question rather than a price defect of this bounded answer.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:evidence:candidate-comparison:4bff359b34aa547e2b492d8b73ab1d2295aecdb2b065458deb909bd01943c9f6",
+          "reference_line_id": "move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:line:0de16372f788d5d9d33facc59f337351cf3d3d28ba7bc14a86296f3b1f7f25a7",
+          "candidate_line_id": "move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:line:a43319b233fcdc9a3e5c4f1547c5ab5e62cce65c04ded1ccca7406505f91fa76"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2016-06",
+      "question": "selected_comparison",
+      "basic_length": 1178,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The g5/Bg3/f4/Bf2 displacement and queen recapture are present, but many unrelated support/presence facts obscure them. The common later cxb4 capture is not clearly compared across arms.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:evidence:candidate-comparison:39a04bbea5687e72b24a727261d901335b741aa6689f854554d6dc4bddef4c66",
+          "reference_line_id": "move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:line:6a5d0ded8b5e3dcc527f83d9ad858f3c81b262160de86a726c70711155999262",
+          "candidate_line_id": "move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:line:908132cac30bd4bea38264458450274b87a270dc8a7b49a511db8eb703c7fbfa"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-01",
+      "question": null,
+      "basic_length": 0,
+      "basic_available": false,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "no_answer",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The source has a meaningful queen-for-material comparison, but selected_target_response is rejected as answer_not_delivered. This is a construction/availability failure, not a successful omission-free summary.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:evidence:candidate-comparison:3a12c1d0336ea749af51b86b2b858145475d44a88d7338080f37b73260ced62b",
+          "reference_line_id": "move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:line:b1dc4f34242b42086b7fe3b119508a95d5da775c14fd8540268c9c2debc13e54",
+          "candidate_line_id": "move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:line:21efe3533698d91f2e33edf703acf905e90654d66b283955a678a25f4bc4b49a"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-02",
+      "question": "selected_comparison",
+      "basic_length": 1572,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "partial",
+      "important_price_omissions": [
+        {
+          "claim": "exd5 takes the d5 pawn in Qb6",
+          "missing": "White leaves the attacked e5 bishop to fxe5; its later Qxe5 recovery also changes the price",
+          "offsets": [
+            10,
+            11,
+            12,
+            15
+          ],
+          "arm": "reference_line_id",
+          "confidence": "high"
+        }
+      ],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "Queen-support history is mixed with selected captures. The Qe7 Nxh7/Kxh7 loss and the later Qb6 queen trade are closed, but the response exd5 that leaves the bishop to capture is not.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:evidence:candidate-comparison:1c5c12c2783fab9136db62b1a4c42a634a9afac480bc8972ff36b022dd79bdd7",
+          "reference_line_id": "move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:line:8803b8116c90412c5916ac90a6d5c1f72792da5e061e7decfb1a4014c587621b",
+          "candidate_line_id": "move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:line:d5831478d6def9cb5f392e35319a41105f3bab29bda8807d75210788f85d6121"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-03",
+      "question": "selected_comparison",
+      "basic_length": 892,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "partial",
+      "important_price_omissions": [
+        {
+          "claim": "Rxc5 takes the c5 pawn in Kh1",
+          "missing": "Qxh4 has just taken the original h2 pawn",
+          "offsets": [
+            15,
+            18
+          ],
+          "arm": "candidate_line_id",
+          "confidence": "claim_scope_sensitive"
+        }
+      ],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The actual check responses and Kh1/Rg1 queen displacement are correct. The final added pawn-gain fragment lacks the preceding pawn price. This price defect is sensitive to interpreting that fragment as an episode outcome; the narrower rook-route claim itself is closed.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:evidence:candidate-comparison:abd372da6a1f89b0128573ff1b46f40ac84134077d871aaa5f45cf476ee335f6",
+          "reference_line_id": "move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:line:31dd8ae48740ddaf7669445788c9ac5473f8908907b9e4ab709cf7c5af6d8611",
+          "candidate_line_id": "move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:line:7a1c22ff1224203884837da45c61eed09c963c94eb931081991d2b2e7c375f00"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-04",
+      "question": "attack_or_immediate_exchange",
+      "basic_length": 159,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": true,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "A compact attack-versus-immediate-exchange comparison preserves the moving original c4 pawn and equal pawn prices without listing every proof move.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:evidence:candidate-comparison:168d07ad8dc5ea84a8e8d655b1edd4313670d3098dd3b4e01505cbf1488fdbd8",
+          "reference_line_id": "move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:line:8d73644c9864c5e256875b805a96028be5b6e2e35f7dc49ada2d709dd7eb0871",
+          "candidate_line_id": "move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:line:d2462645bf4db59cc9310549806c07910e73f1eb69298766c0875af31fc92781"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-05",
+      "question": "selected_comparison",
+      "basic_length": 1808,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "Bxf1/Qxf1 explicitly preserves rook lost for bishop recovered. The chosen content is still a large mixture of route, target, support and presence histories, so this actual useful price is buried. No price omission is charged merely because it is not written as a separate Material sentence.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:evidence:candidate-comparison:65540c59d20bd110cd1d940614faf19651a05350afdfec52310ae1614ad53c99",
+          "reference_line_id": "move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:line:deede1d76c9cdc83156bb71c645b0859bc9e9721e24ac344c4bfc6c2a503dc48",
+          "candidate_line_id": "move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:line:0736e014b5d5bc479a7b10bd9498c3669e1501a97cec71ceb9fb28cf42d6b7d6"
+        }
+      ]
+    },
+    {
+      "game_id": "candidates2018-06",
+      "question": "selected_comparison",
+      "basic_length": 2571,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "Both initial bishop/knight exchange outcomes and their recaptures are present, but a 2,571-character collection of unrelated routes and target histories prevents a short coherent answer. Later exchanges not used by the bounded initial-knight claim are not automatically mandatory.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:evidence:candidate-comparison:95684ec396273dcfa4b7f958d28c9e3f0aec42b5f613abec7c0e6119e404b26c",
+          "reference_line_id": "move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:line:1ef9929d558d9bc890ab04398d346babc0e34a0ec57240626f062994f849fad3",
+          "candidate_line_id": "move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:line:b72032669666c838ba8ccb56463bba6026260b0d896a1c766c46c76dafb109aa"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-01",
+      "question": "selected_comparison",
+      "basic_length": 3417,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "price_scope_confusion",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": true,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "Ownership inspection corrected the initial prose-only omission diagnosis: the Material sentence covers Qxc3, and Qxb4 is a separate explicit pawn capture. Both events are in required/covered proof. The one-pawn account is not clearly scoped or combined with that other capture, so it reads as a contradictory total for a two-pawn loss. This is a content-scope/price-composition failure, not loss of the c3 event from structured evidence. Many unrelated histories expand the body to 3,417 characters.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:evidence:candidate-comparison:bfdd73477b8a0ef7415e41598e46c1405be9dce77478c92e9c4a720aea578c31",
+          "reference_line_id": "move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:line:e1bede287a77ace46cb210532b9c92c2720b756c44e27d29bf365ce11c84f9ab",
+          "candidate_line_id": "move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:line:60069c1b105ea4650f65fcabba130b33bc575853db442f7d0cf3ed8ce3709e66"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-02",
+      "question": "contested_pair_response",
+      "basic_length": 371,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": true,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The same original attacked d4 knight is exchanged in Nd7 and moved out of its original attack in Nc6, even though different root knights move. The recorded-continuation filler can be removed, but the actual subject, response and equal knight price are readable.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:evidence:candidate-comparison:9038ec3c201b9a0f1663d8226cc0b45360520dc2cf8485959985f2197898040b",
+          "reference_line_id": "move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:line:08c79c79c11a0068b6299c88988a3606179184acecd7ea8c8e0716e50efad867",
+          "candidate_line_id": "move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:line:a1df10547d3c68bbcfdb628914b4f24390e4d2cc356e1a2adc733d10fe1181a6"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-03",
+      "question": "selected_comparison",
+      "basic_length": 1469,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The Rc1 Rxc2/exd2+/Rxd2 bishop-for-knight-and-pawn response is preserved. The basic body instead leads with an unrelated f3-clearing rook-support fact and mixes other captures; it does not prioritize this closed answer. No free-bishop assertion is made.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:evidence:candidate-comparison:9fb57e181dd05f0ce22e0e79af62442988339956b9a4fbf857d282983d89e1dd",
+          "reference_line_id": "move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:line:316270d069b1240278ace1277eab7560b5237707f6bde157c8ccc553eeaf6b22",
+          "candidate_line_id": "move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:line:3d8376f465ecc504e3153eb8bf01f7eff05d8ad8c6c7c3c682ebf1fc687ddfac"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-04",
+      "question": "selected_comparison",
+      "basic_length": 2073,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The d1 checking capture and actual recapture are present. The two orders both taking e4 is not made clear, while irrelevant queen-target and pawn-presence histories dominate the default body.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:evidence:candidate-comparison:6a13472d20b673a6afebe7909ad8eae10c850f26f90e803a12471159d69ca7b6",
+          "reference_line_id": "move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:line:03fe595dde99445aa9dc5096771ab99245cfe7f23c3a83a8840a6db7f86cb9c9",
+          "candidate_line_id": "move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:line:7814d4833625a2ab6aab3fa955536d3e912037c9aff006e4143b02dd40d3f7ad"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-05",
+      "question": "selected_comparison",
+      "basic_length": 935,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": true,
+      "selected_episode_closure": "bounded_complete",
+      "important_price_omissions": [],
+      "question_selection_or_scope_failure": false,
+      "construction_or_delivery_failure": false,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "Despite excessive introductory target/presence text, the body identifies Rb1 escaping the same knight, Nxe5 taking its other target, and Bxd3/cxd3 exchanging bishop for knight. It answers the meaningful root contrast with the required price. This passes usefulness narrowly and still needs pruning.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:evidence:candidate-comparison:bfafad0f132bf68c04ad1f00f174d6cb723198e46121cb15a2457cfde8945ecb",
+          "reference_line_id": "move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:line:c89abdd1a03cd5d8d56b18f68ea2116e71d888941ab45ffe3497a03a061849c8",
+          "candidate_line_id": "move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:line:a2e89bc374384c959d5c86d0f05a695d388280ae7c884bbb02cf5aaac55e0965"
+        }
+      ]
+    },
+    {
+      "game_id": "wch2024-06",
+      "question": "selected_comparison",
+      "basic_length": 2366,
+      "basic_available": true,
+      "assessment_state": "current",
+      "useful_and_complete_basic": false,
+      "selected_episode_closure": "partial",
+      "important_price_omissions": [
+        {
+          "claim": "Qxh2 gains h2 in the Qh4 arm",
+          "missing": "Immediately preceding Qxa5 took Black original a7 pawn",
+          "offsets": [
+            11,
+            12
+          ],
+          "arm": "reference_line_id",
+          "confidence": "claim_scope_sensitive"
+        }
+      ],
+      "question_selection_or_scope_failure": true,
+      "construction_or_delivery_failure": true,
+      "important_price_scope_confusion": false,
+      "ungrounded_threat_or_attack_resolution_claims": [],
+      "reader_rationale": "The major Qe7 queen-for-two-rooks result has every actual capture and check response, but is buried near the end of 2,366 characters of target histories. A separate Qh4 pawn-gain fragment omits its paired price; the heavy-piece trade itself is closed.",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:evidence:candidate-comparison:e2bf6318ac6b2cb21a48fb38631415c70008749c97b0ea7742dce8da87ac0573",
+          "reference_line_id": "move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:line:a36d8bb2bb55f10a8b38967951ff0917c2a05dedc0f66966a8fc8b974828dd96",
+          "candidate_line_id": "move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:line:5a090e28542671a3b274573b07f27ce0dd1a88f2e490ccdeb776c1141e22a5d1"
+        }
+      ]
+    }
+  ]
+}

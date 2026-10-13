@@ -1,0 +1,677 @@
+{
+  "scope": "Final compact attribution of all seven v5-to-v6 delivery changes; same opened 900 regression requests and 3840 reports. No quality grade, new cohort reading or new product rule.",
+  "cases": [
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 10,
+      "original_partial_packet": true,
+      "exact_matched_reports": 4,
+      "before_basic_characters": 2941,
+      "after_basic_characters": 2995,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": false,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "delete",
+          "before": "Qxd5 recaptures the white pawn on d5.",
+          "after": ""
+        },
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "In the Qxd5 line, both sides exchange one knight and one bishop; White also loses one pawn."
+        }
+      ],
+      "changed_capture_ownership": [],
+      "compact_content_diagnosis": "The f6-knight keeps supporting the d5-queen and remains attacked by the g5-bishop until Bxf6 at offset3. Existing captured-piece references are retained; their price is now aggregated as both minor-piece trades and White pawn loss.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "f6",
+          "provider_role": "knight",
+          "supported_target_original_square": "d8",
+          "target_role": "queen",
+          "attacker_original_square": "g5",
+          "attacker_role": "bishop"
+        },
+        "loss_offset": 3,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": false
+      }
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 11,
+      "original_partial_packet": false,
+      "exact_matched_reports": 3,
+      "before_basic_characters": 2668,
+      "after_basic_characters": 2488,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": false,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "delete",
+          "before": "Bxf6 captures the black knight on f6. Bxc3+ captures the white knight on c3.",
+          "after": ""
+        },
+        {
+          "operation": "replace",
+          "before": "recaptures",
+          "after": "captures"
+        },
+        {
+          "operation": "delete",
+          "before": "black",
+          "after": ""
+        },
+        {
+          "operation": "delete",
+          "before": "on c3. gxf6 captures the white bishop on f6. Qxf6 captures the black pawn on f6. Qxc3+ captures the white pawn",
+          "after": ""
+        },
+        {
+          "operation": "delete",
+          "before": "queen on c3. In the Bxf6 line: Kxc3 recaptures the black",
+          "after": ""
+        },
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "In the Bxf6 line:"
+        },
+        {
+          "operation": "replace",
+          "before": "Nxf6 captures",
+          "after": "In"
+        },
+        {
+          "operation": "replace",
+          "before": "white queen on f6.",
+          "after": "Bxf6 line, both sides exchange one pawn and one knight and one bishop and one queen."
+        }
+      ],
+      "changed_capture_ownership": [],
+      "compact_content_diagnosis": "The bishop after Bxf6 keeps supporting d4 and remains attacked by the g7-pawn until gxf6 at offset3. Existing capture ownership stays the same; the retained exchange sequence is delivered as both sides trading pawn, knight, bishop and queen.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "g5",
+          "provider_role": "bishop",
+          "supported_target_original_square": "d4",
+          "target_role": "pawn",
+          "attacker_original_square": "g7",
+          "attacker_role": "pawn"
+        },
+        "loss_offset": 3,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": false
+      }
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 64,
+      "original_partial_packet": false,
+      "exact_matched_reports": 4,
+      "before_basic_characters": 3058,
+      "after_basic_characters": 3070,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": true,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "delete",
+          "before": "Qxc5 captures the white pawn on c5.",
+          "after": ""
+        },
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "In the Rc2+ line, both sides exchange one pawn."
+        }
+      ],
+      "changed_capture_ownership": [
+        {
+          "line_id": "move-review:872a6fb0f21021f271e61a27849a3d017bc735d1c487b8a272359d02e1c92581:63:e2c2:line:9d3511c3b62fb98af506e2291684f37aeb6c8fa6339526bfc003d097cd9b7efc",
+          "perspective": "black",
+          "before_covered_ledger_projection_cp": 100,
+          "after_covered_ledger_projection_cp": 0,
+          "added": [
+            [
+              4,
+              "d1d3",
+              -100
+            ]
+          ],
+          "removed": [],
+          "missing_ledger_refs": []
+        }
+      ],
+      "compact_content_diagnosis": "The d3-pawn keeps supporting the c2-rook and remains attacked by the d1-rook until Rxd3 at offset3. Its loss is newly owned with the Qxc5 pawn gain, so the scoped price is one pawn traded by each side.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "d3",
+          "provider_role": "pawn",
+          "supported_target_original_square": "e2",
+          "target_role": "rook",
+          "attacker_original_square": "d1",
+          "attacker_role": "rook"
+        },
+        "loss_offset": 3,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": true
+      }
+    },
+    {
+      "game_id": "fundamentals-game-05",
+      "ply": 64,
+      "original_partial_packet": false,
+      "exact_matched_reports": 4,
+      "before_basic_characters": 0,
+      "after_basic_characters": 2005,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": true,
+      "summary_unavailable_changed": true,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "Known G5 delivery regression recovered; selected support/recapture interval is -100cp, whole provided line 0cp, repeated ending remains.",
+      "text_change_fragments": [
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "In the Rd7 line: Ke8 clears f7; Rf7 later occupies that square in this line. In the provided Rd7 line, the same rook next moves with Rf7 to f7. After Rf7, Black's rook on f7 adds support to Black's pawn on f6, which is under attack from White's rook on h6. Rd7 clears e7; Ke7 later occupies that square in this line. After Ke7, Black's king on e7 now targets White's knight on e6. After Bc8, Black's bishop on c8 now targets White's knight on e6. Nd4 moves the knight out of the attack from Black's bishop on d7. Nd4 moves the knight out of the attack from Black's king on e7. After Nxc6+, Black's bishop on d7 now targets White's knight on c6. Nxb4 moves the knight out of the attack from Black's bishop on d7. After Nxb4, the white knight originally on e6 is still present on b4. After Rd7, Black's rook on d7 adds support to Black's pawn on d6, which is under attack from White's rook on d1. After Nc4, Black's knight on c4 adds support to Black's pawn on d6, which is under attack from White's rook on d1. That support continues until Nxd6+ captures the supported pawn; Nxd6 recaptures its capturer with the supporting knight. After c5, Black's bishop on a8 now targets White's knight on e4. Nxd6+ moves the knight out of the attack from Black's bishop on a8. After Nxd6, Black's knight on d6 now targets White's pawn on f5. The white pawn originally on f5 is still present on f5 after Rxd6 and after Rh7+. After Rxd6, Black's rook on f7 attacks White's pawn on f5. In the provided Nc4 line: Nxd6+ gives check to the Black king on e8 with White's knight on d6. Nxd6 captures the checking knight on d6. In the Nc4 line, both sides exchange one knight and one rook; Black also loses one pawn. In the Nc4 line: The recorded line stops after Rh7+; no following reply is recorded. In the Rd7 line: Nxb4 captures the black rook on b4. In the Nc4 line: The recorded line stops after Rh7+; no following reply is recorded. In the Rd7 line: The recorded continuation is Kf8. Nxc6+ captures the black pawn on c6."
+        }
+      ],
+      "changed_capture_ownership": [
+        {
+          "line_id": "move-review:f8744b723df659ac0c22cf98e701dbe9391d595c6f235e8ebf25a85ba67c24cd:63:e7d7:line:6b28c6ea329ad41d188d3121541fbe750faf0fe31bc58dd6553f4f4879a5db5e",
+          "perspective": "black",
+          "before_covered_ledger_projection_cp": null,
+          "after_covered_ledger_projection_cp": -100,
+          "added": [
+            [
+              10,
+              "e4d6",
+              -100
+            ],
+            [
+              11,
+              "c4d6",
+              300
+            ],
+            [
+              12,
+              "d1d6",
+              -300
+            ],
+            [
+              14,
+              "d6d7",
+              -500
+            ],
+            [
+              15,
+              "e8d7",
+              500
+            ]
+          ],
+          "removed": [],
+          "missing_ledger_refs": []
+        },
+        {
+          "line_id": "move-review:f8744b723df659ac0c22cf98e701dbe9391d595c6f235e8ebf25a85ba67c24cd:63:e7d7:line:e86c6978ec222643e12b8f33d2fb955072dd0c2afa6775c0bea2ae52c51773c6",
+          "perspective": "black",
+          "before_covered_ledger_projection_cp": null,
+          "after_covered_ledger_projection_cp": -600,
+          "added": [
+            [
+              24,
+              "d4c6",
+              -100
+            ],
+            [
+              26,
+              "c6b4",
+              -500
+            ]
+          ],
+          "removed": [],
+          "missing_ledger_refs": []
+        }
+      ],
+      "compact_content_diagnosis": "The missing body is restored with the existing Nc4 support use, knight/rook exchange and d6 pawn cost. The scoped -100cp differs from the complete line net0cp; the Rh7+ ending sentence is still duplicated."
+    },
+    {
+      "game_id": "fundamentals-game-06",
+      "ply": 36,
+      "original_partial_packet": false,
+      "exact_matched_reports": 4,
+      "before_basic_characters": 2122,
+      "after_basic_characters": 2210,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": true,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "Nd5 line, both sides exchange one queen; White gives up one rook for one knight. In the"
+        }
+      ],
+      "changed_capture_ownership": [
+        {
+          "line_id": "move-review:38aac0f63cbb3fd6f7cb99164934b7169df3b78587b649603087a5d562fa6d57:35:e7d5:line:12ee15eb0e52d5da0c8ee7e22e6ab2c56ae235688a74a9e2214af6c0e3cf6913",
+          "perspective": "black",
+          "before_covered_ledger_projection_cp": 0,
+          "after_covered_ledger_projection_cp": 200,
+          "added": [
+            [
+              20,
+              "d3d5",
+              -300
+            ],
+            [
+              21,
+              "a5d5",
+              500
+            ],
+            [
+              22,
+              "f7d5",
+              -900
+            ],
+            [
+              23,
+              "c6d5",
+              900
+            ]
+          ],
+          "removed": [],
+          "missing_ledger_refs": []
+        }
+      ],
+      "compact_content_diagnosis": "The d5-knight keeps supporting c3 and remains attacked by the original d1-rook until Rxd5 at offset19. Rxd5 Qxd5 Qxd5 Bxd5 adds the actual knight/rook price and queen exchange to the bounded account.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "e7",
+          "provider_role": "knight",
+          "supported_target_original_square": "c3",
+          "target_role": "pawn",
+          "attacker_original_square": "d1",
+          "attacker_role": "rook"
+        },
+        "loss_offset": 19,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": true
+      }
+    },
+    {
+      "game_id": "fundamentals-game-07",
+      "ply": 79,
+      "original_partial_packet": false,
+      "exact_matched_reports": 4,
+      "before_basic_characters": 1002,
+      "after_basic_characters": 1048,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": true,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "insert",
+          "before": "",
+          "after": "In the b3 line, both sides exchange one pawn."
+        }
+      ],
+      "changed_capture_ownership": [
+        {
+          "line_id": "move-review:6cfcc8853e422a2b14db34e6dba96877bbdc10f1be4272ca0bdc115b0d6c864c:78:c3f3:line:b8840ad231933a67ab9718e23b0629c57ab87c76b5d140877dddec66d198ab97",
+          "perspective": "white",
+          "before_covered_ledger_projection_cp": null,
+          "after_covered_ledger_projection_cp": 0,
+          "added": [
+            [
+              13,
+              "e3e5",
+              100
+            ],
+            [
+              14,
+              "b4b3",
+              -100
+            ]
+          ],
+          "removed": [],
+          "missing_ledger_refs": []
+        }
+      ],
+      "compact_content_diagnosis": "The b3-pawn keeps supporting c4 and remains attacked by the b4-rook until Rxb3 at offset13. The Rxe5 pawn gain and supported-pawn loss are delivered as a pawn trade in the selected interval.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "b2",
+          "provider_role": "pawn",
+          "supported_target_original_square": "c4",
+          "target_role": "knight",
+          "attacker_original_square": "b4",
+          "attacker_role": "rook"
+        },
+        "loss_offset": 13,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": true
+      }
+    },
+    {
+      "game_id": "fundamentals-game-08",
+      "ply": 42,
+      "original_partial_packet": false,
+      "exact_matched_reports": 7,
+      "before_basic_characters": 549,
+      "after_basic_characters": 504,
+      "cost_delivery_changed": true,
+      "capture_ownership_projection_changed": false,
+      "summary_unavailable_changed": false,
+      "new_basic_absence": false,
+      "diagnostic_interpretation": "The observed relation satisfies the generic delayed-provider interval conditions; actual private branch is not instrumented. Material ownership changes in three cases; the other three aggregate the already owned material facts.",
+      "text_change_fragments": [
+        {
+          "operation": "replace",
+          "before": "line: Qxc6 captures the black queen on c6. bxc6 recaptures the white queen on c6.",
+          "after": "line, both sides exchange one queen."
+        }
+      ],
+      "changed_capture_ownership": [],
+      "compact_content_diagnosis": "The queen after Qc6 keeps supporting d6 and remains attacked by the e4-queen until Qxc6 at offset3. The same Qxc6/bxc6 capture ownership is now delivered as a queen exchange rather than two capture sentences.",
+      "verified_relation_interval": {
+        "declared_relation": {
+          "provider_original_square": "b5",
+          "provider_role": "queen",
+          "supported_target_original_square": "d6",
+          "target_role": "pawn",
+          "attacker_original_square": "e4",
+          "attacker_role": "queen"
+        },
+        "loss_offset": 3,
+        "all_roles_support_and_attack_verified": true,
+        "ownership_projection_changed": false
+      }
+    }
+  ],
+  "whole_input_and_controls": {
+    "baseline_to_v6": {
+      "overall": {
+        "jobs": 900,
+        "fully_replayed_readable_jobs": 900,
+        "statuses": {
+          "fully_replayed": 900
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3840,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 900,
+          "original_packet_flag_exact": 900,
+          "report_count_exact": 900,
+          "work_trace_exact": 900,
+          "candidate_ids_exact": 900,
+          "pair_path_ids_moves_exact": 900,
+          "verification_exact": 900,
+          "assessment_exact": 900,
+          "assessment_state_exact": 900,
+          "line_material_ledgers_exact": 900
+        },
+        "changed_basic_jobs": 224,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 22,
+        "after_no_basic_jobs": 22,
+        "cost_delivery_changed_jobs": 218,
+        "cost_owned_capture_projection_changed_jobs": 46,
+        "before_jobs_with_exact_repeated_sentences": 149,
+        "after_jobs_with_exact_repeated_sentences": 139,
+        "before_repeated_sentence_excess": 243,
+        "after_repeated_sentence_excess": 225
+      },
+      "original_clean_packet_group": {
+        "jobs": 802,
+        "fully_replayed_readable_jobs": 802,
+        "statuses": {
+          "fully_replayed": 802
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3486,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 802,
+          "original_packet_flag_exact": 802,
+          "report_count_exact": 802,
+          "work_trace_exact": 802,
+          "candidate_ids_exact": 802,
+          "pair_path_ids_moves_exact": 802,
+          "verification_exact": 802,
+          "assessment_exact": 802,
+          "assessment_state_exact": 802,
+          "line_material_ledgers_exact": 802
+        },
+        "changed_basic_jobs": 198,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 19,
+        "after_no_basic_jobs": 19,
+        "cost_delivery_changed_jobs": 194,
+        "cost_owned_capture_projection_changed_jobs": 41,
+        "before_jobs_with_exact_repeated_sentences": 136,
+        "after_jobs_with_exact_repeated_sentences": 127,
+        "before_repeated_sentence_excess": 224,
+        "after_repeated_sentence_excess": 207
+      },
+      "original_partial_packet_group": {
+        "jobs": 98,
+        "fully_replayed_readable_jobs": 98,
+        "statuses": {
+          "fully_replayed": 98
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 354,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 98,
+          "original_packet_flag_exact": 98,
+          "report_count_exact": 98,
+          "work_trace_exact": 98,
+          "candidate_ids_exact": 98,
+          "pair_path_ids_moves_exact": 98,
+          "verification_exact": 98,
+          "assessment_exact": 98,
+          "assessment_state_exact": 98,
+          "line_material_ledgers_exact": 98
+        },
+        "changed_basic_jobs": 26,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 3,
+        "after_no_basic_jobs": 3,
+        "cost_delivery_changed_jobs": 24,
+        "cost_owned_capture_projection_changed_jobs": 5,
+        "before_jobs_with_exact_repeated_sentences": 13,
+        "after_jobs_with_exact_repeated_sentences": 12,
+        "before_repeated_sentence_excess": 19,
+        "after_repeated_sentence_excess": 18
+      },
+      "additional_reading_controls_exact": {
+        "progress": 900,
+        "assessment_scope": 900,
+        "proposal_sources": 900,
+        "requirement_states": 900,
+        "public_path_count": 900
+      }
+    },
+    "v5_to_v6": {
+      "overall": {
+        "jobs": 900,
+        "fully_replayed_readable_jobs": 900,
+        "statuses": {
+          "fully_replayed": 900
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3840,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 900,
+          "original_packet_flag_exact": 900,
+          "report_count_exact": 900,
+          "work_trace_exact": 900,
+          "candidate_ids_exact": 900,
+          "pair_path_ids_moves_exact": 900,
+          "verification_exact": 900,
+          "assessment_exact": 900,
+          "assessment_state_exact": 900,
+          "line_material_ledgers_exact": 900
+        },
+        "changed_basic_jobs": 7,
+        "summary_unavailable_changed_jobs": 1,
+        "before_no_basic_jobs": 23,
+        "after_no_basic_jobs": 22,
+        "cost_delivery_changed_jobs": 7,
+        "cost_owned_capture_projection_changed_jobs": 4,
+        "before_jobs_with_exact_repeated_sentences": 138,
+        "after_jobs_with_exact_repeated_sentences": 139,
+        "before_repeated_sentence_excess": 226,
+        "after_repeated_sentence_excess": 225
+      },
+      "original_clean_packet_group": {
+        "jobs": 802,
+        "fully_replayed_readable_jobs": 802,
+        "statuses": {
+          "fully_replayed": 802
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3486,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 802,
+          "original_packet_flag_exact": 802,
+          "report_count_exact": 802,
+          "work_trace_exact": 802,
+          "candidate_ids_exact": 802,
+          "pair_path_ids_moves_exact": 802,
+          "verification_exact": 802,
+          "assessment_exact": 802,
+          "assessment_state_exact": 802,
+          "line_material_ledgers_exact": 802
+        },
+        "changed_basic_jobs": 6,
+        "summary_unavailable_changed_jobs": 1,
+        "before_no_basic_jobs": 20,
+        "after_no_basic_jobs": 19,
+        "cost_delivery_changed_jobs": 6,
+        "cost_owned_capture_projection_changed_jobs": 4,
+        "before_jobs_with_exact_repeated_sentences": 126,
+        "after_jobs_with_exact_repeated_sentences": 127,
+        "before_repeated_sentence_excess": 208,
+        "after_repeated_sentence_excess": 207
+      },
+      "original_partial_packet_group": {
+        "jobs": 98,
+        "fully_replayed_readable_jobs": 98,
+        "statuses": {
+          "fully_replayed": 98
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 354,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 98,
+          "original_packet_flag_exact": 98,
+          "report_count_exact": 98,
+          "work_trace_exact": 98,
+          "candidate_ids_exact": 98,
+          "pair_path_ids_moves_exact": 98,
+          "verification_exact": 98,
+          "assessment_exact": 98,
+          "assessment_state_exact": 98,
+          "line_material_ledgers_exact": 98
+        },
+        "changed_basic_jobs": 1,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 3,
+        "after_no_basic_jobs": 3,
+        "cost_delivery_changed_jobs": 1,
+        "cost_owned_capture_projection_changed_jobs": 0,
+        "before_jobs_with_exact_repeated_sentences": 12,
+        "after_jobs_with_exact_repeated_sentences": 12,
+        "before_repeated_sentence_excess": 18,
+        "after_repeated_sentence_excess": 18
+      },
+      "additional_reading_controls_exact": {
+        "progress": 900,
+        "assessment_scope": 900,
+        "proposal_sources": 900,
+        "requirement_states": 900,
+        "public_path_count": 900
+      }
+    }
+  },
+  "preservation": {
+    "freeze_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+    "class_fingerprints": {
+      "baseline": {
+        "file_count": 1695,
+        "sha256": "ce6dde6cfa23352cc130390155b2a56e0d8b2f3e336b06dd245a5ac0aa5ca72a"
+      },
+      "v5": {
+        "file_count": 1699,
+        "sha256": "50e5a71e02d5fb05ce006e117b8c5bae6c37c6024a121ac360e0142e90dcf2a3"
+      },
+      "v6": {
+        "file_count": 1699,
+        "sha256": "f93992955c59962aec7744adfa72cbfad0ad3c1519871a9ee00e25e7ddbc6d05"
+      }
+    },
+    "main_sources": {
+      "count": 71,
+      "mismatches": []
+    },
+    "supporting_files": {
+      "count": 47,
+      "mismatches": [
+        "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts"
+      ],
+      "unchanged_count": 46,
+      "approved_post_freeze_changes": [
+        {
+          "path": "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts",
+          "frozen_sha256": "2231644b1ebfd745c807af99ceee8e506f90f5f61efaae5f2894d9df086ab2b0",
+          "actual_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+          "scope": "Parent-authorized frontend mechanical public contract fix; backend sources/classes and saved replay unchanged.",
+          "evidence_record": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\relationship-delivery-20261004\\post-freeze-public-contract-fix.json",
+          "evidence_record_sha256": "8c053d9b5ddbe7a8966c604fff56115d2034e3da6b19137efc7f3d870d6c7294"
+        }
+      ],
+      "unapproved_mismatches": []
+    },
+    "protected_files": {
+      "count": 43,
+      "mismatches": []
+    },
+    "old_manifest_fields": {
+      "count": 13,
+      "mismatches": []
+    }
+  },
+  "replay_harness_time": {
+    "total_job_elapsed_ms": 1893699,
+    "median_job_elapsed_ms": 2056.0,
+    "first_job_elapsed_ms": 13284,
+    "p90_job_elapsed_ms": 3468,
+    "p90_method": "Nearest rank: sorted[ceil(0.90 * n) - 1]; historical reports may use a different adjacent rank."
+  },
+  "limits": [
+    "Fixed virtual time preserves request budget but does not reproduce actual deadline behavior.",
+    "Harness elapsed time excludes fresh engine, browser, mobile and full-stack execution.",
+    "Capture-ownership projections are descriptive public-ledger reads, not material-account recalculation or quality grades.",
+    "Delayed-provider causality requires selected-relation and actual trace evidence; text-change counts cannot establish it."
+  ],
+  "full_before_after_target_file": "target/relationship-delivery-20261004/replay-tools/v6-v5-all-changes.json",
+  "delayed_provider_proof": "research/relationship-delivery-20261004/v6-delayed-provider-attribution.json",
+  "g5_price_scope_and_repetition": "research/relationship-delivery-20261004/v6-game05-p64-delivery.json",
+  "six_recorded_relation_intervals_verified": true,
+  "private_branch_attribution": "Source/data inference, not an instrumented runtime trace."
+}

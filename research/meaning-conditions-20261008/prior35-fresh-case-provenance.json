@@ -1,0 +1,1813 @@
+{
+  "created_utc": "2026-10-08T06:06:22.346738+00:00",
+  "purpose": "Seal position-only fresh.py-compatible inputs for the unchanged original35 cohort before new current-product fresh execution.",
+  "authority_scope": "Research files only; no main/test/UI edit, compiler, engine, product replay or test runner executed.",
+  "cases_file": {
+    "path": "research/meaning-conditions-20261008/prior35-fresh-cases.json",
+    "sha256": "bc2fa894cb639850f2145e96f6d36f70b51cfa809f8fa3f8a328d01efe4b7faf"
+  },
+  "original_input_files": [
+    {
+      "path": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "rows": 18,
+      "saved_reports": 77
+    },
+    {
+      "path": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "rows": 17,
+      "saved_reports": 73
+    }
+  ],
+  "transformation": {
+    "id": "source.game_id",
+    "initial_fen": "source.request.initial_fen",
+    "move_prefix_uci": "source.request.move_prefix_uci",
+    "fen": "source.request.current_fen",
+    "lines": "[[source.request.focus.played_move_uci]]",
+    "product_injected_author_line_or_score_or_hypothesis": false,
+    "per_case_allowed_fields": [
+      "id",
+      "initial_fen",
+      "move_prefix_uci",
+      "fen",
+      "lines"
+    ],
+    "original_requests_reconstructed_as_equal_positions_and_focus": true,
+    "changed_transport_fields": "fresh.py creates a new request_id and uses caller --budget-ms (default30000); preserve these as new execution metadata, not old report ownership.",
+    "focus_result": "fresh.py recomputes resulting_fen by legal play; all35 recomputed results equal source request.focus.resulting_fen.",
+    "suggestions": "Run without --proposals or --probe-threats unless a separately declared experiment explicitly requires them. This file supplies no resume reports."
+  },
+  "compatibility_reader": {
+    "path": "research/decision-timing-20261006/fresh.py",
+    "sha256": "b84628a361c94feb75c385d2f3631f45870183af7dde068c832a245735a6a12c",
+    "relevant_lines": [
+      104,
+      107,
+      110,
+      111,
+      112,
+      116
+    ],
+    "executed_by_this_preparation": false
+  },
+  "count": 35,
+  "duplicate_ids": [],
+  "all35_legal_history_and_focus_verified": true,
+  "original_total_report_outcomes": {
+    "completed": 135,
+    "executor_failed": 15
+  },
+  "attempted_fresh_selection_scope": {
+    "accepted17": 17,
+    "original_attempted_denominator18": 18,
+    "rejected_begin_case": "TAT25-06",
+    "failure": "FocusedMoveInvalid",
+    "included_in_original35": false,
+    "claim": "These17 accepted cases plus18 earlier opened cases define35; do not claim the rejected attempt succeeded."
+  },
+  "fixed_original_mandatory_price_criteria": {
+    "hardcoded_reader": {
+      "path": "research/strategic-option-20261007/audit_legacy.py",
+      "sha256": "a3e50cc5bf2915cbfdcc8f3f98da829ab00a117fe9e26d042f76a4f7bfc4be68",
+      "relevant_lines": [
+        27,
+        37
+      ]
+    },
+    "supplemental_reading_source": {
+      "path": "research/basic-purpose-20261005/regression-reading.json",
+      "sha256": "8d836e0681532e59be9a74d5ebb7479966a413d37a74f10915db47272fd5a485"
+    },
+    "original_rule": {
+      "COR06-02": {
+        "b4d5": [
+          13
+        ]
+      },
+      "COR06-08": {
+        "f6d7": [
+          2,
+          3,
+          7,
+          8,
+          9,
+          10
+        ],
+        "c8d7": [
+          17,
+          18,
+          20
+        ]
+      },
+      "COR06-09": {
+        "d5b3": [
+          2,
+          3,
+          6,
+          7,
+          11,
+          12
+        ],
+        "c2c3": [
+          1,
+          2,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "candidates2018-10": {
+        "e5f4": [
+          11,
+          12
+        ],
+        "h6f4": [
+          14,
+          15
+        ]
+      },
+      "COR06-03": {
+        "f5e6": [
+          5
+        ]
+      },
+      "TAT25-01": {
+        "a8c8": [
+          13
+        ]
+      },
+      "TAT25-04": {
+        "e4e5": [
+          13
+        ]
+      },
+      "TAT25-11": {
+        "e8g8": [
+          3,
+          4,
+          5,
+          11,
+          12
+        ]
+      }
+    },
+    "case_count": 8,
+    "root_offset_count": 34,
+    "human_reading_findings": [
+      {
+        "id": "TAT25-01",
+        "root": "a8c8",
+        "must_remain_core": [
+          13
+        ],
+        "reason": "The displayed later rook attack on the bishop on a7 must retain that bishop's preceding Bxa7 gain from the rook's former support duty."
+      },
+      {
+        "id": "TAT25-04",
+        "root": "e4e5",
+        "must_remain_core": [
+          13
+        ],
+        "reason": "The knight that actually uses the vacated e4 square is subsequently captured on e4. Displaying the use while moving that loss to detail hides its known price."
+      },
+      {
+        "id": "TAT25-11",
+        "root": "e8g8",
+        "must_remain_core": [
+          3,
+          4,
+          5,
+          11,
+          12
+        ],
+        "reason": "The selected Bxh7+ / Kxh7 support use depends on the earlier e4 clearance and its observed exchange. The existing check episode also includes Qd3+ / Kg8."
+      }
+    ],
+    "human_reading_scope": "Same-researcher content reading of the three changed stored cases, after purposev5 passed 344 existing/new tests. This is a regression finding, not an independent quality rating.",
+    "mandatory_scope": "Specific known core episodes on8 exposed cases; not35 independent human minimum-answer judgments.",
+    "identity_binding_only": {
+      "candidates2018-10": [
+        {
+          "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+          "moves_uci": [
+            "e5f4",
+            "g1e1",
+            "e2c4",
+            "b4a5",
+            "b5a4",
+            "a5c7",
+            "d7e5",
+            "e1h1",
+            "a8f8",
+            "c7e7",
+            "e5g6",
+            "e4g6"
+          ],
+          "root_move": "e5f4",
+          "original_offset": 11
+        },
+        {
+          "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+          "moves_uci": [
+            "e5f4",
+            "g1e1",
+            "e2c4",
+            "b4a5",
+            "b5a4",
+            "a5c7",
+            "d7e5",
+            "e1h1",
+            "a8f8",
+            "c7e7",
+            "e5g6",
+            "e4g6",
+            "h7g6"
+          ],
+          "root_move": "e5f4",
+          "original_offset": 12
+        },
+        {
+          "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+          "moves_uci": [
+            "h6f4",
+            "b4a5",
+            "f4e3",
+            "g1e1",
+            "e2f2",
+            "a5c7",
+            "d7c5",
+            "e1g1",
+            "e3h6",
+            "d1f1",
+            "f2e2",
+            "c6b8",
+            "f6f8",
+            "c7d6",
+            "a8b8"
+          ],
+          "root_move": "h6f4",
+          "original_offset": 14
+        },
+        {
+          "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+          "moves_uci": [
+            "h6f4",
+            "b4a5",
+            "f4e3",
+            "g1e1",
+            "e2f2",
+            "a5c7",
+            "d7c5",
+            "e1g1",
+            "e3h6",
+            "d1f1",
+            "f2e2",
+            "c6b8",
+            "f6f8",
+            "c7d6",
+            "a8b8",
+            "d6c5"
+          ],
+          "root_move": "h6f4",
+          "original_offset": 15
+        }
+      ],
+      "COR06-02": [
+        {
+          "start_fen": "2rq1rk1/1bp1bppp/p3pn2/8/Qn1P4/2B2NP1/1P1NPPBP/R4RK1 b - - 1 16",
+          "moves_uci": [
+            "b4d5",
+            "c3a5",
+            "d8d7",
+            "a4c4",
+            "c7c5",
+            "f3e5",
+            "d7d6",
+            "c4b3",
+            "d6b8",
+            "e2e4",
+            "d5b4",
+            "d4c5",
+            "e7c5",
+            "a5b4"
+          ],
+          "root_move": "b4d5",
+          "original_offset": 13
+        }
+      ],
+      "COR06-03": [
+        {
+          "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+          "moves_uci": [
+            "f5e6",
+            "a4b3",
+            "c2b3",
+            "f7e6",
+            "f1h3",
+            "a8a2"
+          ],
+          "root_move": "f5e6",
+          "original_offset": 5
+        }
+      ],
+      "COR06-08": [
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "c8d7",
+            "d4e2",
+            "e8d8",
+            "g2g4",
+            "b7b5",
+            "f2h4",
+            "f8e7",
+            "g4g5",
+            "f6e8",
+            "f4f5",
+            "c6e5",
+            "f3g2",
+            "b8c8",
+            "a4b5",
+            "a6b5",
+            "h4f2",
+            "b5b4",
+            "f5e6"
+          ],
+          "root_move": "c8d7",
+          "original_offset": 17
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "c8d7",
+            "d4e2",
+            "e8d8",
+            "g2g4",
+            "b7b5",
+            "f2h4",
+            "f8e7",
+            "g4g5",
+            "f6e8",
+            "f4f5",
+            "c6e5",
+            "f3g2",
+            "b8c8",
+            "a4b5",
+            "a6b5",
+            "h4f2",
+            "b5b4",
+            "f5e6",
+            "f7e6"
+          ],
+          "root_move": "c8d7",
+          "original_offset": 18
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "c8d7",
+            "d4e2",
+            "e8d8",
+            "g2g4",
+            "b7b5",
+            "f2h4",
+            "f8e7",
+            "g4g5",
+            "f6e8",
+            "f4f5",
+            "c6e5",
+            "f3g2",
+            "b8c8",
+            "a4b5",
+            "a6b5",
+            "h4f2",
+            "b5b4",
+            "f5e6",
+            "f7e6",
+            "c3a2",
+            "c7c2"
+          ],
+          "root_move": "c8d7",
+          "original_offset": 20
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 2
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 3
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "b7b5",
+            "e4e5",
+            "b5a4",
+            "e5d6"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 7
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "b7b5",
+            "e4e5",
+            "b5a4",
+            "e5d6",
+            "f8d6"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 8
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "b7b5",
+            "e4e5",
+            "b5a4",
+            "e5d6",
+            "f8d6",
+            "d4d6"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 9
+        },
+        {
+          "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+          "moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "b7b5",
+            "e4e5",
+            "b5a4",
+            "e5d6",
+            "f8d6",
+            "d4d6",
+            "c7c3"
+          ],
+          "root_move": "f6d7",
+          "original_offset": 10
+        }
+      ],
+      "COR06-09": [
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 1
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 2
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 5
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 6
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 7
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4"
+          ],
+          "root_move": "c2c3",
+          "original_offset": 8
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 2
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "e5d4"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 3
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "e5d4",
+            "e3d5",
+            "d7e6",
+            "d5e7"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 6
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "e5d4",
+            "e3d5",
+            "d7e6",
+            "d5e7",
+            "d8e7"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 7
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "e5d4",
+            "e3d5",
+            "d7e6",
+            "d5e7",
+            "d8e7",
+            "c1g5",
+            "h7h6",
+            "g5h4",
+            "e6b3"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 11
+        },
+        {
+          "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+          "moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "e5d4",
+            "e3d5",
+            "d7e6",
+            "d5e7",
+            "d8e7",
+            "c1g5",
+            "h7h6",
+            "g5h4",
+            "e6b3",
+            "c2b3"
+          ],
+          "root_move": "d5b3",
+          "original_offset": 12
+        }
+      ],
+      "TAT25-01": [
+        {
+          "start_fen": "r3qrk1/pp3pbp/3Q2p1/8/4p1b1/2N1B3/PPPR1PPP/2K4R b - - 3 16",
+          "moves_uci": [
+            "a8c8",
+            "c3d5",
+            "c8d8",
+            "d5f6",
+            "g7f6",
+            "d6f6",
+            "e8e6",
+            "f6e6",
+            "g4e6",
+            "h1d1",
+            "d8d2",
+            "d1d2",
+            "f7f6",
+            "e3a7"
+          ],
+          "root_move": "a8c8",
+          "original_offset": 13
+        }
+      ],
+      "TAT25-04": [
+        {
+          "start_fen": "2rq1rk1/pp1b1p2/2n1pn2/2b3p1/4P2B/2N3P1/PP2QPBP/R4RK1 w - - 0 16",
+          "moves_uci": [
+            "e4e5",
+            "c6d4",
+            "e2d1",
+            "g5h4",
+            "e5f6",
+            "d8f6",
+            "c3e4",
+            "f6g7",
+            "g3h4",
+            "d7c6",
+            "g1h1",
+            "f7f5",
+            "a1c1",
+            "f5e4"
+          ],
+          "root_move": "e4e5",
+          "original_offset": 13
+        }
+      ],
+      "TAT25-11": [
+        {
+          "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+          "moves_uci": [
+            "e8g8",
+            "c3e4",
+            "c6c5",
+            "e4c5"
+          ],
+          "root_move": "e8g8",
+          "original_offset": 3
+        },
+        {
+          "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+          "moves_uci": [
+            "e8g8",
+            "c3e4",
+            "c6c5",
+            "e4c5",
+            "e7c5"
+          ],
+          "root_move": "e8g8",
+          "original_offset": 4
+        },
+        {
+          "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+          "moves_uci": [
+            "e8g8",
+            "c3e4",
+            "c6c5",
+            "e4c5",
+            "e7c5",
+            "d4c5"
+          ],
+          "root_move": "e8g8",
+          "original_offset": 5
+        },
+        {
+          "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+          "moves_uci": [
+            "e8g8",
+            "c3e4",
+            "c6c5",
+            "e4c5",
+            "e7c5",
+            "d4c5",
+            "b7f3",
+            "f1f3",
+            "b6d7",
+            "a1d1",
+            "d8c7",
+            "d3h7"
+          ],
+          "root_move": "e8g8",
+          "original_offset": 11
+        },
+        {
+          "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+          "moves_uci": [
+            "e8g8",
+            "c3e4",
+            "c6c5",
+            "e4c5",
+            "e7c5",
+            "d4c5",
+            "b7f3",
+            "f1f3",
+            "b6d7",
+            "a1d1",
+            "d8c7",
+            "d3h7",
+            "g8h7"
+          ],
+          "root_move": "e8g8",
+          "original_offset": 12
+        }
+      ]
+    },
+    "identity_binding_scope": "Existing pre-goal optionv3 core-covered witnesses for the original root/offset rule, attached as full start-FEN+prefix identities. They do not add a new normative criterion or imply that every covered move is a proven valuation cause.",
+    "fresh_path_change_limit": "If new actual engine paths differ, old offsets alone are insufficient. Judge the known price obligation on the corresponding owned action and outcome; absence of the old realization is not automatically a successful omission."
+  },
+  "separately_completed_original_request_supplements": [
+    {
+      "id": "wch2016-09",
+      "completed_source": {
+        "path": "target/decision-timing-20261006/reg2016complete42/stored-reports.jsonl",
+        "sha256": "bb0af7d761d56be26839a50702add84ba75d1c97794c22a8d03eba5306fd1d2d"
+      },
+      "replay_manifest": {
+        "path": "target/decision-timing-20261006/criticalreg2016/manifest.json",
+        "sha256": "dc02d26a50f864ae1c91314e98ce91c665ff195fab1f30d7edadcb66edfed398"
+      },
+      "replay_product_version": "criticalv11",
+      "same_original_request": true,
+      "all_original_issued_work_and_report_prefix_exactly_retained": true,
+      "original_reports": 3,
+      "additional_actual_reports": 2,
+      "saved_report_count": 5,
+      "fully_replayed_at_recorded_product_version": true,
+      "relation": "A separately completed continuation of the identical original request; it is not present in the immutable original35 input file, and has not been replayed by this audit or silently substituted into that denominator."
+    },
+    {
+      "id": "wch2024-09",
+      "completed_source": {
+        "path": "target/decision-timing-20261006/criticalreg2024complete/stored-reports.jsonl",
+        "sha256": "f40af9f6ed8ea92c1dd159e112113be2c63ae8970bce7727d9e16c67342e4361"
+      },
+      "replay_manifest": {
+        "path": "target/decision-timing-20261006/criticalreg2024prices14/manifest.json",
+        "sha256": "106b3f74b21552355af8680328ddd71620d242baa5c1ed0028ed7fac3d94b6da"
+      },
+      "replay_product_version": "criticalv14",
+      "same_original_request": true,
+      "all_original_issued_work_and_report_prefix_exactly_retained": true,
+      "original_reports": 4,
+      "additional_actual_reports": 3,
+      "saved_report_count": 7,
+      "fully_replayed_at_recorded_product_version": true,
+      "relation": "A separately completed continuation of the identical original request; it is not present in the immutable original35 input file, and has not been replayed by this audit or silently substituted into that denominator."
+    }
+  ],
+  "rows": [
+    {
+      "id": "wch2016-07",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 1,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "7f1fc506b161cc9f965195d153deb765fe76242c4e4f709e9e0208654d03a85b",
+      "original_request_id": "fresh-wch2016-07-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "5rk1/5p1p/B3pbp1/8/1p6/1P2P3/P1R2PPP/6K1 b - - 1 24",
+      "original_saved_report_count": 5,
+      "original_report_outcomes": {
+        "completed": 5
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "b4fcbd212ecf4ca401b3e66f235241eb1835fdd54a55d4bc14338242033c09ea"
+    },
+    {
+      "id": "wch2016-08",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 2,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "933a35fe5b4d35f0bd6a8650503fb207af882e96c91b4ca02219e6ebee2d81bd",
+      "original_request_id": "fresh-wch2016-08-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "3r2k1/4qppp/1p2pnn1/pN6/P1PR4/4P3/5PPP/4QBK1 w - - 1 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "43e585ee4fdc835926bfeaeb6df504eb4c643792a5db114ed3f900a7d32ccb73"
+    },
+    {
+      "id": "wch2016-09",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 3,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "6b509562d04576722da9872c569d317667949e4d1642f0876497c0849046263a",
+      "original_request_id": "fresh-wch2016-09-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1r1r2k1/5ppp/Rb1q4/7n/3P4/1B2BP2/5P1P/3Q2RK b - - 3 24",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "2662c408436dab9346c56e3b00dac385e8b94d97e0f9b56a9149671c8ec8b531",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "44a56c9ac7ac9cbedb2e510d71a189a13fd3c57e89dfe8ef32c0fc3cdad76bd4"
+    },
+    {
+      "id": "wch2016-10",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 4,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "356e7742ae6110d95767566bfbd75d3852838ae744251301c9eb27dfc479a7a4",
+      "original_request_id": "fresh-wch2016-10-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r5k1/1p4p1/2p1p1np/p2pp3/P3P2P/2PPNrP1/1P3P2/R4R1K w - - 0 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "8b1e11f5c1c038effd248cc63dedc3e25992e3586653d128517c2607c96b0532"
+    },
+    {
+      "id": "wch2016-11",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 5,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "7d308200665a3739f8c385464d5478f1a3e39c8038272a9d92c5f21b5ec70362",
+      "original_request_id": "fresh-wch2016-11-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "4r1k1/6pp/p3q3/1p4Q1/3Pp3/P2P3P/2P3P1/5RK1 b - - 0 24",
+      "original_saved_report_count": 5,
+      "original_report_outcomes": {
+        "completed": 5
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "search_limits",
+        "max_search_elapsed_ms"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "a6266bee7380ab4151f6e7f236ac8a4e33908dcbfaac4e471ebb310709713938"
+    },
+    {
+      "id": "wch2016-12",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 6,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "af52d768819843efd71c995f14918482b81c85e43aaede5dd0ee74c8d7dcc6c9",
+      "original_request_id": "fresh-wch2016-12-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r4b2/pp3k1p/2p2pp1/3p4/3P1BP1/2P5/PP3P1P/4RK2 w - - 1 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "22e987ff7ffc03d2ad6825ef11a2f0ff3cf5ea9a9746d4723da4bd6e01fc70a3"
+    },
+    {
+      "id": "candidates2018-07",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 7,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "be54a548b95856c9ac3825a6c518ee55b9d913977850540b94627deafae4dfb1",
+      "original_request_id": "fresh-candidates2018-07-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r4k1r/ppp2pp1/1n2b3/2p1P1Bp/2P5/P3N1PP/2P2PK1/3RR3 b - - 2 24",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "e8bfc45d07252847216dc633b9d9d84835620a0537b7f6fa3548ed5f15b8189a",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "ce59ef6466148af35e2eb76e0a3a7ab0e8dfdebd184406cf71efec93952c27a8"
+    },
+    {
+      "id": "candidates2018-08",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 8,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "687f8d053de35c8b335f9e0f4b385efabdb12576abd47143eafa6406c25f63da",
+      "original_request_id": "fresh-candidates2018-08-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1r1r2k1/1QRn1pp1/4pq1p/1p1p4/2bP4/P4NP1/4PP1P/R4BK1 w - - 10 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "9f7631d3a2e0fee432f471a0f83e5446487b5b637d04e13e1ffe4ce6dab0fee8"
+    },
+    {
+      "id": "candidates2018-09",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 9,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "4811e89b917924410cbee91f66fa9c0669391195a681ddf42bc1456d42f15d6a",
+      "original_request_id": "fresh-candidates2018-09-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r1b1k1r1/ppp1qp1p/8/2p4n/2Q1P1pP/2P3P1/PP3P2/RNB2R1K b q - 1 16",
+      "original_saved_report_count": 5,
+      "original_report_outcomes": {
+        "completed": 4,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "f44f0172d03a9991e35d592b758c4ecec21f5bca784afc0101f4b6865352a3b1",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "engine_position_moves_uci",
+        "search_fen",
+        "search_limits",
+        "max_search_elapsed_ms",
+        "search_anchor"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "670edd74be9e5bf766247607ea6e6586a693f291bc705b3e6d9ee58fc8622788"
+    },
+    {
+      "id": "candidates2018-10",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 10,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "d9e6f4a7ee9bf4ccef325c067b70c9155148b4f3e34102cacfbd008d5b7e5448",
+      "original_request_id": "fresh-candidates2018-10-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r6k/3n2pp/p1Np1r2/1p1Pp3/PQ2Bb2/5P2/1PP1q3/1K1R2R1 w - - 0 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "de687230a49af05b49454a7a94e001562cce935f1ac5136191bd8b9b0cc8378c"
+    },
+    {
+      "id": "candidates2018-11",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 11,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "efd8d679d5258f1bd17333b76a7799ee488f2a3bc97b9e26373bd1e850d1b4cd",
+      "original_request_id": "fresh-candidates2018-11-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "4q1k1/1p3pp1/2p3np/3n4/QP1N4/2P4P/3B1PP1/6K1 b - - 0 24",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "b1ddced96da8be8bcb3bd99afce4c3a9a99454bb787c325e23055e696321e799",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "search_limits",
+        "max_search_elapsed_ms"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "772c21e4f51ac88b79ae6cd895870cf669c68ba0c1af65a43a90802892c4d33a"
+    },
+    {
+      "id": "candidates2018-12",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 12,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "39e4bb089f8e298a16edb4918326b2fa0962057390155d4255a72804826f5d49",
+      "original_request_id": "fresh-candidates2018-12-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "2rr2k1/5pp1/3b3p/R2p1b2/1p1B3P/2P3P1/1P1N1P2/4R1K1 w - - 0 25",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "d2755f19a84c83e704556cbf0bead847534dca476a7389f814fa77e148738014",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "engine_failure"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "ae52a1b7cab888b6eb509f1090805483900789b1b122d71651f084583ab373a0"
+    },
+    {
+      "id": "wch2024-07",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 13,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "e3bfb1e4514abdb031a4218c2eca455e977edaec6c02a26354189e6680beb4d5",
+      "original_request_id": "fresh-wch2024-07-39",
+      "original_ply": 39,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "3rrnk1/p4pbp/1q3np1/1p1P4/1Pp5/4BBPP/P1NQ1P2/R3R1K1 b - - 1 20",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 5,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:5",
+          "execution_key_sha256": "faa909b85b8a506a2bb4113e20c47eefe547c7a3165a4cd221c710fdec7be974",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "d6006d50d5b11240b7ffddce6db40b38a4ea35ae173ce8bc07130945492dc9d2"
+    },
+    {
+      "id": "wch2024-08",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 14,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "ce8aaa92be3aa59190221ce899f8e30ec3ec30e7694492796fc59e43edb735ed",
+      "original_request_id": "fresh-wch2024-08-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "4r1k1/3n1bpp/nq3p2/pp6/8/B2P1NP1/P3P1BP/1R1Q1K2 w - - 0 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "63be43a4436d87d74c211fcdd776d277654980e0306338ec7ad3e38618b720f3"
+    },
+    {
+      "id": "wch2024-09",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 15,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "23a727ab4935aa7a4f5acfb8c9b58dcc21a502144610ef2c782ed9da19e873e1",
+      "original_request_id": "fresh-wch2024-09-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1r4k1/q3bppp/rN2pn2/1QP5/8/5BP1/4PP1P/2RR2K1 b - - 2 24",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "4600d60a00f593c4d1530d501177f91f70f5239098db447f75d50ea225cfd1b5",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": true,
+      "pre_goal_optionv3_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "e959cc89f4317cbabcf57174ccbfa7769098999024a63be9eba3b3e6196c2a3d"
+    },
+    {
+      "id": "wch2024-10",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 16,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "19d754ad459927531666078562a8be947753e46bbe5a9e0646ab29732a0b4cd2",
+      "original_request_id": "fresh-wch2024-10-48",
+      "original_ply": 48,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "2n1b3/pp3p1p/4pk2/5p2/8/P3PNP1/1P2BP1P/4K3 w - - 0 25",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "96bfaaee2c7ec7ba7ccfd40b55b8375fbd29731c05c4c5bd5c695dff9207f381"
+    },
+    {
+      "id": "wch2024-11",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 17,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "4abf74eaa6ee0f63c625a01808aa96fbbdb0bae2b59bde6fe5878803ac4146fc",
+      "original_request_id": "fresh-wch2024-11-47",
+      "original_ply": 47,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "4k2r/1pqrpp2/2n3pb/pR5p/P1PpQ3/3P2PP/2N2PB1/3R2K1 b k - 3 24",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "7cef9489c622940fe96f07df3cd53fd7942a0c9a8135479adfe0073b3f25acbf"
+    },
+    {
+      "id": "wch2024-12",
+      "original_source": "target/relation-ownership-20261004/opened-final-inputs-v2.jsonl",
+      "original_row_1based": 18,
+      "source_file_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+      "source_request_canonical_sha256": "5dc1e1866eeea4913886ebe720ed13f84ef10ba9168b62e194500a2028602f39",
+      "original_request_id": "fresh-wch2024-12-40",
+      "original_ply": 40,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1r1qr1k1/1pp2pp1/1nn2bbp/pN6/2PPp3/P1Q1B1PP/1P3PBK/3RR1N1 w - - 4 21",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 6
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "ccae7d1ee2a58c110386675d27b7e5b45e06d34da9128659da539d703e52d1d7"
+    },
+    {
+      "id": "COR06-01",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 1,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "1a06eea692cc4b577a1b2aa33a9f27f09f40e70d1130de2a11959c8a738cec1d",
+      "original_request_id": "answer-selection-COR06-01-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2r2k1/1p1bppbp/npp3p1/6N1/3PPPP1/2P4P/P5B1/R1B2RK1 b - - 0 16",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 6
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "e54db7df8b5ec064476f97f2ee9f17d194cbdc14865f436acc1c3c71f33b3000"
+    },
+    {
+      "id": "COR06-02",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 2,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "ccf9514e3a6244431d9f07287f7692f4b867359ba0bce627053cc8803f1c6e5a",
+      "original_request_id": "answer-selection-COR06-02-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "2rq1rk1/1bp1bppp/p3pn2/3n4/Q2P4/2B2NP1/1P1NPPBP/R4RK1 w - - 2 17",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "d7fbf3d7f3d5e13fc23c5b55a62a607f973d838b10e7a01077e59f4d863705c6",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "engine_failure"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "9d79e4978f91d273e151057bf47b7aad1c1f315ef01bad917302640f08f90459"
+    },
+    {
+      "id": "COR06-03",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 3,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "436d6e7c977017ed090c048cf0cb78883505dcb195481201c96ca28454903650",
+      "original_request_id": "answer-selection-COR06-03-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp1NP3/4B3/PPPQN2P/2KR1B1R b - - 1 16",
+      "original_saved_report_count": 5,
+      "original_report_outcomes": {
+        "completed": 4,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "513fce044e437b326d9060a4649702c6cf8791328a0c6cae38b13e2cd6ff19ac",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "54c4cfed0b0a96d9b20a0e9e062f9fd6cb68bed6e72248fa1ea73c4b68dbe492"
+    },
+    {
+      "id": "COR06-04",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 4,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "40b012fb335b50a392ec650e2ae93a2e03b0530f9c5da2083c8a67fcbf68fcf4",
+      "original_request_id": "answer-selection-COR06-04-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r3kb1r/pppqp2p/1nn1p1p1/8/1Q1P4/2N1BP2/PP2N1PP/R2R2K1 w kq - 4 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "d4b409919bf22052bbdf3e35b7d857f88c308b43f12dacfdcf8505940dc27fa2"
+    },
+    {
+      "id": "COR06-05",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 5,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "ebb162e05aa98b77cb02731a17a45f68fba817430fa10b3b61734eed5287387b",
+      "original_request_id": "answer-selection-COR06-05-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2q1rk1/1b3ppp/p4b2/n1p1N3/P2PB3/1pP5/1P2QPPP/R1B2RK1 b - - 1 16",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "85aeccbd7e6df1cfbbad0ea0429d1bc2cad66f473bb137c89e2b6a7863b4bc8b",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "engine_failure"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "1b38f751ed5dcc796242fd2ec8a40c54ad4e67249c7ae184c6c748fad5f256fb"
+    },
+    {
+      "id": "COR06-08",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 6,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "03323b19346644bb36a617449bd51c0eabc449bc648b91962e6ddbf4d337d4e3",
+      "original_request_id": "answer-selection-COR06-08-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1rb1rbk1/1pqn1ppp/p1npp3/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K w - - 5 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "ce11df330ccc8260858f1f4f979a8b0bb566542cf6c83d4113b34c1ec2fdce1c",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "engine_position_moves_uci",
+        "search_fen",
+        "search_limits",
+        "max_search_elapsed_ms",
+        "search_anchor"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "d9603ad47ecc4b653e7df8bc85e01f089c6916fc9f2d5c2e840cb86c1ebb577b"
+    },
+    {
+      "id": "COR06-09",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 7,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "737e878bd2d268783a4bddd2d284c232b1789353f0d9d75921a778c3ec4052e3",
+      "original_request_id": "answer-selection-COR06-09-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2q1rk1/3bbppp/p1np1n2/1pp1p3/4P3/PB1PNN1P/1PP2PP1/R1BQR1K1 b - - 9 16",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 6
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "engine_position_moves_uci",
+        "search_fen",
+        "search_limits",
+        "max_search_elapsed_ms",
+        "search_anchor"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "c3ddc8907a1d4dd542d9bfa5fcca50228a673194950451833e2c553e0568485f"
+    },
+    {
+      "id": "COR06-10",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 8,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "13aad333e3dbdf4f418fbfa7c195d362bc2262c17becf07098f7594a4e1a65e8",
+      "original_request_id": "answer-selection-COR06-10-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r4rk1/pp1qppbp/3pb1p1/3N4/1PP1P3/4B3/P3QPPP/2R2RK1 w - - 3 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "b72799c17413224849370da883618337f3d18aa58cc100dc5a9b506095203fa2"
+    },
+    {
+      "id": "COR06-11",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 9,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "2227eea81c034788a3e7716cf95a65f5fe3c080e74e54dc329286d817f7a6a9e",
+      "original_request_id": "answer-selection-COR06-11-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r4rk1/ppq2pbp/P1p1b1p1/4n3/5B2/2N3P1/1P2PPBP/R1Q2RK1 b - - 0 16",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "3ad27800a679f98ed2b056ddd8a2e26f3b21876561ec6556743359eec9bb4d4b",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "search_limits",
+        "max_search_elapsed_ms"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "6e366ba7610ea2f7fb3082aada1e4505e6bd96619dbb7bd6e6caec36759076a7"
+    },
+    {
+      "id": "TAT25-01",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 10,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "1e91715a03bc0d4bd42cdf52d0c9832a7f014abf72727c63ccedbdef7b7dedd1",
+      "original_request_id": "answer-selection-TAT25-01-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "2r1qrk1/pp3pbp/3Q2p1/8/4p1b1/2N1B3/PPPR1PPP/2K4R w - - 4 17",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 6
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "6b06245567a1827c1a8b34cd1773ab7b39d3449593bcd43a22c73a5337693cf1"
+    },
+    {
+      "id": "TAT25-03",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 11,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "160cc8972828eeb23802e5402f7f95cf4aa207488a738e65c4f3d7cdc31aa4a5",
+      "original_request_id": "answer-selection-TAT25-03-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2qr1k1/p5pp/2bb4/3pNp2/1P6/8/PBPP1PPP/R2QK2R w KQ - 1 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "50476e1b21d54ca6ff62dae639e027116c300fe15e662e84e2499aaf23340ceb"
+    },
+    {
+      "id": "TAT25-04",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 12,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "a709ca71c643f0ed566aa3399ab7b88731079bee9c15e8edcd350ef057883020",
+      "original_request_id": "answer-selection-TAT25-04-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "2rq1rk1/pp1b1p2/2n1pn2/2b3B1/4P3/2N3P1/PP2QPBP/R4RK1 b - - 0 16",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "f8b98dc9999d92108c52a88793417d25408508e1f9817b8b03e7244efea94bff",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "engine_failure"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "ad068f0ad6cb657286eb2d1c2f169ee88ec656ff3b620590d589d2ab84e9e515"
+    },
+    {
+      "id": "TAT25-05",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 13,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "3eec057817912a6484cf1d65de3b34f99f25ad071785bb6974d6f4c3b2f8ec1d",
+      "original_request_id": "answer-selection-TAT25-05-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r1bq2k1/pp3pnp/2p2bp1/3p4/3P1B2/2P1Q3/PP1N1PPP/4RBK1 w - - 2 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 3,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "df9cf3658a73ebf5ee8269fae4997c93399dd08400a925773fd046b6d9a0fd55",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "search_budget_exhausted"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "missing_saved_report",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "96108fa4786dc78cd61de30c2635a81a350f7a1055a92e4408458e9a18118c44"
+    },
+    {
+      "id": "TAT25-07",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 14,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "d08e16dfb2018aadfc793841e9b270f18f1c2dc9da5888b2799ebe33f036fadb",
+      "original_request_id": "answer-selection-TAT25-07-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2q1rk1/pp3p1p/1bp1bnp1/5N2/1n5N/1P4P1/1B1PPPBP/1R1Q1RK1 w - - 0 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "f9349c5bce2acb7312d72080d54a8e072370146173239c9c29897af3dedd7f52"
+    },
+    {
+      "id": "TAT25-09",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 15,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "ab37dac5e097be2902128f2a4eff5f8b6f698c51d3d7062c70a165ba00782a6b",
+      "original_request_id": "answer-selection-TAT25-09-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "1r1q1rk1/p1b2ppp/b1n1p3/4Pn2/2pp1B2/2P2N2/PPBNQPPP/1R3RK1 w - - 0 17",
+      "original_saved_report_count": 6,
+      "original_report_outcomes": {
+        "completed": 6
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "01716b3eadda3322cfc0474e41e818d9d8ae95f13a880db4b91aebb94f02ac86"
+    },
+    {
+      "id": "TAT25-10",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 16,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "b770736826766edaa442685b8005868c6329281dd96e7dc60b16a8f8f31357e2",
+      "original_request_id": "answer-selection-TAT25-10-31",
+      "original_ply": 31,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P1PP2/3P1N2/PBQ1B1PP/R4RK1 b - - 0 16",
+      "original_saved_report_count": 3,
+      "original_report_outcomes": {
+        "completed": 2,
+        "executor_failed": 1
+      },
+      "original_failed_reports": [
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "65966eacf8bef9a30cf6a6ad086c564a5c193445edad050c82795bf55e748ea3",
+          "outcome": {
+            "kind": "executor_failed",
+            "failure_code": "engine_failure"
+          }
+        }
+      ],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "issued_work_mismatch",
+      "current_goal_meaningv22_mismatched_work_fields": [
+        "execution_key_sha256",
+        "root_restriction",
+        "search_limits"
+      ],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "9e8e2f1637c2526172033f7a41921ed3e71974407ae072edb641759bc808f989"
+    },
+    {
+      "id": "TAT25-11",
+      "original_source": "target/answer-selection-20261004/fresh-accepted17-stored-reports.jsonl",
+      "original_row_1based": 17,
+      "source_file_sha256": "56179ef28337c7ad21c6dd6692e7f0f83206426ce788a110d63d419dfdb904d4",
+      "source_request_canonical_sha256": "b456de2e1a43f72fb4fc53d388a50cc19c419cbd0909bc96c1d7bcf3b5666fbf",
+      "original_request_id": "answer-selection-TAT25-11-32",
+      "original_ply": 32,
+      "original_engine_profile": "sf18-smallnet-t2-h16-v1",
+      "original_remaining_budget_ms": 30000,
+      "focus_resulting_fen": "r2q1rk1/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 w - - 1 17",
+      "original_saved_report_count": 4,
+      "original_report_outcomes": {
+        "completed": 4
+      },
+      "original_failed_reports": [],
+      "original_research_executor_partial_packet": false,
+      "pre_goal_optionv3_replay_status": "fully_replayed",
+      "current_goal_meaningv22_replay_status": "fully_replayed",
+      "current_goal_meaningv22_mismatched_work_fields": [],
+      "legal_history_current_fen_and_focus_result_verified": true,
+      "transformed_case_canonical_sha256": "fab531f0dbc69853a9ba03527bb1f42e4a0a54cd94d0c77a8209eb559355abd4"
+    }
+  ]
+}

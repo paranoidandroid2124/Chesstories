@@ -1,0 +1,170 @@
+[
+  {
+    "group": "opened35",
+    "id": "wch2016-12",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "candidates2018-11",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "wch2024-08",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "COR06-11",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "TAT25-04",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "TAT25-05",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "opened35",
+    "id": "TAT25-07",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  },
+  {
+    "group": "prior14",
+    "id": "B12",
+    "fields": {
+      "statements": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "paths": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      },
+      "positions": {
+        "same_multiset": true,
+        "removed": 0,
+        "added": 0
+      }
+    }
+  }
+]

@@ -1,0 +1,656 @@
+{
+  "scope": "Final read-only attribution of six delayed-provider relations among the seven changed opened regression jobs; no new engine, cohort or product logic.",
+  "method": "Track the three declared original pieces on the same legal saved line; check unchanged roles, actual support and actual attack at every position from after root until before capture, then match that capture to a delivered Cost ownership reference.",
+  "limits": [
+    "These recorded relationships qualify for the source generic interval checks; actual private branch execution is not exposed by the public protocol.",
+    "These are previously opened regression examples, not independent generalization success counts.",
+    "Three cases gain material ownership; three keep the existing material ownership and change its aggregate delivery.",
+    "Cost-reference ledger sums are scoped projections, not full provided-line balances."
+  ],
+  "cases": [
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 10,
+      "line_id": "move-review:fd1e397a6f4de78b2bd8fd0de228a2dd0a19bf93fbcc2e49da46369002791696:9:d8d5:line:589b52f69a7487369609479c6ab0363e949041b1a363d05462ce7a252de94a8d",
+      "declared_relation": {
+        "provider_original_square": "f6",
+        "provider_role": "knight",
+        "supported_target_original_square": "d8",
+        "target_role": "queen",
+        "attacker_original_square": "g5",
+        "attacker_role": "bishop"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 3,
+        "relative_move": 4,
+        "SAN": "Bxf6",
+        "UCI": "g5f6",
+        "victim": {
+          "role": "knight",
+          "side": "black",
+          "square": "f6"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": false,
+      "cost_material_refs": [
+        {
+          "relative_move": 1,
+          "UCI": "d8d5",
+          "side": "black",
+          "delta_cp": 100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "d5",
+            "value_cp": 100,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 4,
+          "UCI": "g5f6",
+          "side": "white",
+          "delta_cp": -300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "f6",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 5,
+          "UCI": "b4c3",
+          "side": "black",
+          "delta_cp": 300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "c3",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 6,
+          "UCI": "b2c3",
+          "side": "white",
+          "delta_cp": -300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "bishop",
+            "square": "c3",
+            "value_cp": 300,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 7,
+          "UCI": "g7f6",
+          "side": "black",
+          "delta_cp": 300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "bishop",
+            "square": "f6",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 100,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 11,
+      "line_id": "move-review:f85df455f12a9f90702496cce3b8f7812cc4967ccd72ed83339745aa412d8981:10:g5f6:line:55b687cea1959f122a39319ef85a8a25c984e7b2df89e3efc01298e07c55ab18",
+      "declared_relation": {
+        "provider_original_square": "g5",
+        "provider_role": "bishop",
+        "supported_target_original_square": "d4",
+        "target_role": "pawn",
+        "attacker_original_square": "g7",
+        "attacker_role": "pawn"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 3,
+        "relative_move": 4,
+        "SAN": "gxf6",
+        "UCI": "g7f6",
+        "victim": {
+          "role": "bishop",
+          "side": "white",
+          "square": "f6"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": false,
+      "cost_material_refs": [
+        {
+          "relative_move": 1,
+          "UCI": "g5f6",
+          "side": "white",
+          "delta_cp": 300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "f6",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 2,
+          "UCI": "b4c3",
+          "side": "black",
+          "delta_cp": -300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "c3",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 3,
+          "UCI": "b2c3",
+          "side": "white",
+          "delta_cp": 300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "bishop",
+            "square": "c3",
+            "value_cp": 300,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 4,
+          "UCI": "g7f6",
+          "side": "black",
+          "delta_cp": -300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "bishop",
+            "square": "f6",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 11,
+          "UCI": "f4f6",
+          "side": "white",
+          "delta_cp": 100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "f6",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 12,
+          "UCI": "a5c3",
+          "side": "black",
+          "delta_cp": -100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "c3",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 13,
+          "UCI": "d2c3",
+          "side": "white",
+          "delta_cp": 900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "c3",
+            "value_cp": 900,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 16,
+          "UCI": "d5f6",
+          "side": "black",
+          "delta_cp": -900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "f6",
+            "value_cp": 900,
+            "recapture": "excluded"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 0,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 64,
+      "line_id": "move-review:872a6fb0f21021f271e61a27849a3d017bc735d1c487b8a272359d02e1c92581:63:e2c2:line:9d3511c3b62fb98af506e2291684f37aeb6c8fa6339526bfc003d097cd9b7efc",
+      "declared_relation": {
+        "provider_original_square": "d3",
+        "provider_role": "pawn",
+        "supported_target_original_square": "e2",
+        "target_role": "rook",
+        "attacker_original_square": "d1",
+        "attacker_role": "rook"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 3,
+        "relative_move": 4,
+        "SAN": "Rxd3",
+        "UCI": "d1d3",
+        "victim": {
+          "role": "pawn",
+          "side": "black",
+          "square": "d3"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": true,
+      "cost_material_refs": [
+        {
+          "relative_move": 4,
+          "UCI": "d1d3",
+          "side": "white",
+          "delta_cp": -100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "d3",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 5,
+          "UCI": "f8c5",
+          "side": "black",
+          "delta_cp": 100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "c5",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 7,
+          "UCI": "c5d4",
+          "side": "black",
+          "delta_cp": 900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "d4",
+            "value_cp": 900,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 8,
+          "UCI": "d3d4",
+          "side": "white",
+          "delta_cp": -900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "d4",
+            "value_cp": 900,
+            "recapture": "proven"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 0,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    },
+    {
+      "game_id": "fundamentals-game-06",
+      "ply": 36,
+      "line_id": "move-review:38aac0f63cbb3fd6f7cb99164934b7169df3b78587b649603087a5d562fa6d57:35:e7d5:line:12ee15eb0e52d5da0c8ee7e22e6ab2c56ae235688a74a9e2214af6c0e3cf6913",
+      "declared_relation": {
+        "provider_original_square": "e7",
+        "provider_role": "knight",
+        "supported_target_original_square": "c3",
+        "target_role": "pawn",
+        "attacker_original_square": "d1",
+        "attacker_role": "rook"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 19,
+        "relative_move": 20,
+        "SAN": "Rxd5",
+        "UCI": "d3d5",
+        "victim": {
+          "role": "knight",
+          "side": "black",
+          "square": "d5"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": true,
+      "cost_material_refs": [
+        {
+          "relative_move": 9,
+          "UCI": "e6f5",
+          "side": "black",
+          "delta_cp": 100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "f5",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 16,
+          "UCI": "g5f5",
+          "side": "white",
+          "delta_cp": -100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "f5",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 20,
+          "UCI": "d3d5",
+          "side": "white",
+          "delta_cp": -300,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "knight",
+            "square": "d5",
+            "value_cp": 300,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 21,
+          "UCI": "a5d5",
+          "side": "black",
+          "delta_cp": 500,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "rook",
+            "square": "d5",
+            "value_cp": 500,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 22,
+          "UCI": "f7d5",
+          "side": "white",
+          "delta_cp": -900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "d5",
+            "value_cp": 900,
+            "recapture": "proven"
+          }
+        },
+        {
+          "relative_move": 23,
+          "UCI": "c6d5",
+          "side": "black",
+          "delta_cp": 900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "d5",
+            "value_cp": 900,
+            "recapture": "proven"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 200,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    },
+    {
+      "game_id": "fundamentals-game-07",
+      "ply": 79,
+      "line_id": "move-review:6cfcc8853e422a2b14db34e6dba96877bbdc10f1be4272ca0bdc115b0d6c864c:78:c3f3:line:b8840ad231933a67ab9718e23b0629c57ab87c76b5d140877dddec66d198ab97",
+      "declared_relation": {
+        "provider_original_square": "b2",
+        "provider_role": "pawn",
+        "supported_target_original_square": "c4",
+        "target_role": "knight",
+        "attacker_original_square": "b4",
+        "attacker_role": "rook"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 13,
+        "relative_move": 14,
+        "SAN": "Rxb3",
+        "UCI": "b4b3",
+        "victim": {
+          "role": "pawn",
+          "side": "white",
+          "square": "b3"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": true,
+      "cost_material_refs": [
+        {
+          "relative_move": 13,
+          "UCI": "e3e5",
+          "side": "white",
+          "delta_cp": 100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "e5",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 14,
+          "UCI": "b4b3",
+          "side": "black",
+          "delta_cp": -100,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "pawn",
+            "square": "b3",
+            "value_cp": 100,
+            "recapture": "excluded"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 0,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    },
+    {
+      "game_id": "fundamentals-game-08",
+      "ply": 42,
+      "line_id": "move-review:34496910992b5d547b0ba613ac7324a64f5b24a02ca61f58db642dadd2523138:41:b5c6:line:9714392d7e5350813db968aa9e365d2bd47e87322bc75afd75595f2b0a95553c",
+      "declared_relation": {
+        "provider_original_square": "b5",
+        "provider_role": "queen",
+        "supported_target_original_square": "d6",
+        "target_role": "pawn",
+        "attacker_original_square": "e4",
+        "attacker_role": "queen"
+      },
+      "verified_counts_after_root_before_loss": [
+        1,
+        2,
+        3
+      ],
+      "support_role_and_actual_attacker_control_preserved": true,
+      "actual_provider_loss": {
+        "offset": 3,
+        "relative_move": 4,
+        "SAN": "Qxc6",
+        "UCI": "e4c6",
+        "victim": {
+          "role": "queen",
+          "side": "black",
+          "square": "c6"
+        }
+      },
+      "loss_owned_by_new_cost_unit": true,
+      "ownership_projection_changed_from_v5": false,
+      "cost_material_refs": [
+        {
+          "relative_move": 4,
+          "UCI": "e4c6",
+          "side": "white",
+          "delta_cp": -900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "c6",
+            "value_cp": 900,
+            "recapture": "excluded"
+          }
+        },
+        {
+          "relative_move": 5,
+          "UCI": "b7c6",
+          "side": "black",
+          "delta_cp": 900,
+          "promotion_gain_cp": 0,
+          "capture": {
+            "role": "queen",
+            "square": "c6",
+            "value_cp": 900,
+            "recapture": "proven"
+          }
+        }
+      ],
+      "covered_ledger_projection_sum_cp": 0,
+      "scope": "Selected relation and its bounded material account, not the full-PV material balance or all-response proof."
+    }
+  ],
+  "other_price_changes": [
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 10,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": false,
+      "summary_unavailable_changed": false
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 11,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": false,
+      "summary_unavailable_changed": false
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "ply": 64,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": true,
+      "summary_unavailable_changed": false
+    },
+    {
+      "game_id": "fundamentals-game-05",
+      "ply": 64,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": true,
+      "summary_unavailable_changed": true
+    },
+    {
+      "game_id": "fundamentals-game-06",
+      "ply": 36,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": true,
+      "summary_unavailable_changed": false
+    },
+    {
+      "game_id": "fundamentals-game-07",
+      "ply": 79,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": true,
+      "summary_unavailable_changed": false
+    },
+    {
+      "game_id": "fundamentals-game-08",
+      "ply": 42,
+      "cost_delivery_changed": true,
+      "capture_ownership_changed": false,
+      "summary_unavailable_changed": false
+    }
+  ]
+}

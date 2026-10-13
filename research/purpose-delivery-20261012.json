@@ -1,0 +1,450 @@
+{
+  "goal": "Purpose and reply function delivered within a real 10-second product run",
+  "registered_before_new_product_output": true,
+  "existing": {
+    "id": "FJ-SG35-LATE-NE4",
+    "criteria_source": "exchange-function-20261011.json#/existing/unchanged_minimum"
+  },
+  "fresh": {
+    "id": "GF-WANG-16-G5",
+    "source": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Custom\\Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+    "pages": [
+      206,
+      207,
+      208
+    ],
+    "fen": "r4rk1/2qnp1bn/2p1b1pp/ppPp1p2/3P1PPP/P1NNPB2/1P6/R1BQ1RK1 w - - 0 16",
+    "move": "g4g5",
+    "prior_matches": [],
+    "minimum": [
+      "Explain g5 as fixing and restricting the kingside structure with the conditional choice it gives Black.",
+      "If Black takes hxg5 and White recaptures hxg5, explain the cleared h-file and the disappearance of the potential h5 pawn target.",
+      "If Black keeps the structure closed with h5, distinguish the retained pawn target and closed h-file from the capture branch; do not claim an untested sacrifice or forced win.",
+      "Keep the played-move assessment separate from conditional reply values and preserve actual exchange costs."
+    ]
+  },
+  "limits": {
+    "depth_max": 18,
+    "wall_clock_budget_ms": 10000,
+    "quality_cases": 2,
+    "real_browser": true,
+    "no_frozen_engine_reports": true
+  },
+  "prior_completion_correction": "The previous exchange-function result did not test UI decoding and used 180000 ms for the new case. It does not establish screen delivery or 10-second operation.",
+  "completed_scope": "Common owned purpose/reply-function composition, source/question and UI work contracts, and actual basic-panel delivery for the two registered positions within a 10000 ms request. This is not whole-product release certification.",
+  "environment": {
+    "workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+    "branch": "codex/functional-choice-value",
+    "browser": "headed Chrome with production MoveReviewCoordinator, runtime source, decoder, renderMoveReview and Chessground",
+    "engine": "fresh Stockfish 18 browser WASM; sf18-smallnet-t2-h16-v1; 2 threads; Hash 16MB",
+    "server": "Java 21 production ChesstoryRuntime via actual HTTP; harness proxies the API",
+    "locale": "en-US",
+    "full_lila_docker_available": false,
+    "existing_is_first_user_job_after_server_start": true,
+    "timer_includes": [
+      "worker preparation",
+      "engine work",
+      "HTTP transport",
+      "runtime assembly",
+      "client decode and basic-panel delivery"
+    ],
+    "startup_preparation": "Unscored legal replay and serialization of a standard opening before listening; no engine search, no user-case precomputation, no reusable job or answer."
+  },
+  "cases": [
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "elapsed_ms": 8924.034999966621,
+      "state_display_ms": 8911.07,
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "job_id": "UWCW6zMjT0gs4qdF2w19134ZnX8j9hbQ",
+      "source_files": [
+        "http-1791741014252254000-request.json",
+        "http-1791741018833799700-response.json",
+        "http-1791741022268572400-response.json"
+      ],
+      "terminal_response_bytes": 2385841,
+      "summary": "After Ne4, Black's knight on e4 now targets White's knight on g3. After Ne4, Bxe4 is the stronger tested reply than Qe2. In the Ne4 line: The recorded continuation is Bxe4 dxe4. Bxe4 captures the black knight on e4. dxe4 recaptures the white bishop on e4. After Bxe4, Black's pawn on d5 now targets White's bishop on e4. After Bxe4, Black's queen on e6 now targets White's bishop on e4. After Bxe4, Black's pawn on f5 now targets White's bishop on e4. After dxe4, Black's pawn on e4 now targets White's queen on d3. The exchange leaves Black's pawn on e4 blocking the line from Black's queen on e6 to White's pawn on e3. The advanced piece has gone, but the recapturing pawn keeps that pressure closed. In the Ne4 line: The recorded continuation is Qe2 Ncd6. Ncd6 moves the knight out of the attack from White's queen on e2. After Ncd6, Black's knight on d6 supports Black's knight on e4. The recorded continuation is Ng4 Kg1 Nd6 Nf1 Ne4 Rb2 Kh7 Bxe4 dxe4. Bxe4 captures the black knight on e4. dxe4 recaptures the white bishop on e4. Ng4 preserves the original f6 knight while another can be offered on e4. Here Ne4 uses the knight originally on c4, leaving the knight from f6 for Ng4. After dxe4, from g4 it attacks White's pawn on e3 and White's pawn on h2, retaining another source of pressure on the pawn. The immediate Ne4 exchange gives up that piece and this way of continuing the pressure. The compared root choices are g6 and Ne4.",
+      "screen": "purpose-delivery-20261012/ne4.png",
+      "core_semantic_review": "pass against the unchanged preregistered minimum"
+    },
+    {
+      "id": "GF-WANG-16-G5",
+      "elapsed_ms": 5350.435000002384,
+      "state_display_ms": 5335.22,
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "job_id": "pe9tNBg-F9ym61OeJegFATLjJexsO-Hr",
+      "source_files": [
+        "http-1791741092026456800-request.json",
+        "http-1791741093693855500-response.json",
+        "http-1791741096854558300-response.json"
+      ],
+      "terminal_response_bytes": 3057723,
+      "summary": "After g5, White's pawn on g5 now targets Black's pawn on h6. After g5, Rfb8 and hxg5 are competitive replies. In the g5 line: The recorded continuation is Rfb8 Ne2. In the g5 line: The recorded continuation is hxg5 hxg5. hxg5 captures the white pawn on g5. hxg5 recaptures the black pawn on g5. After hxg5, White's pawn on f4 now targets Black's pawn on g5. After hxg5, White's pawn on h4 now targets Black's pawn on g5. g5 blocks the forward advance of Black's pawn on g6. The advance makes the pawn structure a choice: taking and recapturing opens the h-file by removing its pawns. With h5, the opponent keeps that file closed: Black's pawn on h5 is blocked by White's pawn on h4 and remains a target of White's bishop on f3. The exchange gives up that pawn target in return for the open file; the closed branch keeps it. In the g5 line: With Nxg5, the black knight originally on h7 captures the white pawn originally on h4. The compared root choices are g5 and Rf2. In the g5 line: fxg5 recaptures the black knight on g5.",
+      "screen": "purpose-delivery-20261012/g5.png",
+      "core_semantic_review": "pass against the unchanged preregistered minimum"
+    }
+  ],
+  "interpretation": {
+    "existing": "The final root numerical comparison is g6/Ne4. The unrestricted same-depth root survey also supplied Ng4 Kg1 Nd6 Nf1 Ne4 Rb2 Kh7 Bxe4 dxe4. It trades the original c4 knight and keeps the original f6 knight on g4 targeting e3/h2. This is the preregistered allowed alternative realization, not the exact book Nd5/e3/f4 line; its value is not copied into the selected g6 comparison.",
+    "fresh": "Rfb8 is the tested first-reply leader, competitive with hxg5. The same owned full reply pool supplies h5 as the structurally distinct closed branch. No forced h5, sacrifice, forced win or immediate rook entry is claimed. Nxg5 and fxg5 prices remain in basic prose."
+  },
+  "implementation": {
+    "questions": "Use one 512-character source-reference contract in proposal construction, discovery, request schema and browser decoder; preserve complete identifiers rather than truncating them.",
+    "delivery": "Admit exchange_function and exact five-part first-response ownership; validate compact issued work consistently; preserve a valid owned core when optional detail is invalid.",
+    "composition": "ResponsePurposeReading owns reviewed mover, completed first-response pair and actual own actions. ExchangeFunctionReading contributes identity-preserving blocked-pressure, retained-piece and open/closed pawn-file facts. No case FEN or move-name dispatch.",
+    "retained_witness": "A separate root continuation can supply a functional witness only through its exact completed unrestricted root work at adequate depth; it does not replace the numerical pair.",
+    "budget": "At most 10000 ms remaining: direct D12 root/focus and reviewed-mover reply full pool plus at most one missing capture/decline-class work. Longer jobs retain D8 preview/D16 verification. Normal issued depth cap18; no deadline extension.",
+    "publication": "Assemble the owned purpose first. Pending work carries its required certificate. A delivered answer publishes required board resources and early path positions; omitted optional position references are null. Complete paths, scores and material events remain."
+  },
+  "failed_approaches_not_counted_as_completion": [
+    "Backend exchange_function text was discarded by the consumer contract.",
+    "A legitimate 258-character source reference failed the old internal question limit.",
+    "Short response work did not match the client time/node contract.",
+    "Broad semantic projection and 5-9 MB responses consumed the short-job budget.",
+    "D16 and then D14 first-user jobs missed the 10-second condition.",
+    "An earlier D12 run met time but lacked the retained functional meaning; time-only success was not accepted.",
+    "Exact-book assumptions missed delayed acceptance and retained activation before the exchange; the final reader verifies actual identities and positions."
+  ],
+  "diagnostic_attempts_same_two_positions": [
+    {
+      "file": "existing-browser-1791736407756454100.json",
+      "case": "existing",
+      "elapsed_ms": 10020.09500002861,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        16,
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791737590725339600.json",
+      "case": "existing",
+      "elapsed_ms": 9083.564999997616,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        16,
+        16
+      ],
+      "delivered_questions": [
+        "selected_comparison"
+      ]
+    },
+    {
+      "file": "existing-browser-1791738170816915400.json",
+      "case": "existing",
+      "elapsed_ms": 10006.694999992847,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        16,
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791738370575828000.json",
+      "case": "existing",
+      "elapsed_ms": 10019.07999998331,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        16,
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791738744115614100.json",
+      "case": "existing",
+      "elapsed_ms": 10008.964999973774,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791739047563850400.json",
+      "case": "existing",
+      "elapsed_ms": 7513.665000021458,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": [
+        "first_target_response"
+      ]
+    },
+    {
+      "file": "existing-browser-1791739490575158400.json",
+      "case": "existing",
+      "elapsed_ms": 10003.435000002384,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791739523144028600.json",
+      "case": "existing",
+      "elapsed_ms": 6013.8900000452995,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": [
+        "exchange_function"
+      ]
+    },
+    {
+      "file": "existing-browser-1791739817718937400.json",
+      "case": "existing",
+      "elapsed_ms": 10010.964999973774,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791740358464068800.json",
+      "case": "existing",
+      "elapsed_ms": 10014.319999992847,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791740572569131200.json",
+      "case": "existing",
+      "elapsed_ms": 10010.7349999547,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "existing-browser-1791740766526647000.json",
+      "case": "existing",
+      "elapsed_ms": 9381.194999992847,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "delivered_questions": [
+        "first_target_response"
+      ]
+    },
+    {
+      "file": "existing-browser-1791741022530228200.json",
+      "case": "existing",
+      "elapsed_ms": 8924.034999966621,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "delivered_questions": [
+        "exchange_function"
+      ]
+    },
+    {
+      "file": "new-browser-1791736877417682900.json",
+      "case": "new",
+      "elapsed_ms": 6899.939999997616,
+      "terminal_kind": "fault",
+      "reason": null,
+      "issued_depths": [
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "new-browser-1791737502289558000.json",
+      "case": "new",
+      "elapsed_ms": 10008.384999990463,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "new-browser-1791738216660498100.json",
+      "case": "new",
+      "elapsed_ms": 10032.939999997616,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        16,
+        16,
+        16
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "new-browser-1791738767907268400.json",
+      "case": "new",
+      "elapsed_ms": 3218.660000026226,
+      "terminal_kind": "fault",
+      "reason": null,
+      "issued_depths": [
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "new-browser-1791738962033708400.json",
+      "case": "new",
+      "elapsed_ms": 10005.629999995232,
+      "terminal_kind": "abstained",
+      "reason": null,
+      "issued_depths": [
+        14
+      ],
+      "delivered_questions": []
+    },
+    {
+      "file": "new-browser-1791738990322599900.json",
+      "case": "new",
+      "elapsed_ms": 9706.810000002384,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": [
+        "exchange_function"
+      ]
+    },
+    {
+      "file": "new-browser-1791739571820197700.json",
+      "case": "new",
+      "elapsed_ms": 6035.024999976158,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        14,
+        14,
+        14
+      ],
+      "delivered_questions": [
+        "exchange_function"
+      ]
+    },
+    {
+      "file": "new-browser-1791741097174378200.json",
+      "case": "new",
+      "elapsed_ms": 5350.435000002384,
+      "terminal_kind": "completed",
+      "reason": null,
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "delivered_questions": [
+        "exchange_function"
+      ]
+    }
+  ],
+  "verification": {
+    "live_quality_cases": 2,
+    "question_contract": {
+      "suite": "AvailableEntryTest",
+      "passed": 4,
+      "log": "target/research-runs/purpose-delivery-20261012/question-contract-test.log"
+    },
+    "consumer_contract": {
+      "suite": "moveReviewPurposeDelivery.test.ts",
+      "passed": 3,
+      "checks": [
+        "actual selected root moves and verdict, typed functional answer",
+        "foreign response owner and missing exchange price rejected while decoded numerical evidence is unchanged",
+        "compact reply work accepted and depth19 rejected"
+      ],
+      "log": "target/research-runs/purpose-delivery-20261012/purpose-delivery-test.log"
+    },
+    "build": "Changed Scala sources compiled incrementally; actual browser bundle built successfully.",
+    "test_environment": "Node test bundle uses the existing target/duplication-20261010/ui-preload.mjs jsdom preload. A bare Node invocation failed before tests due to missing window, then all three passed with the required preload.",
+    "screen_review": "Both saved full-page basic panels were visually inspected; essential meaning is outside collapsed details."
+  },
+  "evidence_bundle": {
+    "path": "judgment-evaluation/fixtures/public-commentary-v6/purpose-delivery-browser.json.gz",
+    "sha256": "761d80a34c4db1f94abb2a2db6fa5b4a1e13799410f3c4caaf438252094679e9",
+    "bytes": 796747,
+    "snapshot_mutation": false
+  },
+  "preservation": {
+    "initial_dirty_entries": 335,
+    "byte_unchanged": 309,
+    "original_deletions_preserved": 16,
+    "missing_or_restored_unexpectedly": [],
+    "intentionally_extended_initial_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/TargetResponseInvestigation.scala",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ExchangeFunctionReading.scala",
+      "research/README.md"
+    ],
+    "initial_readme_text_preserved": true,
+    "baseline_manifest_sha256": "9f8eb9f86d9f04dd081761ef4ba6f61e3d814d71d1c50c48f7b14580241c8f62",
+    "baseline_and_before_copies": "target/research-runs/purpose-delivery-20261012/",
+    "commit_created": false
+  },
+  "limitations": [
+    "Two development cases do not establish broad strategic generalization; the fresh case was exposed during implementation, not an independent holdout.",
+    "The real product-component harness is not a completed full-Lila integration test; Docker was unavailable.",
+    "English screen only; Korean output and all navigation interactions were not validated.",
+    "Depth12 and measured latency on this host do not imply depth16-equivalent accuracy or a hard deadline on all positions/devices. Synchronous assembly cannot be preempted.",
+    "Basic prose still repeats some attacks/exchanges. General quiet-plan discovery and sufficient strategic compensation remain incomplete.",
+    "No broad regression suite, full TypeScript typecheck or release-wide verification was run."
+  ]
+}

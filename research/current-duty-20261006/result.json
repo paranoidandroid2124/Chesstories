@@ -1,0 +1,84 @@
+{
+  "version": "dutyv4",
+  "generated_utc": "2026-10-05T22:17:46.099031+00:00",
+  "started_utc": "2026-10-05T21:12:25Z",
+  "deadline_utc": "2026-10-06T12:12:25Z",
+  "implementation": "Existing fallback strengthened with a verified current defense question, actual root counterplay and its closed price; no case ID/SAN branches or new dependencies.",
+  "scala_tests": 372,
+  "scala_suites": 15,
+  "ui_tests": 44,
+  "same_input_fresh": {
+    "positions": 14,
+    "fully_replayed": 14,
+    "pending": 0,
+    "unchanged_upstream": 14,
+    "unchanged_facts": 14,
+    "text_changed": 2,
+    "lost_delivery": 0,
+    "prices_moved": 0,
+    "prices_lost": 0,
+    "added_prices": 3,
+    "duplicate_cases": 0,
+    "missing_mandatory": 0
+  },
+  "opened35": {
+    "positions": 35,
+    "fully_replayed": 35,
+    "pending": 0,
+    "unchanged_upstream": 35,
+    "unchanged_facts": 35,
+    "text_changed": 0,
+    "lost_delivery": 0,
+    "prices_moved": 0,
+    "prices_lost": 0,
+    "added_prices": 0,
+    "duplicate_cases": 0,
+    "missing_mandatory": 0
+  },
+  "frontend": {
+    "positions": 57,
+    "exact_basic_links": 2364,
+    "rejected_mutations": 30
+  },
+  "new_engine": {
+    "positions": 8,
+    "completed": 8,
+    "original_completed": 7,
+    "original_partial": 1,
+    "retried_case": "D01",
+    "run_manifest": "target/current-duty-20261006/new8complete/manifest.json"
+  },
+  "reading_rules_unchanged_after_freeze": true,
+  "frontend_fixed_after_new_output": true,
+  "limits": [
+    "Developer reading of basic prose against the declared human task. These constructed related examples are engineering checks, not an independent novice study or a population quality score. Need and excess are separate judgments.",
+    "No global significance ranking, strategic evaluation cause, compensation or forcing proof was added.",
+    "수치 판정과 확인한 이유가 어긋나는 사례에서 현재 역할, 놓친 기회, 대가, 평가 원인의 미확정을 구분해 기본 답을 고른다. B03·D05의 입증되지 않은 원인, D02·D07의 불필요한 이력, D06·D08의 첫 응수 연결을 각각 다른 실패로 다룬다."
+  ],
+  "verification": "research/current-duty-20261006/verification.json",
+  "artifacts": {
+    "report.html": "9fd611ccb1a12b9c98909aa89c8ee80756cecea95fbe3a0024222176d381bcc0",
+    "reading.json": "6102327e7af2e583b08507e01a4caa9b38409f0e30e3e4f90ea019692f93f437",
+    "comparison-dutyv4.json": "6a52ed31dbe94e4856d8e07f43a51b82537c724013d4afdb7b85f2851b449905",
+    "diagnosis.json": "e3950d2980194bfee5b81801761251f96146a3dbbb0043cb4ab5b4a2ec4792b5",
+    "rule-freeze.json": "62963de99e24c49bc40347f8891a7d25bb5ff9709c3f4746dc39a9cd9b7ac3e0",
+    "decoder-repair.json": "a4284ed857b12991f28c7b11966eb2030e4991a7daf7c9f3dfb2272d3328ab54",
+    "verification.json": "7d1555fa914241aae47c83fb225eec892c4a962efe665b043a9440113df9f827"
+  },
+  "finished_utc": "2026-10-05T22:20:01.599894+00:00",
+  "elapsed_seconds": 4057,
+  "final_sources_verified": true,
+  "visual_qa": {
+    "report_loaded": true,
+    "D01_expanded": true,
+    "case_count": 8,
+    "board_count": 8,
+    "viewport_width": 1265,
+    "document_width": 1265,
+    "horizontal_overflow": false
+  },
+  "source_manifests": {
+    "main_manifest_sha256": "46f63eefeaf013fa6cc56e70386076eeb0e365b842c294a60950cd85e423b8fc",
+    "ui_manifest_sha256": "008ade360662dcd1afcdebacf5b5b6e62dd9be447ee499fe68543b009ec74901"
+  }
+}

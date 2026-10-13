@@ -1,0 +1,252 @@
+{
+  "COR06-02": {
+    "oracle_question": "How do Nbd5 and Bc6 deal with the attacked b4 knight, and what actually happens to that knight?",
+    "arms": [
+      {
+        "line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:da202259667be7263f4543d6ff15f0b272b275a7db1d09a79e48266d879f7f3e",
+        "statements": [
+          {
+            "type": "evades",
+            "offset": 0,
+            "actor": "white:queen:a4",
+            "target": "black:knight:b4"
+          },
+          {
+            "type": "evades",
+            "offset": 0,
+            "actor": "white:bishop:c3",
+            "target": "black:knight:b4"
+          },
+          {
+            "type": "attack",
+            "offset": 0,
+            "actor": "black:knight:b4",
+            "target": "white:bishop:c3"
+          },
+          {
+            "type": "evades",
+            "offset": 1,
+            "actor": "black:knight:b4",
+            "target": "white:bishop:c3"
+          },
+          {
+            "type": "attack",
+            "offset": 9,
+            "actor": "white:pawn:e2",
+            "target": "black:knight:b4"
+          },
+          {
+            "type": "evades",
+            "offset": 10,
+            "actor": "white:pawn:e2",
+            "target": "black:knight:b4"
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              13
+            ]
+          }
+        ]
+      },
+      {
+        "line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:7394f43cecd26e7b717f05d1f235809b9affd450a0ef3ff4c17d87b15ae21a6a",
+        "statements": [
+          {
+            "type": "attack",
+            "offset": 0,
+            "actor": "black:bishop:b7",
+            "target": "white:queen:a4"
+          },
+          {
+            "type": "evades",
+            "offset": 1,
+            "actor": "black:bishop:b7",
+            "target": "white:queen:a4"
+          },
+          {
+            "type": "presence",
+            "subject": "black:knight:b4"
+          }
+        ]
+      }
+    ]
+  },
+  "COR06-08": {
+    "oracle_question": "How does the Nd7 continuation exchange the central knights, and what does White pay when its queen then takes the d6 bishop, compared with Bd7?",
+    "arms": [
+      {
+        "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:dbc04a1cd698f9770aea4aad1cd0e000aeb66b8aff40089c41423ec7b7f0e377",
+        "statements": [
+          {
+            "type": "continuation",
+            "offsets": [
+              0,
+              1
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "control",
+            "offset": 3,
+            "actor": "white:queen:d2",
+            "target": "white:knight:c3",
+            "present": true,
+            "sole": true
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              7,
+              8,
+              9
+            ]
+          },
+          {
+            "type": "control",
+            "offset": 9,
+            "actor": "white:queen:d2",
+            "target": "white:knight:c3",
+            "present": false,
+            "sole": true
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:51870bda4728077a2627c6f1a3c9b57fda5ecdf6ff594e6c79d8e1c5953cbe8f",
+        "statements": [
+          {
+            "type": "continuation",
+            "offsets": [
+              0
+            ]
+          },
+          {
+            "type": "route",
+            "subject": "white:knight:d4",
+            "offsets": [
+              1
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              17,
+              18
+            ]
+          },
+          {
+            "type": "attack",
+            "offset": 16,
+            "actor": "black:pawn:a6",
+            "target": "white:knight:c3"
+          },
+          {
+            "type": "evades",
+            "offset": 19,
+            "actor": "black:pawn:a6",
+            "target": "white:knight:c3"
+          },
+          {
+            "type": "presence",
+            "subject": "white:knight:d4"
+          },
+          {
+            "type": "presence",
+            "subject": "white:knight:c3"
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              20
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "COR06-09": {
+    "oracle_question": "What does retreating the d5 bishop to b3 actually preserve, and what minor pieces are exchanged after ...Nd4 compared with c3?",
+    "arms": [
+      {
+        "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:251b8b47d7058e581a6c7f93a99fedca679e89adfbcc53ccb26f05042eedbf87",
+        "statements": [
+          {
+            "type": "evades",
+            "offset": 0,
+            "actor": "black:knight:f6",
+            "target": "white:bishop:d5"
+          },
+          {
+            "type": "continuation",
+            "offsets": [
+              1
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              6,
+              7
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              11,
+              12
+            ]
+          }
+        ]
+      },
+      {
+        "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:d75e5f00cde6ecdce03205be7d75833271e1f844a0d431d57f3fe5280684a828",
+        "statements": [
+          {
+            "type": "continuation",
+            "offsets": [
+              0
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              1,
+              2
+            ]
+          },
+          {
+            "type": "exchange",
+            "offsets": [
+              6,
+              7
+            ]
+          },
+          {
+            "type": "presence",
+            "subject": "white:knight:f3"
+          }
+        ]
+      }
+    ]
+  }
+}

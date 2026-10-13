@@ -1,0 +1,1581 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T01:19:45.401639+00:00",
+  "scope": "Human source criteria for losing a cheap capture while other captures remain legal, with Black played-move commentary and White plan commentary separated. Known exposed development research, not new independent success criteria.",
+  "independence": {
+    "main_or_tests_read_or_edited": false,
+    "new_engine_runs": 0,
+    "new_product_output_or_new_engine_results_read": false,
+    "already_completed_24_query_research_read": true,
+    "prior_new_four_basic_reading_known": true,
+    "independent_criteria_revised_or_rescored": false,
+    "new_proposed_product_fixtures": 0
+  },
+  "preserved_source_records_sha256": {
+    "independent-theory-controls.json": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+    "independent-minimum-comparisons-semantic-reading.json": "cd84018cf264e9842d19c7c7aeb0753f2ea8d6605016f28eb4d081486f3e9e80",
+    "independent-functional-followup-product-inputs.json": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "functional-followup-basic-v24b-human-reading.json": "a426cb0c2194f51c6a9c368a019236cd928a9def49061b203a24c64e365ef0df"
+  },
+  "source": {
+    "book_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+    "book_sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+    "reading_edition_pages_reread": [
+      413,
+      414,
+      415,
+      416,
+      417,
+      418
+    ],
+    "diagrams_or_page_layout_visually_checked_this_phase": [
+      413,
+      418
+    ],
+    "earlier_diagram_pages_checked": [
+      414,
+      415,
+      416
+    ],
+    "source_pdf_footer_pages": "489–497",
+    "completed_comparisons_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\independent-minimum-batch-driver\\summary.json",
+    "completed_comparisons_sha256": "1b3c2cbe72fd6f41789dfce2c26f0fa697c1e394a01345762df225e065c84a19",
+    "full_book_or_general_product_success_claim": false
+  },
+  "author_meaning": [
+    {
+      "pages": [
+        413,
+        418
+      ],
+      "meaning": "White f5 is attacked twice, but clearing that tension oneself can help Black more than accepting a possible pawn loss. Threat existence alone does not require an immediate exchange."
+    },
+    {
+      "pages": [
+        413,
+        416,
+        418
+      ],
+      "meaning": "White fxe6-fxe6 repairs Black's doubled f-pawns and makes ...f6-f5 available, freeing bishop activity. This is the author's strategic-error explanation, not a claim that every exchange on f5 has the same effect."
+    },
+    {
+      "pages": [
+        414,
+        415,
+        416
+      ],
+      "meaning": "Black ...exf5 can give up pressure and allow White activity; White may choose different knight routes or pawn pressure. Red1 preserves that choice, and ...a5 can be met by a kingside route. Good defensive play need not eliminate every useful White plan."
+    },
+    {
+      "pages": [
+        415,
+        416
+      ],
+      "meaning": "The book gives Red1 a5 Ne2 exf5 Ng3 and Na2 a5 Nc1 routes. It does not provide our Nd5 capture-price controls; those are derived research comparisons."
+    },
+    {
+      "pages": [
+        416,
+        417
+      ],
+      "meaning": "Black later won after White's fxe6, but both sides missed resources and the later win does not establish a forced causal chain from move20 alone."
+    }
+  ],
+  "legal_resource_states": [
+    {
+      "id": "e6-held-before-Nd5",
+      "prefix_san": [
+        "Red1",
+        "a5",
+        "Nd5"
+      ],
+      "fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+      "target_square": "d5",
+      "target_book_root_actor": "w-N@c3",
+      "white_direct_defenders": [
+        "w-R@d4",
+        "w-P@e4"
+      ],
+      "side_to_move": "black",
+      "black_geometric_attackers": [
+        "b-R@c5",
+        "b-P@e6"
+      ],
+      "all_legal_current_black_captures_of_target": [
+        {
+          "san": "Rxd5",
+          "capturer_book_root_actor": "b-R@c5",
+          "target_book_root_actor": "w-N@c3",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "Rxd5",
+              "recapturer_book_root_actor": "w-R@d4"
+            },
+            {
+              "san": "exd5",
+              "recapturer_book_root_actor": "w-P@e4"
+            }
+          ]
+        },
+        {
+          "san": "exd5",
+          "capturer_book_root_actor": "b-P@e6",
+          "target_book_root_actor": "w-N@c3",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "Rxd5",
+              "recapturer_book_root_actor": "w-R@d4"
+            },
+            {
+              "san": "exd5",
+              "recapturer_book_root_actor": "w-P@e4"
+            }
+          ]
+        }
+      ],
+      "black_capture_scope": "Actual legal Black moves at this stage; null when White is to move. Geometrical pressure is recorded separately.",
+      "book_root_id_anchor": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "not_product_fixture_or_new_engine_plan": true
+    },
+    {
+      "id": "e6-moved-to-f5-before-Nd5",
+      "prefix_san": [
+        "Red1",
+        "exf5",
+        "Nd5"
+      ],
+      "fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+      "target_square": "d5",
+      "target_book_root_actor": "w-N@c3",
+      "white_direct_defenders": [
+        "w-R@d4",
+        "w-P@e4"
+      ],
+      "side_to_move": "black",
+      "black_geometric_attackers": [
+        "b-R@c5"
+      ],
+      "all_legal_current_black_captures_of_target": [
+        {
+          "san": "Rxd5",
+          "capturer_book_root_actor": "b-R@c5",
+          "target_book_root_actor": "w-N@c3",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "Rxd5",
+              "recapturer_book_root_actor": "w-R@d4"
+            },
+            {
+              "san": "exd5",
+              "recapturer_book_root_actor": "w-P@e4"
+            }
+          ]
+        }
+      ],
+      "black_capture_scope": "Actual legal Black moves at this stage; null when White is to move. Geometrical pressure is recorded separately.",
+      "book_root_id_anchor": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "not_product_fixture_or_new_engine_plan": true
+    },
+    {
+      "id": "after-strong-fxe4-Rxe4",
+      "prefix_san": [
+        "Red1",
+        "exf5",
+        "Nd5",
+        "fxe4",
+        "Rxe4"
+      ],
+      "fen": "3k3r/3bbp2/p2p1p2/1prN3p/4R2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+      "target_square": "d5",
+      "target_book_root_actor": "w-N@c3",
+      "white_direct_defenders": [
+        "w-R@e1"
+      ],
+      "side_to_move": "black",
+      "black_geometric_attackers": [
+        "b-R@c5"
+      ],
+      "all_legal_current_black_captures_of_target": [
+        {
+          "san": "Rxd5",
+          "capturer_book_root_actor": "b-R@c5",
+          "target_book_root_actor": "w-N@c3",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "Rxd5",
+              "recapturer_book_root_actor": "w-R@e1"
+            }
+          ]
+        }
+      ],
+      "black_capture_scope": "Actual legal Black moves at this stage; null when White is to move. Geometrical pressure is recorded separately.",
+      "book_root_id_anchor": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "not_product_fixture_or_new_engine_plan": true
+    },
+    {
+      "id": "after-new-bishop-pressure",
+      "prefix_san": [
+        "Red1",
+        "exf5",
+        "Nd5",
+        "fxe4",
+        "Rxe4",
+        "Bf5",
+        "Re2",
+        "Be6"
+      ],
+      "fen": "3k3r/4bp2/p2pbp2/1prN3p/7P/P4B2/1PP1R1P1/1K1R4 w - - 3 24",
+      "target_square": "d5",
+      "target_book_root_actor": "w-N@c3",
+      "white_direct_defenders": [
+        "w-R@e1",
+        "w-B@f3"
+      ],
+      "side_to_move": "white",
+      "black_geometric_attackers": [
+        "b-R@c5",
+        "b-B@d7"
+      ],
+      "all_legal_current_black_captures_of_target": null,
+      "black_capture_scope": "Actual legal Black moves at this stage; null when White is to move. Geometrical pressure is recorded separately.",
+      "book_root_id_anchor": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "not_product_fixture_or_new_engine_plan": true
+    },
+    {
+      "id": "root-two-attacks-on-f5",
+      "prefix_san": [
+        "Red1"
+      ],
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+      "target_square": "f5",
+      "target_book_root_actor": "w-P@f5",
+      "white_direct_defenders": [
+        "w-P@e4"
+      ],
+      "side_to_move": "black",
+      "black_geometric_attackers": [
+        "b-R@c5",
+        "b-P@e6"
+      ],
+      "all_legal_current_black_captures_of_target": [
+        {
+          "san": "Rxf5",
+          "capturer_book_root_actor": "b-R@c5",
+          "target_book_root_actor": "w-P@f5",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "exf5",
+              "recapturer_book_root_actor": "w-P@e4"
+            }
+          ]
+        },
+        {
+          "san": "exf5",
+          "capturer_book_root_actor": "b-P@e6",
+          "target_book_root_actor": "w-P@f5",
+          "all_immediate_legal_recaptures": [
+            {
+              "san": "exf5",
+              "recapturer_book_root_actor": "w-P@e4"
+            }
+          ]
+        }
+      ],
+      "black_capture_scope": "Actual legal Black moves at this stage; null when White is to move. Geometrical pressure is recorded separately.",
+      "book_root_id_anchor": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "not_product_fixture_or_new_engine_plan": true
+    }
+  ],
+  "conditional_capture_ledgers": [
+    {
+      "id": "cheap-pawn-capture-white-rook-choice",
+      "san": [
+        "Red1",
+        "a5",
+        "Nd5",
+        "exd5",
+        "Rxd5",
+        "Rxd5",
+        "Rxd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "exd5",
+          "uci": "e6d5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d4d5",
+          "moving_book_root_actor": "w-R@d4",
+          "captured_book_root_actor": "b-P@e6",
+          "before_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprR1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-R@d4",
+          "before_fen": "3k3r/3bbp2/3p1p2/pprR1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1r1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d1d5",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/3p1p2/pp1r1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K6 b - - 0 23"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3p1p2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K6 b - - 0 23",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "cheap-pawn-capture-white-pawn-choice",
+      "san": [
+        "Red1",
+        "a5",
+        "Nd5",
+        "exd5",
+        "exd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "exd5",
+          "uci": "e6d5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "exd5",
+          "uci": "e4d5",
+          "moving_book_root_actor": "w-P@e4",
+          "captured_book_root_actor": "b-P@e6",
+          "before_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprP1P1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3p1p2/pprP1P1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "rook-capture-best-white-pawn-choice-before",
+      "san": [
+        "Red1",
+        "a5",
+        "Nd5",
+        "Rxd5",
+        "exd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "exd5",
+          "uci": "e4d5",
+          "moving_book_root_actor": "w-P@e4",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3ppp2/pp1P1P1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3ppp2/pp1P1P1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "rook-only-chain-is-conditional-not-forced",
+      "san": [
+        "Red1",
+        "a5",
+        "Nd5",
+        "Rxd5",
+        "Rxd5",
+        "exd5",
+        "Rxd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d4d5",
+          "moving_book_root_actor": "w-R@d4",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3ppp2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        },
+        {
+          "san": "exd5",
+          "uci": "e6d5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-R@d4",
+          "before_fen": "3k3r/3bbp2/3ppp2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1p1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d1d5",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": "b-P@e6",
+          "before_fen": "3k3r/3bbp2/3p1p2/pp1p1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K6 b - - 0 23"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3p1p2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K6 b - - 0 23",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "rook-capture-white-pawn-choice-after",
+      "san": [
+        "Red1",
+        "exf5",
+        "Nd5",
+        "Rxd5",
+        "exd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-P@f5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "exd5",
+          "uci": "e4d5",
+          "moving_book_root_actor": "w-P@e4",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1P1p1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/p2p1p2/1p1P1p1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "changed-defender-after-strong-reply",
+      "san": [
+        "Red1",
+        "exf5",
+        "Nd5",
+        "fxe4",
+        "Rxe4",
+        "Rxd5",
+        "Rxd5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-P@f5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "fxe4",
+          "uci": "f5e4",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-P@e4",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN3p/3Rp2P/P4B2/1PP3P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "Rxe4",
+          "uci": "d4e4",
+          "moving_book_root_actor": "w-R@d4",
+          "captured_book_root_actor": "b-P@e6",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN3p/3Rp2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN3p/4R2P/P4B2/1PP3P1/1K1R4 b - - 0 22"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-N@c3",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN3p/4R2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1r3p/4R2P/P4B2/1PP3P1/1K1R4 w - - 0 23"
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d1d5",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1p1r3p/4R2P/P4B2/1PP3P1/1K1R4 w - - 0 23",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1R3p/4R2P/P4B2/1PP3P1/1K6 b - - 0 23"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/p2p1p2/1p1R3p/4R2P/P4B2/1PP3P1/1K6 b - - 0 23",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "book-good-White-plan-after-a5",
+      "san": [
+        "Red1",
+        "a5",
+        "Ne2",
+        "exf5",
+        "Ng3"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "Ne2",
+          "uci": "c3e2",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21"
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-P@f5",
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22"
+        },
+        {
+          "san": "Ng3",
+          "uci": "e2g3",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4BN1/1PP3P1/1K1R4 b - - 1 22"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4BN1/1PP3P1/1K1R4 b - - 1 22",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "book-Black-a5-against-Na2-route",
+      "san": [
+        "Na2",
+        "a5",
+        "Nc1",
+        "exf5",
+        "Nb3",
+        "Re5",
+        "Nxa5"
+      ],
+      "nodes": [
+        {
+          "san": "Na2",
+          "uci": "c3a2",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20"
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "moving_book_root_actor": "b-P@a6",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21"
+        },
+        {
+          "san": "Nc1",
+          "uci": "a2c1",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP3P1/1KN1R3 b - - 1 21"
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "moving_book_root_actor": "b-P@e6",
+          "captured_book_root_actor": "w-P@f5",
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP3P1/1KN1R3 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP3P1/1KN1R3 w - - 0 22"
+        },
+        {
+          "san": "Nb3",
+          "uci": "c1b3",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP3P1/1KN1R3 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/PN3B2/1PP3P1/1K2R3 b - - 1 22"
+        },
+        {
+          "san": "Re5",
+          "uci": "c5e5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/PN3B2/1PP3P1/1K2R3 b - - 1 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp2rp1p/3RP2P/PN3B2/1PP3P1/1K2R3 w - - 2 23"
+        },
+        {
+          "san": "Nxa5",
+          "uci": "b3a5",
+          "moving_book_root_actor": "w-N@c3",
+          "captured_book_root_actor": "b-P@a6",
+          "before_fen": "3k3r/3bbp2/3p1p2/pp2rp1p/3RP2P/PN3B2/1PP3P1/1K2R3 w - - 2 23",
+          "after_fen": "3k3r/3bbp2/3p1p2/Np2rp1p/3RP2P/P4B2/1PP3P1/1K2R3 b - - 0 23"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/3p1p2/Np2rp1p/3RP2P/P4B2/1PP3P1/1K2R3 b - - 0 23",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    },
+    {
+      "id": "bad-root-rook-capture-versus-pawn-capture",
+      "san": [
+        "Red1",
+        "Rxf5",
+        "exf5"
+      ],
+      "nodes": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "moving_book_root_actor": "w-R@e1",
+          "captured_book_root_actor": null,
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+        },
+        {
+          "san": "Rxf5",
+          "uci": "c5f5",
+          "moving_book_root_actor": "b-R@c5",
+          "captured_book_root_actor": "w-P@f5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1p3r1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+        },
+        {
+          "san": "exf5",
+          "uci": "e4f5",
+          "moving_book_root_actor": "w-P@e4",
+          "captured_book_root_actor": "b-R@c5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1p3r1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1p3P1p/3R3P/P1N2B2/1PP3P1/1K1R4 b - - 0 21"
+        }
+      ],
+      "final_fen": "3k3r/3bbp2/p2ppp2/1p3P1p/3R3P/P1N2B2/1PP3P1/1K1R4 b - - 0 21",
+      "scope": "Legal source or constructed illustration; not all moves forced or separately valued."
+    }
+  ],
+  "completed_evidence_used": [
+    {
+      "query_id": "SG41-Red1-strongest-challenge-wholelegal-d24-180s",
+      "depth": 24,
+      "scope": "unrestricted top3",
+      "values": [
+        {
+          "root_san": "Ke8",
+          "white_cp": 53,
+          "line_san": [
+            "Ke8",
+            "Ne2",
+            "exf5",
+            "Ng3",
+            "f4",
+            "Ne2",
+            "f5",
+            "Nxf4",
+            "fxe4",
+            "Rxe4",
+            "Bc6",
+            "Re3",
+            "Bxf3",
+            "Rxf3",
+            "Rf5",
+            "g3",
+            "Kd7",
+            "Rd5",
+            "Re5",
+            "Rfd3",
+            "Kc6",
+            "R5d4",
+            "Rg8",
+            "a4",
+            "Rg4",
+            "axb5+",
+            "axb5",
+            "c3",
+            "Re1+",
+            "Ka2"
+          ]
+        },
+        {
+          "root_san": "Re5",
+          "white_cp": 59,
+          "line_san": [
+            "Re5",
+            "b3",
+            "Ke8",
+            "b4",
+            "Bc6",
+            "Kb2",
+            "Kd7",
+            "R1d3",
+            "Kc7",
+            "Nd1",
+            "Rc8",
+            "Ne3",
+            "Bf8",
+            "g4",
+            "exf5",
+            "gxf5",
+            "Bh6",
+            "Nd1",
+            "Bf4",
+            "Rxd6",
+            "Re7",
+            "Rxf6"
+          ]
+        },
+        {
+          "root_san": "Bc6",
+          "white_cp": 62,
+          "line_san": [
+            "Bc6",
+            "a4",
+            "Kd7",
+            "R1d3",
+            "e5",
+            "Rb4",
+            "Bd8",
+            "axb5",
+            "axb5",
+            "Rb3",
+            "Ba5",
+            "Nd5",
+            "Bxd5",
+            "Rxd5",
+            "Rxd5",
+            "exd5",
+            "b4",
+            "c3",
+            "bxc3",
+            "Rb7+",
+            "Kc8",
+            "Rxf7",
+            "cxb2",
+            "Kxb2",
+            "Be1",
+            "Rxf6",
+            "Kd7",
+            "Rg6",
+            "Bxh4",
+            "Kc2",
+            "e4",
+            "Bxe4",
+            "Rf8",
+            "Rh6",
+            "Bf6",
+            "Rxh5",
+            "Rh8",
+            "Rxh8",
+            "Bxh8",
+            "g4",
+            "Bf6",
+            "Kd3",
+            "Ke7"
+          ]
+        }
+      ]
+    },
+    {
+      "query_id": "SG41-Red1-strongest-challenge-named-d24-180s",
+      "depth": 24,
+      "scope": "named only",
+      "values": [
+        {
+          "root_san": "a5",
+          "white_cp": 54,
+          "line_san": [
+            "a5",
+            "Ne2",
+            "exf5",
+            "Ng3",
+            "f4",
+            "Ne2",
+            "f5",
+            "Nxf4",
+            "fxe4",
+            "Rxe4",
+            "Bf5",
+            "Re2",
+            "Bd7",
+            "Red2",
+            "Re5",
+            "g3",
+            "Ke8",
+            "Rd5"
+          ]
+        },
+        {
+          "root_san": "Rg8",
+          "white_cp": 59,
+          "line_san": [
+            "Rg8",
+            "R1d2",
+            "Rh8",
+            "Ne2",
+            "Bf8",
+            "R4d3",
+            "exf5",
+            "Ng3",
+            "Bh6",
+            "Rd1",
+            "Bf4",
+            "Nxf5",
+            "Bxf5",
+            "exf5",
+            "Kd7",
+            "Rb3",
+            "Be5",
+            "Rb4",
+            "Bg3",
+            "Bd5",
+            "a5",
+            "Rb3",
+            "Bxh4",
+            "Bxf7",
+            "Rxf5",
+            "g3",
+            "Bg5",
+            "Rbd3",
+            "Kc7",
+            "Be6",
+            "Re5",
+            "Rxd6",
+            "Re8",
+            "Rd7+",
+            "Kc6",
+            "Bf7"
+          ]
+        },
+        {
+          "root_san": "Re5",
+          "white_cp": 60,
+          "line_san": [
+            "Re5",
+            "a4",
+            "bxa4",
+            "Nxa4",
+            "exf5",
+            "exf5",
+            "a5",
+            "Nb6",
+            "Bxf5",
+            "Ra4",
+            "Rc5",
+            "Rd2",
+            "Ke8",
+            "Nc4",
+            "Bd7",
+            "Nxd6+",
+            "Kf8",
+            "Rc4",
+            "Re5",
+            "Nxf7",
+            "Re1+",
+            "Bd1",
+            "Kxf7",
+            "Rxd7",
+            "Rd8",
+            "Rd2"
+          ]
+        },
+        {
+          "root_san": "exf5",
+          "white_cp": 66,
+          "line_san": [
+            "exf5",
+            "Nd5",
+            "fxe4",
+            "Rxe4",
+            "Bf5",
+            "Re2",
+            "Be6",
+            "Nb4",
+            "Rc4",
+            "Nxa6",
+            "Rxh4",
+            "Re3",
+            "f5",
+            "Nb4",
+            "Rg8",
+            "Nc6+",
+            "Kd7",
+            "Nd4",
+            "Bg5",
+            "Red3",
+            "Bc4",
+            "Nxf5",
+            "Bxd3",
+            "Nxh4"
+          ]
+        },
+        {
+          "root_san": "e5",
+          "white_cp": 132,
+          "line_san": [
+            "e5",
+            "R4d3",
+            "Bc6",
+            "Nd5",
+            "Bxd5",
+            "Rxd5",
+            "Rxd5",
+            "Rxd5",
+            "Kc7",
+            "a4",
+            "bxa4",
+            "Ra5",
+            "Kb6",
+            "Rxa4",
+            "Bd8",
+            "Ra3",
+            "a5",
+            "Rc3",
+            "Kb7",
+            "Be2",
+            "Bb6",
+            "Bc4",
+            "Rg8",
+            "Bd5+",
+            "Ka7"
+          ]
+        },
+        {
+          "root_san": "Rxf5",
+          "white_cp": 490,
+          "line_san": [
+            "Rxf5",
+            "exf5",
+            "Kc7",
+            "R4d3",
+            "Bc8",
+            "b4",
+            "Rh7",
+            "Ne4",
+            "d5",
+            "Nc3",
+            "Kb8",
+            "Nxd5",
+            "exd5",
+            "Rxd5",
+            "Rh8",
+            "Kb2",
+            "Re8",
+            "c3",
+            "Bb7",
+            "Rd7",
+            "Bxf3",
+            "gxf3"
+          ]
+        }
+      ]
+    },
+    {
+      "query_id": "SG41-same-Rd1-pawn-held-wholelegal-d24-180s",
+      "depth": 24,
+      "scope": "unrestricted top3",
+      "values": [
+        {
+          "root_san": "exd5",
+          "white_cp": -358,
+          "line_san": [
+            "exd5",
+            "Rxd5",
+            "Rxd5",
+            "Rxd5",
+            "Bc6",
+            "Rd1",
+            "Kc7",
+            "c3",
+            "Bf8",
+            "Kc2",
+            "Bh6",
+            "Kd3",
+            "Bf4",
+            "b4",
+            "a4",
+            "Ra1",
+            "Bg3",
+            "Rh1",
+            "Be5",
+            "Ke3",
+            "Bd7",
+            "Rf1",
+            "Rg8",
+            "Kf2",
+            "Bg3+",
+            "Ke3",
+            "Bxh4"
+          ]
+        },
+        {
+          "root_san": "Rc6",
+          "white_cp": 55,
+          "line_san": [
+            "Rc6",
+            "Nc3",
+            "Rc5",
+            "Ne2",
+            "exf5",
+            "Ng3",
+            "Kc7",
+            "Nxf5",
+            "Bxf5",
+            "exf5",
+            "Rxf5",
+            "a4",
+            "Re5",
+            "axb5",
+            "Rxb5",
+            "Rc4+",
+            "Rc5",
+            "Rxc5+",
+            "dxc5",
+            "Rd5",
+            "f5",
+            "Rxf5",
+            "Bxh4",
+            "Rxc5+",
+            "Kb6"
+          ]
+        },
+        {
+          "root_san": "Bf8",
+          "white_cp": 111,
+          "line_san": [
+            "Bf8",
+            "b4",
+            "Rxd5",
+            "exd5",
+            "e5",
+            "R4d3",
+            "Bxf5",
+            "Rc3",
+            "axb4",
+            "axb4",
+            "e4",
+            "Be2",
+            "Bd7",
+            "Ra3",
+            "f5",
+            "Ra8+",
+            "Ke7",
+            "Ra7",
+            "Kd8",
+            "Ra5",
+            "Rg8",
+            "Bxb5",
+            "Bxb5",
+            "Rxb5",
+            "Rxg2",
+            "Rb8+",
+            "Ke7",
+            "Rf1",
+            "Bg7",
+            "Rxf5",
+            "Rg1+",
+            "Ka2"
+          ]
+        }
+      ]
+    },
+    {
+      "query_id": "SG41-same-Rd1-pawn-held-named-d24-180s",
+      "depth": 24,
+      "scope": "named only",
+      "values": [
+        {
+          "root_san": "exd5",
+          "white_cp": -353,
+          "line_san": [
+            "exd5",
+            "Rxd5",
+            "Rxd5",
+            "Rxd5",
+            "Bc6",
+            "Rd1",
+            "Bf8",
+            "b4",
+            "a4",
+            "g3",
+            "Kc7",
+            "Rd3",
+            "Bh6",
+            "Ka2",
+            "Kd7",
+            "Kb2",
+            "Re8",
+            "Bxh5",
+            "Re7",
+            "Rd4",
+            "Bxe4",
+            "Be2",
+            "Bc6",
+            "Bd3",
+            "Re1"
+          ]
+        },
+        {
+          "root_san": "Rxd5",
+          "white_cp": 173,
+          "line_san": [
+            "Rxd5",
+            "exd5",
+            "e5",
+            "R4d3",
+            "Bxf5",
+            "Rb3",
+            "e4",
+            "Be2",
+            "Rg8",
+            "Bxh5",
+            "Rxg2",
+            "Re1",
+            "Bg4",
+            "Bxg4",
+            "Rxg4",
+            "h5",
+            "f5",
+            "Rh3",
+            "Bf6",
+            "h6",
+            "Ke7",
+            "Rh5",
+            "Rf4",
+            "a4"
+          ]
+        }
+      ]
+    },
+    {
+      "query_id": "SG41-same-Rd1-pawn-captured-f5-wholelegal-d24-180s",
+      "depth": 24,
+      "scope": "unrestricted top3",
+      "values": [
+        {
+          "root_san": "fxe4",
+          "white_cp": 54,
+          "line_san": [
+            "fxe4",
+            "Rxe4",
+            "Bf5",
+            "Re2",
+            "Be6",
+            "Nb4",
+            "Rc4",
+            "Nxa6",
+            "Rxh4",
+            "Nb4",
+            "Rc4",
+            "Bd5",
+            "Rc5",
+            "Bxe6",
+            "fxe6",
+            "Rxe6",
+            "Kd7",
+            "Re3",
+            "Rg5",
+            "Nd5",
+            "Bd8",
+            "Rf3",
+            "f5",
+            "g3",
+            "h4",
+            "gxh4",
+            "Rxh4",
+            "Nb4"
+          ]
+        },
+        {
+          "root_san": "Be6",
+          "white_cp": 82,
+          "line_san": [
+            "Be6",
+            "exf5",
+            "Bxf5",
+            "R1d2",
+            "Bf8",
+            "b4",
+            "Rc8",
+            "Nxf6",
+            "Rc3",
+            "Ne4",
+            "Bxe4",
+            "Rxe4",
+            "f5",
+            "Re6",
+            "Rxa3",
+            "Rde2",
+            "Bg7",
+            "Rxd6+",
+            "Kc7",
+            "Rc6+",
+            "Kd7",
+            "Rd2+",
+            "Ke8",
+            "Rc8+",
+            "Ke7"
+          ]
+        },
+        {
+          "root_san": "a5",
+          "white_cp": 158,
+          "line_san": [
+            "a5",
+            "b4",
+            "axb4",
+            "axb4",
+            "Rc8",
+            "Nb6",
+            "Rc7",
+            "Nxd7",
+            "fxe4",
+            "Bxe4",
+            "Kxd7",
+            "Bf5+",
+            "Kc6",
+            "Rd5",
+            "Ra8",
+            "R1d4",
+            "Rca7",
+            "Be4",
+            "Kb6",
+            "Rxh5",
+            "Ra1+",
+            "Kb2",
+            "R8a4",
+            "Bd5",
+            "Re1",
+            "Rf5",
+            "Raa1",
+            "h5",
+            "Rab1+",
+            "Kc3",
+            "Re3+",
+            "Kd2"
+          ]
+        }
+      ]
+    },
+    {
+      "query_id": "SG41-same-Rd1-pawn-captured-f5-named-d24-180s",
+      "depth": 24,
+      "scope": "named only",
+      "values": [
+        {
+          "root_san": "Rxd5",
+          "white_cp": 284,
+          "line_san": [
+            "Rxd5",
+            "exd5",
+            "Kc8",
+            "c4",
+            "Bd8",
+            "cxb5",
+            "axb5",
+            "Be2",
+            "Bb6",
+            "Rb4",
+            "Bc5",
+            "Rb3",
+            "b4",
+            "axb4",
+            "Bf2",
+            "Ra3",
+            "Kc7",
+            "Rc1+",
+            "Kb7",
+            "Rac3",
+            "Kb6",
+            "Rc7",
+            "Rd8",
+            "Bxh5",
+            "f4",
+            "Bxf7",
+            "Bxh4",
+            "Be6",
+            "Bb5",
+            "Rc8",
+            "Rxc8",
+            "Rxc8",
+            "Bf1",
+            "Rh8"
+          ]
+        }
+      ]
+    }
+  ],
+  "minimum_functional_condition": {
+    "legal_availability": "Nd5 is legal in both states. Losing Pe6xd5 does not make the knight immune: Rc5xd5 remains legal.",
+    "price": "An effective substitute must survive White's best capture response at an acceptable price. Here ...exd5 exchanges a pawn for the knight, while ...Rxd5 allows White Pe4xd5 and gives a rook for the knight. Later pawn prices and compensation also matter.",
+    "strong_counter": "After ...exf5 Nd5, the strongest returned Black response is ...fxe4, not constructed ...Rxd5. Its removal of Pe4 changes the defender; Rd1 then supports Nd5. Later ...Be6 applies new pressure and White may move Nb4 while preserving activity.",
+    "usefulness": "The disappearance of the cheap pawn capture makes Nd5 a more usable option at the declared depth despite the remaining rook attack. It does not prove that Nd5 is forced, every attack is harmless, or Black has no effective defense.",
+    "original_root_judgment": "This is a concrete consequence of Black ...exf5. It is not by itself a mistake verdict or the exclusive cause of Red1's best evaluation. Black ...a5 still allows White Ne2; a bad optional Nd5 continuation cannot rank a5 as a forced winning defense."
+  },
+  "capture_substitution_test_for_humans": [
+    "Is the remaining capturer attacking the same actual target at the relevant stage, and can it legally carry out that capture?",
+    "What can the opponent choose after the capture, including every immediate recapturer and forcing reply? Do not choose a worse recapture on the opponent's behalf.",
+    "Does the remaining capture actually preserve the lost resource's relevant outcome: safe material gain, denial of a valuable plan, or acceptable compensation? A shared target alone is not enough.",
+    "Does the reply that is actually strongest attack a different target, remove a defender, or force the plan to change? Evaluate that route before treating a weak named capture as decisive.",
+    "Does at least one valuable continuation remain under that pressure, with its necessary prices? A legal response or nominal piece value is only a first observation."
+  ],
+  "why_other_capturer_does_not_imply_redundancy": {
+    "same_target_different_price": "Before the e6 pawn moves, cheap ...exd5 is -358 White CP at d24, while ...Rxd5 is +173 with White's pawn recapture. After ...exf5, ...Rxd5 remains legal but is +284; the full-root strongest ...fxe4 is +54. Existence of the rook attack does not replace the lost cheap pawn resource.",
+    "old_chain_error_preserved_as_error": "Rxd5-Rxd5-exd5-Rxd5 is legal only as one voluntary chain. White's Pe4xd5 alternative prevents using that chain as the forced before-price.",
+    "not_piece_type_rule": "Rook captures can be sound sacrifices and pawn captures can fail tactically. Nominal piece cost helps pose the question but does not replace best-reply and compensation checks.",
+    "when_redundancy_could_be_valid": "If a remaining resource is shown to achieve the same relevant denial or result under the opponent's strongest choices at no material explanatory cost, losing the first capturer may be irrelevant to that claim. This study does not certify that equivalence from raw attacker counts."
+  },
+  "mover_commentary_scope": {
+    "Black_played_exf5": {
+      "human_task": "Black is trying to defend and deal with White's pressure; describe what the chosen capture buys and gives up.",
+      "threat_statement_allowed": "The moved pawn on f5 can attack White e4. An immediate capture is an action already performed, not a merely future threat. It does not automatically force White to abandon activity.",
+      "mistake_statement_condition": "Require a validated consequential loss against better Black alternatives. A useful White response, the removed pawn capture, or a small numeric gap alone does not justify blunder or forced-loss wording.",
+      "exchange_price": "Black captures the f5 pawn but gives up the e6 pawn's cheap d5 capture. Doubled f-pawns remain and f5 is now occupied by that same e6 pawn, so Black f6-f5 is still unavailable at that stage.",
+      "White_plan_scope": "White can consider Nd5 and other activity, with the price of accepting pawn loss and responding to ...fxe4/Be6. Do not narrate a forced White win or a compulsory Nd5 reply.",
+      "minimum_comment": "...exf5로 폰을 잡지만 e6 폰이 떠나 Nd5를 폰으로 싸게 잡는 방어가 없어집니다. 룩의 포획은 백 폰의 되잡기 때문에 같은 대안이 아니며, 흑은 ...fxe4 같은 다른 방어로 백의 활동을 다시 제한해야 합니다."
+    },
+    "Black_played_a5": {
+      "human_task": "Describe the queenside restriction and retained central option without pretending every White plan is stopped.",
+      "new_role": "a5 newly controls b4 and makes that future knight route less attractive. It preserves rather than creates the existing Pe6xd5 resource.",
+      "White_response_scope": "White can choose Ne2 rather than an expensive immediate Nd5. The book and completed a5 comparison show a valid kingside route; White activity after a sound defense does not alone make that defense an error.",
+      "minimum_comment": "...a5로 퀸사이드의 b4 경로를 제한하면서 e6 폰의 d5 견제를 남깁니다. 다만 백은 Ne2로 다른 활동을 고를 수 있으므로 모든 계획을 막는 수는 아닙니다.",
+      "ranking_limit": "At the declared d24 named root comparison a5 is +54 and exf5 +66 White CP. This close root difference is not the large -358 vs +54 descendant gap, and has not been stability-rerun."
+    },
+    "White_played_Ne2_after_a5": {
+      "human_task": "Explain a valid route suited to the opponent's restriction rather than always asking for a target to capture.",
+      "minimum_comment": "흑의 ...a5로 퀸사이드 경로가 제한됐으므로 나이트를 킹사이드로 돌립니다. e6 폰이 남아 있는 d5로 서두르지 않고, 흑의 중앙 폰 변화에 맞춰 다음 활동을 고를 수 있습니다.",
+      "conditional_routes": "Ng3 is one book realization after ...exf5. Against ...f4 the completed line returns Ne2 and changes implementation. If ...Rg8 makes Ng3 too expensive, another route is needed; a normal purpose does not promise Ng3 in every variation.",
+      "short_purpose_acceptance": "A concise kingside-redeployment comment may suffice when no comparison or consequential missed price is claimed. Do not force every legal counter ledger into that basic comment."
+    },
+    "White_played_Nd5_after_a5": {
+      "human_task": "This actual descendant move has a concrete error reason, unlike the unplayed alternative in the Black a5 commentary.",
+      "minimum_comment": "e6 폰이 남아 있어 Nd5를 폰으로 잡을 수 있습니다. 백이 되잡아도 나이트와 폰의 교환이 되므로, 여기서는 Ne2 같은 다른 경로를 고르는 편이 맞습니다.",
+      "limit": "Bounded d24 supports the large loss in the registered position; no universal every-Nd5-is-bad rule is inferred."
+    }
+  },
+  "source_and_resource_counterexamples": [
+    {
+      "id": "two-root-attacks-are-not-two-equivalent-threats",
+      "source_pages": [
+        413,
+        418
+      ],
+      "facts": "White Pf5 is attacked by Pe6 and Rc5 but supported by Pe4. Rc5xf5-Pe4xf5 gives up a rook for a pawn; named d24 Rxf5 is +490 vs exf5 +66 White CP.",
+      "human_implication": "Twice attacked does not mean White must rush fxe6. The cheap and expensive captures have different meaning and White may accept a price for activity."
+    },
+    {
+      "id": "removed-cheap-capture-with-rook-still-attacking",
+      "states": [
+        "e6-held-before-Nd5",
+        "e6-moved-to-f5-before-Nd5"
+      ],
+      "human_implication": "Legal remaining Rxd5 is not a functionally equivalent substitute for cheap Pe6xd5."
+    },
+    {
+      "id": "supporter-changes-without-plan-failure",
+      "states": [
+        "e6-moved-to-f5-before-Nd5",
+        "after-strong-fxe4-Rxe4"
+      ],
+      "human_implication": "After ...fxe4-Rxe4 the original supporting Pe4 is gone but Rd1 supports Nd5. Requiring that pawn's permanent survival would wrongly withdraw the activity explanation."
+    },
+    {
+      "id": "new-attacker-with-changed-realization",
+      "state": "after-new-bishop-pressure",
+      "human_implication": "...Be6 adds a bishop attacker and the completed strong line chooses Nb4. Activity need not mean the knight remains forever on d5 or is never attacked."
+    },
+    {
+      "id": "exchange-directions-have-different-functions",
+      "source_pages": [
+        413,
+        416,
+        418
+      ],
+      "human_implication": "White fxe6-fxe6 undoubles f-pawns and frees f5. Black exf5 does neither immediately: the original e6 pawn occupies f5 and the f6/f7 structure remains. Generic exchange-release wording conflates them."
+    },
+    {
+      "id": "bad-descendant-does-not-make-good-root-forced-win",
+      "human_implication": "Nd5 after a5 is a bad optional White response, while Ne2 remains good. That descendant price cannot rank Black a5 far above exf5 or certify the whole Red1 causal explanation."
+    }
+  ],
+  "confirmation_limits": [
+    "All cited numerical evidence comes from already completed registered d24 comparisons; no new engine validation was done.",
+    "Unrestricted searches return only top3, not independent scores for every root or downstream response.",
+    "Derived legal states establish capture/recapture availability, not every resource's global value or future compensation.",
+    "Source criteria are informed by previous exposed research and basic outputs. They are not retrospectively applied as new independent success requirements.",
+    "Generic capture substitution should compare relevant price and best replies, but this reading does not implement or prove a universal solver."
+  ]
+}

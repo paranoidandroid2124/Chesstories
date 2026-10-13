@@ -1,0 +1,2071 @@
+{
+  "schema": "independent_move_notes_v1",
+  "game": {
+    "white": "Frank Marshall",
+    "black": "Jose Raul Capablanca",
+    "event": "Match 1909",
+    "supplied_result": "1-0",
+    "provided_score_plies": 49,
+    "final_board_is_terminal": false,
+    "termination_reason_supplied": false
+  },
+  "method": {
+    "author": "assistant language-model reasoning, independent of the product",
+    "product_sources_read": false,
+    "product_output_read": false,
+    "engine_used": false,
+    "sourcebook_annotations_read": false,
+    "human_reader_evaluation": false,
+    "python_chess_scope": "Played-move legality, FEN, listed geometric controls, and explicit variation legality/checkmate only; no engine and no search for best moves.",
+    "phase1": "Recorded actions, legal/physical relationships, actual exchange closure, and explicitly scoped manually chosen tactical variations.",
+    "phase2": "Intent, strategic preference, lasting weakness, best-move ranking, and full result claims remain inferences unless separately proved."
+  },
+  "notes": [
+    {
+      "ply": 1,
+      "move_number": 1,
+      "side": "white",
+      "san": "d4",
+      "uci": "d2d4",
+      "before_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "after_fen": "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1",
+      "question": "What center and development does d4 establish?",
+      "core_message": "d4 occupies the center and opens the c1-bishop's route, which White uses with Bg5.",
+      "phase1": {
+        "condition": "The d2-pawn blocks the bishop's c1-d2-e3-f4-g5 diagonal.",
+        "actual_use_or_reply": "The pawn reaches d4, controls c5 and e5, and leaves d2 empty; Bg5 follows at White's fourth move.",
+        "cost_or_result": "White commits the d-pawn to the center; no material changes."
+      },
+      "phase2_inference": "A space-grabbing central setup is a plausible plan, not a proven advantage.",
+      "not_proved": "The strength of alternative first moves is outside this reading.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "d2",
+        "to": "d4",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 2,
+      "move_number": 1,
+      "side": "black",
+      "san": "d5",
+      "uci": "d7d5",
+      "before_fen": "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1",
+      "after_fen": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2",
+      "question": "How does Black meet White's center?",
+      "core_message": "...d5 contests the center directly rather than conceding it.",
+      "phase1": {
+        "condition": "White's pawn on d4 controls c5 and e5.",
+        "actual_use_or_reply": "Black places a pawn on d5, controlling c4 and e4; c4 challenges it next.",
+        "cost_or_result": "The two d-pawns stand opposite one another; no exchange has occurred."
+      },
+      "phase2_inference": "Black's setup aims at central equality, but equality is not established here.",
+      "not_proved": "No opening ranking or forced response is claimed.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "d7",
+        "to": "d5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 3,
+      "move_number": 2,
+      "side": "white",
+      "san": "c4",
+      "uci": "c2c4",
+      "before_fen": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2",
+      "after_fen": "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2",
+      "question": "What does c4 challenge?",
+      "core_message": "c4 attacks the d5-pawn and creates a concrete choice about the center.",
+      "phase1": {
+        "condition": "Black has established a pawn on d5.",
+        "actual_use_or_reply": "The c-pawn reaches c4 and attacks d5; Black supports d5 with ...e6 rather than capturing immediately.",
+        "cost_or_result": "White has not yet gained a pawn; the tension remains."
+      },
+      "phase2_inference": "The move is consistent with a queenside space advantage and pressure on d5.",
+      "not_proved": "Whether ...dxc4 or another defense is preferable is not calculated.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "c2",
+        "to": "c4",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 4,
+      "move_number": 2,
+      "side": "black",
+      "san": "e6",
+      "uci": "e7e6",
+      "before_fen": "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2",
+      "after_fen": "rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "question": "What does ...e6 provide for d5?",
+      "core_message": "...e6 supports d5 and makes the f8-bishop's development possible.",
+      "phase1": {
+        "condition": "White's c4-pawn attacks d5.",
+        "actual_use_or_reply": "The e6-pawn supports d5; its later ...exd5 recapture actually restores the pawn on that square.",
+        "cost_or_result": "The c8-bishop's kingside diagonal is obstructed by the e6-pawn for the moment."
+      },
+      "phase2_inference": "This is a solid central commitment with a development tradeoff.",
+      "not_proved": "No claim that the bishop obstruction is a lasting weakness.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "e7",
+        "to": "e6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 5,
+      "move_number": 3,
+      "side": "white",
+      "san": "Nc3",
+      "uci": "b1c3",
+      "before_fen": "rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3",
+      "after_fen": "rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 3",
+      "question": "What is Nc3 attacking while developing?",
+      "core_message": "Nc3 adds pressure to d5 and controls e4.",
+      "phase1": {
+        "condition": "The d5-pawn is defended by e6.",
+        "actual_use_or_reply": "The b1-knight reaches c3 and attacks d5; this particular knight is later exchanged by ...Nxc3.",
+        "cost_or_result": "Its pressure does not win d5 on the spot."
+      },
+      "phase2_inference": "The move supports White's central development.",
+      "not_proved": "No unsupported tactical gain is inferred from the attack.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "N",
+        "from": "b1",
+        "to": "c3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 6,
+      "move_number": 3,
+      "side": "black",
+      "san": "Nf6",
+      "uci": "g8f6",
+      "before_fen": "rnbqkbnr/ppp2ppp/4p3/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR b KQkq - 1 3",
+      "after_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+      "question": "How does ...Nf6 reinforce Black's position?",
+      "core_message": "...Nf6 develops a knight while adding a defender to d5.",
+      "phase1": {
+        "condition": "White has two attackers directed at d5: the c4-pawn and c3-knight.",
+        "actual_use_or_reply": "The g8-knight reaches f6, supports d5, and gains access to e4.",
+        "cost_or_result": "Bg5 next attacks this knight along a line toward the queen."
+      },
+      "phase2_inference": "Normal development is the strategic reading.",
+      "not_proved": "No optimality claim for this move order.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "g8",
+        "to": "f6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 7,
+      "move_number": 4,
+      "side": "white",
+      "san": "Bg5",
+      "uci": "c1g5",
+      "before_fen": "rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 4",
+      "after_fen": "rnbqkb1r/ppp2ppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR b KQkq - 3 4",
+      "question": "What does Bg5 make awkward for the f6-knight?",
+      "core_message": "Bg5 attacks the f6-knight along the line toward Black's queen.",
+      "phase1": {
+        "condition": "The diagonal g5-f6-e7-d8 contains the knight and queen, with e7 empty.",
+        "actual_use_or_reply": "The c1-bishop develops to g5; ...Be7 next inserts a bishop behind the knight.",
+        "cost_or_result": "This is a relative pin to a queen, not an absolute pin to the king."
+      },
+      "phase2_inference": "The move increases pressure without making all knight moves illegal.",
+      "not_proved": "The value of preserving this bishop versus exchanging it is not evaluated.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "B",
+        "from": "c1",
+        "to": "g5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 8,
+      "move_number": 4,
+      "side": "black",
+      "san": "Be7",
+      "uci": "f8e7",
+      "before_fen": "rnbqkb1r/ppp2ppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR b KQkq - 3 4",
+      "after_fen": "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR w KQkq - 4 5",
+      "question": "What does ...Be7 change about that line?",
+      "core_message": "...Be7 shields the queen behind the f6-knight and clears f8 for castling.",
+      "phase1": {
+        "condition": "Bg5 attacks along g5-f6-e7-d8.",
+        "actual_use_or_reply": "The f8-bishop reaches e7; ...Ne4 then vacates f6 and White answers Bxe7.",
+        "cost_or_result": "Black permits an equal bishop exchange rather than losing a queen along the line."
+      },
+      "phase2_inference": "Breaking the practical pin while developing is the plausible purpose.",
+      "not_proved": "The next knight move is legal, not proven best.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "b",
+        "from": "f8",
+        "to": "e7",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 9,
+      "move_number": 5,
+      "side": "white",
+      "san": "e3",
+      "uci": "e2e3",
+      "before_fen": "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR w KQkq - 4 5",
+      "after_fen": "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N1P3/PP3PPP/R2QKBNR b KQkq - 0 5",
+      "question": "What preparation does e3 make useful?",
+      "core_message": "e3 supports d4 and opens the f1-bishop's path to d3.",
+      "phase1": {
+        "condition": "White's bishop is still on f1, and e2 obstructs f1-e2-d3.",
+        "actual_use_or_reply": "The pawn reaches e3, defending d4; Bd3 follows two White turns later.",
+        "cost_or_result": "No immediate tactical gain; White prepares development."
+      },
+      "phase2_inference": "The move is consistent with a stable central setup.",
+      "not_proved": "No assertion that White must choose this pawn structure.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "e2",
+        "to": "e3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 10,
+      "move_number": 5,
+      "side": "black",
+      "san": "Ne4",
+      "uci": "f6e4",
+      "before_fen": "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N1P3/PP3PPP/R2QKBNR b KQkq - 0 5",
+      "after_fen": "rnbqk2r/ppp1bppp/4p3/3p2B1/2PPn3/2N1P3/PP3PPP/R2QKBNR w KQkq - 1 6",
+      "question": "What concrete targets does ...Ne4 create?",
+      "core_message": "...Ne4 attacks both the g5-bishop and c3-knight, making White resolve the piece tension.",
+      "phase1": {
+        "condition": "...Be7 has screened the queen and the d5-pawn can defend e4.",
+        "actual_use_or_reply": "The f6-knight reaches e4; White exchanges the g5-bishop on e7, and the knight later captures on c3.",
+        "cost_or_result": "Black's advanced knight is itself traded off after ...Nxc3 bxc3."
+      },
+      "phase2_inference": "The extra knight move is justified by actual threats in this line, not by development alone.",
+      "not_proved": "No claim that this continuation is forced or optimal.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "f6",
+        "to": "e4",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 11,
+      "move_number": 6,
+      "side": "white",
+      "san": "Bxe7",
+      "uci": "g5e7",
+      "before_fen": "rnbqk2r/ppp1bppp/4p3/3p2B1/2PPn3/2N1P3/PP3PPP/R2QKBNR w KQkq - 1 6",
+      "after_fen": "rnbqk2r/ppp1Bppp/4p3/3p4/2PPn3/2N1P3/PP3PPP/R2QKBNR b KQkq - 0 6",
+      "question": "Why exchange on e7 now?",
+      "core_message": "Bxe7 removes Black's bishop while taking White's attacked bishop out of ...Ne4's reach.",
+      "phase1": {
+        "condition": "The e4-knight attacks Bg5, and f6 has been vacated.",
+        "actual_use_or_reply": "The original c1-bishop travels g5-f6-e7 and captures the original f8-bishop; ...Qxe7 recaptures.",
+        "cost_or_result": "Both dark-squared bishops disappear; White does not win a bishop outright."
+      },
+      "phase2_inference": "White chooses simplification of this piece tension.",
+      "not_proved": "Other retreats and exchanges are not compared.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "B",
+        "from": "g5",
+        "to": "e7",
+        "captured": "b",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 12,
+      "move_number": 6,
+      "side": "black",
+      "san": "Qxe7",
+      "uci": "d8e7",
+      "before_fen": "rnbqk2r/ppp1Bppp/4p3/3p4/2PPn3/2N1P3/PP3PPP/R2QKBNR b KQkq - 0 6",
+      "after_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PPn3/2N1P3/PP3PPP/R2QKBNR w KQkq - 0 7",
+      "question": "How does Black finish the bishop exchange?",
+      "core_message": "...Qxe7 restores the material balance without moving the king.",
+      "phase1": {
+        "condition": "White's bishop occupies e7 after capturing Black's bishop.",
+        "actual_use_or_reply": "The queen from d8 captures it on e7.",
+        "cost_or_result": "Black preserves castling rights; the recapturing queen later works from c7 and d7."
+      },
+      "phase2_inference": "Keeping the king available for castling is the positional interpretation.",
+      "not_proved": "No claim that a king recapture is illegal or necessarily losing.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "q",
+        "from": "d8",
+        "to": "e7",
+        "captured": "B",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 13,
+      "move_number": 7,
+      "side": "white",
+      "san": "Bd3",
+      "uci": "f1d3",
+      "before_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PPn3/2N1P3/PP3PPP/R2QKBNR w KQkq - 0 7",
+      "after_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PPn3/2NBP3/PP3PPP/R2QK1NR b KQkq - 1 7",
+      "question": "What does Bd3 address immediately?",
+      "core_message": "Bd3 develops White's remaining bishop and attacks the knight on e4.",
+      "phase1": {
+        "condition": "Black's knight on e4 lies on the d3-e4 diagonal.",
+        "actual_use_or_reply": "The f1-bishop reaches d3; Black chooses ...Nxc3, vacating e4, instead of withdrawing this knight.",
+        "cost_or_result": "The bishop's longer diagonal toward h7 becomes clear only after the knight leaves e4."
+      },
+      "phase2_inference": "White prepares castling and central activity.",
+      "not_proved": "No immediate h7 attack is attributed to the position while Ne4 still blocks the diagonal.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "B",
+        "from": "f1",
+        "to": "d3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 14,
+      "move_number": 7,
+      "side": "black",
+      "san": "Nxc3",
+      "uci": "e4c3",
+      "before_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PPn3/2NBP3/PP3PPP/R2QK1NR b KQkq - 1 7",
+      "after_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PP4/2nBP3/PP3PPP/R2QK1NR w KQkq - 0 8",
+      "question": "What does ...Nxc3 trade away?",
+      "core_message": "...Nxc3 removes White's c3-knight, but Black's capturing knight is lost to bxc3.",
+      "phase1": {
+        "condition": "The e4-knight can capture c3 and White's b2-pawn can recapture there.",
+        "actual_use_or_reply": "The original g8-knight captures the original b1-knight; the b-pawn takes it next.",
+        "cost_or_result": "One knight from each side disappears; Black's b8-knight remains undeveloped."
+      },
+      "phase2_inference": "Black changes White's pawn structure instead of retaining the central knight.",
+      "not_proved": "No proof that this structure change benefits Black overall.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "e4",
+        "to": "c3",
+        "captured": "N",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 15,
+      "move_number": 8,
+      "side": "white",
+      "san": "bxc3",
+      "uci": "b2c3",
+      "before_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PP4/2nBP3/PP3PPP/R2QK1NR w KQkq - 0 8",
+      "after_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PP4/2PBP3/P4PPP/R2QK1NR b KQkq - 0 8",
+      "question": "What remains after bxc3?",
+      "core_message": "bxc3 completes the knight exchange, supports d4, and leaves White's b-file without a pawn.",
+      "phase1": {
+        "condition": "Black's knight stands on c3 after capturing White's knight.",
+        "actual_use_or_reply": "The original b2-pawn recaptures on c3 and defends d4.",
+        "cost_or_result": "White temporarily has pawns on c3 and c4, but cxd5 ...exd5 later removes the c4-pawn; the doubled structure is not permanent."
+      },
+      "phase2_inference": "The half-open b-file becomes an avenue for Rfb1.",
+      "not_proved": "No lasting doubled-pawn weakness is asserted.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "b2",
+        "to": "c3",
+        "captured": "n",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 16,
+      "move_number": 8,
+      "side": "black",
+      "san": "Nd7",
+      "uci": "b8d7",
+      "before_fen": "rnb1k2r/ppp1qppp/4p3/3p4/2PP4/2PBP3/P4PPP/R2QK1NR b KQkq - 0 8",
+      "after_fen": "r1b1k2r/pppnqppp/4p3/3p4/2PP4/2PBP3/P4PPP/R2QK1NR w KQkq - 1 9",
+      "question": "Which knight does ...Nd7 develop?",
+      "core_message": "...Nd7 develops Black's remaining b8-knight, not the knight exchanged on c3.",
+      "phase1": {
+        "condition": "The original g8-knight has disappeared.",
+        "actual_use_or_reply": "The b8-knight reaches d7, controlling e5 and c5; it later goes to f6 and back to d7.",
+        "cost_or_result": "No material change; this knight will eventually be exchanged by Bxd7."
+      },
+      "phase2_inference": "Central reinforcement is the likely plan.",
+      "not_proved": "Its best route is not established.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "b8",
+        "to": "d7",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 17,
+      "move_number": 9,
+      "side": "white",
+      "san": "Nf3",
+      "uci": "g1f3",
+      "before_fen": "r1b1k2r/pppnqppp/4p3/3p4/2PP4/2PBP3/P4PPP/R2QK1NR w KQkq - 1 9",
+      "after_fen": "r1b1k2r/pppnqppp/4p3/3p4/2PP4/2PBPN2/P4PPP/R2QK2R b KQkq - 2 9",
+      "question": "What does Nf3 make ready?",
+      "core_message": "Nf3 reinforces d4 and clears g1 so White can castle.",
+      "phase1": {
+        "condition": "White's king is still on e1, with the f1-bishop already on d3.",
+        "actual_use_or_reply": "The original g1-knight develops to f3 and controls e5.",
+        "cost_or_result": "This is White's surviving knight, later used on e5."
+      },
+      "phase2_inference": "The move completes the immediate kingside development.",
+      "not_proved": "No evaluation of alternative knight routes.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "N",
+        "from": "g1",
+        "to": "f3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 18,
+      "move_number": 9,
+      "side": "black",
+      "san": "O-O",
+      "uci": "e8g8",
+      "before_fen": "r1b1k2r/pppnqppp/4p3/3p4/2PP4/2PBPN2/P4PPP/R2QK2R b KQkq - 2 9",
+      "after_fen": "r1b2rk1/pppnqppp/4p3/3p4/2PP4/2PBPN2/P4PPP/R2QK2R w KQ - 3 10",
+      "question": "What does ...O-O actually reposition?",
+      "core_message": "...O-O places the king on g8 and the h8-rook on f8.",
+      "phase1": {
+        "condition": "Black has cleared f8 and g8.",
+        "actual_use_or_reply": "Black castles; the f8-rook is later transferred to c8 and b8.",
+        "cost_or_result": "Castling does not guarantee safety: the eventual back-rank configuration becomes tactically important."
+      },
+      "phase2_inference": "A safer and connected development setup is the usual intention.",
+      "not_proved": "No blanket king-safety advantage is claimed.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "k",
+        "from": "e8",
+        "to": "g8",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 19,
+      "move_number": 10,
+      "side": "white",
+      "san": "cxd5",
+      "uci": "c4d5",
+      "before_fen": "r1b2rk1/pppnqppp/4p3/3p4/2PP4/2PBPN2/P4PPP/R2QK2R w KQ - 3 10",
+      "after_fen": "r1b2rk1/pppnqppp/4p3/3P4/3P4/2PBPN2/P4PPP/R2QK2R b KQ - 0 10",
+      "question": "What tension does cxd5 resolve?",
+      "core_message": "cxd5 removes Black's original d-pawn, but White's c-pawn is immediately recaptured.",
+      "phase1": {
+        "condition": "White's c4-pawn attacks d5 and Black's e6-pawn can recapture.",
+        "actual_use_or_reply": "cxd5 is followed by ...exd5.",
+        "cost_or_result": "The c-pawn exchange leaves White's d4-pawn facing Black's replacement pawn on d5."
+      },
+      "phase2_inference": "White clarifies the central structure.",
+      "not_proved": "Whether retaining the tension is stronger is not calculated.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "c4",
+        "to": "d5",
+        "captured": "p",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 20,
+      "move_number": 10,
+      "side": "black",
+      "san": "exd5",
+      "uci": "e6d5",
+      "before_fen": "r1b2rk1/pppnqppp/4p3/3P4/3P4/2PBPN2/P4PPP/R2QK2R b KQ - 0 10",
+      "after_fen": "r1b2rk1/pppnqppp/8/3p4/3P4/2PBPN2/P4PPP/R2QK2R w KQ - 0 11",
+      "question": "What does ...exd5 leave in the center?",
+      "core_message": "...exd5 restores a pawn on d5 and completes the exchange.",
+      "phase1": {
+        "condition": "White's original c-pawn stands on d5.",
+        "actual_use_or_reply": "Black's original e-pawn captures from e6 to d5.",
+        "cost_or_result": "Black's original d-pawn and White's original c-pawn are gone; the e6 square is vacated."
+      },
+      "phase2_inference": "The restored d5-pawn is a central foothold but becomes a queen target next.",
+      "not_proved": "No overall structure evaluation is established.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "e6",
+        "to": "d5",
+        "captured": "P",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 21,
+      "move_number": 11,
+      "side": "white",
+      "san": "Qb3",
+      "uci": "d1b3",
+      "before_fen": "r1b2rk1/pppnqppp/8/3p4/3P4/2PBPN2/P4PPP/R2QK2R w KQ - 0 11",
+      "after_fen": "r1b2rk1/pppnqppp/8/3p4/3P4/1QPBPN2/P4PPP/R3K2R b KQ - 1 11",
+      "question": "What concrete pressure does Qb3 create?",
+      "core_message": "Qb3 attacks d5, prompting a new defender in the actual reply.",
+      "phase1": {
+        "condition": "The queen's diagonal b3-c4-d5 is now clear, and d5 has no Black defender before the reply.",
+        "actual_use_or_reply": "The queen develops from d1 via c2 to b3; ...Nf6 then supports d5.",
+        "cost_or_result": "The b7-pawn is also on the queen's file, but it is defended by the c8-bishop."
+      },
+      "phase2_inference": "Queen activity combines central and queenside pressure.",
+      "not_proved": "No forced pawn win is inferred; Black has other possible defenses.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "Q",
+        "from": "d1",
+        "to": "b3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 22,
+      "move_number": 11,
+      "side": "black",
+      "san": "Nf6",
+      "uci": "d7f6",
+      "before_fen": "r1b2rk1/pppnqppp/8/3p4/3P4/1QPBPN2/P4PPP/R3K2R b KQ - 1 11",
+      "after_fen": "r1b2rk1/ppp1qppp/5n2/3p4/3P4/1QPBPN2/P4PPP/R3K2R w KQ - 2 12",
+      "question": "Why return the knight to f6?",
+      "core_message": "...Nf6 directly defends the d5-pawn attacked by Qb3.",
+      "phase1": {
+        "condition": "Black's remaining knight is on d7.",
+        "actual_use_or_reply": "That knight reaches f6 and attacks d5, adding the needed defender.",
+        "cost_or_result": "It also vacates d7, freeing the c8-bishop's diagonal."
+      },
+      "phase2_inference": "Development and central consolidation are the plausible purposes.",
+      "not_proved": "The move is not proven uniquely necessary.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "d7",
+        "to": "f6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 23,
+      "move_number": 12,
+      "side": "white",
+      "san": "a4",
+      "uci": "a2a4",
+      "before_fen": "r1b2rk1/ppp1qppp/5n2/3p4/3P4/1QPBPN2/P4PPP/R3K2R w KQ - 2 12",
+      "after_fen": "r1b2rk1/ppp1qppp/5n2/3p4/P2P4/1QPBPN2/5PPP/R3K2R b KQ - 0 12",
+      "question": "What does a4 begin?",
+      "core_message": "a4 starts the pawn advance a4-a5-a6 and controls b5.",
+      "phase1": {
+        "condition": "White's queenside pieces can support an advance while Black's b-pawn is still on b7.",
+        "actual_use_or_reply": "The pawn takes a4; Qa3 later supports it along the a-file.",
+        "cost_or_result": "White spends a move on space before castling; Black counters in the center with ...c5."
+      },
+      "phase2_inference": "Queenside expansion is inferred from the subsequent actual advance.",
+      "not_proved": "No claim that this plan is best in the current center.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "a2",
+        "to": "a4",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 24,
+      "move_number": 12,
+      "side": "black",
+      "san": "c5",
+      "uci": "c7c5",
+      "before_fen": "r1b2rk1/ppp1qppp/5n2/3p4/P2P4/1QPBPN2/5PPP/R3K2R b KQ - 0 12",
+      "after_fen": "r1b2rk1/pp2qppp/5n2/2pp4/P2P4/1QPBPN2/5PPP/R3K2R w KQ - 0 13",
+      "question": "What does ...c5 challenge?",
+      "core_message": "...c5 attacks White's d4-pawn and contests the center during the queenside expansion.",
+      "phase1": {
+        "condition": "White has begun a4 while its king remains uncastled.",
+        "actual_use_or_reply": "Black's c7-pawn reaches c5; White eventually captures it with dxc5.",
+        "cost_or_result": "The pawn still occupies c5, so Black's c-file is not simply an open file."
+      },
+      "phase2_inference": "Active central counterplay is the strategic interpretation.",
+      "not_proved": "The timing and evaluation of this break are not proved.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "c7",
+        "to": "c5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 25,
+      "move_number": 13,
+      "side": "white",
+      "san": "Qa3",
+      "uci": "b3a3",
+      "before_fen": "r1b2rk1/pp2qppp/5n2/2pp4/P2P4/1QPBPN2/5PPP/R3K2R w KQ - 0 13",
+      "after_fen": "r1b2rk1/pp2qppp/5n2/2pp4/P2P4/Q1PBPN2/5PPP/R3K2R b KQ - 1 13",
+      "question": "What does Qa3 keep connected?",
+      "core_message": "Qa3 supports the a-pawn and keeps a diagonal aimed at c5.",
+      "phase1": {
+        "condition": "White's a4-pawn can advance, and Black has placed a pawn on c5.",
+        "actual_use_or_reply": "The queen goes b3-a3, backs a5-a6, and later uses a3-b4-c5 to capture on c5.",
+        "cost_or_result": "It no longer attacks d5 from b3; the queen spends a second move before castling."
+      },
+      "phase2_inference": "The move connects the pawn expansion to a later capture route.",
+      "not_proved": "Intent is inferred; no necessary preparation or optimality claim.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "Q",
+        "from": "b3",
+        "to": "a3",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 26,
+      "move_number": 13,
+      "side": "black",
+      "san": "b6",
+      "uci": "b7b6",
+      "before_fen": "r1b2rk1/pp2qppp/5n2/2pp4/P2P4/Q1PBPN2/5PPP/R3K2R b KQ - 1 13",
+      "after_fen": "r1b2rk1/p3qppp/1p3n2/2pp4/P2P4/Q1PBPN2/5PPP/R3K2R w KQ - 0 14",
+      "question": "What does ...b6 enable and defend?",
+      "core_message": "...b6 supports c5 and clears b7 for the c8-bishop.",
+      "phase1": {
+        "condition": "Black's bishop is still on c8 and its pawn on c5 needs support.",
+        "actual_use_or_reply": "The b-pawn reaches b6; ...Bb7 follows and ...bxc5 is later used.",
+        "cost_or_result": "The advanced b-pawn can be attacked by a5 and the b1-rook."
+      },
+      "phase2_inference": "Fianchetto-style development is the likely purpose.",
+      "not_proved": "No claim that the resulting queenside is secure.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "b7",
+        "to": "b6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 27,
+      "move_number": 14,
+      "side": "white",
+      "san": "a5",
+      "uci": "a4a5",
+      "before_fen": "r1b2rk1/p3qppp/1p3n2/2pp4/P2P4/Q1PBPN2/5PPP/R3K2R w KQ - 0 14",
+      "after_fen": "r1b2rk1/p3qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R3K2R b KQ - 0 14",
+      "question": "What pressure does a5 add?",
+      "core_message": "a5 attacks b6 while keeping the pawn backed by Qa3.",
+      "phase1": {
+        "condition": "The b6-pawn is now a concrete target and the a-pawn can advance again.",
+        "actual_use_or_reply": "White reaches a5; the later a6 attacks the bishop on b7.",
+        "cost_or_result": "No pawn is won immediately: b6 is defended and the game advances past the tension."
+      },
+      "phase2_inference": "White restricts the queenside and gains space.",
+      "not_proved": "The long-term value of the advanced pawn is not yet established.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "a4",
+        "to": "a5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 28,
+      "move_number": 14,
+      "side": "black",
+      "san": "Bb7",
+      "uci": "c8b7",
+      "before_fen": "r1b2rk1/p3qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R3K2R b KQ - 0 14",
+      "after_fen": "r4rk1/pb2qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R3K2R w KQ - 1 15",
+      "question": "What does ...Bb7 develop, and what blocks it?",
+      "core_message": "...Bb7 develops Black's remaining bishop, but its diagonal toward the center is blocked by Black's d5-pawn.",
+      "phase1": {
+        "condition": "...b6 has vacated b7.",
+        "actual_use_or_reply": "The c8-bishop reaches b7; a6 later attacks it and it retreats to c6.",
+        "cost_or_result": "The bishop is on the board and active on nearby diagonals, not already attacking the f3-knight through d5."
+      },
+      "phase2_inference": "Developing the bishop supports Black's queenside setup.",
+      "not_proved": "Calling it permanently good or bad would require further assessment.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "b",
+        "from": "c8",
+        "to": "b7",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 29,
+      "move_number": 15,
+      "side": "white",
+      "san": "O-O",
+      "uci": "e1g1",
+      "before_fen": "r4rk1/pb2qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R3K2R w KQ - 1 15",
+      "after_fen": "r4rk1/pb2qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R4RK1 b - - 2 15",
+      "question": "What does O-O make available?",
+      "core_message": "O-O moves White's king to g1 and places the h1-rook on f1, ready for Rfb1.",
+      "phase1": {
+        "condition": "White has cleared f1 and g1.",
+        "actual_use_or_reply": "White castles; the next move transfers that rook to b1 while Ra1 stays on its original file.",
+        "cost_or_result": "The eventual f2-g2-h2 pawn cover leaves a back-rank issue until f4 creates a flight square."
+      },
+      "phase2_inference": "Castling completes development before the queenside confrontation.",
+      "not_proved": "King safety is not treated as absolute.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "K",
+        "from": "e1",
+        "to": "g1",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 30,
+      "move_number": 15,
+      "side": "black",
+      "san": "Qc7",
+      "uci": "e7c7",
+      "before_fen": "r4rk1/pb2qppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R4RK1 b - - 2 15",
+      "after_fen": "r4rk1/pbq2ppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R4RK1 w - - 3 16",
+      "question": "What work does ...Qc7 support?",
+      "core_message": "...Qc7 supports c5 and prepares the actual ...Nd7 and ...Qxd7 sequence.",
+      "phase1": {
+        "condition": "Black's c5-pawn and queenside minor pieces need coordination.",
+        "actual_use_or_reply": "The queen goes e7-c7; it later recaptures White's bishop on d7.",
+        "cost_or_result": "The queen on c7 initially obstructs the rook's downward c-file access until it leaves that square."
+      },
+      "phase2_inference": "Black is coordinating queenside play.",
+      "not_proved": "No precise evaluation gain is assigned to the queen maneuver.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "q",
+        "from": "e7",
+        "to": "c7",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 31,
+      "move_number": 16,
+      "side": "white",
+      "san": "Rfb1",
+      "uci": "f1b1",
+      "before_fen": "r4rk1/pbq2ppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/R4RK1 w - - 3 16",
+      "after_fen": "r4rk1/pbq2ppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/RR4K1 b - - 4 16",
+      "question": "Why use the f-rook for Rfb1?",
+      "core_message": "Rfb1 attacks the b6-pawn on White's half-open b-file while leaving Ra1 on the a-file.",
+      "phase1": {
+        "condition": "White's original b-pawn has left the file; Black's b6-pawn remains.",
+        "actual_use_or_reply": "The castled h1-rook travels f1-e1-d1-c1-b1; the a1-rook is preserved for the later passed-pawn mechanism.",
+        "cost_or_result": "The b-file becomes fully open only after ...bxc5; this rook is later exchanged on b8."
+      },
+      "phase2_inference": "Concentrating pressure on the queenside is the inferred plan.",
+      "not_proved": "The choice of rook is coherent with later play, not proven the only correct choice.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "R",
+        "from": "f1",
+        "to": "b1",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 32,
+      "move_number": 16,
+      "side": "black",
+      "san": "Nd7",
+      "uci": "f6d7",
+      "before_fen": "r4rk1/pbq2ppp/1p3n2/P1pp4/3P4/Q1PBPN2/5PPP/RR4K1 b - - 4 16",
+      "after_fen": "r4rk1/pbqn1ppp/1p6/P1pp4/3P4/Q1PBPN2/5PPP/RR4K1 w - - 5 17",
+      "question": "What does ...Nd7 reinforce, and what does it invite?",
+      "core_message": "...Nd7 controls e5 and c5, but Bf5 next attacks it.",
+      "phase1": {
+        "condition": "Black's remaining knight has been on f6.",
+        "actual_use_or_reply": "The knight returns to d7, backed by Qc7; Bxd7 ...Qxd7 later removes it.",
+        "cost_or_result": "After the exchange, this knight can no longer contest White's e5 outpost."
+      },
+      "phase2_inference": "A rerouting or central reinforcement plan is plausible.",
+      "not_proved": "No unsupported mistake label for the retreat.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "n",
+        "from": "f6",
+        "to": "d7",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 33,
+      "move_number": 17,
+      "side": "white",
+      "san": "Bf5",
+      "uci": "d3f5",
+      "before_fen": "r4rk1/pbqn1ppp/1p6/P1pp4/3P4/Q1PBPN2/5PPP/RR4K1 w - - 5 17",
+      "after_fen": "r4rk1/pbqn1ppp/1p6/P1pp1B2/3P4/Q1P1PN2/5PPP/RR4K1 b - - 6 17",
+      "question": "What does Bf5 target?",
+      "core_message": "Bf5 aims directly at Nd7, offering a bishop-for-knight exchange.",
+      "phase1": {
+        "condition": "The f5-e6-d7 diagonal is clear.",
+        "actual_use_or_reply": "White's bishop moves d3-f5; Bxd7 follows after ...Rfc8.",
+        "cost_or_result": "After ...Rfc8, the knight lies on the bishop's line toward that rook; this is a relative pin, not an illegal-move restriction."
+      },
+      "phase2_inference": "White is choosing a knight-versus-bishop position and removing an e5 defender.",
+      "not_proved": "Its strategic superiority is not proved from the exchange alone.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "B",
+        "from": "d3",
+        "to": "f5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 34,
+      "move_number": 17,
+      "side": "black",
+      "san": "Rfc8",
+      "uci": "f8c8",
+      "before_fen": "r4rk1/pbqn1ppp/1p6/P1pp1B2/3P4/Q1P1PN2/5PPP/RR4K1 b - - 6 17",
+      "after_fen": "r1r3k1/pbqn1ppp/1p6/P1pp1B2/3P4/Q1P1PN2/5PPP/RR4K1 w - - 7 18",
+      "question": "What does ...Rfc8 prepare?",
+      "core_message": "...Rfc8 places a rook behind the c-file structure, but White can now exchange on d7 along the line toward it.",
+      "phase1": {
+        "condition": "The c8-bishop has moved, allowing the f8-rook to cross e8 and d8.",
+        "actual_use_or_reply": "The rook reaches c8; after Bxd7, the bishop on d7 attacks this rook and ...Qxd7 removes it.",
+        "cost_or_result": "Qc7 initially blocks the rook's file and Bc6 later does so; an already open c-file is not claimed."
+      },
+      "phase2_inference": "Central-file pressure is the inferred plan.",
+      "not_proved": "No proof that ...Rfc8 is an error rather than a chosen exchange.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "r",
+        "from": "f8",
+        "to": "c8",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 35,
+      "move_number": 18,
+      "side": "white",
+      "san": "Bxd7",
+      "uci": "f5d7",
+      "before_fen": "r1r3k1/pbqn1ppp/1p6/P1pp1B2/3P4/Q1P1PN2/5PPP/RR4K1 w - - 7 18",
+      "after_fen": "r1r3k1/pbqB1ppp/1p6/P1pp4/3P4/Q1P1PN2/5PPP/RR4K1 b - - 0 18",
+      "question": "What does Bxd7 remove permanently?",
+      "core_message": "Bxd7 exchanges White's remaining bishop for Black's remaining knight, clearing an important defender of e5.",
+      "phase1": {
+        "condition": "The bishop on f5 attacks Nd7.",
+        "actual_use_or_reply": "The original f1-bishop captures the original b8-knight; ...Qxd7 recaptures.",
+        "cost_or_result": "Both sides lose one minor piece. White keeps its f3-knight; Black keeps its b7-bishop."
+      },
+      "phase2_inference": "The resulting knight-versus-bishop arrangement is consistent with Ne5 later.",
+      "not_proved": "The move is not justified solely by a generic preference for knights.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "B",
+        "from": "f5",
+        "to": "d7",
+        "captured": "n",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 36,
+      "move_number": 18,
+      "side": "black",
+      "san": "Qxd7",
+      "uci": "c7d7",
+      "before_fen": "r1r3k1/pbqB1ppp/1p6/P1pp4/3P4/Q1P1PN2/5PPP/RR4K1 b - - 0 18",
+      "after_fen": "r1r3k1/pb1q1ppp/1p6/P1pp4/3P4/Q1P1PN2/5PPP/RR4K1 w - - 0 19",
+      "question": "What does ...Qxd7 complete and defend?",
+      "core_message": "...Qxd7 completes the minor-piece exchange and keeps the remaining bishop supported.",
+      "phase1": {
+        "condition": "White's bishop occupies d7 and attacks the c8-rook.",
+        "actual_use_or_reply": "The queen from c7 captures on d7; from there it defends Bb7 and later Bc6.",
+        "cost_or_result": "White's bishop and Black's knight are both gone; no free minor-piece gain."
+      },
+      "phase2_inference": "The queen coordinates Black's remaining forces.",
+      "not_proved": "No broad simplification or drawing claim.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "q",
+        "from": "c7",
+        "to": "d7",
+        "captured": "B",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 37,
+      "move_number": 19,
+      "side": "white",
+      "san": "a6",
+      "uci": "a5a6",
+      "before_fen": "r1r3k1/pb1q1ppp/1p6/P1pp4/3P4/Q1P1PN2/5PPP/RR4K1 w - - 0 19",
+      "after_fen": "r1r3k1/pb1q1ppp/Pp6/2pp4/3P4/Q1P1PN2/5PPP/RR4K1 b - - 0 19",
+      "question": "What does a6 force Black to address?",
+      "core_message": "a6 attacks Bb7 and creates an advanced pawn backed by Qa3.",
+      "phase1": {
+        "condition": "White's pawn is on a5 and Black's bishop is on b7.",
+        "actual_use_or_reply": "The pawn reaches a6; Black retreats the bishop to c6.",
+        "cost_or_result": "The a7-pawn still blocks any advance to a7, so this is not yet a free passed-pawn race."
+      },
+      "phase2_inference": "The pawn cramps Black's queenside.",
+      "not_proved": "No claim that every bishop retreat or every Black reply is forced.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "a5",
+        "to": "a6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 38,
+      "move_number": 19,
+      "side": "black",
+      "san": "Bc6",
+      "uci": "b7c6",
+      "before_fen": "r1r3k1/pb1q1ppp/Pp6/2pp4/3P4/Q1P1PN2/5PPP/RR4K1 b - - 0 19",
+      "after_fen": "r1r3k1/p2q1ppp/Ppb5/2pp4/3P4/Q1P1PN2/5PPP/RR4K1 w - - 1 20",
+      "question": "What does ...Bc6 preserve, and what does it obstruct?",
+      "core_message": "...Bc6 preserves the attacked bishop, but places it in front of Black's c8-rook.",
+      "phase1": {
+        "condition": "The a6-pawn attacks b7; Qd7 can defend a bishop on c6.",
+        "actual_use_or_reply": "The bishop retreats to c6, still controlling the diagonal toward a8.",
+        "cost_or_result": "It blocks the rook's access to c5, a concrete feature of the next pawn exchange."
+      },
+      "phase2_inference": "The bishop offers a useful promotion barrier despite that obstruction.",
+      "not_proved": "The retreat's overall quality is not independently evaluated.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "b",
+        "from": "b7",
+        "to": "c6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 39,
+      "move_number": 20,
+      "side": "white",
+      "san": "dxc5",
+      "uci": "d4c5",
+      "before_fen": "r1r3k1/p2q1ppp/Ppb5/2pp4/3P4/Q1P1PN2/5PPP/RR4K1 w - - 1 20",
+      "after_fen": "r1r3k1/p2q1ppp/Ppb5/2Pp4/8/Q1P1PN2/5PPP/RR4K1 b - - 0 20",
+      "question": "What does dxc5 exploit in the actual reply?",
+      "core_message": "dxc5 leads to a pawn gain after ...bxc5 Qxc5, with Qa3 covering the capture square.",
+      "phase1": {
+        "condition": "The queen's a3-b4-c5 diagonal is clear and Bc6 obstructs Rc8.",
+        "actual_use_or_reply": "White's original d-pawn captures Black's original c-pawn; the b-pawn recaptures and the queen captures that pawn.",
+        "cost_or_result": "White gives up its d-pawn for two Black pawns in the supplied continuation, gaining one pawn net."
+      },
+      "phase2_inference": "Clarifying the center and opening files is the strategic reading.",
+      "not_proved": "...bxc5 is the actual response, not proved forced; alternatives may create different counterplay.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "d4",
+        "to": "c5",
+        "captured": "p",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 40,
+      "move_number": 20,
+      "side": "black",
+      "san": "bxc5",
+      "uci": "b6c5",
+      "before_fen": "r1r3k1/p2q1ppp/Ppb5/2Pp4/8/Q1P1PN2/5PPP/RR4K1 b - - 0 20",
+      "after_fen": "r1r3k1/p2q1ppp/P1b5/2pp4/8/Q1P1PN2/5PPP/RR4K1 w - - 0 21",
+      "question": "What price follows ...bxc5?",
+      "core_message": "...bxc5 recovers White's d-pawn, but leaves the recapturing pawn available to Qxc5.",
+      "phase1": {
+        "condition": "Black's c-pawn has been captured and the b6-pawn can recapture on c5.",
+        "actual_use_or_reply": "Black's original b-pawn takes White's d-pawn; White's queen takes it next.",
+        "cost_or_result": "The c8-rook cannot defend c5 through its own bishop on c6. The b-file loses its last pawn."
+      },
+      "phase2_inference": "Opening the b-file gives Black rook activity, but the pawn cost is real.",
+      "not_proved": "This is a candidate decision to review, not a proved blunder without alternative analysis.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "p",
+        "from": "b6",
+        "to": "c5",
+        "captured": "P",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 41,
+      "move_number": 21,
+      "side": "white",
+      "san": "Qxc5",
+      "uci": "a3c5",
+      "before_fen": "r1r3k1/p2q1ppp/P1b5/2pp4/8/Q1P1PN2/5PPP/RR4K1 w - - 0 21",
+      "after_fen": "r1r3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/RR4K1 b - - 0 21",
+      "question": "What does Qxc5 win and free?",
+      "core_message": "Qxc5 completes the pawn gain and vacates a3 so Ra1 can support a6 along the a-file.",
+      "phase1": {
+        "condition": "The recapturing pawn on c5 is undefended in this position.",
+        "actual_use_or_reply": "The queen takes it via a3-b4-c5 and attacks Bc6, which is still defended by Qd7.",
+        "cost_or_result": "White is one pawn ahead; the earlier White d-pawn loss must be included in that count."
+      },
+      "phase2_inference": "Queen activity and the advanced a-pawn now work together.",
+      "not_proved": "No claim that a pawn advantage alone determines the outcome.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "Q",
+        "from": "a3",
+        "to": "c5",
+        "captured": "p",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 42,
+      "move_number": 21,
+      "side": "black",
+      "san": "Rab8",
+      "uci": "a8b8",
+      "before_fen": "r1r3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/RR4K1 b - - 0 21",
+      "after_fen": "1rr3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/RR4K1 w - - 1 22",
+      "question": "What does ...Rab8 contest?",
+      "core_message": "...Rab8 puts a rook on the open b-file opposite White's b1-rook.",
+      "phase1": {
+        "condition": "Both b-pawns have left the file.",
+        "actual_use_or_reply": "The a8-rook reaches b8, defended by the c8-rook; Rxb8 ...Rxb8 follows.",
+        "cost_or_result": "Black trades one pair of rooks and later obtains a counterchecking route on b1."
+      },
+      "phase2_inference": "Active rook play is the strategic motive.",
+      "not_proved": "Its compensation for the pawn is not proved sufficient.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "r",
+        "from": "a8",
+        "to": "b8",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 43,
+      "move_number": 22,
+      "side": "white",
+      "san": "Rxb8",
+      "uci": "b1b8",
+      "before_fen": "1rr3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/RR4K1 w - - 1 22",
+      "after_fen": "1Rr3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/R5K1 b - - 0 22",
+      "question": "What does Rxb8 actually gain?",
+      "core_message": "Rxb8 exchanges a pair of rooks rather than winning a rook outright.",
+      "phase1": {
+        "condition": "Black's rook on b8 is defended by its c8-rook.",
+        "actual_use_or_reply": "White's original h1-rook, transferred through f1 and b1, captures Black's original a8-rook.",
+        "cost_or_result": "...Rxb8 captures that White rook next; White's original a1-rook remains."
+      },
+      "phase2_inference": "Simplification retains White's advanced a-pawn and extra pawn.",
+      "not_proved": "No conversion claim based on simplification alone.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "R",
+        "from": "b1",
+        "to": "b8",
+        "captured": "r",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 44,
+      "move_number": 22,
+      "side": "black",
+      "san": "Rxb8",
+      "uci": "c8b8",
+      "before_fen": "1Rr3k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/R5K1 b - - 0 22",
+      "after_fen": "1r4k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/R5K1 w - - 0 23",
+      "question": "What threat does the remaining rook make possible?",
+      "core_message": "...Rxb8 leaves Black's surviving rook on an open b-file, which later enables ...Rb1+.",
+      "phase1": {
+        "condition": "White's rook is on b8 after its capture.",
+        "actual_use_or_reply": "Black's original h8-rook, transferred through f8 and c8, recaptures on b8.",
+        "cost_or_result": "One rook remains on each side. The later Qf5 can support the b1 invasion."
+      },
+      "phase2_inference": "Black retains active counterplay despite being a pawn down.",
+      "not_proved": "The future mating threat needs the queen's actual alignment; it is not asserted prematurely.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "r",
+        "from": "c8",
+        "to": "b8",
+        "captured": "R",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 45,
+      "move_number": 23,
+      "side": "white",
+      "san": "Ne5",
+      "uci": "f3e5",
+      "before_fen": "1r4k1/p2q1ppp/P1b5/2Qp4/8/2P1PN2/5PPP/R5K1 w - - 0 23",
+      "after_fen": "1r4k1/p2q1ppp/P1b5/2QpN3/8/2P1P3/5PPP/R5K1 b - - 1 23",
+      "question": "What does Ne5 attack with tempo?",
+      "core_message": "Ne5 attacks Qd7 and Bc6, bringing White's surviving knight into the center.",
+      "phase1": {
+        "condition": "The knight that guarded e5 from d7 has been exchanged.",
+        "actual_use_or_reply": "White's original g1-knight goes f3-e5; ...Qf5 moves the attacked queen and attacks the knight in return.",
+        "cost_or_result": "Ne5 is not yet defended by a White piece; f4 next addresses that."
+      },
+      "phase2_inference": "An active outpost is the strategic interpretation, with concrete targets rather than an abstract centralization claim.",
+      "not_proved": "Whether this is the best knight move is untested.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "N",
+        "from": "f3",
+        "to": "e5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 46,
+      "move_number": 23,
+      "side": "black",
+      "san": "Qf5",
+      "uci": "d7f5",
+      "before_fen": "1r4k1/p2q1ppp/P1b5/2QpN3/8/2P1P3/5PPP/R5K1 b - - 1 23",
+      "after_fen": "1r4k1/p4ppp/P1b5/2QpNq2/8/2P1P3/5PPP/R5K1 w - - 2 24",
+      "question": "What counterplay does ...Qf5 create?",
+      "core_message": "...Qf5 escapes the knight's attack and attacks Ne5 while aligning with the b1 invasion.",
+      "phase1": {
+        "condition": "Ne5 attacks the queen on d7 and the bishop on c6.",
+        "actual_use_or_reply": "The queen moves d7-e6-f5; its diagonal f5-e4-d3-c2-b1 supports a rook on b1.",
+        "cost_or_result": "The queen no longer defends Bc6 from d7, so White can examine capturing it after resolving the counterplay."
+      },
+      "phase2_inference": "Black chooses active threats instead of passive protection.",
+      "not_proved": "This move's responsibility for the eventual loss is not established; later defenses are not exhaustively compared.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "q",
+        "from": "d7",
+        "to": "f5",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 47,
+      "move_number": 24,
+      "side": "white",
+      "san": "f4",
+      "uci": "f2f4",
+      "before_fen": "1r4k1/p4ppp/P1b5/2QpNq2/8/2P1P3/5PPP/R5K1 w - - 2 24",
+      "after_fen": "1r4k1/p4ppp/P1b5/2QpNq2/5P2/2P1P3/6PP/R5K1 b - - 0 24",
+      "question": "Why is f4 more than a knight defender?",
+      "core_message": "f4 protects Ne5 and creates the f2 flight square, preventing a back-rank trap when White captures on c6.",
+      "phase1": {
+        "condition": "The knight on e5 is attacked, and ...Rb1+ Rxb1 Qxb1 would leave a king on g1 with no flight if f2 stayed occupied.",
+        "actual_use_or_reply": "The pawn moves f2-f4, defends e5, and leaves f2 available. Without it, 24.Nxc6 Rb1+ 25.Rxb1 Qxb1# is a validated forced mating reply to that particular capture.",
+        "cost_or_result": "White spends a pawn move on tactical security; no material changes in the actual move."
+      },
+      "phase2_inference": "Some kingside weakening is possible, but the immediate concrete safety gains take priority.",
+      "not_proved": "No proof that f4 is unique or best among all White moves.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "P",
+        "from": "f2",
+        "to": "f4",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 48,
+      "move_number": 24,
+      "side": "black",
+      "san": "Rb6",
+      "uci": "b8b6",
+      "before_fen": "1r4k1/p4ppp/P1b5/2QpNq2/5P2/2P1P3/6PP/R5K1 b - - 0 24",
+      "after_fen": "6k1/p4ppp/Prb5/2QpNq2/5P2/2P1P3/6PP/R5K1 w - - 1 25",
+      "question": "What hidden price does ...Rb6 attach to its defense?",
+      "core_message": "...Rb6 guards Bc6 and attacks a6, but relies on a7's recapture of a rook that White's queen can take.",
+      "phase1": {
+        "condition": "Bc6 is attacked, while Black's queen and king remain on f5 and g8.",
+        "actual_use_or_reply": "The rook reaches b6, defended by Pa7; Qxb6 now offers a concrete queen sacrifice.",
+        "cost_or_result": "After ...axb6, Black's a-pawn no longer blocks a6-a7, and Nxc6 can remove the bishop's a8 control."
+      },
+      "phase2_inference": "This is a candidate tactical error at this exact choice, not automatically a defect of earlier ...Qf5.",
+      "not_proved": "No exhaustive proof that ...Rb6 loses or that a different defense saves the game.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "r",
+        "from": "b8",
+        "to": "b6",
+        "captured": null,
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    },
+    {
+      "ply": 49,
+      "move_number": 25,
+      "side": "white",
+      "san": "Qxb6",
+      "uci": "c5b6",
+      "before_fen": "6k1/p4ppp/Prb5/2QpNq2/5P2/2P1P3/6PP/R5K1 w - - 1 25",
+      "after_fen": "6k1/p4ppp/PQb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+      "question": "Why offer the queen on b6, and what must Black's recapture allow?",
+      "core_message": "Qxb6 removes the rook and offers the queen to draw a7's pawn off the a-file; Nxc6 can then clear the promotion barrier.",
+      "phase1": {
+        "condition": "White has Pa6 backed by Ra1, Ne5 can take Bc6, and Black's king is boxed behind f7-g7-h7.",
+        "actual_use_or_reply": "The actual game ends after the rook capture. In the conditional ...axb6 26.Nxc6 Qc8 27.Ne7+ line, the knight forks king and queen; other validated lines expose back-rank mate.",
+        "cost_or_result": "The queen is still on b6 in the recorded game. Its loss and the bishop recovery belong to hypothetical continuations, not the played score."
+      },
+      "phase2_inference": "The connected passed-pawn, rook, knight and back-rank mechanism gives the sacrifice its meaning.",
+      "not_proved": "The supplied result is 1-0, but the final board is not mate. Not every Black reply is proved losing, and 25.Nxc6 has not been proved inferior.",
+      "automatic_check": {
+        "played_move_legal": true,
+        "actor": "Q",
+        "from": "c5",
+        "to": "b6",
+        "captured": "r",
+        "post_move_check": false,
+        "post_move_terminal": null
+      }
+    }
+  ],
+  "machine_checked_geometry": [
+    {
+      "after_ply": 5,
+      "from": "c3",
+      "to": "d5",
+      "actor": "N",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 6,
+      "from": "f6",
+      "to": "d5",
+      "actor": "n",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 7,
+      "from": "g5",
+      "to": "f6",
+      "actor": "B",
+      "occupant": "n",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 13,
+      "from": "d3",
+      "to": "e4",
+      "actor": "B",
+      "occupant": "n",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 15,
+      "from": "c3",
+      "to": "d4",
+      "actor": "P",
+      "occupant": "P",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 21,
+      "from": "b3",
+      "to": "d5",
+      "actor": "Q",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 22,
+      "from": "f6",
+      "to": "d5",
+      "actor": "n",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 25,
+      "from": "a3",
+      "to": "a4",
+      "actor": "Q",
+      "occupant": "P",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 25,
+      "from": "a3",
+      "to": "c5",
+      "actor": "Q",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 26,
+      "from": "b6",
+      "to": "c5",
+      "actor": "p",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 27,
+      "from": "a5",
+      "to": "b6",
+      "actor": "P",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 31,
+      "from": "b1",
+      "to": "b6",
+      "actor": "R",
+      "occupant": "p",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 32,
+      "from": "d7",
+      "to": "e5",
+      "actor": "n",
+      "occupant": null,
+      "geometric_control": true
+    },
+    {
+      "after_ply": 33,
+      "from": "f5",
+      "to": "d7",
+      "actor": "B",
+      "occupant": "n",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 35,
+      "from": "d7",
+      "to": "c8",
+      "actor": "B",
+      "occupant": "r",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 37,
+      "from": "a6",
+      "to": "b7",
+      "actor": "P",
+      "occupant": "b",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 38,
+      "from": "c6",
+      "to": "a8",
+      "actor": "b",
+      "occupant": "r",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 39,
+      "from": "a3",
+      "to": "c5",
+      "actor": "Q",
+      "occupant": "P",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 41,
+      "from": "a1",
+      "to": "a6",
+      "actor": "R",
+      "occupant": "P",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 41,
+      "from": "c5",
+      "to": "c6",
+      "actor": "Q",
+      "occupant": "b",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 42,
+      "from": "b8",
+      "to": "b1",
+      "actor": "r",
+      "occupant": "R",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 45,
+      "from": "e5",
+      "to": "d7",
+      "actor": "N",
+      "occupant": "q",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 45,
+      "from": "e5",
+      "to": "c6",
+      "actor": "N",
+      "occupant": "b",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 46,
+      "from": "f5",
+      "to": "e5",
+      "actor": "q",
+      "occupant": "N",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 46,
+      "from": "f5",
+      "to": "b1",
+      "actor": "q",
+      "occupant": null,
+      "geometric_control": true
+    },
+    {
+      "after_ply": 47,
+      "from": "f4",
+      "to": "e5",
+      "actor": "P",
+      "occupant": "N",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 48,
+      "from": "b6",
+      "to": "c6",
+      "actor": "r",
+      "occupant": "b",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 48,
+      "from": "b6",
+      "to": "a6",
+      "actor": "r",
+      "occupant": "P",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 48,
+      "from": "a7",
+      "to": "b6",
+      "actor": "p",
+      "occupant": "r",
+      "geometric_control": true
+    },
+    {
+      "after_ply": 49,
+      "from": "a7",
+      "to": "b6",
+      "actor": "p",
+      "occupant": "Q",
+      "geometric_control": true
+    }
+  ],
+  "machine_checked_negative_geometry": [
+    {
+      "after_ply": 40,
+      "target": "c5",
+      "black_defenders": []
+    },
+    {
+      "after_ply": 45,
+      "target": "e5",
+      "white_defenders": []
+    }
+  ],
+  "variations": [
+    {
+      "id": "before_f4_knight_capture",
+      "starts_after_actual_ply": 46,
+      "san": [
+        "Nxc6",
+        "Rb1+",
+        "Rxb1",
+        "Qxb1#"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": "Outcome(termination=<Termination.CHECKMATE: 1>, winner=False)",
+      "scope": "For this 24.Nxc6 branch, ...Rb1+ leaves Rxb1 as White's only legal reply, and ...Qxb1 is checkmate. This does not rank all alternatives to f4.",
+      "positions": [
+        {
+          "san": "Nxc6",
+          "fen": "1r4k1/p4ppp/P1N5/2Qp1q2/8/2P1P3/5PPP/R5K1 b - - 0 24",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rb1+",
+          "fen": "6k1/p4ppp/P1N5/2Qp1q2/8/2P1P3/5PPP/Rr4K1 w - - 1 25",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Rxb1"
+          ]
+        },
+        {
+          "san": "Rxb1",
+          "fen": "6k1/p4ppp/P1N5/2Qp1q2/8/2P1P3/5PPP/1R4K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qxb1#",
+          "fen": "6k1/p4ppp/P1N5/2Qp4/8/2P1P3/5PPP/1q4K1 w - - 0 26",
+          "check": true,
+          "legal_replies_if_checked": []
+        }
+      ]
+    },
+    {
+      "id": "before_f4_queen_capture",
+      "starts_after_actual_ply": 46,
+      "san": [
+        "Qxc6",
+        "Rb1+",
+        "Rxb1",
+        "Qxb1#"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": "Outcome(termination=<Termination.CHECKMATE: 1>, winner=False)",
+      "scope": "The analogous bishop capture by the queen also admits this mating line; the record does not contain either hypothetical capture.",
+      "positions": [
+        {
+          "san": "Qxc6",
+          "fen": "1r4k1/p4ppp/P1Q5/3pNq2/8/2P1P3/5PPP/R5K1 b - - 0 24",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rb1+",
+          "fen": "6k1/p4ppp/P1Q5/3pNq2/8/2P1P3/5PPP/Rr4K1 w - - 1 25",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Rxb1"
+          ]
+        },
+        {
+          "san": "Rxb1",
+          "fen": "6k1/p4ppp/P1Q5/3pNq2/8/2P1P3/5PPP/1R4K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qxb1#",
+          "fen": "6k1/p4ppp/P1Q5/3pN3/8/2P1P3/5PPP/1q4K1 w - - 0 26",
+          "check": true,
+          "legal_replies_if_checked": []
+        }
+      ]
+    },
+    {
+      "id": "knight_capture_after_f4_rook_exchange",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Nxc6",
+        "Rb1+",
+        "Rxb1",
+        "Qxb1+",
+        "Kf2"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": null,
+      "scope": "This is a legal counterchecking line to 25.Nxc6. White can also choose Kf2 directly after ...Rb1+; Rxb1 is not forced here. No result after Kf2 is proved.",
+      "positions": [
+        {
+          "san": "Nxc6",
+          "fen": "6k1/p4ppp/PrN5/2Qp1q2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rb1+",
+          "fen": "6k1/p4ppp/P1N5/2Qp1q2/5P2/2P1P3/6PP/Rr4K1 w - - 1 26",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Kf2",
+            "Rxb1"
+          ]
+        },
+        {
+          "san": "Rxb1",
+          "fen": "6k1/p4ppp/P1N5/2Qp1q2/5P2/2P1P3/6PP/1R4K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qxb1+",
+          "fen": "6k1/p4ppp/P1N5/2Qp4/5P2/2P1P3/6PP/1q4K1 w - - 0 27",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Kf2"
+          ]
+        },
+        {
+          "san": "Kf2",
+          "fen": "6k1/p4ppp/P1N5/2Qp4/5P2/2P1P3/5KPP/1q6 b - - 1 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        }
+      ]
+    },
+    {
+      "id": "knight_capture_after_f4_greedy_recapture",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Nxc6",
+        "Rxc6",
+        "Qxc6"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": null,
+      "scope": "Black's rook recapture is answered by Qxc6. The existence of this material-winning branch does not prove Black must choose it.",
+      "positions": [
+        {
+          "san": "Nxc6",
+          "fen": "6k1/p4ppp/PrN5/2Qp1q2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rxc6",
+          "fen": "6k1/p4ppp/P1r5/2Qp1q2/5P2/2P1P3/6PP/R5K1 w - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qxc6",
+          "fen": "6k1/p4ppp/P1Q5/3p1q2/5P2/2P1P3/6PP/R5K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        }
+      ]
+    },
+    {
+      "id": "queen_offer_knight_first_queen_fork",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Qxb6",
+        "axb6",
+        "Nxc6",
+        "Qc8",
+        "Ne7+",
+        "Kf8",
+        "Nxc8"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": null,
+      "scope": "After ...Qc8, Ne7+ attacks both Kg8 and Qc8. Black can choose Kh8 instead of Kf8; the fork is geometrically confirmed but ...Qc8 is not forced.",
+      "positions": [
+        {
+          "san": "Qxb6",
+          "fen": "6k1/p4ppp/PQb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "axb6",
+          "fen": "6k1/5ppp/Ppb5/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Nxc6",
+          "fen": "6k1/5ppp/PpN5/3p1q2/5P2/2P1P3/6PP/R5K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qc8",
+          "fen": "2q3k1/5ppp/PpN5/3p4/5P2/2P1P3/6PP/R5K1 w - - 1 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Ne7+",
+          "fen": "2q3k1/4Nppp/Pp6/3p4/5P2/2P1P3/6PP/R5K1 b - - 2 27",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Kh8",
+            "Kf8"
+          ]
+        },
+        {
+          "san": "Kf8",
+          "fen": "2q2k2/4Nppp/Pp6/3p4/5P2/2P1P3/6PP/R5K1 w - - 3 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Nxc8",
+          "fen": "2N2k2/5ppp/Pp6/3p4/5P2/2P1P3/6PP/R5K1 b - - 0 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        }
+      ]
+    },
+    {
+      "id": "queen_offer_bishop_block_mate",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Qxb6",
+        "axb6",
+        "a7",
+        "Bb7",
+        "a8=Q+",
+        "Bxa8",
+        "Rxa8+",
+        "Qc8",
+        "Rxc8#"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": "Outcome(termination=<Termination.CHECKMATE: 1>, winner=True)",
+      "scope": "A legal mating branch showing the a-file rook and back-rank motif. The moves ...Bb7 and the complete branch are not claimed forced.",
+      "positions": [
+        {
+          "san": "Qxb6",
+          "fen": "6k1/p4ppp/PQb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "axb6",
+          "fen": "6k1/5ppp/Ppb5/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "a7",
+          "fen": "6k1/P4ppp/1pb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Bb7",
+          "fen": "6k1/Pb3ppp/1p6/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 1 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "a8=Q+",
+          "fen": "Q5k1/1b3ppp/1p6/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 27",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Bc8",
+            "Bxa8",
+            "Qc8"
+          ]
+        },
+        {
+          "san": "Bxa8",
+          "fen": "b5k1/5ppp/1p6/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 0 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rxa8+",
+          "fen": "R5k1/5ppp/1p6/3pNq2/5P2/2P1P3/6PP/6K1 b - - 0 28",
+          "check": true,
+          "legal_replies_if_checked": [
+            "Qc8"
+          ]
+        },
+        {
+          "san": "Qc8",
+          "fen": "R1q3k1/5ppp/1p6/3pN3/5P2/2P1P3/6PP/6K1 w - - 1 29",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rxc8#",
+          "fen": "2R3k1/5ppp/1p6/3pN3/5P2/2P1P3/6PP/6K1 b - - 0 29",
+          "check": true,
+          "legal_replies_if_checked": []
+        }
+      ]
+    },
+    {
+      "id": "queen_offer_king_move_mate",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Qxb6",
+        "axb6",
+        "Nxc6",
+        "Kf8",
+        "a7",
+        "Qc8",
+        "a8=Q",
+        "Qxa8",
+        "Rxa8#"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": "Outcome(termination=<Termination.CHECKMATE: 1>, winner=True)",
+      "scope": "A legal mating branch; Nc6 guards e7, removing the f8-king's otherwise available flight after the rook capture.",
+      "positions": [
+        {
+          "san": "Qxb6",
+          "fen": "6k1/p4ppp/PQb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "axb6",
+          "fen": "6k1/5ppp/Ppb5/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Nxc6",
+          "fen": "6k1/5ppp/PpN5/3p1q2/5P2/2P1P3/6PP/R5K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Kf8",
+          "fen": "5k2/5ppp/PpN5/3p1q2/5P2/2P1P3/6PP/R5K1 w - - 1 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "a7",
+          "fen": "5k2/P4ppp/1pN5/3p1q2/5P2/2P1P3/6PP/R5K1 b - - 0 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qc8",
+          "fen": "2q2k2/P4ppp/1pN5/3p4/5P2/2P1P3/6PP/R5K1 w - - 1 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "a8=Q",
+          "fen": "Q1q2k2/5ppp/1pN5/3p4/5P2/2P1P3/6PP/R5K1 b - - 0 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qxa8",
+          "fen": "q4k2/5ppp/1pN5/3p4/5P2/2P1P3/6PP/R5K1 w - - 0 29",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rxa8#",
+          "fen": "R4k2/5ppp/1pN5/3p4/5P2/2P1P3/6PP/6K1 b - - 0 29",
+          "check": true,
+          "legal_replies_if_checked": []
+        }
+      ]
+    },
+    {
+      "id": "queen_offer_pawn_first_unclosed_defense",
+      "starts_after_actual_ply": 48,
+      "san": [
+        "Qxb6",
+        "axb6",
+        "a7",
+        "Qc8",
+        "Nxc6",
+        "Qa8",
+        "Rb1",
+        "h6"
+      ],
+      "all_moves_legal": true,
+      "machine_checked_terminal": null,
+      "scope": "This legal defensive branch remains unclosed. It prevents treating the pawn-first a7 plan as an already proved win against every defense.",
+      "positions": [
+        {
+          "san": "Qxb6",
+          "fen": "6k1/p4ppp/PQb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 25",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "axb6",
+          "fen": "6k1/5ppp/Ppb5/3pNq2/5P2/2P1P3/6PP/R5K1 w - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "a7",
+          "fen": "6k1/P4ppp/1pb5/3pNq2/5P2/2P1P3/6PP/R5K1 b - - 0 26",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qc8",
+          "fen": "2q3k1/P4ppp/1pb5/3pN3/5P2/2P1P3/6PP/R5K1 w - - 1 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Nxc6",
+          "fen": "2q3k1/P4ppp/1pN5/3p4/5P2/2P1P3/6PP/R5K1 b - - 0 27",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Qa8",
+          "fen": "q5k1/P4ppp/1pN5/3p4/5P2/2P1P3/6PP/R5K1 w - - 1 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "Rb1",
+          "fen": "q5k1/P4ppp/1pN5/3p4/5P2/2P1P3/6PP/1R4K1 b - - 2 28",
+          "check": false,
+          "legal_replies_if_checked": null
+        },
+        {
+          "san": "h6",
+          "fen": "q5k1/P4pp1/1pN4p/3p4/5P2/2P1P3/6PP/1R4K1 w - - 0 29",
+          "check": false,
+          "legal_replies_if_checked": null
+        }
+      ]
+    }
+  ],
+  "main_uncertainties": [
+    "The selected mechanism can be true without proving why a move is best. Quiet-move intentions are inferred from subsequent use, not independently established.",
+    "The original f6-knight is exchanged on c3; the later d7/f6/d7 knight is the original b8-knight. A same-role merge would invent an incorrect piece history.",
+    "bxc3 creates only temporary doubled c-pawns: the original c-pawn is exchanged on d5. Treating that early structural cost as permanent would misread the game.",
+    "The pawn gain at moves 20-21 depends on the actual ...bxc5 reply. Alternative defenses to dxc5 have not been compared; the blame cannot be silently assigned to dxc5, ...bxc5, or an earlier quiet move.",
+    "The tested back-rank refutation of 24.Nxc6 before f4 is forced within that branch. This establishes a concrete duty for f4, not the uniqueness of f4.",
+    "25.Nxc6 has an important ...Rb1+ counterchecking branch, but it is not proved worse or drawing; king-check continuations after Kf2 remain unverified.",
+    "25.Qxb6 is connected to a7-pawn displacement, Bc6 removal, Ra1 support, back-rank mate and Ne7+ forks. Omitting either the offered queen or these recovery mechanisms would misstate its cost.",
+    "The pawn-first defensive branch with ...Qc8/...Qa8/...h6 is legal and unclosed. It warns against calling every promotion line forced.",
+    "The game result 1-0 is supplied metadata. The position after 25.Qxb6 is neither check nor checkmate, and resignation or a complete forced win was not supplied."
+  ],
+  "candidate_content_selection_failures": [
+    "Selecting only development labels can miss concrete defensive duties: ...Nf6 defending d5, Qc7 enabling Qxd7, or f4 creating f2 flight.",
+    "Describing ...Nxc3 or Rxb8 as a free gain while suppressing the next recapture changes the meaning.",
+    "Selecting only the intermediate Bc6 capture can miss ...Rb1+ and the back-rank cost, while listing every later event can obscure the same duty.",
+    "Treating Qxb6 as only a rook gain or a simple queen blunder misses the a7-pawn displacement and subsequent promotion/royal-fork mechanism.",
+    "Treating an unplayed alternative as a proven error, or the supplied winning result as a proof of every continuation, would misassign responsibility."
+  ]
+}

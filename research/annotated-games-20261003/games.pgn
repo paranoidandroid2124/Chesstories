@@ -1,0 +1,197 @@
+[Event "Match"]
+[Site "?"]
+[Date "1909.??.??"]
+[Round "?"]
+[White "F. J. Marshall"]
+[Black "J. R. Capablanca"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page159"]
+[BookGame "1"]
+[BookMainlinePlies "49"]
+
+1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 Ne4 6. Bxe7 Qxe7 7. Bd3 Nxc3 8.
+bxc3 Nd7 9. Nf3 O-O 10. cxd5 exd5 11. Qb3 Nf6 12. a4 c5 13. Qa3 b6 14. a5 Bb7
+15. O-O Qc7 16. Rfb1 Nd7 17. Bf5 Rfc8 18. Bxd7 Qxd7 19. a6 Bc6 20. dxc5 bxc5
+21. Qxc5 Rab8 22. Rxb8 Rxb8 23. Ne5 Qf5 24. f4 Rb6 25. Qxb6 1-0
+
+[Event "San Sebastian"]
+[Site "San Sebastian"]
+[Date "1911.??.??"]
+[Round "?"]
+[White "A. K. Rubinstein"]
+[Black "J. R. Capablanca"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page163"]
+[BookGame "2"]
+[BookMainlinePlies "83"]
+
+1. d4 d5 2. Nf3 c5 3. c4 e6 4. cxd5 exd5 5. Nc3 Nc6 6. g3 Be6 7. Bg2 Be7 8. O-O
+Rc8 9. dxc5 Bxc5 10. Ng5 Nf6 11. Nxe6 fxe6 12. Bh3 Qe7 13. Bg5 O-O 14. Bxf6
+Qxf6 15. Nxd5 Qh6 16. Kg2 Rcd8 17. Qc1 exd5 18. Qxc5 Qd2 19. Qb5 Nd4 20. Qd3
+Qxd3 21. exd3 Rfe8 22. Bg4 Rd6 23. Rfe1 Rxe1 24. Rxe1 Rb6 25. Re5 Rxb2 26. Rxd5
+Nc6 27. Be6+ Kf8 28. Rf5+ Ke8 29. Bf7+ Kd7 30. Bc4 a6 31. Rf7+ Kd6 32. Rxg7 b5
+33. Bg8 a5 34. Rxh7 a4 35. h4 b4 36. Rh6+ Kc5 37. Rh5+ Kb6 38. Bd5 b3 39. axb3
+a3 40. Bxc6 Rxb3 41. Bd5 a2 42. Rh6+ 1-0
+
+[Event "Havana"]
+[Site "Havana"]
+[Date "1913.??.??"]
+[Round "?"]
+[White "D. Janowski"]
+[Black "J. R. Capablanca"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page169"]
+[BookGame "3"]
+[BookMainlinePlies "72"]
+[SupplementSource "https://huggingface.co/datasets/Mai0313/Chess-AI-Database/resolve/102aa7f457c2466f93e5a6953ec84a40b844e816/chess_database_by_human/Capablanca.pgn"]
+[SupplementBeginsAtPly "73"]
+
+1. d4 Nf6 2. Nf3 d6 3. Bg5 Nbd7 4. e3 e5 5. Nc3 c6 6. Bd3 Be7 7. Qe2 Qa5 8. O-O
+Nf8 9. Rfd1 Bg4 10. h3 Bh5 11. dxe5 dxe5 12. Ne4 Nxe4 13. Bxe7 Kxe7 14. Bxe4
+Bg6 15. Qc4 Ne6 16. b4 Qc7 17. Bxg6 hxg6 18. Qe4 Kf6 19. Rd3 Rad8 20. Rad1 g5
+21. c4 Rxd3 22. Rxd3 Rd8 23. Rxd8 Nxd8 24. h4 gxh4 25. Qxh4+ Ke6 26. Qg4+ Kf6
+27. Qg5+ Ke6 28. Qxg7 Qd6 29. c5 Qd5 30. e4 Qd1+ 31. Kh2 f6 32. Qg4+ Ke7 33.
+Nxe5 Qxg4 34. Nxg4 Ne6 35. e5 fxe5 36. Nxe5 Nd4 37. g4 Ke6 38. f4 a5 39. bxa5
+Kd5 40. g5 Kxc5 41. g6 Nf5 42. Kh3 Kd5 43. Kg4 Ng7 44. Kg5 c5 45. Nd7 c4 46.
+Nb6+ Kd4 47. Nxc4 Kxc4 48. f5 Kd5 49. f6 Ne6+ 50. Kh6 1-0
+
+[Event "St. Petersburg"]
+[Site "St. Petersburg"]
+[Date "1913.??.??"]
+[Round "?"]
+[White "J. R. Capablanca"]
+[Black "E. A. Snosko-Borovski"]
+[Result "0-1"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page174"]
+[BookGame "4"]
+[BookMainlinePlies "80"]
+
+1. d4 e6 2. e4 d5 3. Nc3 Nf6 4. Bg5 Bb4 5. exd5 Qxd5 6. Bxf6 Bxc3+ 7. bxc3 gxf6
+8. Nf3 b6 9. Qd2 Bb7 10. Be2 Nd7 11. c4 Qf5 12. O-O-O O-O-O 13. Qe3 Rhg8 14. g3
+Qa5 15. Rd3 Kb8 16. Rhd1 Qf5 17. Nh4 Qg5 18. f4 Qg7 19. Bf3 Rge8 20. Bxb7 Kxb7
+21. c5 c6 22. Nf3 Qf8 23. Nd2 bxc5 24. Nc4 Nb6 25. Na5+ Ka8 26. dxc5 Nd5 27.
+Qd4 Rc8 28. c4 e5 29. Qg1 e4 30. cxd5 exd3 31. d6 Re2 32. d7 Rc2+ 33. Kb1 Rb8+
+34. Nb3 Qe7 35. Rxd3 Re2 36. Qd4 Rd8 37. Qa4 Qe4 38. Qa6 Kb8 39. Kc1 Rxd7 40.
+Nd4 Re1+ 0-1
+
+[Event "St. Petersburg"]
+[Site "St. Petersburg"]
+[Date "1914.??.??"]
+[Round "?"]
+[White "Dr. E. Lasker"]
+[Black "J. R. Capablanca"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page181"]
+[BookGame "5"]
+[BookMainlinePlies "83"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6 5. d4 exd4 6. Qxd4 Qxd4 7. Nxd4 Bd6
+8. Nc3 Ne7 9. O-O O-O 10. f4 Re8 11. Nb3 f6 12. f5 b6 13. Bf4 Bb7 14. Bxd6 cxd6
+15. Nd4 Rad8 16. Ne6 Rd7 17. Rad1 Nc8 18. Rf2 b5 19. Rfd2 Rde7 20. b4 Kf7 21.
+a3 Ba8 22. Kf2 Ra7 23. g4 h6 24. Rd3 a5 25. h4 axb4 26. axb4 Rae7 27. Kf3 Rg8
+28. Kf4 g6 29. Rg3 g5+ 30. Kf3 Nb6 31. hxg5 hxg5 32. Rh3 Rd7 33. Kg3 Ke8 34.
+Rdh1 Bb7 35. e5 dxe5 36. Ne4 Nd5 37. N6c5 Bc8 38. Nxd7 Bxd7 39. Rh7 Rf8 40. Ra1
+Kd8 41. Ra8+ Bc8 42. Nc5 1-0
+
+[Event "Rice Memorial Tournament"]
+[Site "Rice Memorial Tournament"]
+[Date "1916.??.??"]
+[Round "?"]
+[White "O. Chajes"]
+[Black "J. R. Capablanca"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page189"]
+[BookGame "6"]
+[BookMainlinePlies "119"]
+[SupplementSource "https://huggingface.co/datasets/Mai0313/Chess-AI-Database/resolve/102aa7f457c2466f93e5a6953ec84a40b844e816/chess_database_by_human/Capablanca.pgn"]
+[SupplementBeginsAtPly "120"]
+
+1. e4 e6 2. d4 d5 3. Nc3 Nf6 4. Bg5 Bb4 5. e5 h6 6. Bd2 Bxc3 7. bxc3 Ne4 8. Qg4
+Kf8 9. Bc1 c5 10. Bd3 Qa5 11. Ne2 cxd4 12. O-O dxc3 13. Bxe4 dxe4 14. Qxe4 Nc6
+15. Rd1 g6 16. f4 Kg7 17. Be3 Ne7 18. Bf2 Nd5 19. Rd3 Bd7 20. Nd4 Rac8 21. Rg3
+Kh7 22. h4 Rhg8 23. h5 Qb4 24. Rh3 f5 25. exf6 Nxf6 26. hxg6+ Rxg6 27. Rxh6+
+Kxh6 28. Nf5+ exf5 29. Qxb4 Rcg8 30. g3 Bc6 31. Rd1 Kh5 32. Rd6 Be4 33. Qxc3
+Nd5 34. Rxg6 Kxg6 35. Qe5 Kf7 36. c4 Re8 37. Qb2 Nf6 38. Bd4 Rh8 39. Qb5 Rh1+
+40. Kf2 a6 41. Qb6 Rh2+ 42. Ke1 Nd7 43. Qd6 Bc6 44. g4 fxg4 45. f5 Rh1+ 46. Kd2
+Ke8 47. f6 Rh7 48. Qe6+ Kf8 49. Be3 Rf7 50. Bh6+ Kg8 51. Bg7 g3 52. Ke2 g2 53.
+Kf2 Nf8 54. Qg4 Nd7 55. Kg1 a5 56. a4 Bxa4 57. Qh3 Rxf6 58. Bxf6 Nxf6 59. Qxg2+
+Kf8 60. Qxb7 Be8 61. Qb6 Ke7 62. Qxa5 Nd7 63. Kf2 Bf7 64. Ke3 Kd6 65. Kd4 Kc6
+66. Qf5 1-0
+
+[Event "San Sebastian"]
+[Site "San Sebastian"]
+[Date "1911.??.??"]
+[Round "?"]
+[White "J. R. Capablanca"]
+[Black "A. Burn"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page197"]
+[BookGame "7"]
+[BookMainlinePlies "91"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. d3 d6 6. c3 Be7 7. Nbd2 O-O 8. Nf1
+b5 9. Bc2 d5 10. Qe2 dxe4 11. dxe4 Bc5 12. Bg5 Be6 13. Ne3 Re8 14. O-O Qe7 15.
+Nd5 Bxd5 16. exd5 Nb8 17. a4 b4 18. cxb4 Bxb4 19. Bxf6 Qxf6 20. Qe4 Bd6 21.
+Qxh7+ Kf8 22. Nh4 Qh6 23. Qxh6 gxh6 24. Nf5 h5 25. Bd1 Nd7 26. Bxh5 Nf6 27. Be2
+Nxd5 28. Rfd1 Nf4 29. Bc4 Red8 30. h4 a5 31. g3 Ne6 32. Bxe6 fxe6 33. Ne3 Rdb8
+34. Nc4 Ke7 35. Rac1 Ra7 36. Re1 Kf6 37. Re4 Rb4 38. g4 Ra6 39. Rc3 Bc5 40.
+Rf3+ Kg7 41. b3 Bd4 42. Kg2 Ra8 43. g5 Ra6 44. h5 Rxc4 45. bxc4 Rc6 46. g6 1-0
+
+[Event "Berlin"]
+[Site "Berlin"]
+[Date "1913.??.??"]
+[Round "?"]
+[White "J. Mieses"]
+[Black "J. R. Capablanca"]
+[Result "0-1"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page201"]
+[BookGame "8"]
+[BookMainlinePlies "88"]
+
+1. e4 e5 2. d4 exd4 3. Qxd4 Nc6 4. Qe3 Nf6 5. Nc3 Bb4 6. Bd2 O-O 7. O-O-O Re8
+8. Qg3 Nxe4 9. Nxe4 Rxe4 10. Bf4 Qf6 11. Nh3 d6 12. Bd3 Nd4 13. Be3 Bg4 14. Ng5
+Rxe3 15. Qxg4 Ne2+ 16. Bxe2 Rxe2 17. Ne4 Rxe4 18. Qxe4 Qg5+ 19. f4 Qb5 20. c3
+Bc5 21. Rhe1 Qc6 22. Rd5 Qd7 23. f5 c6 24. Rd2 d5 25. Qf3 Be7 26. Rde2 Bf6 27.
+Qh5 h6 28. g4 Kh7 29. Kb1 Rd8 30. Rd1 c5 31. Qh3 Qa4 32. Red2 Qe4+ 33. Ka1 b5
+34. Qg2 Qa4 35. Kb1 b4 36. cxb4 Qxb4 37. a3 Qa4 38. Rxd5 Rb8 39. R1d2 c4 40.
+Qg3 Rb3 41. Qd6 c3 42. Rc2 cxb2 43. Rd3 Qe4 44. Rd1 Rc3 0-1
+
+[Event "Berlin"]
+[Site "Berlin"]
+[Date "1913.??.??"]
+[Round "?"]
+[White "J. R. Capablanca"]
+[Black "R. Teichmann"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page209"]
+[BookGame "9"]
+[BookMainlinePlies "75"]
+
+1. d4 d5 2. Nf3 Nf6 3. c4 e6 4. Bg5 Be7 5. Nc3 Nbd7 6. e3 O-O 7. Rc1 b6 8. cxd5
+exd5 9. Bb5 Bb7 10. O-O a6 11. Ba4 Rc8 12. Qe2 c5 13. dxc5 Nxc5 14. Rfd1 Nxa4
+15. Nxa4 b5 16. Rxc8 Qxc8 17. Nc3 Qc4 18. Nd4 Qxe2 19. Ncxe2 Rc8 20. Nf5 Kf8
+21. Nxe7 Kxe7 22. Nd4 g6 23. f3 h6 24. Bxh6 Nd7 25. h4 Nc5 26. Bf4 Ne6 27. Nxe6
+Kxe6 28. Rd2 Rh8 29. Rc2 Rc8 30. Rxc8 Bxc8 31. Kf2 d4 32. exd4 Kd5 33. Ke3 Be6
+34. Kd3 Kc6 35. a3 Bc4+ 36. Ke3 Be6 37. Bh6 Kd5 38. Bg7 1-0
+
+[Event "St. Petersburg"]
+[Site "St. Petersburg"]
+[Date "1914.??.??"]
+[Round "?"]
+[White "J. R. Capablanca"]
+[Black "F. J. Marshall"]
+[Result "1-0"]
+[Source "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page215"]
+[BookGame "10"]
+[BookMainlinePlies "121"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. Qe2 Qe7 6. d3 Nf6 7. Bg5 Be6 8.
+Nc3 h6 9. Bxf6 Qxf6 10. d4 Be7 11. Qb5+ Nd7 12. Bd3 g5 13. h3 O-O 14. Qxb7 Rab8
+15. Qe4 Qg7 16. b3 c5 17. O-O cxd4 18. Nd5 Bd8 19. Bc4 Nc5 20. Qxd4 Qxd4 21.
+Nxd4 Bxd5 22. Bxd5 Bf6 23. Rad1 Bxd4 24. Rxd4 Kg7 25. Bc4 Rb6 26. Re1 Kf6 27.
+f4 Ne6 28. fxg5+ hxg5 29. Rf1+ Ke7 30. Rg4 Rg8 31. Rf5 Rc6 32. h4 Rgc8 33. hxg5
+Rc5 34. Bxe6 fxe6 35. Rxc5 Rxc5 36. g6 Kf8 37. Rc4 Ra5 38. a4 Kg7 39. Rc6 Rd5
+40. Rc7+ Kxg6 41. Rxa7 Rd1+ 42. Kh2 d5 43. a5 Rc1 44. Rc7 Ra1 45. b4 Ra4 46. c3
+d4 47. Rc6 dxc3 48. Rxc3 Rxb4 49. Ra3 Rb7 50. a6 Ra7 51. Ra5 Kf6 52. g4 Ke7 53.
+Kg3 Kd6 54. Kf4 Kc7 55. Ke5 Kd7 56. g5 Ke7 57. g6 Kf8 58. Kxe6 Ke8 59. g7 Rxg7
+60. a7 Rg6+ 61. Kf5 1-0

@@ -1,0 +1,309 @@
+{
+  "completed_utc": "2026-10-07T12:50:46.220846+00:00",
+  "final_product": "criticalv14",
+  "frozen_engine_cohort_product": "criticalv11",
+  "final_delta": "After the 23-run freeze: retained assessment refresh status corrected; bounded first capturing reply of a continuously attacked target retained. Existing actual reports are replayed exactly for these corrections. No search parameters changed or new engine trial substituted.",
+  "targeted_runtime_tests": 104,
+  "targeted_UI_tests": 81,
+  "full_analyse_typescript_build": "exit0",
+  "broad_runtime": {
+    "tests": 338,
+    "passed": 321,
+    "failed": 17,
+    "new_failure_names": [],
+    "scope": "Failure names match the source-hash-verified goal-start product; this does not make the whole suite green.",
+    "manifest": "target\\critical-comparison-20261007\\currentbroadv14\\manifest.json"
+  },
+  "regression": {
+    "opened35": {
+      "positions": 35,
+      "fully_replayed": 33,
+      "pending": 2,
+      "text_changed": 3,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 4,
+      "missing_mandatory": 0,
+      "facts_unchanged": 28
+    },
+    "prior14": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "pending": 0,
+      "text_changed": 1,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 2,
+      "missing_mandatory": 0,
+      "facts_unchanged": 13
+    }
+  },
+  "completed_missing2016": {
+    "exact_reports": 5,
+    "product": "criticalv11",
+    "scope": "Separate already-completed source; not completion of the two missing legacy records."
+  },
+  "completed_missing2024": {
+    "archived_reports": 4,
+    "actual_new_reports": 3,
+    "normal_latency_trial": false,
+    "original_report_mismatch_retained": "criticalreg2024: 4/7 reports, changed selected focus budget.",
+    "required_old_refs_lost_on_current_paths": [],
+    "retired_old_branch_refs": [
+      [
+        "b1b5",
+        "g7g6",
+        "b5b4",
+        "a6a5",
+        "b4f4",
+        "a5c5"
+      ],
+      [
+        "b1b5",
+        "g7g6",
+        "b5b4",
+        "a6a5",
+        "b4f4",
+        "a5c5",
+        "c1c5"
+      ],
+      [
+        "b1b5",
+        "g7g6",
+        "b5b4",
+        "a6a5",
+        "b4f4",
+        "a5c5",
+        "c1c5",
+        "e7c5"
+      ],
+      [
+        "b1b5",
+        "g7g6",
+        "b5b4",
+        "a6a5",
+        "b4f4",
+        "a5c5",
+        "c1c5",
+        "e7c5",
+        "f4f6"
+      ],
+      [
+        "b1b5",
+        "g7g6",
+        "b5b4",
+        "a6a5",
+        "b4f4",
+        "a5c5",
+        "c1c5",
+        "e7c5",
+        "f4f6",
+        "c5b6"
+      ],
+      [
+        "b1d3",
+        "e7c5",
+        "c1c5",
+        "a6b6",
+        "d3c3",
+        "b8f8",
+        "d1a1",
+        "b6a6",
+        "a1c1",
+        "a6a3",
+        "c3b2",
+        "a3a2",
+        "b2b4",
+        "a2a1",
+        "c1a1"
+      ],
+      [
+        "b1d3",
+        "e7c5",
+        "c1c5",
+        "a6b6",
+        "d3c3",
+        "b8f8",
+        "d1a1",
+        "b6a6",
+        "a1c1",
+        "a6a3",
+        "c3b2",
+        "a3a2",
+        "b2b4",
+        "a2a1",
+        "c1a1",
+        "a7a1"
+      ]
+    ],
+    "final_exact_replay": "criticalreg2024prices14: all7 reports replayed without changing work identity",
+    "earlier_price_audit_failure": "v12 omitted first Bxc5/Rxc5 price on a retained path. v13 restored coverage; v14 names actual captures with original physical identities."
+  },
+  "actual_UI_delivery": [
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalverifiednormal1.json",
+      "sha256": "34e19df872d6cb872740c50c704200d341fe695347ed8ee8acdcce924776e7bf",
+      "snapshots": 6,
+      "selection_failed": [],
+      "negative_rejected": 10,
+      "exact_SAN_links": 108
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalverifiedcold1.json",
+      "sha256": "bd5c93ccacbeca17aa84d273b951eecd55e8e15a5a14273a474b9b613a13c194",
+      "snapshots": 1,
+      "selection_failed": [],
+      "negative_rejected": 8,
+      "exact_SAN_links": 22
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalverifiedrepeat1.json",
+      "sha256": "8a63b01ce0cb8f8dc76a5ca3fecb1cfdb12759b60420a6dbc0959f7dc8386fc9",
+      "snapshots": 6,
+      "selection_failed": [],
+      "negative_rejected": 13,
+      "exact_SAN_links": 188
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalverifiedcontrols1.json",
+      "sha256": "375c1be7c5e9870419a8ea0e9e6aa12265baf403f8652aba6d0e794393160cf8",
+      "snapshots": 6,
+      "selection_failed": [
+        "R02"
+      ],
+      "negative_rejected": 13,
+      "exact_SAN_links": 122
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalverifiednew1.json",
+      "sha256": "20c33ddafb2c382e5749bee2a28a5e9670ebc0a061f0f1361aff37b3954d2bfb",
+      "snapshots": 4,
+      "selection_failed": [],
+      "negative_rejected": 9,
+      "exact_SAN_links": 46
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalrefresh12.json",
+      "sha256": "0d47628799176f2e44dc7aa7d8e798ffbab25d47cb2b7985117f9a87ab27706d",
+      "snapshots": 1,
+      "selection_failed": [],
+      "negative_rejected": 8,
+      "exact_SAN_links": 20
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalreg2024prices14.json",
+      "sha256": "6908ba89ea2b4d8129d58cbb527d803d8c936d64292de7b9b44a0ac97920466a",
+      "snapshots": 1,
+      "selection_failed": [],
+      "negative_rejected": 9,
+      "exact_SAN_links": 32
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalcontrols14.json",
+      "sha256": "1589285c6792d75ba94d913938eeb36fba997ecacccec8eea9f087a2062af810",
+      "snapshots": 6,
+      "selection_failed": [],
+      "negative_rejected": 13,
+      "exact_SAN_links": 142
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalnew14.json",
+      "sha256": "a9ce6f83a56fb2511a598828b2cec919ae9fa746d81c1cf8a28ccc2fa45e27f6",
+      "snapshots": 4,
+      "selection_failed": [],
+      "negative_rejected": 9,
+      "exact_SAN_links": 46
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalregression14.json",
+      "sha256": "d95ad004cb5a29c3bf4dc35e47193f05dccf9db180e980c0c46ca28a1c69e428",
+      "snapshots": 49,
+      "selection_failed": [],
+      "negative_rejected": 10,
+      "exact_SAN_links": 2152
+    },
+    {
+      "path": "research\\critical-comparison-20261007\\frontend-criticalpair14.json",
+      "sha256": "cd0bc5d0e59af47c8d5336503079432ca89958f95e0cd260692cf4066bef05f9",
+      "snapshots": 6,
+      "selection_failed": [],
+      "negative_rejected": 13,
+      "exact_SAN_links": 188
+    }
+  ],
+  "final_meaning": {
+    "T20_30s_complete": 3,
+    "T20_30s_trials": 3,
+    "H05_30s_full": 0,
+    "H05_30s_partial": 2,
+    "H05_30s_trials": 3,
+    "pair_10s_full": 0,
+    "pair_10s_trials": 6,
+    "new4_full": 0,
+    "new4_trials": 4
+  },
+  "deep_root_probe": {
+    "path": "target/critical-comparison-20261007/deeper-root-v2/manifest.json",
+    "configurations": 3,
+    "completed_required_depth": 0,
+    "observed_depths": [
+      18,
+      19,
+      26
+    ],
+    "product_reports_submitted": 0,
+    "earlier_invalid_attempt": "deeper-root: supplied wire fields to a decoded-work adapter; valid queries=0. Original attempt retained."
+  },
+  "independent_entry_choice": {
+    "path": "target\\critical-comparison-20261007\\entry-choice-v1\\manifest.json",
+    "configurations": 2,
+    "required_depth_completed": 2,
+    "product_reports_submitted": 0,
+    "readings": [
+      {
+        "case": "H05R2",
+        "moves": [
+          "Kf4",
+          "Ke4"
+        ],
+        "white_cp": 534,
+        "depth": 16,
+        "interpretation": "The declared entry remains comparable in this fixed local query despite disappearance from the refreshed PV. This does not prove the root evaluation cause, other defenses, budget feasibility or product delivery."
+      },
+      {
+        "case": "H05R3",
+        "moves": [
+          "Kf5",
+          "e5"
+        ],
+        "white_cp": 519,
+        "depth": 16,
+        "interpretation": "The declared entry remains comparable in this fixed local query despite disappearance from the refreshed PV. This does not prove the root evaluation cause, other defenses, budget feasibility or product delivery."
+      }
+    ]
+  },
+  "final_pair_fixed_clock": {
+    "exact_cases": 5,
+    "cases": 6,
+    "incomplete": "H05R1: 5/6 saved reports replayed",
+    "same_in_frozen_product_control": true,
+    "new_engine_execution": false,
+    "actual_last_limits": {
+      "depth": 16,
+      "nodes": 20000000,
+      "movetime_ms": 2500,
+      "multi_pv": 3
+    },
+    "fixed_clock_last_limits": {
+      "depth": 16,
+      "nodes": 20000000,
+      "movetime_ms": 5000,
+      "multi_pv": 3
+    },
+    "scope": "Both frozen v11 and final v14 choose the same pending work under an unadvanced clock. The original real-time run used a compact final allowance. This modeled-clock replay remains incomplete; no work keys or reports were changed."
+  },
+  "retained_final_UI_preparation_failure": "The first criticalregression14 UI probe was given an empty original-requests file and stopped before decoding a record. The corrected input uses the 49 actual original requests with the same snapshots and reports.",
+  "retained_test_harness_correction": "criticaluifinal12: invalid whole-snapshot rejection expectation in the added test, followed by a nonexistent comparisonText suite. Corrected test checks selection rejection; moveReviewComparisonText is the actual suite. criticaluicorrected12 passes all81.",
+  "retained_price_test_correction": "First v13 tests used an incorrect SAN expectation for a summarized material account and an illegal king move on the negative board. Corrected legal board; final v14 uses an explicit physical exchange receipt and preserves the no-later-trade counterexample.",
+  "interpretation": "Small purposive cohorts and researcher reading. No population success rate, independent novice comprehension, whole-book reading or universal evaluation explanation claim."
+}

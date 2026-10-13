@@ -1,0 +1,11 @@
+{
+  "corrected_utc": "2026-10-07T10:54:11.588430+00:00",
+  "failed_label": "criticalfinalnormal1",
+  "substitute_label": "criticalfinalnormal2",
+  "original_bridge_manifest_sha256": "436848f12eeb72105169d9b3ae71223198981dae246582227af4cc7c15a5e555",
+  "corrected_bridge_manifest_sha256": "382dd7010e0be62f8cae10da8328eeeb4806a6c86df5d915ca1d76f3b7bcbfbb",
+  "engine_asset_changed": false,
+  "product_rule_changed": false,
+  "cases_or_budget_changed": false,
+  "reason": "Resolve JSDOM from the explicit repository-working-directory dependency path so the preserved bundle may live in any research output directory. Failure occurred before any engine ready or job execution."
+}

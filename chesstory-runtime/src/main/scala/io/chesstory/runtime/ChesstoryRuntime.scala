@@ -22,9 +22,12 @@ object ChesstoryRuntime:
   private val PositionCommentaryJobsPath = "/v1/position-commentary-jobs"
   private val JobId = "^[A-Za-z0-9_-]{32}$".r
   private val RootSearchDepth = 16
+  private val ShortJobSearchDepth = 12
   private val JobDeadlineMillis = 3L * 60L * 1000L
   private val MaximumRetainedJobs = 2048
   private val TerminalJobRetentionMillis = 2L * 60L * 1000L
+
+  private lazy val commentaryReady: Unit = RuntimeProtocol.initialize()
 
   def main(args: Array[String]): Unit =
     val host = sys.env.getOrElse("CHESSTORY_HOST", DefaultHost)
@@ -49,6 +52,7 @@ object ChesstoryRuntime:
       workerCount: Int = DefaultWorkers
   ): RunningRuntimeServer =
     require(workerCount > 0 && workerCount <= MaxWorkers, s"workerCount must be between 1 and $MaxWorkers")
+    commentaryReady
     val server = HttpServer.create(address, 256)
     val workers = Semaphore(workerCount)
     val admitted = Semaphore(workerCount + MaximumQueuedRequests)
@@ -159,12 +163,17 @@ object ChesstoryRuntime:
             case Right(jobRequest) =>
               val nowEpochMs = System.currentTimeMillis()
               val policy = CommentaryJobPolicy(
-                RootSearchDepth,
+                if jobRequest.remainingBudgetMs.exists(_ <= 10000) then ShortJobSearchDepth else RootSearchDepth,
                 requestReceivedEpochMs + math.min(JobDeadlineMillis, jobRequest.remainingBudgetMs.fold(JobDeadlineMillis)(_.toLong)),
                 jobRequest.engineProfile,
                 investigateChoices = true,
-                // Eight is the existing CP-assessment admission floor, not a latency or accuracy promise.
-                previewDepth = Some(8)
+                // A short job cannot afford a second root/focus pair when the
+                // preview chooses another reference. Spend its one root pass
+                // at one matched depth, leaving room for the move's purpose.
+                previewDepth = Option.when(jobRequest.remainingBudgetMs.forall(_ > 10000))(8),
+                // Two root candidates suffice for the rating comparison;
+                // reserve the short job's assembly budget for reply differences.
+                shortJob = jobRequest.remainingBudgetMs.exists(_ <= 10000)
               )
               commentaryJobs.createJob(
                 jobRequest.requestId,

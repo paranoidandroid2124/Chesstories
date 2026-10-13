@@ -1,9 +1,0 @@
-useNodeVersion: 24.12.0
-managePackageManagerVersions: true
-updateNotified: false
-onlyBuiltDependencies:
-  - esbuild
-packages:
-  - 'bin'
-  - 'ui/*'
-  - 'ui/@types/*'

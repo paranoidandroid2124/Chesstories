@@ -1,0 +1,29 @@
+{
+  "suites": [
+    "CommentaryAnswerTest",
+    "CommentaryDependencyTest",
+    "CommentaryEnglishCompositionTest",
+    "CommentaryIdeaIdentityTest",
+    "RootQuestionAnswerTest",
+    "RootThreatAnswerTest",
+    "CommentaryMaterialAccountTest",
+    "MeaningCompositionTest",
+    "ReferenceMeaningDeliveryTest",
+    "PracticalDecisionTest"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 90.303,
+  "log": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\test-run-v6.log",
+  "count": 272,
+  "junit_measured_seconds": 89.166,
+  "log_sha256": "e268df476056f2aacd3acfbd35c3f23582adf94d574c3cafe8f8a46ea3099803",
+  "main_compile": {
+    "exit_code": 0,
+    "elapsed_seconds": 45.687
+  },
+  "test_compile": {
+    "exit_code": 0,
+    "elapsed_seconds": 24.06
+  },
+  "scope": "Direct cached Scala 3.7.4/Java21 compiler, 71 main sources and ten selected test suites. Not the official full build."
+}

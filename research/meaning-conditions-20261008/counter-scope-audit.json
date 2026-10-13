@@ -1,0 +1,1346 @@
+{
+  "schema": "counter_scope_audit.v1",
+  "recorded_utc": "2026-10-07T20:28:28.326198+00:00",
+  "scope": "읽기 전용 제품 감사 및 개인 연구 기록. 이 에이전트는 제품 소스 변경, 새 엔진 실행, 검사 실행을 하지 않았다.",
+  "user_annotations_addressed": [
+    2,
+    4
+  ],
+  "method": {
+    "current_sources": "아래 sha256의 현 소스",
+    "actual_records": "optionfinalbooks1의 실제 엔진 journal과 optionbookdiagnostic1의 같은 기록 재생",
+    "history": "selectionv3/v5의 development-decisions와 critical-comparison 완료 기록",
+    "not_claimed": "범용 중요도 해결, 추가 계산 결과, 새 화면 성공 또는 전체 이론서 완독"
+  },
+  "sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryJobReducer.scala",
+      "lines": [
+        623,
+        635,
+        1293,
+        1555,
+        1674,
+        1687,
+        1786,
+        1808,
+        2077,
+        2511,
+        2588,
+        2610,
+        2702,
+        2891,
+        2942,
+        2982
+      ],
+      "sha256_at_audit": "c5d9449526f196dd30785156ee0da851475b2cd72497a8f748da9efa5a11623b"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryIdea.scala",
+      "lines": [
+        335,
+        352,
+        433,
+        450,
+        496,
+        509,
+        800
+      ],
+      "sha256_at_audit": "07163dd5bb0c70a7dbc6dd42e54c932974ae11a432287318db0207fca5607eb4"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryDiscovery.scala",
+      "lines": [
+        1408,
+        1417,
+        1427,
+        1448,
+        1751
+      ],
+      "sha256_at_audit": "3b1429dd42ada39781e638473a7b30897c25095cf63cbfbf6abefef14681415e"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryProposal.scala",
+      "lines": [
+        79,
+        120,
+        156,
+        180,
+        205
+      ],
+      "sha256_at_audit": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\TargetResponseInvestigation.scala",
+      "lines": [
+        28,
+        57,
+        87
+      ],
+      "sha256_at_audit": "a494b895a41d2ecbe13e8df257ad3c56a10abffe2371512a6127c9648ae0b434"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\PositionCommentaryJobProtocol.scala",
+      "lines": [
+        120
+      ],
+      "sha256_at_audit": "34328593bfb44241a88e460058515a33e62d5bb1866d6eb1c1b1c9d69db5238d"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootSubjectComparison.scala",
+      "lines": [
+        905,
+        956
+      ],
+      "sha256_at_audit": "7305de25af51df169a0fbeaa7aaff072ad9508db7e20de4065da9e55c95f5416"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootQuestionSummary.scala",
+      "lines": [
+        58,
+        155,
+        209,
+        470,
+        851,
+        908
+      ],
+      "sha256_at_audit": "a6e92cb6ab4bd7a03a13abab9c7c2e7734879d317e68f8ea1605b1fde862801c"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryAnswer.scala",
+      "lines": [
+        280,
+        308
+      ],
+      "sha256_at_audit": "d111f58755822d0b067a01fd1f80141d731c926da448fda67e03adfd3041fc86"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\MoveWorkProjection.scala",
+      "lines": [
+        3240,
+        3328,
+        3386,
+        3513,
+        3533,
+        3573
+      ],
+      "sha256_at_audit": "26a2e41e1da2bb3b56dee1aea7bf4fd1ae3f3e6ae460d9ecf6d906241d4c6428"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\answer-selection-20261004\\development-decisions.json",
+      "lines": [
+        23,
+        28
+      ],
+      "sha256_at_audit": "0ab35d3603d3f843b4724d09ec48ab7bb5e006f032ad0352169b95deefdd198c"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\critical-comparison-20261007\\completion.json",
+      "lines": [
+        1
+      ],
+      "sha256_at_audit": "fa332a0483ed8b2c2f7d3a0f73f7c649fd6b4624e0886188f57db1c4ac85d4d4"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\optionfinalbooks1\\journal.jsonl.gz",
+      "lines": [],
+      "sha256_at_audit": "349e6685f43a9431e6939e8874fd1484b08f8727f7e384321c890ae2089ba6d1"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\optionbookdiagnostic1\\dependency-readings.json",
+      "lines": [],
+      "sha256_at_audit": "5440968f4f3b3f2f326d02805974caaa92628c559c01dad6ce65327e306cda0d"
+    }
+  ],
+  "main_findings": [
+    "SG13 첫응수 비교는 준비된 상태였다. contrast_context의 모든 비점수 조건이 supported이고 generated arm head가 [contrast_context, contrast_strength]였으나 조사하지 않았다.",
+    "현재 일반 agenda는 explorationsIssued>=2에서 종료한다. >=4는 reserve 계열의 제한된 후속 비교 예외에만 해당하며 reserve_entry_value에는 정확한 별도 5번째 비교 예외가 있다.",
+    "SG13 두 일반 탐색은 Qd7 Bxh4 gxh4 Qf4 뒤 unrestricted와 Bd5/h5 restricted로 소비했다. 더 앞의 Bxh4/g5 및 Bxh4/Kf8 두 쌍은 finish의 investigation_limit로 바뀌었다.",
+    "plan-counter의 모든 준비된 비교가 CommentaryIdea의 의미 우선순위를 얻는 것은 아니다. ownedEffects/contribution와 Member.role의 좁은 정의를 지나지 못한 SG13 비교는 proposalChoices 기본 decision(2,4), non-essential, agenda urgency3 경로이다. source의 changed fact는 root selection 중요도를 스스로 입증하지 않는다.",
+    "총 deadline을 늘려도 일반 agenda 조기 종료와 per-work node/time 조건이 그대로라 필요한 비교는 실행되지 않는다.",
+    "SW02의 깊은 material_followup이 d16+27ply=d43 root refresh를 요구했다. 그 root d43 조회가 5m node ceiling에 걸렸고 needs_refresh를 남겼다. investigationDepth는 미완료 targetDepth43까지 모든 answer의 current 기준으로 전파한다.",
+    "본문 축소가 안전하려면 exact condition/use 질문과 그 가격 단위가 함께 보존돼야 한다. 현재 protect는 완결된 좁은 단위가 없는 price/check 혼합 section을 통째로 보호한다. 이것을 전역 해제하면 selectionv5와 같은 손실 위험이 재현된다."
+  ],
+  "sg13_required_pair": {
+    "prefix": [
+      "e8d7"
+    ],
+    "reference": "f6h4",
+    "alternative": "g6g5",
+    "existing_id": "contrast_strength",
+    "expected_relation": "better",
+    "expected_relation_means": "흑 차례에서 alternative g5가 reference Bxh4보다 더 높은 값인지 질문한다. 백 cp가 더 높으면 흑에게는 더 낮은 평가다.",
+    "readings_timeline": [
+      {
+        "report_number": 4,
+        "counters": [
+          {
+            "id": "discovery:01947874340ab486608aac7ec3211b07d616d6787c4f0b6d670c2836de32bede",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g7f8,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "deferred",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          },
+          {
+            "id": "discovery:49f80cfcac2cfea9d71ac298dc004825ee2a926f208ab6c766dd22e156ba5fdd",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g6g5,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "deferred",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          }
+        ]
+      },
+      {
+        "report_number": 5,
+        "counters": [
+          {
+            "id": "discovery:01947874340ab486608aac7ec3211b07d616d6787c4f0b6d670c2836de32bede",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g7f8,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "deferred",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          },
+          {
+            "id": "discovery:49f80cfcac2cfea9d71ac298dc004825ee2a926f208ab6c766dd22e156ba5fdd",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g6g5,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "deferred",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          }
+        ]
+      },
+      {
+        "report_number": 6,
+        "counters": [
+          {
+            "id": "discovery:01947874340ab486608aac7ec3211b07d616d6787c4f0b6d670c2836de32bede",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g7f8,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          },
+          {
+            "id": "discovery:49f80cfcac2cfea9d71ac298dc004825ee2a926f208ab6c766dd22e156ba5fdd",
+            "live": true,
+            "heads": [
+              [
+                "contrast_context",
+                "contrast_strength"
+              ]
+            ],
+            "comparison": "CompareMoves(contrast_strength,List(e8d7),f6h4,g6g5,Some(better))",
+            "noncomparison_states": [
+              {
+                "id": "reference_action",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_0",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_0",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_1",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_1",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "reference_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "alternative_condition_2",
+                "state": "observed",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_condition_2",
+                "state": "supported",
+                "stop_reason": null
+              },
+              {
+                "id": "contrast_context",
+                "state": "supported",
+                "stop_reason": null
+              }
+            ],
+            "comparison_reading": {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "actual_work_timeline": [
+    {
+      "case": "SG13",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 8,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "e8d7",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": 138
+          },
+          "suffix_plies": 13
+        },
+        {
+          "first": "e8b8",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": 48
+          },
+          "suffix_plies": 12
+        },
+        {
+          "first": "e8c8",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": 46
+          },
+          "suffix_plies": 14
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 28
+    },
+    {
+      "case": "SG13",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "e8d7",
+          "c6d5"
+        ]
+      },
+      "limits": {
+        "depth": 8,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 2
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "e8d7",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": 117
+          },
+          "suffix_plies": 8
+        },
+        {
+          "first": "c6d5",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": 23
+          },
+          "suffix_plies": 7
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 41
+    },
+    {
+      "case": "SG13",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 6000,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "e8d7",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 316
+          },
+          "suffix_plies": 19
+        },
+        {
+          "first": "e8c8",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 13
+          },
+          "suffix_plies": 16
+        },
+        {
+          "first": "e8b8",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "suffix_plies": 22
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 490
+    },
+    {
+      "case": "SG13",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "e8d7",
+          "c6d5"
+        ]
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 2
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "e8d7",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 307
+          },
+          "suffix_plies": 17
+        },
+        {
+          "first": "c6d5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "suffix_plies": 14
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 324
+    },
+    {
+      "case": "SG13",
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "prefix": [
+        "e8d7",
+        "f6h4",
+        "g3h4",
+        "f3f4"
+      ],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "c6d5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 431
+          },
+          "suffix_plies": 27
+        },
+        {
+          "first": "d7d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 385
+          },
+          "suffix_plies": 17
+        },
+        {
+          "first": "b4b5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 370
+          },
+          "suffix_plies": 19
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 815
+    },
+    {
+      "case": "SG13",
+      "work_id": "work:5",
+      "purpose": "response_comparison",
+      "prefix": [
+        "e8d7",
+        "f6h4",
+        "g3h4",
+        "f3f4"
+      ],
+      "root_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "c6d5",
+          "h4h5"
+        ]
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 2
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "c6d5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 437
+          },
+          "suffix_plies": 22
+        },
+        {
+          "first": "h4h5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 275
+          },
+          "suffix_plies": 17
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 757
+    },
+    {
+      "case": "SG13",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "progress": {
+        "phase": "completed",
+        "legal_move_count": 23,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 6,
+        "physical_reports_accepted": 6
+      }
+    },
+    {
+      "case": "SW02",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 8,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "h6h7",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": -150
+          },
+          "suffix_plies": 9
+        },
+        {
+          "first": "c2f2",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": -171
+          },
+          "suffix_plies": 4
+        },
+        {
+          "first": "g5g6",
+          "depth": 8,
+          "white_score": {
+            "kind": "cp",
+            "value": -233
+          },
+          "suffix_plies": 8
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 20
+    },
+    {
+      "case": "SW02",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 6000,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "h6h7",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -162
+          },
+          "suffix_plies": 27
+        },
+        {
+          "first": "g5g6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -324
+          },
+          "suffix_plies": 17
+        },
+        {
+          "first": "c2f2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -394
+          },
+          "suffix_plies": 23
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 956
+    },
+    {
+      "case": "SW02",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "prefix": [
+        "h6h7",
+        "c5c8",
+        "g5g6",
+        "f8e7",
+        "h8g7",
+        "f7g6",
+        "c2e2",
+        "e7d6",
+        "e2f2",
+        "g6g5",
+        "f2f8",
+        "c8f8",
+        "g7f8",
+        "c3c2",
+        "h7h8q",
+        "c2c1q",
+        "h8d4",
+        "d6c6",
+        "d4e4",
+        "c6b5",
+        "e4b7",
+        "b5a4",
+        "b7a8",
+        "a4b3",
+        "a8d5",
+        "b3b2",
+        "d5d4"
+      ],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 3500,
+      "outcome_kind": "completed",
+      "returned": [
+        {
+          "first": "c1c3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -246
+          },
+          "suffix_plies": 19
+        },
+        {
+          "first": "b2a3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -194
+          },
+          "suffix_plies": 16
+        },
+        {
+          "first": "b2a2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -192
+          },
+          "suffix_plies": 38
+        }
+      ],
+      "failure_code": null,
+      "measured_executor_ms": 615
+    },
+    {
+      "case": "SW02",
+      "work_id": "work:3",
+      "purpose": "root_search",
+      "prefix": [],
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "limits": {
+        "depth": 43,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 6000,
+      "outcome_kind": "executor_failed",
+      "returned": [],
+      "failure_code": "search_budget_exhausted",
+      "measured_executor_ms": 2137
+    },
+    {
+      "case": "SW02",
+      "assessment_state": "needs_refresh",
+      "verification": {
+        "state": "stopped",
+        "target_depth": 43,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      "progress": {
+        "phase": "completed",
+        "legal_move_count": 12,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 4,
+        "physical_reports_accepted": 4
+      }
+    }
+  ],
+  "minimal_implementation_proposal": {
+    "root_dependency": "기존 rootDependency의 same-root receipt-linked 질문 범위를 확장하되, 첫 응수 prefix.size==1이며 현재 actual/best root pair의 한 팔을 정확히 연장하고, 현재 returned reference reply를 포함하고, generated arm의 비comparison head가 모두 supported/observed이며 철회되지 않은 pending pair에 한정한다.",
+    "priority": "해당 첫 반론의 비교를 그 응수를 수용한 이후의 먼 가격/기물 개선 조사보다 먼저 배치한다. existing proposalChoices 및 beginResponses의 dependency 경로 재사용; 추가 scheduler나 motif weight 없음.",
+    "admission": "외부에서 구한 점수를 old work로 위조 접수하지 않는다. 수정 후 public reducer가 같은 history/prefix/roots로 정식 issue한 work를 실행하고 execution key와 anchor를 보존해 Completed report를 접수한다.",
+    "receipt_consumption": "refreshProposalReadings는 responseSearches에서 동일 prefix의 pairAnswer를 읽으므로 현재 질문도 자동 접수 가능하다. same packet, same exact initial history and prefix, same owned work의 두 충분한 depth, currentAnswer, certified path와 occurrence가 필요하다. proposalRefs는 관계 provenance를 보존하되 별도 강도 증거는 아니다.",
+    "effort": "120초 job은 현재 wire 1..180000ms 규약 안이다. per-work 2.5/5/8초가 별도이므로 이미 선택한 필수 pair의 1회 완료 allowance를 명시적으로 늘려야 한다. normal default 전역 확대와 새 effort abstraction는 이 결과만으로 정당화되지 않는다.",
+    "guards": [
+      "정확한 (history,prefix,unordered pair,profile,depth) 중복 비교를 반복하지 않는다.",
+      "일반 topic 두 번 제한과 local replay requirement cap 및 원래 deadline/전달 reserve는 유지한다.",
+      "completion allowance는 이미 선택된 첫응수와 그 반론에 한정한다. 다른 root나 먼 새 topic에 재사용하지 않는다.",
+      "childRechecksIssued<=1, depth<=100, mismatch 및 stale score 보호를 유지한다.",
+      "가능한 선택의 비교 완료 자체를 원래 수의 평가 원인 설명 성공으로 세지 않는다."
+    ],
+    "remaining_scope_issue": "ready first-reply 조건은 조사할 이유이며 중요도 또는 핵심 원인의 증명은 아니다. 새 결과가 필요한 root explanation을 바꾸는 근거인지 별도 판독해야 한다.",
+    "root_receipt_recipe": {
+      "find": "explanationReceipts(active)에서 CommentaryInvestigation.pairedAnswer(packet,playedMove,reviewReference,work,lines,Some(prepared))와 currentAnswer를 통과하는 동일work의 root pair를 찾는다.",
+      "sg13_boundary": "currentRootReceipt 하나는 충분하지 않다. 실제 work2 unrestricted는 Qd7/Qc8/Qb8이며 Bd5가 없다. work3 focus pair가 Qd7/Bd5를 함께 소유한다.",
+      "anchor": "root pair answer의 referenceLineId/alternativeLineId 중 prefix.head와 일치하는 certified path가 prefix :+ compared reference reply로 시작하는지 확인한다. prefix.size==1, same declared path/occurrence/history가 필요하다.",
+      "required_arm": "CommentaryIdea.currentQuestions의 pending entry에서 compare head와 supported/observed인 모든 다른 head를 포함한 ready generated arm만 인정한다.",
+      "refs": "issueProposalComparison 기존 owners 수집이 같은 prefix/reference/alternative의 alias (proposalId,requirementId)를 proposalRefs에 남긴다. parent Root/Focus workId와 새 Response workId의 역할을 혼동하지 않는다."
+    }
+  },
+  "strongest_counter_scope": {
+    "current_generator_boundary": "planCounters는 대부분 quiet/nonpromotion이며 relevant 후보와 한 neutral representative를 생성한다. capture/promotions 또는 일반 강한 반격을 포괄하지 못할 수 있다.",
+    "pair_test": "Bxh4/g5 제한 검색은 그 두 수의 상대값만 답한다. 이를 전체 합법 응수 중 가장 강한 반론이라고 부르지 않는다.",
+    "broader_validation": "동일 child history의 unrestricted search에서 returned leader를 확인하고 필요하면 기존 observed reference와 leader를 같은 work pair로 검증한다. top-N에서 named reference가 빠지면 부재를 가치 없음으로 해석하지 않고 정확한 pair 추가 조사 또는 미확정으로 남긴다."
+  },
+  "protected_question_and_price_units": {
+    "independent_question_unit": "기존 CommentaryAnswer.conditionUses의 exact MoveRef(condition), MoveRef(actual use) 쌍. 소유 path/occurrence, 같은 원래 기물 정체성, 조건의 변화와 실제 사용을 함께 보존한다. 같은 SAN, 같은 FEN, 같은 역할 손실 수는 합치는 기준이 아니다.",
+    "price_unit": "그 실제 use를 소유한 certified Account.events/offsets + dutyCosts + 필요한 checks/replies + 사용한 지원 기물의 후속 손실/승격/terminal 결과. exact material event의 source/occurrence를 보존하며 하나의 기본 가격 owner를 둔다.",
+    "coexistence": "새 중심 답이 같은 use/가격/조건 참조를 모두 소유하면 설명 공유 또는 중복 제거가 가능하다. 다른 독립 root/use의 중요도가 없다고 증명하지 못했으면 함께 남기거나 기존 선택을 보존한다.",
+    "safe_detail": "주변 history/presence와 위치 증명 anchor는 별도 상세로 옮길 수 있다. 현재 필수 use나 capture/check reply를 상세에만 남기고 기본 설명이 완결됐다고 계산하지 않는다.",
+    "narrowing_barrier": "protect가 통째로 보존하는 section을 줄이려면 기존 typed statement와 account closure로 같은 가격 집합을 소유하는 좁은 단위가 먼저 성립해야 한다. 전체 account에 continuousRecovery 제한을 전역 적용하지 않는다."
+  },
+  "historical_failures": [
+    {
+      "version": "selectionv3",
+      "failure": "동일 target outcome/price의 포획 가능성만으로 기존 지원 의미를 밀어냄",
+      "prevent": "different outcome or price는 진입 자격일 뿐 기존 independent condition/use를 자동 대체하지 않도록 보호"
+    },
+    {
+      "version": "selectionv5",
+      "failure": "continuous-recovery 제한을 모든 경제 계정에 적용해 네 기존 exchange/clearance/response 가격을 제거",
+      "prevent": "기존 넓은 account의 가격을 유지하고 새로운 scoped question의 좁은 account에만 조건 적용"
+    },
+    {
+      "version": "critical-comparison-20261007",
+      "failure": "selected comparison timing 개선 뒤 H05와 새 네 장면 의미 답이 남음; normal10s0/6",
+      "prevent": "완료·참조 검사 성공을 일반 의미 해명으로 세지 않고 fixed old/new 사례의 central question을 별도 판독"
+    }
+  ],
+  "acceptance_tests_for_root_work": [
+    "기존 SG13 work0..3 actual prefix 재생 후 next issued work가 first-reply semantic comparison을 선택하며 deep 4ply 조사보다 앞서는지 확인.",
+    "같은 history의 실제 비교 receipt가 두 pending counter question 중 정확한 pair만 answered/supported/refuted로 바꾸는지 확인; wrong prefix/owner work를 거절.",
+    "already tried same pair/depth로 다시 접수·조사하지 않는지 확인.",
+    "required pair 끝났지만 expected_relation refuted일 때 해당 질문만 반박하고 parent preparation 가치나 기본 판단을 무근거로 뒤집지 않는지 확인.",
+    "120초 일반 한도 증가만으로 탐색 cap를 우회하지 않으며 required completion allowance가 unrelated topic을 새로 시작하지 않는지 확인.",
+    "선택된 use, 가격, check reply의 exact sets 보존을 old regression 및 새 book counterexample에서 확인. 단순 문장 길이/관계 수 비교를 성공으로 쓰지 않음."
+  ],
+  "priority_inference_scope": "C-plan-counter의 priority 값은 실제 middle-state context/readings와 현 소스의 Member.contribution/role/filter를 대조한 정적 추론이다. 새로운 런타임 priority instrumentation 또는 새엔진 실행으로 판정했다고 주장하지 않는다.",
+  "incomplete_one_query_policy": {
+    "existing": "ExecutorFailed는 compact focus retry1회 뒤 stop으로 entire job의 unresolved proposals를 stopped시킨다.",
+    "minimal_branch": "InvestigatingProposals의 BudgetExhausted에만 exact issued prefix+unordered pair의 unresolved readings를 stopped/search_budget_exhausted 및 workId로 남기고 기존 baseline/questions를 가지고 beginResponses로 돌아간다. 이미 확인한 facts/answers와 needs_refresh를 보존한다.",
+    "duplicate_guard": "Response failed work는 rootSearches나 responseReceipts에 남지 않으므로 현재 Entry stopped reading의 exact pair 키를 proposalChoices에서 체크해 새 generated alias의 중복 실행을 막는다. child conflict의 explicit verifyAfter는 별도 제한된 의무이며 예외적인 재검증 이유를 기록해야 한다.",
+    "meaning": "미완료는 그 비교의 미확정이다. parent idea 의미가 거짓이라는 reading으로 바꾸지 않는다.",
+    "scope": "다른 ready independent question은 기존 두 일반 topic allowance 안에서 계속 선택할 수 있다. 완료 의무를 이유로 unrelated 새topic 또는 무제한 첫reply pair를 늘리지 않는다."
+  },
+  "additional_measurements_reported_by_parent": {
+    "provenance": "2026-10-08 현재작업의 부모 에이전트 메시지에서 전달. 이 에이전트는 실행하거나 raw파일을 아직검증하지 않았다.",
+    "SG13_Qd7_reply_full_d24": {
+      "elapsed_ms": 104955,
+      "returned_top3": [
+        {
+          "move": "Bxh4",
+          "white_cp": 555
+        },
+        {
+          "move": "Qe2",
+          "white_cp": 563
+        },
+        {
+          "move": "Qh5",
+          "white_cp": 576
+        }
+      ],
+      "g5": "top3 omitted; named comparison still requires exactpair or remains unverified"
+    },
+    "SG13_Qd7_Bxh4_g5_d20": {
+      "elapsed_ms": 7245,
+      "reference_Bxh4_white_cp": 463,
+      "alternative_g5_white_cp": 503,
+      "black_relation": "alternative lower; expected better refuted in this completed pair if allpublicowner/depthguards hold"
+    },
+    "SG02_Qd2_gxf3_d24": {
+      "elapsed_ms": 116421,
+      "white_cp": [
+        -39,
+        -751
+      ]
+    },
+    "interpretation": "시간 확대 뒤 일부 비교가 완료되지만 일반 최선 선택과 최초 수의 평가 원인을 자동 입증하지 않는다. 참조책과 현재엔진의 반론 우선순위가 다를 수도 있으므로 비교범위/깊이/실행을 명시한다."
+  },
+  "updated_utc": "2026-10-07T20:31:19.108679+00:00",
+  "regression_handoff": {
+    "recorded_utc": "2026-10-07T20:48:33.235618+00:00",
+    "test_file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/FirstReplyCompletionTest.scala",
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/first-reply-dependency-prefix-produced.json",
+    "fixture_scope": "optionfinalbooks1 SG13의 실제 첫 4 보고만 추출. 후속 가상 점수는 공개 reducer 전이의 소유권 및 완료/실패 상태를 검사한다.",
+    "status": "written_not_compiled_or_run_by_this_agent",
+    "cases": [
+      "unrestricted work:2에는 Bd5가 없고 same-work Focus work:3에만 실제/대안 두 arm이 있는 상황에서 ready Qd7/Bxh4/g5 firstreply 비교를 우선 발행한다.",
+      "제출된 일반 root 비교 2개를 완료한 뒤 work:6에서 exact firstreply를 완료하고 가설이 refuted여도 observed owned answer를 접수한다.",
+      "Focus Qd7의 응수가 Kf8로 바뀌면 이전 Bxh4/g5 firstreply pair가 같은 current root dependency로 발행되지 않는다.",
+      "depth 15인 Focus pair는 required depth 16의 firstreply dependency가 될 수 없다.",
+      "unowned work report는 physical report ledger를 전진시키지 못한다.",
+      "ready 조건이 deferred인 arm은 neededRequirementIds와 comparisonContexts(readyOnly=true) 둘 다 해당 강도 비교를 요구하지 않는다.",
+      "BudgetExhausted 후 exact unordered pair의 제출/역방향/자동 소유자는 answer 없이 stopped가 되고 다른 pair가 계속 완료되며 discovery 재생성 후 failed pair를 재발행하지 않는다."
+    ],
+    "limits": [
+      "ActiveCommentaryJob이 private이므로 상태 주입이나 reflection 없이 공개 start/submit 경로로 작성했다.",
+      "공개 API는 중간 새 제출 alias를 접수하지 않는다. 따라서 fresh alias를 직접 새로 추가하는 테스트는 없고, 기존 alias와 자동 discovery 재생성 후의 재발행을 검사한다.",
+      "unready 음성 사례는 기존 공개 ingredient Entry의 판독 함수에 대한 단위 회귀다. private firstreply helper에 가짜 Active를 직접 넣지 않는다.",
+      "새 meaningv1 180초 실제 SG13의 Kf8/Qd1+ frontier 변화는 이 고정된 이전 입력 회귀와 별개다.",
+      "제품 소스 편집, Scala 컴파일/검사 실행 및 새 엔진 실행은 root 담당이며 이 에이전트는 수행하지 않았다."
+    ],
+    "root_reported_result": "meaningv3 combined 60 tests: FirstReplyCompletionTest 7 and MeaningConditionScopeTest 6 passed. Two CriticalComparisonSchedulingTest failures occurred before report admission on exact work key mismatch. This agent did not execute that suite."
+  },
+  "frontend_regression_handoff": {
+    "recorded_utc": "2026-10-07T21:13:15.643982+00:00",
+    "test_file": "lila-docker/repos/lila/ui/analyse/tests/moveReview.test.ts",
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/first-reply-allowance-produced.json.gz",
+    "fixture_bytes": 152879,
+    "fixture_sha256": "1851505d9fcf9f0b536ea72bbd2b3e8db26af65a2341b9a0035d7b7328d0dd64",
+    "status": "written_not_compiled_or_run_by_this_agent",
+    "positive": "기존 actual criticalbrepeats1 H05R3 firstreply work:2 snapshot의 준비된 경로·조건·소유권·두 수는 유지하고 producer tag만 C-reserve-response에서 C-plan-counter로 변경. generated pending exact firstpair에 40m nodes/8s search/9s elapsed를 허용한다.",
+    "negative": [
+      "depth 8",
+      "foreign reading work_id",
+      "submitted-only owner",
+      "comparison no longer pending",
+      "other prefix",
+      "other legal pair",
+      "foreign root occurrence",
+      "mixed 20m/8s allowance",
+      "9001ms elapsed allowance",
+      "실제 다른 2ply 결정에 40m/8s/9s를 얹어도 firstreply allowance를 받을 수 없음"
+    ],
+    "limits": [
+      "frontend 공개 wire에는 generated arms/head readiness가 없으므로 체스적 조건의 준비를 decoder가 다시 입증하지 않는다. backend 준비 조건은 Scala regression이 검사한다.",
+      "producer tag variation은 접수 계약 테스트이며 새로운 C-plan-counter 체스 근거 또는 generator의 발견 성공을 주장하지 않는다.",
+      "제품 소스/엔진/컴파일/검사 실행은 root 담당이다."
+    ]
+  },
+  "critical_fixture_key_regression": {
+    "source_test_run": "target/decision-timing-20261006/mcFirstScope3/run.log",
+    "original_fixture": "judgment-evaluation/fixtures/public-commentary-v6/selected-dependency-prefix-produced.json",
+    "fixture_key": "912fd2fd36b7b822be7e8ba25848b719f8102dc0e0898ce1d92ba54b6fcc76da",
+    "current_issued_key_expected_by_assertion": "ffd868ef223339c1e6afc383870de56c0eb4637a3d5a45f265fa4978536ec88a",
+    "confirmed_change": {
+      "before_restricted_moves": [
+        "e5f6",
+        "f7f6"
+      ],
+      "after_restricted_moves": [
+        "e5f6",
+        "b4b3"
+      ]
+    },
+    "unchanged": "work:2, response_comparison, initial history, child Fen, root/position anchor, profile, depth16, 40m nodes,8s search,9s elapsed,multiPV2. Changing only ordered restricted moves recomputes exactly the current issued ffd868 key.",
+    "interpretation": "새 general firstreply dependency가 기존 receipt-linked reserve f6 비교를 b3 비교로 앞서 대체한 scheduling 변화. 시간 한도 변경이나 foreign report 소유권 문제와 다르다.",
+    "do_not_do": "old fixture report의 execution key만 바꾸거나 assertion을 약화하여 통과시키지 않는다. 그러면 원래 reserve/timing 의무를 검증하지 못하고 실제 다른 work를 재접수한다.",
+    "minimal_fix": "기존 current root에 소유되고 선택된 reserve/hold/timing exact 의무를 일반 새 ready firstreply counter보다 먼저 유지한다. 이 우선순위는 의미 의무 보존이지 f6가 가장 강하다는 판정이 아니다."
+  },
+  "evidence_first_counter_order": {
+    "fact_counter_is_not_utility_counter": "조건을 실제로 바꾸는 합법 반론은 후보 자격을 얻는다. expectedRelation=better 가설이나 source name은 그 반론의 평가상 중요도 또는 최강성을 입증하지 않는다.",
+    "existing_boundary": "TargetResponseInvestigation.Search는 exact child, packet/history/anchor/work ownership, 충분한 깊이, certified full-root paths를 유지한다. lines는 그 child mover 점수로 정렬되고 selectedLinePairs는 returned leader에서 peers로 향한다. pairAnswer는 같은 work의 실제 두 후보만 답한다.",
+    "proposed_sequence": [
+      "이전에 이미 선택한 current receipt-linked exact 의무를 먼저 마감한다.",
+      "새 firstreply 의미를 검증할 때 같은 exact child의 owned unrestricted 검색이 없으면 현재 TargetResponse survey 하나를 먼저 한다. 전체 legal pool이 검색됐다는 work scope를 보존한다.",
+      "반환한 leader와 질문의 참조/대안이 같은-work에 있으면 기존 pairAnswer로 접수한다. 의미를 바꾸는 응수가 leader로 바뀌었으면 그 응수의 실제 조건을 다시 읽고 필요한 기존 root refresh/child challenge만 따른다.",
+      "정해진 중요한 named counter가 반환되지 않았으면 omission을 약함으로 판정하지 않고 한 번 exact 보충한다. 동일 unordered pair 실패/중복/새 alias 차단과 2+2 cap은 유지한다."
+    ],
+    "scope_statement": "제한 pair의 stronger, legal functional class의 strongest returned member, unrestricted same-depth search의 returned leader는 서로 다른 범위다. 독립 research d24 결과는 제품 issued work로 정식 접수되기 전에는 product evidence로 혼합하지 않는다.",
+    "SG13": "Root가 실행한 독립 d24 unrestricted Qd7 응수 조사에서 Bxh4가 best returned move이고 g5는 top3에서 빠졌다. 따라서 g5는 조건을 시험하는 한 counter이며 자동으로 strongest가 아니다. g5 omission만으로 그 실제 strength를 결정하지 않는다.",
+    "not_added": "전역 점수, 새 scheduler 계층, motif weights 또는 every-counter-strongest 규칙은 제안하지 않는다."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "scope": "Same-researcher content reading of the three changed stored cases, after purposev5 passed 344 existing/new tests. This is a regression finding, not an independent quality rating.",
+  "rejected_change": "Promoting only root uses and their exact actions removed known linked episodes from the default explanation even though expanded material accounts remained valid.",
+  "findings": [
+    {"id": "TAT25-01", "root": "a8c8", "must_remain_core": [13], "reason": "The displayed later rook attack on the bishop on a7 must retain that bishop's preceding Bxa7 gain from the rook's former support duty."},
+    {"id": "TAT25-04", "root": "e4e5", "must_remain_core": [13], "reason": "The knight that actually uses the vacated e4 square is subsequently captured on e4. Displaying the use while moving that loss to detail hides its known price."},
+    {"id": "TAT25-11", "root": "e8g8", "must_remain_core": [3, 4, 5, 11, 12], "reason": "The selected Bxh7+ / Kxh7 support use depends on the earlier e4 clearance and its observed exchange. The existing check episode also includes Qd3+ / Kg8."}
+  ],
+  "decision": "Keep an existing bundle's capture/check episode, including its connected conditions and replies, until a narrower account is independently closed. Do not count uncertain importance as successful omission. Plain background geometry may still move to detail when it carries no such episode."
+}

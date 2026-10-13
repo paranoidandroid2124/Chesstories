@@ -1211,14 +1211,19 @@ def _attest_run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
     }
 
 
+def _read_preregistration(corpus: Corpus) -> Mapping[str, Any]:
+    preregistration = read_json(corpus.root / "preregistration.json")
+    if not isinstance(preregistration, Mapping):
+        raise ContractError("preregistration must be an object")
+    return preregistration
+
+
 def _finalize_run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
     key = _environment_secret("CHESSTORY_EVAL_HMAC_KEY")
     corpus = Corpus(root / "corpus" / "v1")
     if corpus.split_state(arguments.split) != "sealed":
         raise ContractError("finalize-run is reserved for sealed two-phase runs")
-    preregistration = read_json(corpus.root / "preregistration.json")
-    if not isinstance(preregistration, Mapping):
-        raise ContractError("preregistration must be an object")
+    preregistration = _read_preregistration(corpus)
     custodian_root, custodian_state_id, custodian_storage_binding = _custodian_state(
         corpus
     )
@@ -1319,9 +1324,7 @@ def _qualify_fresh_confirm(
 ) -> Mapping[str, Any]:
     key = _environment_secret("CHESSTORY_EVAL_HMAC_KEY")
     corpus = Corpus(root / "corpus" / "v1")
-    preregistration = read_json(corpus.root / "preregistration.json")
-    if not isinstance(preregistration, Mapping):
-        raise ContractError("preregistration must be an object")
+    preregistration = _read_preregistration(corpus)
     custodian_root, custodian_state_id, custodian_storage_binding = _custodian_state(
         corpus
     )

@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-04",
+  "author": "concise_answer_review",
+  "language": "ko",
+  "scope": {
+    "method": "제품 소스와 기존 테스트의 읽기 전용 호출 경로 감사. 관측된 코드 조건과 정적 추론을 분리한다.",
+    "product_modified": false,
+    "tests_executed": false,
+    "engine_executed": false,
+    "browser_or_full_app_executed": false,
+    "protected_corpus_read": false,
+    "new_quality_measurement": false,
+    "automatic_threat_default": "CommentaryJobReducer.scala:45의 probeThreats=false 유지. 이번 감사로 기본값 변경의 효용은 증명하지 않는다.",
+    "limitations": [
+      "기존 코드 검사 본문을 읽었으며 이번 감사에서 통과 여부를 다시 실행하지 않았다.",
+      "특수 reader의 거절 조건을 확인했지만, 다른 reader까지 포함한 새 국면의 최종 출력 실패율을 측정하지 않았다.",
+      "기보나 이론서의 전략적 교훈을 단일 PV의 강제 결과로 취급하지 않는다. 독립 인간 독자 평가도 아니다."
+    ]
+  },
+  "source_fingerprints": [
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryThreat.scala","sha256":"192ee3e4cf2e06a305e63963a1e5fb2a17752ba73dc5558188b2bd0b65a73107"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala","sha256":"0c5eabc42c01d431701040c6a3150cb65bf434cc8bf0199d09682a8e8fbd1eb5"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala","sha256":"4fde5c21db96898a8b93f9107bcd9ef59b0ba9de9c38e57a7f74cd36d866c83e"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala","sha256":"cf64ef3cfdade4afff4f715d2fe1b4976220529346038aa79605d96f9cf9d977"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala","sha256":"82a0f1e4d9db7235d3851b123a10b8c111629b255a9c20a4da88e252085cb0d6"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala","sha256":"3b5d76b710d50604e1d480836b20c2040f3e36f60d19dcfc9fb7980f2d59ef12"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala","sha256":"9a97e8a76f9e7c155323dd17f40e532d205419820ad46ffe1f4ce35aa9d65a8f"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala","sha256":"aa8a2a46f6e008d7a8177976e5fffc0dc089219ff6bbf53ce4bbd783b6b8b268"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala","sha256":"5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala","sha256":"d84ad623cd0a16229e04a5d283b5d492333bc9c8b205534e58f08434d0c0547b"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/RootThreatAnswerTest.scala","sha256":"9653b6af043339a942a83eed5aef91ce64e7a389b1ff26049ef3ada4be993ada"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/PracticalDecisionTest.scala","sha256":"bea7ca55b1a26291deb97de9d219b18b1093d4db2e8629af13f6afab286a011c"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDiscoveryTest.scala","sha256":"a4ef313804c44ce022edd6f2be52fffb27e091c5ece3364e65c336e6ad3c145b"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryIdeaIdentityTest.scala","sha256":"b72ed65edddee3180f530081442d64ef14f50367f40c1fadb8dbd65867ae243a"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/PreparationCausalityTest.scala","sha256":"29339e866246da9ad2426cb5dc6a29ad3d378bb427207fee1d5a512049b4d146"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/RootQuestionAnswerTest.scala","sha256":"df670b826cec08d4b6d9f0194170cbb74cbe1aa17086a366f529ee1f08e9b926"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/ReferenceMeaningDeliveryTest.scala","sha256":"0c9c37228e4f8e259cf6b9eb1339e65a2a610bd6649c5e6bd3da51b73551f755"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/CheckResponseInvestigationTest.scala","sha256":"79d8476e0cd91457d2fd604757fa80556205780867c837849fcf31219044116b"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/PositionResourceDeliveryTest.scala","sha256":"88b722de46c9c83a82dad05b665032504bf1b9451af2c7f7ecb49c75b98b5e4d"}
+  ],
+  "boundaries": [
+    {"name":"candidate","meaning":"패스 가정이나 기하 변화는 조사할 수 또는 관계를 제안한다.","does_not_establish":"실제 차례의 합법성, 승리 가능한 위협, 검토 수의 예방 효과"},
+    {"name":"actual_legality","meaning":"원래 기물 추적과 정확한 실제 위치의 legal_move/legal_capture가 그 행동의 가능 여부를 증명한다.","does_not_establish":"포획이 이득이거나 실제로 선택될 것, 왕수에 따른 강제성"},
+    {"name":"actual_check","meaning":"실제 상대 수 이후 currentCheckSources와 체크 응수 증명이 왕수가 발생한 것을 증명한다.","does_not_establish":"오직 킹 이동만 가능하다는 것, 이후 물질 이득의 강제성"},
+    {"name":"observed_use_and_price","meaning":"제공된 실제 분기의 사용, 응수, 원래 대상 손실, 되잡기 및 종결을 같은 소유된 경로에서 연결한다.","does_not_establish":"관측되지 않은 모든 응수의 결과, 앞 수의 인과적 필요성"},
+    {"name":"relative_strength","meaning":"같은 위치와 차례의 소유된 CompareMoves 보고가 비교 판정을 제공한다.","does_not_establish":"다른 위치의 비교 판정이나 가정 위치의 평가를 루트의 평가로 옮기는 것"}
+  ],
+  "flow": [
+    {"stage":"pass origin","source":"CommentaryThreat.scala:8-20","caller":"CommentaryJobReducer.scala:1215-1228","behavior":"체크/종결 제외, 차례 반전, EP 제거, 실제 history와 분리된 가정 history."},
+    {"stage":"candidate extraction","source":"CommentaryJobReducer.scala:899-914","caller":"submitCompletedReport(ProbingThreat)","behavior":"가정 위치에서 합법적으로 재생된 첫 포획 또는 체크만 후보로 추출. 가정 점수/PV는 폐기."},
+    {"stage":"actual comparison proposal","source":"CommentaryThreat.scala:22-47","caller":"CommentaryJobReducer.scala:907","behavior":"실제 루트 비교에 속한 수순의 실제 prefix를 복원하고 그 차례에서 후보가 합법일 때 ObserveMove와 CompareMoves를 요청. 가정 수순 자체는 근거가 아님."},
+    {"stage":"general reply discovery","source":"CommentaryDiscovery.scala:561-809,811-895","caller":"CommentaryInvestigation.discover via CommentaryJobReducer.scala:1233-1239","behavior":"포획, 공급된 조용한 이중 공격, 실제 지지 사용, 전술적 반격, 접근 및 진입의 차이를 기존 facts/비교 질문으로 조사."},
+    {"stage":"typed facts","source":"CommentaryFactAtoms.scala:17-23,83-110","caller":"CommentaryFactReader","behavior":"동일 packet/path와 정확한 point 확인. control, legal_move/legal_capture, 실제 check를 구분. 불완전 목록의 부재는 unknown."},
+    {"stage":"fact contrast","source":"CommentaryFactReader.scala:326-356","caller":"FactComparison reading","behavior":"알려진 값과 호환 binding의 same/different 및 시간 순서만 확인. different 자체는 원인/최선/강제 이득 판정이 아님."},
+    {"stage":"idea/member","source":"CommentaryIdea.scala:475-504","caller":"CommentaryIdea.read","behavior":"소유된 generated arms와 답변을 읽되, Member는 sacrifice_loss 또는 reference_action Fact가 있어야 생성."},
+    {"stage":"mechanism focus","source":"CommentaryIdea.scala:105-134,218-244","caller":"MoveWorkProjection.scala:1556","behavior":"현재 확인된 tracking, 정확한 소유된 비교와 조건 사용을 확인. capture response 차이 또는 같은 중간 수의 행동 가능성 차이를 좁게 인증."},
+    {"stage":"check events","source":"MoveWorkProjection.scala:289-319","caller":"root/detail check composition","behavior":"CreatedCheckResponseInventory와 RootCheckResponse에서 CheckingMove/CheckReply를 만든다. openedCheckers를 mover와 구분한다."},
+    {"stage":"typed root choices","source":"RootQuestionSummary.scala:1249-1292;RootThreatSummary.scala:18-92","caller":"MoveWorkProjection.scala:2752-2755","behavior":"특수 체크 기능 대비 또는 공격자 제거/즉시 되잡기라는 실제 물리 질문을 선택한다."},
+    {"stage":"investigated answer","source":"MoveWorkProjection.scala:2884-2971","caller":"questionFocus -> physicalAnswers","behavior":"legal_capture/legal_move 실제 행동과 control/location 조건의 소유된 사용을 기존 typed meaning과 비용 원장으로 이어 completePairAnswer 호출."},
+    {"stage":"common delivery","source":"MoveWorkProjection.scala:2983-2994;RootQuestionSummary.scala:152-242,345-365","caller":"answerChoice -> completeSelectedConditions -> realize","behavior":"선택은 표현 실패 뒤에도 보존. 관련 응수/가격/승격/종결과 전체 proof를 공통 처리하고 표면 SAN 수와 proof를 분리한다."}
+  ],
+  "findings": [
+    {
+      "id":"T1",
+      "kind":"static_coverage_gap",
+      "priority":1,
+      "title":"합법적인 상대 수의 체크 기능만 사라지는 예방이 특수 모양에 묶여 있다",
+      "sources":["RootQuestionSummary.scala:1249-1292","CommentaryDiscovery.scala:862-891","CommentaryIdea.scala:108-129","MoveWorkProjection.scala:289-319,2893-2913"],
+      "observed_code":"CheckStatus 타입은 이미 존재한다. 기존 check_status_comparison reader는 킹이 먼저 움직인 arm, 루트 수가 새로 공격한 동일 actor의 singleEvasion, 그 actor가 주는 체크, 바로 뒤의 킹 이동, 다른 arm의 동일 UCI, 체크 뒤 동일 actor의 실제 gain까지 요구한다. opponent_entry는 두 arm 모두 합법인 동일 reply의 capture-response legality가 달라야 생성한다. investigated_mechanism의 조건은 control/location에 묶여 있다.",
+      "inference":"합법적인 상대 수는 남지만 발견 체크만 사라지는 예방, 체크 후 차단/포획으로 응수하는 비교, 뒤의 포획 없이 템포 기능을 설명할 수 있는 대비는 이 특수 reader 또는 entry 관문을 자체 통과하지 못한다. 다른 reader의 전체 최종 출력 실패까지 실행으로 확인한 주장은 아니다.",
+      "counterexample_candidate":"이론서 지도 AI Revolution PDF201의 Ka3/...e4: ...e4 자체가 합법적으로 남아도 발견 비숍 체크가 사라질 수 있다. 이동한 폰과 실제 checker가 다르며 '상대 수를 불가능하게 했다'로 표현하면 틀린 내용이다. 책 설명과 별도로 실제 두 분기 소유/합법성/체크 source/응수/가격을 검사해야 한다.",
+      "minimum_change":"기존 CheckStatus, CheckingMove, CheckReply/CheckSequence를 재사용하는 실제 check-status 대비를 좁게 연결한다. 처음에는 두 actual arms의 같은 원래 상대 actor가 같은 실제 결정 단계에서 행한 동일 수로 한정해도 된다. 새 그래프 없이 prepare와 기존 인증 체크 자료를 읽고 common completePairAnswer/completeSelectedConditions/realize로 전달한다. 기존 특수 reader의 gain 안전 조건을 무조건 삭제하거나 체크가 없는 경우를 성공한 방어로 승격하지 않는다.",
+      "must_preserve":["동일 실제 시작 위치와 정확한 path 인스턴스","원래 상대 actor/king와 현재 역할 추적","양쪽 실제 행동의 합법성","실제 checker는 mover가 아닐 수 있음","체크 뒤 실제 응수 closure 또는 확인된 종결","관련 손실·되잡기·승격 및 종결","강제 이득/더 좋은 선택 판정과 체크 사실의 분리"]
+    },
+    {
+      "id":"T2",
+      "kind":"static_integration_gap",
+      "priority":1,
+      "title":"조사 요청의 답과 기본 본문 질문 사이에 직접 연결되지 않는 관문이 있다",
+      "sources":["CommentaryThreat.scala:33-47","CommentaryIdea.scala:475-504","CommentaryDiscovery.scala:799-807,853-859,887-892","MoveWorkProjection.scala:2752-2768,2983-2993"],
+      "observed_code":"pass-probe의 requirements는 ObserveMove+CompareMoves뿐이다. C-opponent-choice/access/entry는 choice_reference/reference_access/reference_reply 등의 Fact를 쓴다. CommentaryIdea.Member는 reference_action 또는 sacrifice_loss Fact를 요구하므로 이 entry 하나만으로 QuestionFocus를 만들 수 없다. RootThreatSummary는 legacyChoice가 없을 때만 후보가 된다.",
+      "inference":"후속 실제 비교가 완료돼도 그 entry의 질문이 investigated_mechanism 루트 본문으로 바로 이어진다는 보장은 없다. 이는 모든 해설이 사라진다는 주장이 아니다. 다른 discovery가 관계를 다시 찾거나 기존 물리 reader가 답할 수 있다. pass-probe의 CompareMoves는 실제 child prefix의 비교이므로 그 판정만으로 root 수가 위협을 막았다고 주장해서도 안 된다.",
+      "minimum_change":"이미 선택된 root 질문을 설명하는 실제 두 분기의 조건/원래 대상/응수/가격이 확보된 경우 그 기존 typed Section을 공통 answer에 넣는 경계를 사용한다. 이름을 reference_action으로 바꾸거나 모든 answered child comparison에 root priority를 주는 방식은 사용하지 않는다. 비교 anchor가 root와 다른 경우는 child의 유효성 답으로만 남긴다.",
+      "not_required_now":"모든 국면에서 가장 중요한 질문을 고르는 새 범용 정책 또는 pass-origin→root causal certificate의 완성"
+    },
+    {
+      "id":"T3",
+      "kind":"bounded_discovery_scope",
+      "priority":3,
+      "title":"자동 pass 후보는 즉시 포획 또는 체크로 제한된다",
+      "sources":["CommentaryJobReducer.scala:903-905,1215-1226","CommentaryDiscovery.scala:580-607","PracticalDecisionTest.scala:916-955"],
+      "observed_code":"pass 보고의 첫 수는 captures/checks만 유지한다. 일반 discovery는 공급된 실제 reply의 조용한 double attack을 관찰한다.",
+      "inference":"조용한 퀸/룩 포크처럼 첫 수가 비포획·비체크인 off-PV pass 후보는 현재 추출되지 않는다. 이미 공급된 조용한 포크도 전혀 다룰 수 없다는 뜻은 아니다. 이 한계는 잘못된 사실 승격보다 탐색 범위의 제한이다.",
+      "minimum_change":"우선 T1/T2의 실제 답 전달을 고친다. 자동 조사 확대가 실제 기본 해설을 개선하는 근거를 확보하기 전에는 기본값과 탐색 폭을 바꾸지 않는다. SAN/전술 이름 예외를 넣지 않는다."
+    },
+    {
+      "id":"T4",
+      "kind":"scope_completion_duplication",
+      "priority":2,
+      "title":"공격자 제거/되잡기 reader는 자체 전체 경로 비용 규칙을 적용한다",
+      "sources":["RootThreatSummary.scala:31-42,58-83","RootQuestionSummary.scala:152-242","MoveWorkProjection.scala:2992-2993","RootThreatAnswerTest.scala:37-104"],
+      "observed_code":"RootThreatSummary.primary는 root/attacker/target 연관 capture seeds의 account를 만들고 그 합이 path의 모든 capture와 같아야 하며 모든 path offsets를 요구한다. witness는 정확히 offset1 포획+offset2 균형 되잡기로 한정한다. 공통 completePairAnswer의 selected lead 경로는 선택한 실제 move의 관련 즉시 교환·체크 응수만 따라가며 end ref를 전체 구간으로 보지 않는다.",
+      "inference":"한 reader 안에 넓은 primary 가격 범위와 좁은 즉시 witness 범위가 동시에 존재한다. 독립된 나중 포획이 focal account에 들어오지 않으면 primary가 거절될 수 있다. 반대로 root 기물의 관련 후속 손실은 이 전체 보존 때문에 유지된다. 단순 all-captures 조건 삭제는 안전한 수정이 아니다.",
+      "minimum_change":"실제 선택된 AttackerRemovalOrSupport/SupportRecapture의 주장 범위를 먼저 고정한 뒤, 관련 원래 기물·거래 링크가 결정한 account와 응수 완성을 기존 공통 처리로 모을 수 있다. root mover의 관련 손실·회복·가격은 그대로, 독립 기록은 같은 Answer.details로 보존한다. 즉시 균형 witness를 임의로 지연/불균형 witness까지 허용하는 변경은 이번 최소안에 포함하지 않는다.",
+      "duplication_limit":"Material와 SupportRecapture가 같은 포획을 참조한다는 사실 자체는 중복 오류가 아니다. 관계의 실제 사용과 가격을 각각 증명할 수 있다. 최종 본문에서 같은 가격을 두 번 해석하는지 확인하지 않고 중복 비용이라고 단정하지 않는다."
+    },
+    {
+      "id":"T5",
+      "kind":"strong_claim_certificate_boundary",
+      "priority":2,
+      "title":"동일 중간 수 제한은 강한 준비 인과 주장과 bounded 대비를 구별해야 한다",
+      "sources":["CommentaryIdea.scala:120-129","CommentaryIdea.scala:68-101,400-448","PreparationCausalityTest.scala:128-166,169-242"],
+      "observed_code":"move-order mechanism은 같은 중간 UCI와 같은 action 가능성의 legal→illegal 차이를 요구한다. functionalEffect는 루트 소유 조건이 실제 사용 시점까지 유지되는지 확인한다. continuationText는 실제 원래 actor/target과 관측된 사용을 따로 추적한다.",
+      "inference":"같은 중간 수는 모든 실제 비교의 필수 안전 조건이 아니다. 그러나 이 조건은 후속 상대 선택이 원인을 바꾼 경우 루트 준비 수가 필요했다고 단정하지 않도록 하는 인증이기도 하다. 상대가 pin을 제거하거나 target이 떠나는 다른 수순을 단순히 같은 행동/SAN으로 합치면 잘못된 인과가 된다.",
+      "minimum_change":"강한 '이 수가 그 행동을 가능하게 한다/필요하다' 인증에는 현재 조건을 유지한다. 중간 선택이 다른 실제 두 수순은 같은 원래 기물과 실제 조건 지속성/사용/가격이 확인될 때 bounded 관측 대비로만 기존 답변에 전달한다. 같은 중간 UCI guard를 일반적으로 제거하지 않는다."
+    }
+  ],
+  "existing_test_scope": [
+    {"source":"PracticalDecisionTest.scala:3132-3199","covers":"패스 점수/PV를 실제 평가/근거에 bind하지 않음, 실제 legal child CompareMoves, 선택적 작업 실패 뒤 baseline 보존, EP/체크/종결 origin guard","does_not_cover":"실제 조사 답이 root 기본 summary_question으로 보존되는지"},
+    {"source":"PracticalDecisionTest.scala:916-955","covers":"Najdorf Game15 조용한 Nd5의 실제 세 대상과 현재/과거 reply 구분, forced gain 아님","does_not_cover":"기본 root summary_question의 질문/가격 완결성. 해당 검사는 question_comparison의 상세 text를 읽음"},
+    {"source":"RootThreatAnswerTest.scala:37-104","covers":"정확한 original attacker/target/provider, 별도 witness 경로 소유, 실제 재포획 가격, 관련 뒤 교환 보존, geometry-only 거절","does_not_cover":"독립된 뒤 포획의 detail 분리 또는 일반 체크 기능 예방"},
+    {"source":"CommentaryDiscoveryTest.scala:202-235","covers":"h3 이후 PV 밖 ...Bg4 진입의 실제 hxg4 응수 legality 차이와 원래 Nf3 대상","does_not_cover":"그 수가 반드시 이득/불이득인지, 해당 답의 기본 본문 채택"},
+    {"source":"RootQuestionAnswerTest.scala:70-73,112-126;ReferenceMeaningDeliveryTest.scala:1501-1552","covers":"특수 Qd7/Kf1 뒤 ...Nh4 체크 대비, 실제 이후 포획, 중립 교환과 path ownership","does_not_cover":"발견 checker≠mover, 차단/포획 체크 응수, 후속 포획 없는 체크 기능 대비"},
+    {"source":"PreparationCausalityTest.scala:169-242","covers":"같은 좌표 이동이 계속 합법이어도 원래 target capture가 사라질 수 있음, 차단/지원 조건 변화와 비교 strength 구분","does_not_cover":"일반 root prevention 문장 선택"},
+    {"source":"PositionResourceDeliveryTest.scala:25-55;CheckResponseInvestigationTest.scala:136-144","covers":"비포획 발견 체크에서 mover와 checker 구분, incomplete inventory의 check unknown, legal checking candidate와 현재 체크 구분","does_not_cover":"기본 본문의 실제 예방 답"}
+  ],
+  "minimum_implementation_candidate": {
+    "name":"existing typed actual check-function contrast",
+    "size":"기존 reader/caller의 작은 actual-pair 경계와 관련 검사 2~3개. 새 graph/selection framework/전술 유형 목록은 만들지 않는다.",
+    "existing_types":["RootQuestionSummary.Arm/MoveRef","CommentaryFact.Predicate(check/legal_move)","CommentaryAnswer.CheckStatus","CommentaryAnswer.CheckingMove/CheckReply/CheckSequence","CommentaryAnswer.Section/Answer","기존 Material/PieceExchange/Terminal"],
+    "initial_safe_scope":[
+      "동일 실제 시작 위치의 두 소유된 경로, 서로 다른 root move.",
+      "첫 실제 상대 결정 단계의 같은 원래 actor와 동일 실제 action을 비교하는 것으로 먼저 한정한다. action의 동일성이 checker의 동일성을 뜻하지는 않는다.",
+      "양쪽 action 실제 합법성 및 이후 킹 check present/absent가 알려져 있어야 한다. 불완전 inventory는 None/미확인으로 유지.",
+      "체크 쪽 실제 응수를 CheckReply 자료로 남긴다. King move가 아닌 block/capture도 기존 detail로 표현한다. 아직 응수 없는 path는 종결/유효한 열린 끝 처리 없이 완성한 답이라고 채택하지 않는다.",
+      "체크 기능과 관련 사용의 비용 원장, 회복/손실/승격/종결을 공통 completion에 넘긴다. 모든 PV 사건을 core로 만드는 조건은 추가하지 않는다.",
+      "불필요한 quiet route/유한 end marker로 유용성 판정을 채우지 않는다. prove refs와 expressed receipts의 기존 분리를 유지한다."
+    ],
+    "claim_scope":"제공된 실제 두 분기의 체크 기능과 응수 차이. 예방의 성공/강제 물질 이득/최선 판정은 관련 실제 비교 또는 추가 인증이 없으면 주장하지 않는다.",
+    "call_path":"기존 RootQuestionSummary 또는 선택된 physical meaning -> completePairAnswer -> MoveWorkProjection.completeSelectedConditions -> RootQuestionSummary.realize",
+    "selection_caveat":"구성 가능한 사실과 실제로 핵심 질문으로 선택되는 사실을 구분한다. 기존 choose에서 여러 답이 맞으면 None일 수 있으므로 새 branch 존재만으로 일반적인 중요도 선택을 해결했다고 보고하지 않는다.",
+    "automatic_threat_change":false
+  },
+  "verification_candidates": [
+    {
+      "id":"V1",
+      "case":"기존 Qd7/Kf1 - ...Nh4 체크 비교",
+      "source":"RootQuestionAnswerTest.scala:70-73;ReferenceMeaningDeliveryTest.scala:1504-1552",
+      "positive":"기존 특수 질문의 실제 check/king reply/gain과 다른 arm의 neutral trades를 그대로 보존. 기본/상세/interactive proof가 동일 선택을 가리킴.",
+      "negative":"현재 체크 source 또는 실제 check reply를 누락한 자료에서 체크 대비를 완결한 답으로 만들지 않음.",
+      "status":"제안만 함; 이번 감사에서 실행하지 않음"
+    },
+    {
+      "id":"V2",
+      "case":"mover와 checker가 다른 실제 발견 체크 예방",
+      "source":"PositionResourceDeliveryTest.scala:39-55;이론서 지도 AI Revolution PDF201 Ka3/...e4",
+      "positive":"합법 ...e4가 남지만 실제 비숍 체크는 사라지는 두 branch를 실제 합법성/원래 king/체크 source로 확인. 체크 쪽 Bd4 등의 실제 응수와 그 답을 바꾸는 비용을 보존. 표현은 check 기능 대비.",
+      "negative":"단순히 mover가 킹을 control하지 않는다는 이유로 발견 체크를 absent로 만들지 않음. incomplete check inventory, foreign path, 실제 응수 없는 확정 결론 거절.",
+      "status":"작동 원리 후보. 새 엔진/기보 출력은 사용하지 않았고 실제 product pair 구성 검사는 아직 수행하지 않음"
+    },
+    {
+      "id":"V3",
+      "case":"기존 h3/...Bg4와 original target의 실제 포획 응수",
+      "source":"CommentaryDiscoveryTest.scala:202-235;PreparationCausalityTest.scala:169-242",
+      "positive":"actual legal reply와 원래 bishop/knight/pawn의 target identity, hxg4 가능성 변화가 유지됨. 실제 사용/가격이 확보되었을 때만 기본 답에 연결.",
+      "negative":"same-coordinate quiet action을 원래 target의 capture로 오인하지 않음. 지지/차단의 FactComparison이 supported여도 equal/worse CompareMoves를 successful defense로 승격하지 않음.",
+      "status":"기존 검사 범위를 재사용하는 제안; 이번 실행 없음"
+    },
+    {
+      "id":"V4",
+      "case":"기존 Nxe5/Rd8 실제 support witness",
+      "source":"RootThreatAnswerTest.scala:37-104;PracticalDecisionTest.scala:3132-3199",
+      "positive":"exact original attacker/target/provider와 target loss/recapture/후속 관련 loss를 유지. 별도 witness_line_ids를 정확히 전달.",
+      "negative":"지원 기하만 있는 자료 또는 pass score/PV만으로 위협 대응/가격을 완성하지 않음. foreign witness 또는 실제 승격 capture를 ordinary support receipt로 덮지 않음.",
+      "status":"기존 신뢰 경계 검사 유지 제안; 새 실행 없음"
+    },
+    {
+      "id":"V5",
+      "case":"Najdorf Game15 quiet Nd5 double attack",
+      "source":"PracticalDecisionTest.scala:916-955",
+      "positive":"이미 공급된 실제 fork의 original queen/bishop/knight와 현재 branch observation을 유지.",
+      "negative":"두 개 이상의 contact 또는 quiet fork라는 이름만으로 강제 퀸 획득 판정하지 않음. historical reply가 다른 current reply의 핵심 답으로 남지 않음.",
+      "status":"자동 탐색 확대의 근거로 사용하지 않음. 실제 기본 해설 효용은 별도 미확인"
+    }
+  ],
+  "root_threat_price_boundary": {
+    "requested_focus": "이번 구현은 동적 선택 관계의 가격 소유/전달에 집중한다. 새로운 threat 후보/selector/check 비교 확대는 실제 saved master 증거가 없는 경우 다음 과제로 남긴다.",
+    "account_definition": "RootQuestionSummary.scala:126의 Account(events,offsets,dutyCosts,complete)",
+    "account_meanings": [
+      {
+        "field":"dutyCosts",
+        "source":"RootQuestionSummary.scala:615-646",
+        "meaning":"근거 부족 표시가 아니다. 포획된 원래 defender의 same-side target을 다른 상대 capturer가 나중에 잡고, defender 포획 직전 그 defender가 target의 유일 controller였으며, ray/pin 안전 조건 및 동일 target/capturer 위치·지속 공격·추가 defender 부재가 실제 각 위치에서 확인된 (defenderLoss,laterTargetLoss)이다.",
+        "completion_behavior":"finish는 그 laterTargetLoss를 span(cost,false)로 실제 selected events/offsets에 이미 추가한다. duties가 남아 있다는 사실은 비용이 물질 계정에 빠졌다는 뜻이 아니다.",
+        "claim_limit":"해당 실제 수순의 방어 관계 상실과 후속 비용. 모든 대안을 조사한 강제 손실이나 루트 수의 실수 책임을 이 값만으로 확정하지 않는다."
+      },
+      {
+        "field":"complete",
+        "source":"RootQuestionSummary.scala:575-614,709-711",
+        "meaning":"계정이 참조하는 실제 체크마다 바로 다음 ref가 포함돼 있는지 검사한다. 끝 체크에 실제 응수가 없으면 false이다.",
+        "must_preserve":"false를 true로 바꾸어 가격을 통과시키지 않는다. MoveWorkProjection.scala:3215-3223의 exact owned RecordedEnd bounded 허용도 '응수 증명'과 구분한다."
+      },
+      {
+        "field":"events/offsets",
+        "source":"RootQuestionSummary.scala:580-611,647-708",
+        "meaning":"focal capturer의 관련 실제 포획/되잡기, 부모 교환, 실제 체크 응수, captureLinks/otherTargetGains의 관련 회복·비용을 따라간다. 단순 같은 기물의 전체 생애가 의무가 되는 것은 아니다.",
+        "must_preserve":"원래 대상·actor/거래 링크와 실제 구간 소유를 유지한다. 큰 가격/같은 SAN/같은 기물 등장만으로 다른 후속 episode를 합치지 않는다."
+      }
+    ],
+    "pre_common_rejections": [
+      {
+        "source":"RootThreatSummary.scala:31-42",
+        "caller":"readAnswer의 direct/prepare primary, RootThreatSummary.scala:56-57",
+        "guard":"accounts.forall(complete && dutyCosts.isEmpty && offsets owned); events.toSet == all path captures; final move not check",
+        "effect":"증명된 dutyCosts가 있고 그 비용이 events에 이미 포함됐어도 primary가 None이다. 또 focal seed 계정으로 설명할 필요가 없는 독립된 후속 포획이 있으면 all-captures equality로 None일 수 있다. 공통 completeSelectedConditions에 전달할 Answer가 아직 없으므로 공통 가격 처리가 이를 복구할 수 없다.",
+        "protection":"불완전 체크/미소유 refs, 누락된 실제 root mover 가격, 전체 경로 결과인 것처럼 읽히는 축소 계정의 거짓 주장을 차단한다. 단순 전체 guard 삭제는 부적절하다."
+      },
+      {
+        "source":"RootThreatSummary.scala:58-83",
+        "caller":"실제 retained support capture/recapture witness 선택",
+        "guard":"exact same initial position/root occurrence/root move, original attacker/target/provider, capture@1/recapture@2/attacker absent@3, complete+dutyCosts.empty, events exactly initial two captures, offsets only0..2, balanced cost",
+        "effect":"초기 실제 즉시 되잡기는 그대로 성립하더라도 account가 관련 provider loss, later sole-defender target loss, 실제 체크 응수로 넓어지면 이 witness의 비용 모양에서 None이다. 이 guard는 넓은 가격을 이 reader가 표현하지 않는다는 제한도 포함한다.",
+        "protection":"geometry-only support를 실제 응수로 승격하지 않음, 잘못된 원래 기물/foreign witness 배제, 두 즉시 포획이 아닌 거래를 균형 recapture로 표현하지 않음, unanswered check 배제. actual identity/source 및 초기 사용 guards는 유지해야 한다."
+      }
+    ],
+    "common_completion_compatibility": {
+      "source":"MoveWorkProjection.scala:3037-3097,3145-3164,3172-3186,3199-3290",
+      "already_available":"selected SupportRecapture/SupportTransfer/SupportedCapture/SupportRetention에서 실제 provider/target 가격을 추적하고, Arm.account의 actual events와 delayed recovery를 계산한다. 새로운 가격 계정은 같은 실제 material event를 공유할 때만 합치고 proof/focus를 함께 이동한다.",
+      "auxiliary_witness_boundary":"completeSelectedConditions의 arms는 pair만으로 생성되고, SupportRecapture는 witness eq arm.path일 때만 supportUses/supports를 제공한다(3146,3162). RootThreatSummary의 별도 실제 witness에는 이미 explicit responseCost가 있으나 공통 pair-price 자동 보완을 받는다고 가정하면 안 된다.",
+      "minimal_shared_direction":"RootThreatSummary의 실제 원래 기물/즉시 사용 certificate는 유지하고, 이미 계산된 related price를 같은 typed Material/PieceExchange Section으로 전달할 수 있는 경우만 사전 거절을 대체한다. primary/witness 모두 actual account.complete와 full source/ref ownership를 유지한다. 별도 witness는 그 witness 자신의 complete actual account를 명시적으로 전달한다. pair-path와 witness-path 가격을 서로 바꾸지 않는다.",
+      "scope_requirement":"초기 targetCapture+recapture의 균형과 후속 가격을 포함한 account 전체의 균형을 분리한다. 추가 실제 loss가 있는 계정을 balanced-only 요약으로 처리하지 않는다. 독립된 포획은 같은 Answer.details로 남길 수 있지만, 관련 가격·승격/종결을 그냥 생략하지 않는다.",
+      "evidence_needed_before_guard_change":"기존 actual support witness의 원래 기물과 초기 사용은 동일하고 Arm.account가 확정된 추가 비용을 포함하여 특수 guard만 거절한 saved actual master 사례가 필요하다. 이번 감사는 이 조건의 정적 가능성을 확인했으며 새 엔진/재생으로 그런 사례를 확보하지 않았다."
+    },
+    "verification_candidates": [
+      "기존 RootThreatAnswerTest의 exact support witness+later countercapture 양성/geometry-only 음성을 유지.",
+      "same actual initial use 뒤 sole-defender의 loss→original target loss가 account.events/dutyCosts에 이미 포함된 사례: 그 실제 가격을 전달하면 초기 사용과 추가 가격 모두 본문에 남는지 확인.",
+      "같은 pawn/defender가 등장하더라도 지속 control이 끊기거나 target/capturer가 이동한 다른 episode: lostDuty로 합치거나 초기 recapture 비용으로 강제하지 않음.",
+      "별도 witness의 related loss 또는 check reply를 빼면 완성한 root answer가 되지 않음; foreign witness/path source 거절 유지."
+    ]
+  },
+  "conclusion": {
+    "established":"가정, 실제 합법성, 기하, 실제 체크, 비교 강도, 가격의 타입/소유 경계는 이미 대체로 존재한다. 전면 재구축보다 현재 판독 결과가 같은 질문의 typed 기본 답으로 이어지는 작은 연결이 필요하다.",
+    "recommended_first":"현재 root 작업 범위는 선택된 동적 관계의 실제 가격 소유/전달이다. RootThreatSummary의 사전 특수 모양 거절을 바꾸는 경우 실제 certificate와 complete account를 유지한 saved actual 사례를 먼저 확인한다. 일반 체크 기능 대비는 실제 master saved pair 근거가 없으면 다음 과제로 남긴다.",
+    "defer":["automatic threat 기본 켜기","off-PV quiet fork 탐색 확대","모든 preparation certificate의 같은 중간 수 guard 제거","immediate balanced recapture를 모든 delayed/unbalanced threat로 확대","모든 중요 질문을 최적으로 고르는 새 정책"],
+    "not_claimed":"이 감사만으로 기본 해설 품질 상승, 일반적인 위협 해소, 출시 조건 충족을 주장하지 않는다."
+  }
+}

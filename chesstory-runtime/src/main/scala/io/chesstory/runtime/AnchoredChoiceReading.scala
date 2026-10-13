@@ -495,16 +495,7 @@ private[runtime] object AnchoredChoiceReading:
           // Compute the whole family's current union before retiring any
           // pending alias. A sibling stage cannot stop another live question.
           val currentIds = ownedObligations.map(_.comparison.id).toSet
-          var current = entry.copy(readings = entry.readings.map { reading =>
-            if reading.requirementId.startsWith(ValuePrefix) && !currentIds(reading.requirementId) &&
-                entry.request.requirements.exists(value => value.id == reading.requirementId && value.isInstanceOf[CompareMoves]) &&
-                Set("deferred", "awaiting_engine")(reading.state) then
-              reading.copy(state = "stopped", stopReason = Some("not_required_for_decision"), answer = None, workId = None)
-            else if currentIds(reading.requirementId) && reading.state == "stopped" &&
-                reading.stopReason.contains("not_required_for_decision") then
-              reading.copy(state = "deferred", stopReason = None, answer = None, workId = None)
-            else reading
-          })
+          var current = entry.withCurrentDecisions(ValuePrefix, currentIds)
           ownedObligations.sortBy(value => (value.phase, value.comparison.prefixMovesUci.mkString(" "), value.comparison.id))
             .foreach { obligation =>
               val requirements = obligation.requirements

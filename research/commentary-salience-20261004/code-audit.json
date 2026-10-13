@@ -1,0 +1,1033 @@
+{
+  "schema_version": 1,
+  "review_id": "commentary-salience-code-audit-20261004",
+  "created_at_utc": "2026-10-04 11:19:08 UTC",
+  "source_root": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "scope": {
+    "task": "현재 코드의 통상적/조용한 내용이 기본 본문으로 진입하는 경로 및 최소 내용 선택 경계 연구",
+    "product_changes": false,
+    "product_or_test_or_engine_execution": false,
+    "docker_or_ui_or_http_execution": false,
+    "protected_corpus_read": false,
+    "new_game_output_read": false,
+    "new_replay_or_quality_evaluation": false,
+    "analysis_kind": "LLM read-only code audit; no independent human-reader assessment",
+    "limits": "아래 범주는 코드의 실제 입구와 체스 내용 역할에 대한 조사다. 모든 국면의 routine 판정·전수 품질·정량 커버율을 주장하지 않는다. 생성 가능한 사실과 자동 기본 선택, 사용자 품질은 서로 다른 항목이다."
+  },
+  "source_manifest": [
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "cd49ef29dc8ecbf3d25f4246ac5d33898a78def0816960faffdda9c7199c6a28",
+      "line_count": 3909
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "8510efe762bfa0c967872620b9c00361e640b1efbf4b5cec3f0a914ac7363271",
+      "line_count": 2010
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "sha256": "5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d",
+      "line_count": 195
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "sha256": "4f63ebfa8143867149784268d71c0860ca4e446ecd789dadc7404672e257bcf0",
+      "line_count": 494
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+      "sha256": "caf484dbd4a528eb304bf830a5e0a025f6dd067f4b26be1081187bd77555ca73",
+      "line_count": 266
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "4fde5c21db96898a8b93f9107bcd9ef59b0ba9de9c38e57a7f74cd36d866c83e",
+      "line_count": 524
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+      "sha256": "ea76a816672c746f2c08657491060fd26cf33b271d6e5604947ea269bfcff5b3",
+      "line_count": 47
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryInvestigation.scala",
+      "sha256": "447b72135c5e871bcb63b534a43a59dde8258d465140ff32cae34b069e7af44e",
+      "line_count": 237
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+      "sha256": "5498b0208c7638f2405a880d465b0213e28ccd2e752eb3fb5cbed052003f3efd",
+      "line_count": 1106
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "sha256": "cf64ef3cfdade4afff4f715d2fe1b4976220529346038aa79605d96f9cf9d977",
+      "line_count": 1489
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+      "sha256": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a",
+      "line_count": 918
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "sha256": "cd0a6b4ca53a917a5c5bd05962baa57bb54924fadca13893e0a861c42555cd20",
+      "line_count": 847
+    }
+  ],
+  "reused_prior_work": [
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/research/relation-ownership-20261004/account-audit.json",
+      "reuse": "전역 account/fits와 질문/가격 소유의 책임 구분. 이전 실행을 반복하지 않고 현재 소스로 앵커를 재확인."
+    },
+    {
+      "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/research/relation-ownership-20261004/final-review.json",
+      "reuse": "선택된 가격의 typed receipt, original/current role, proof/inline 분리, 독립 material interval 확대의 위험. 새 출력 또는 보호된 평가 자료를 읽지 않음."
+    }
+  ],
+  "principal_conclusions": [
+    {
+      "id": "C1",
+      "conclusion": "ordinary move 자체를 지우는 규칙보다 '새 독립 주장이 필요한가'를 판단해야 한다.",
+      "evidence": "기물 유형/이동 유형/역사 존재가 현재 core 입구를 대신하는 부분이 있다. 같은 ordinary action도 선택 질문의 조건·실제 응수·가격이면 필수다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2226,
+          "end": 2245,
+          "note": "basicAction/category + history/use existence core admission"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "conclusion": "quiet의 전술적 정의와 본문 필요성은 서로 다르다.",
+      "evidence": "Arm.quiet는 해당 prefix에 포획/체크가 없고 시작 체크가 아님을 확인하는 보수적 reader 조건이다. 위협 방지·준비·지원 인계의 설명 필요성을 배제하지 않는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 520,
+          "end": 525,
+          "note": "quiet prefix and gained control"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 218,
+          "end": 244,
+          "note": "실제 조건/행동/비교에 대한 focus"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "conclusion": "이미 좋은 보호가 있으므로 새 generic salience framework를 만들 필요가 없다.",
+      "evidence": "quiet support는 owned question/actual use 없으면 optional이며 investigated_mechanism은 exact condition/use와 가격을 선택하고 sibling을 supplementary로 옮긴다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2155,
+          "end": 2170,
+          "note": "quiet support와 exact question tier 분리"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2850,
+          "end": 2936,
+          "note": "정확한 mechanism의 core와 supplementary 분리"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "conclusion": "recapture는 중요도 신호가 아니라 사실 및 가격 관계다.",
+      "evidence": "CaptureLink는 원래 capturer의 실제 제거를 읽으며 balanced material이나 관측 alone은 tactical stability를 증명하지 않는다. net price/지원사용/승격정체성/종결을 바꾸면 반드시 남겨야 한다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "line": 728,
+          "end": 770,
+          "note": "actual physical identity and capture links"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 44,
+          "end": 50,
+          "note": "certified immediate trade closure"
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "conclusion": "기본 질문이 선택되지 않았다는 사실은 routine 판정이 아니다.",
+      "evidence": "choose는 exact answers 중 하나만 있으면 선택하며 focus도 confirmed condition+same tested comparison을 요구한다. Nil/None은 질문 미확인·경쟁·근거 부족을 포함할 수 있다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 773,
+          "end": 798,
+          "note": "독립 선택/검증과 단일 exact choice"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 218,
+          "end": 244,
+          "note": "currentConfirmed 및 exact action/alternative"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2948,
+          "end": 2959,
+          "note": "선택 후 실패는 다른 질문으로 대체하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "C6",
+      "conclusion": "이미 있는 core/details/required/covered/proof_moves로 독립 나열을 줄일 수 있다.",
+      "evidence": "Unit은 실제 본문 inline refs와 전체 typed-content proof refs를 분리한다. Material은 전체 가격과 proof를 유지하면서 각 포획을 문장마다 재진술하지 않는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 18,
+          "end": 40,
+          "note": "proof_moves와 inline refs"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 68,
+          "end": 103,
+          "note": "각각의 소유와 완결성 검사"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 181,
+          "end": 193,
+          "note": "typed aggregate price expression"
+        }
+      ]
+    }
+  ],
+  "orthogonal_axes": {
+    "tactical_quiet": "보통 포획·체크·승격을 하지 않는 수의 전술적 겉모습. 이 감사에서 routine의 대용으로 사용하지 않는다.",
+    "editorially_routine": "현재 선택한 답에서 새 독립 설명을 추가해도 선택의 차이·실제 작동·필수 응수·대가·결과를 더 이해시키지 않는 내용. 그 수 자체가 객관적으로 중요하지 않다는 판정은 아니다.",
+    "cells": [
+      {
+        "tactical": "quiet",
+        "editorial": "routine candidate",
+        "example": "전개/캐슬링/기물 재배치의 단순 좌표 설명이 이미 보드와 선택 답으로 전달되며 별도 확인된 차이를 설명하지 않음"
+      },
+      {
+        "tactical": "quiet",
+        "editorial": "essential",
+        "example": "같은 질문의 실제 위협을 막는 수, 실제 후속 행동을 성립시키는 준비수, 유일한 합법적 응수, 지원 인계"
+      },
+      {
+        "tactical": "capture/check",
+        "editorial": "routine as independent sentence",
+        "example": "이미 완결된 가격에서 같은 물리 capturer의 통상적 되잡기를 다시 한 문장으로 풀어 쓰는 중복"
+      },
+      {
+        "tactical": "capture/check",
+        "editorial": "essential",
+        "example": "앞의 이득을 뒤집는 제거, 다른 칸의 실제 회복, 체크 응수의 손실, 승격 정체성, 확인된 종결"
+      }
+    ],
+    "prohibited_proxies": [
+      "NAG0 또는 !/? 없음",
+      "평가차/WDL 변화가 작음 또는 같은 평가",
+      "recapture라는 이름",
+      "noncapture/quiet이라는 이름",
+      "같은 기물 또는 같은 수순에 등장",
+      "문장/글자 수/사실 개수",
+      "영어 formatter의 길이 또는 문장 결합 가능성"
+    ]
+  },
+  "actual_call_flow": [
+    {
+      "stage": "기본 비교 입력",
+      "behavior": "primary comparison과 정확한 paths를 선택한다. material role signature의 같음/다름은 전달 비교이며 모든 체스적 목적이나 중요도를 대신하지 않는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+          "line": 185,
+          "end": 223,
+          "note": "already-selected actual/best roots; scenes are not all local facts"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+          "line": 247,
+          "end": 255,
+          "note": "loss/promoted role signature"
+        }
+      ]
+    },
+    {
+      "stage": "질문 맥락 공유",
+      "behavior": "Proposal의 direct/background와 Idea QuestionFocus를 기존 compositor로 전달한다. Runtime은 같은 root/pair/orientation의 co-displayed 질문만 공유한다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+          "line": 339,
+          "end": 360,
+          "note": "direct conditions + typed focus context"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+          "line": 449,
+          "end": 478,
+          "note": "actual caller shared move effects"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+          "line": 118,
+          "end": 140,
+          "note": "Result compositor facade"
+        }
+      ]
+    },
+    {
+      "stage": "사실/기능/역사 묶음",
+      "behavior": "observed use와 shared actual use dependencies를 묶고 exact question matching을 판정한다. availability alone은 actual use가 아니다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2113,
+          "end": 2153,
+          "note": "linked use + exact QuestionFocus"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2242,
+          "end": 2259,
+          "note": "broad core and physical bundle construction"
+        }
+      ]
+    },
+    {
+      "stage": "core/supplement admission",
+      "behavior": "core predicate에 history/use/basic action의 유형 조건이 남아 있다. coreBundles의 all nontext otherCore가 physical answer 후보가 되며 prose budget으로 일부를 재선정하지 않는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2226,
+          "end": 2245,
+          "note": "broad core admission"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2631,
+          "end": 2654,
+          "note": "admission and physicalAnswerBundles"
+        }
+      ]
+    },
+    {
+      "stage": "typed physical lead",
+      "behavior": "각 bundle의 action/history, 마지막 target presence/control, selected capture 결과를 Section으로 만들고 lead에 모은다. 이는 실제 default output의 선택이 달라지면 사용되지 않을 수 있는 경로다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2764,
+          "end": 2820,
+          "note": "all selected bundle facts and history ending facts"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2834,
+          "end": 2846,
+          "note": "lead aggregation"
+        }
+      ]
+    },
+    {
+      "stage": "exact question vs fallback",
+      "behavior": "verified single QuestionFocus가 exact mechanism/use를 소유하면 sibling lead를 supplementary로 보내고 investigated_mechanism으로 닫는다. 실패/부재 시 selected_comparison physical lead가 후보로 남는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2850,
+          "end": 2939,
+          "note": "exact ownership versus fallback"
+        }
+      ]
+    },
+    {
+      "stage": "질문 선택 후 조건·가격 완료",
+      "behavior": "terminal/convergence/exchange/investigated/legacy/threat/contact/physical의 기존 순서로 하나를 선택한 뒤 common completion과 realization을 적용한다. 이 단계는 새 importance 선택의 장소가 아니다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2950,
+          "end": 2958,
+          "note": "existing answerChoice and common completion"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3095,
+          "end": 3103,
+          "note": "original selection seeding and question/details preservation"
+        }
+      ]
+    },
+    {
+      "stage": "표현/참조 전달",
+      "behavior": "English는 선택 typed statements를 표현하고 receipts를 반환한다. renderer의 기존 route/peer 통합은 중복 표현만 정리하며 salience를 판정하는 일반 정책이 아니다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 405,
+          "end": 479,
+          "note": "typed receipts and local grouping"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 410,
+          "end": 451,
+          "note": "realization retains typed obligations"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 18,
+          "end": 40,
+          "note": "proof/inline SAN links retained"
+        }
+      ]
+    }
+  ],
+  "routine_candidate_inventory": [
+    {
+      "id": "01",
+      "name": "단순 전개 및 중앙 제어 나열",
+      "editorially_routine_when": "전개했다는 사실이나 일반 제어 좌표가 보드/다른 선택 답에 이미 있고 별도 작동 차이를 설명하지 않음",
+      "must_preserve_when": "exact selected preparation, 실제 새 행동 사용, 위협 대응, 전개 때문에 변한 확인된 가격을 설명함",
+      "do_not_infer_from": "Development 유형·중앙 square 존재·첫 수이라는 이유",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2200,
+          "end": 2204,
+          "note": "current function admission"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2226,
+          "end": 2245,
+          "note": "basicAction core promotion"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 36,
+          "end": 39,
+          "note": "개별 fact wording"
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "통상적 캐슬링과 룩 이동 좌표",
+      "editorially_routine_when": "캐슬링했다는 사실을 다시 좌표로 풀어 쓰는 별도 문장",
+      "must_preserve_when": "selected comparison의 check legality/actual rook use/확인된 response cost를 바꾸는 조건",
+      "do_not_infer_from": "Castle 유형 자체 또는 king safety라고 추정",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2204,
+          "end": 2205,
+          "note": "castle function accepted"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 39,
+          "end": 39,
+          "note": "rook movement description"
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "단순 포획 소개",
+      "editorially_routine_when": "같은 actual event가 이미 선택한 전체 가격/정체성 결과로 설명됨",
+      "must_preserve_when": "포획이 질문의 핵심 gain/대상/작동, blocker departure, support use, promotion identity 또는 terminal을 담당",
+      "do_not_infer_from": "Capture 유형·captured role/value·새 capture라는 이유",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2205,
+          "end": 2205,
+          "note": "capture function unless opening fact already carried"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 232,
+          "end": 251,
+          "note": "raw current-role events and original-identity exchange"
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "통상적 되잡기의 사건별 재진술",
+      "editorially_routine_when": "동일 물리 거래의 회복이 이미 선택한 정확한 가격으로 보존되어 새 독립 사건 문장이 답을 추가하지 않음",
+      "must_preserve_when": "되잡기가 앞 이득을 뒤집음, provider가 실제 회복함, 대안별 다른 capturer/destination, 중간 체크 손실, recapturer 후속 손실, 승격/종결",
+      "do_not_infer_from": "recapture flag·같은 역할·인접·평가가 동일함",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 44,
+          "end": 50,
+          "note": "immediate actual trade obligation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 188,
+          "end": 205,
+          "note": "preceding capture closure"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 21,
+          "end": 32,
+          "note": "Material/PieceExchange covered proof"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 181,
+          "end": 193,
+          "note": "aggregate price"
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "name": "새 공격의 존재",
+      "editorially_routine_when": "새 공격을 만들었다는 사실만 있고 선택한 질문의 사용·대안 차이·actual response를 설명하지 않음",
+      "must_preserve_when": "same exact target의 observed response/removal, 두 선택의 실제 공격 차이, verified threat prevention",
+      "do_not_infer_from": "gained geometric attack이면 곧 중요하다고 판단",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2206,
+          "end": 2211,
+          "note": "current gained attack admission"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2183,
+          "end": 2196,
+          "note": "same actual target root comparison"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 263,
+          "end": 302,
+          "note": "rooted target contact with real changes"
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "name": "기존 공격의 유지/복원",
+      "editorially_routine_when": "현재/끝 위치에 남아 있는 공격을 독립 문장으로 반복함",
+      "must_preserve_when": "선택한 답이 공격 지속·차단·종료·대상 탈출을 묻고 해당 state가 의미를 바꿈",
+      "do_not_infer_from": "control exists·같은 arm에 등장·나중 공격과 현재 공격을 혼동",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2793,
+          "end": 2805,
+          "note": "relocated control + end pressure"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 349,
+          "end": 355,
+          "note": "control existence expression"
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "name": "조용한 새 지원",
+      "editorially_routine_when": "새로운 지원 대상 목록만 있고 질문의 exact condition이나 actual use를 담당하지 않음",
+      "must_preserve_when": "attacked target의 선택 대안 차이·지원 종료의 loss·actual supporting recapture를 설명함",
+      "do_not_infer_from": "gained support·지원 수가 많음·지원 대상이 같은 arm에 있음",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2155,
+          "end": 2170,
+          "note": "already protected quiet support admission"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 434,
+          "end": 464,
+          "note": "peer grouping is wording only"
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "name": "기존 지원 유지/지원자 나열",
+      "editorially_routine_when": "아무 actual selected duty change 없이 keeps supporting/remaining controllers를 반복함",
+      "must_preserve_when": "old provider가 떠난 뒤 selected same target을 지키는 실제 비교, provider departure followed by actual loss, verified handoff",
+      "do_not_infer_from": "present support·remaining controllers alone·unknown을 absence로 사용",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 87,
+          "end": 90,
+          "note": "SupportRetention typed claim"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2862,
+          "end": 2895,
+          "note": "exact focus ownership/contrast"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3325,
+          "end": 3347,
+          "note": "actual departure/support-state/loss episode"
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "name": "같은 기물의 단순 이동 경로",
+      "editorially_routine_when": "나중에 같은 기물이 어디로 갔는지만 나열하고 그것이 현재 답을 성립시키는 사용이 아님",
+      "must_preserve_when": "selected escape/arrival/actual support recapture/line opening, physical identity that changes material or terminal",
+      "do_not_infer_from": "same original actor·PV에 later move 존재",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 596,
+          "end": 614,
+          "note": "piece_route function generation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2230,
+          "end": 2239,
+          "note": "noncapture route in currentAction"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 344,
+          "end": 348,
+          "note": "route narrative"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "name": "기물의 마지막 잔존과 최종 좌표",
+      "editorially_routine_when": "current target survives를 이미 전달한 뒤 마지막 좌표를 별도 기본 사건으로 덧붙임",
+      "must_preserve_when": "선택 질문이 survival/removal/promotion role/terminal을 묻고 그 잔존이 답의 결과를 확정함",
+      "do_not_infer_from": "ActorEnd.present·PV 마지막 count를 설명 필요로 간주",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2801,
+          "end": 2805,
+          "note": "physical history auto-presence/control"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 309,
+          "end": 334,
+          "note": "existing survival witness kept in details"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 1025,
+          "end": 1033,
+          "note": "reader still includes full PieceRoute/Presence core"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 362,
+          "end": 363,
+          "note": "presence expression"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "name": "일반적인 선/통로가 열렸다는 기하 사실",
+      "editorially_routine_when": "통로가 열린 것만 말하며 해당 선이 선택한 실제 행동에서 사용되었는지 없음",
+      "must_preserve_when": "exact typed ClearedRoute move/use, verified selected capturing exposure and actual opponent capture/removal",
+      "do_not_infer_from": "vacated square·opened ray·possible capture alone",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 57,
+          "end": 57,
+          "note": "opening geometric description"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 99,
+          "end": 102,
+          "note": "typed actual clearance/use"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3250,
+          "end": 3298,
+          "note": "actual owned opening and capture response"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "name": "룩 연결/열 점유·지원된 빈칸",
+      "editorially_routine_when": "개발/배치 fact만 있으며 선택한 질문의 observed use/response를 더 설명하지 않음",
+      "must_preserve_when": "selected exact route/control condition that changes actual action or price",
+      "do_not_infer_from": "connected rooks/open file 자체·추정 장기 계획",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2212,
+          "end": 2214,
+          "note": "functions generated but not every one basicAction"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3892,
+          "end": 3908,
+          "note": "source facts and declared fallback priorities"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 47,
+          "end": 47,
+          "note": "rook connection description"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "name": "폰 구조·패스폰 상태 나열",
+      "editorially_routine_when": "현재 doubled/passed 상태의 명명만 있으며 현 비교의 실제 의미를 설명하지 않음",
+      "must_preserve_when": "selected legal destination/passages/actual pawn advance/promotion/response cost",
+      "do_not_infer_from": "pawn-structure category·theory label·구조 같음만으로 무의미하다고 판정",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2204,
+          "end": 2214,
+          "note": "pawn structure admitted as basic, others as functions"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 48,
+          "end": 56,
+          "note": "existing geometric/structural facts"
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "name": "체크/체크 해소의 자명한 사건 기록",
+      "editorially_routine_when": "필수 응수/가격의 증명 안에 이미 있고 그 방법이 답의 차이를 바꾸지 않는 별도 narration",
+      "must_preserve_when": "check changes actual response/cost, only legal response demonstrated by complete inventory, checking capture, selected check-versus-noncheck comparison, incomplete finite ending",
+      "do_not_infer_from": "check exists 또는 check reply이면 모든 내용이 독립 핵심",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2113,
+          "end": 2124,
+          "note": "every check/use bundle as candidate"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 162,
+          "end": 179,
+          "note": "certified checking modes"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3358,
+          "end": 3366,
+          "note": "actual check reply may own material price"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 68,
+          "end": 103,
+          "note": "proof captures/check replies remain complete"
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "name": "기록된 수순 전체를 다시 읽는 Continuation",
+      "editorially_routine_when": "selected condition/price의 proof에 이미 보존된 SAN들을 별도 문장으로 연속 나열함",
+      "must_preserve_when": "실제 reply/arrival/escape 순서 자체가 selected answer의 차이거나 기존 typed claim이 proof를 소유하지 못함",
+      "do_not_infer_from": "moves가 기록되어 있음·required ref는 모두 spoken SAN이어야 함",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 141,
+          "end": 143,
+          "note": "proof-bearing Continuation"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 340,
+          "end": 340,
+          "note": "separate continuation sentence"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 18,
+          "end": 40,
+          "note": "inline versus proof already distinct"
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "name": "물질 변화 없음/같은 역할 수의 반복",
+      "editorially_routine_when": "조건·작동을 설명하지 않고 'no captures or promotions' 또는 같은 material role count만 말함",
+      "must_preserve_when": "selected comparison이 material conservation/draw/terminal를 묻거나 result의 범위를 제한함",
+      "do_not_infer_from": "zero net change/equal material signature/eval small가 routine 증명",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 161,
+          "end": 185,
+          "note": "empty-lead full account fallback and details"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+          "line": 185,
+          "end": 204,
+          "note": "material signature equal/different not full chess equivalence"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 341,
+          "end": 343,
+          "note": "NoMaterialChange wording"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "name": "대안의 동일 배열/수순의 수렴",
+      "editorially_routine_when": "같은 위치에 도달했다는 자료만 있고 독자가 이해해야 할 choice difference가 이미 없거나 다른 핵심임",
+      "must_preserve_when": "selected question is move order/choice equivalence, same full position/history proof supports exactly that conclusion",
+      "do_not_infer_from": "same board alone as same game state·equal eval alone",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 176,
+          "end": 177,
+          "note": "fullState distinction in Convergence"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 390,
+          "end": 398,
+          "note": "convergence/exchange/divergence expressions"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2950,
+          "end": 2953,
+          "note": "convergence/exchange take existing priority"
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "name": "평범한 한 수 기록의 끝/불확실성 안내",
+      "editorially_routine_when": "실제 chess 답이 있고 끝이 incidental quiet horizon이면 독립 사건 서술은 상세/범위 안내로 충분할 수 있음",
+      "must_preserve_when": "last check has no recorded reply, automatic terminal, scope qualification necessary to prevent a false closed claim",
+      "do_not_infer_from": "one-move prefix/record horizon을 checkmate/draw/routine로 해석",
+      "source_anchors": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 173,
+          "end": 180,
+          "note": "exact automatic terminal and RecordedEnd"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 220,
+          "end": 239,
+          "note": "selected refs only grow true trade/check duties"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "line": 728,
+          "end": 735,
+          "note": "quiet one-move proof admission separate from display"
+        }
+      ]
+    }
+  ],
+  "boundary_proposal": {
+    "status": "research recommendation; no implementation or new ranker",
+    "independent_claim_gate": "현재 core(bundle)의 category/history/use existence를 중요도 근거로 쓰는 대신, 기존 selected question이 exact 조건·실제 행동·대안 차이·결과를 이해시키는 어떤 역할을 소유하는지 확인한다. verified QuestionFocus의 answers/ownsCondition 및 legacy SelectedQuestion.confirmedFacts는 재사용한다. evidence inventory 자체를 삭제하지 않는다.",
+    "partition": "기존 Answer.core에는 선택한 질문의 답과 그 답의 필수 closure만 두고, 같은 arm의 independently closed sibling/단순 state/route observations는 Answer.details로 보낸다. sibling이 앞 주장의 의미·가격을 바꾸면 closure로 유지한다. independent 중요도까지 증명 못하면 그 실패를 별도로 기록하며 first/topN로 새 질문을 고르지 않는다.",
+    "ordinary_recapture_rule": "일반 recapture를 별도 독립 주장으로 반복할 필요가 없더라도 selected exact material account의 proof·covered와 실제 gain/loss/identity context를 유지한다. 특정 target/provider/capturer 정체성이 question의 작동을 담당하면 기존 typed outcome을 남긴다. role totals로 대상 정체성이나 promotion context를 대체하지 않는다.",
+    "proof_boundary": "move가 본문 문자열에 나오지 않아도 Statement.references/contentReferences/proof_moves에 남아야 한다. 기존 Material은 전체 price proof를 보유하며 English는 필요한 가격만 말한다. required/focus가 다른 Section으로 이동할 때 실제 owner와 local receipt를 맞춰야 하며 blank phrase로 형식 검사만 통과시키지 않는다.",
+    "unknown_boundary": "ordinary independent claim unnecessary, mandatory closure, reason unconfirmed를 구분한다. QuestionFocus/SelectedQuestion 부재나 unsupported current condition을 routine으로 명명하지 않는다. 기존 Fact state/currentConfirmed/unavailable 상태를 유지하고 원인 미확인은 별도 기록한다.",
+    "minimal_edit_targets": [
+      {
+        "place": "core(bundle)/basicAction and physical fallback section construction",
+        "purpose": "단순 category/history 존재가 독립 기본 주장 입구가 되는 부분을 제한하고 기존 exact question ownership으로 core/details를 결정",
+        "refs": [
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "line": 2226,
+            "end": 2245,
+            "note": "broad admission"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "line": 2631,
+            "end": 2637,
+            "note": "physical fallback source"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "line": 2764,
+            "end": 2846,
+            "note": "typed lead including endpoint observations"
+          }
+        ]
+      },
+      {
+        "place": "existing investigated exact mechanism path",
+        "purpose": "이미 있는 condition/use/cost core, supplementary sibling 분리를 재사용. 전역 graph/새 generic policy frame를 만들지 않음",
+        "refs": [
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "line": 2850,
+            "end": 2936,
+            "note": "existing minimal ownership path"
+          }
+        ]
+      },
+      {
+        "place": "Statement/Section/Answer and realization/proof delivery",
+        "purpose": "내용 선택은 typed Answer 이전/안에서, 표현은 English에서 수행. 필수 응수·가격·scope refs를 삭제하지 않으면서 본문과 상세는 동일 선택에서 구성",
+        "refs": [
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+            "line": 185,
+            "end": 195,
+            "note": "existing Focus/Section/Answer"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "line": 18,
+            "end": 40,
+            "note": "existing proof_moves"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "line": 410,
+            "end": 451,
+            "note": "receipt and closure"
+          },
+          {
+            "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+            "line": 405,
+            "end": 479,
+            "note": "renderer not semantic salience judge"
+          }
+        ]
+      }
+    ],
+    "reject": [
+      "Recapture/quiet/Development 문자열 또는 SAN별 삭제 조건",
+      "NAG/평가차/문장 길이 기반 routine cutoff",
+      "영어에서 문구를 숨긴 뒤 의미도 표현했다고 receipt를 속임",
+      "무관한 모든 follow-up을 필수 closure로 승격",
+      "core 없는 이유 미확인을 no-comment-needed로 가장",
+      "새 graph/framework 또는 대량 prose-specific test"
+    ]
+  },
+  "preservation_examples_from_opened_work": [
+    {
+      "kind": "required price",
+      "example": "선택된 queen gain과 그 queen의 actual loss 사이에 실제 checking reply capture가 있는 경우",
+      "decision": "reply를 새 독립 주제로 반복할 필요와 price/proof에 필수로 남길 필요는 다르다. v12 admission은 exact certified actual CheckReply를 유지한다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3354,
+          "end": 3368,
+          "note": "selected capture only seeds removal; actual reply material accepted"
+        }
+      ]
+    },
+    {
+      "kind": "independent later trades",
+      "example": "선택된 처음 pawn exchange의 capturer가 계속 공격받고 훗날 제거되지만 중간 별도 knight/rook trades가 있는 기존 master negative",
+      "decision": "physical identity/control alone은 같은 핵심 episode/price의 소유 근거가 아니다. 이 별도 거래는 자동 핵심으로 올리지 않는다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3354,
+          "end": 3368,
+          "note": "unowned material guard; nonrecursive"
+        }
+      ]
+    },
+    {
+      "kind": "promoted target loss",
+      "example": "새 Queen이 된 원래 Pawn의 actual capture, followed by supporter loss",
+      "decision": "recapture/aggregate 가격만 남기면 어느 현재 역할의 기물이 사라졌는지 잃는다. same original victim promotion context와 actual typed identity outcome을 유지한다.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3052,
+          "end": 3072,
+          "note": "role-change context"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3341,
+          "end": 3345,
+          "note": "current role outcome"
+        },
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 3435,
+          "end": 3452,
+          "note": "direct identity outcome survives larger aggregate"
+        }
+      ]
+    },
+    {
+      "kind": "quiet survival coordinate",
+      "example": "선택 target가 탈출 후 제공 수순의 조용한 마지막 위치까지 남음",
+      "decision": "survival이 답이면 결과는 유지하되 incidental final coordinate는 details에 둘 수 있다. existing selectedAnswer already does this.",
+      "refs": [
+        {
+          "file": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 309,
+          "end": 334,
+          "note": "survival witness details"
+        }
+      ]
+    }
+  ],
+  "recommended_verification_without_broad_replay": [
+    "기존 저장 Answer/실제 opened master safety cases를 재사용해 core는 선택 question의 difference/use/price/result를 유지하고 optional facts만 details로 옮기는지 typed assertions로 확인한다.",
+    "일반 recapture를 개별 문장으로 삭제해도 exact account.events/covered/proof와 앞 gain을 바꾸는 removal·other-target compensation이 유지되는지 확인한다.",
+    "routine 후보의 부정 사례로 quiet tactical defense/preparation, selected supporting recapture, current promoted role, last checking reply/terminal을 반드시 남긴다. NAG/작은 평가가 있어도 같은 기준을 적용한다.",
+    "unknown/partial reading/no uniquely selected question를 routine으로 잘못 표시하지 않는지 기존 Fact state와 summary_unavailable 전달을 확인한다.",
+    "형식상 source refs/grammar 통과와 독자의 이해는 별개다. 이번 감사는 source-level이고 새 인간 판독·코퍼스 품질·가독성 점수를 생성하지 않았다."
+  ],
+  "final_position": "현재 정보 바다의 원인 중 하나는 단순 사실을 생성하는 능력보다 broad core admission과 physical fallback이 검증된 사실의 존재를 독립 설명의 필요성으로 사용하는 것이다. 해결의 시작은 기존 질문/typed Answer 소유를 유지하면서 새 독립 주장, 필수 closure, 이유 미확인을 분리하는 최소 경계다. 그래프·검증·Stockfish·SAN 연결은 보존한다."
+}
+

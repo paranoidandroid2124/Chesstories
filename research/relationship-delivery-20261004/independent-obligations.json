@@ -1,0 +1,530 @@
+{
+  "assessment_author": "Research assistant LLM reasoning, not a product model and not an independent human reader",
+  "method": "Read exact start positions, legal source paths, physical identities, material and endings before product prose. Alternative useful bounded questions are permitted; conditional obligations apply only when the claim uses their episode. No mandatory SAN word matching.",
+  "positions": [
+    {
+      "game_id": "wch2016-01",
+      "written_at_utc": "2026-10-04T03:11:54.874160+00:00",
+      "facts_sha256": "340593b1b58604fe356b3c3919db552aed534db2ee5ea6aeb9216c0e2d73532a",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:evidence:candidate-comparison:cbe1ef847f93f64947b063f25b53d0c5c95eef0adde0eef2f5c95c1891ead626",
+          "reference_line_id": "move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:line:7d6ef387b9755a01187549f6c0f2052757928ba40517a061ee5e96d1dd57af25",
+          "candidate_line_id": "move-review:5708d1291ea226c0e3063c2219a4c8672f00540ab2129d4862eb88bc7cb65434:46:h2h3:line:6afadce83043d880f256e438f1e20dfc7c660e8eeea9a14590cdb6ab49db267f"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "Which piece recaptures on g4 after the pawn advance in the two provided lines?",
+      "bounded_answer": "h3 precedes g4 and hxg4 in its line; immediate g4 is met by fxg4 and Rxg4. Both initial exchanges trade one pawn, with a different recapturer.",
+      "required_if_claimed": [
+        "An h-pawn recapture claim includes the actual g4/fxg4/hxg4 sequence, scoped to this provided line rather than a forced reply.",
+        "An immediate-g4 price claim includes fxg4 and Rxg4, rather than treating the first pawn loss as final.",
+        "If describing the later minor-piece exchange in the g4 line, retain N loss at offset 13 and B capture at 14; if stating its later net pawn price, include offsets 15 and 16."
+      ],
+      "not_required_for_primary": [
+        "The first quiet king reply",
+        "The unrelated later minor-piece exchange and following pawn trade"
+      ],
+      "unsupported_extensions": [
+        "A permanently safer king",
+        "That h3 is necessary for all possible g4 plans",
+        "A causal engine-score explanation"
+      ]
+    },
+    {
+      "game_id": "wch2016-02",
+      "written_at_utc": "2026-10-04T03:11:54.874160+00:00",
+      "facts_sha256": "79d24c53842b323b0024b9c36157861d2a28bb16e2b6612bab372fec9062b48f",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:evidence:candidate-comparison:11f154d7f63347dcf6663c6d633a49d025383a93d2e71688b8ac6d4f94ae46bb",
+          "reference_line_id": "move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:line:bdc67f9b6768a0e02e198b50339b67d45f47a2529debad4c128980a8b0ed6fb8",
+          "candidate_line_id": "move-review:329db4dfe3e43342b5381fee39387d3109a2f045045ca7e8b379cd8fdc439f34:47:b6d7:line:033af146c52153329575e71c59a7718a0b36eb5bdea54c62d21122781ca613f8"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "Do the two move orders reach the same position before their later choices diverge?",
+      "bounded_answer": "Nbd7/Rb8 are reordered, with White Ra7/Kf1 reordered too. Both lines reach the same board after four moves and then share Rbc8 Nh4 g6 Nf3. This is a bounded convergence of the supplied lines.",
+      "required_if_claimed": [
+        "Convergence uses exact board and side to move after four moves; do not expand it to equivalence of every future line.",
+        "If describing initial e5 support by Nbd7 or b5 support after the b-file is cleared, retain the actual same-piece relationship and its finite episode.",
+        "A later material-result claim in the Rb8 line retains the N/N exchange, R/R exchange, and eventual e5 pawn capture; these do not prove that initial Rb8 itself lost e5."
+      ],
+      "not_required_for_primary": [
+        "All later equal exchanges",
+        "The eventual e5 pawn capture after its initial supporting pieces have moved or been exchanged"
+      ],
+      "unsupported_extensions": [
+        "That every future position is equivalent",
+        "That Rb8 necessarily loses e5",
+        "That development or king safety alone explains an engine-score difference"
+      ]
+    },
+    {
+      "game_id": "wch2016-03",
+      "written_at_utc": "2026-10-04T03:11:54.874160+00:00",
+      "facts_sha256": "adf3962818c191410a94b6173d39cbac13fd358575634db5730a8e2f86dfad0b",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:evidence:candidate-comparison:3c4f3a1b6bad16f20024c94f83367209ae48b240d8a64743169616225ead4b07",
+          "reference_line_id": "move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:line:abf15f961573ea0e8694771ce16d4afa18bcfdf2d0fd1350fbae4bb701b7b213",
+          "candidate_line_id": "move-review:8d95b130a146c8c912c0e12feefb91eaadd312f72a8ae34502f1c8e0e4e0f016:46:a1e1:line:109f2194fbac53f1ee580511e0e15c72b8fb86e9db53d1ae200627297b229017"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "How is the rook used on the third rank in the two continuations, and what is the price of the b6 pawn capture?",
+      "bounded_answer": "The Re1 line uses Re3/Rb3; the Ne5 line uses Ra3/Rb3. In both, Black Rxc2 precedes White Rxb6, so the b6 pawn is counterbalanced by the c2 pawn loss. Both lines also exchange White knight for Black bishop.",
+      "required_if_claimed": [
+        "A rook-route claim includes its actual third-rank use, not merely arrival on e1.",
+        "A b6-pawn gain claim retains the preceding c2 pawn loss on that same arm.",
+        "A minor-piece capture claim retains the c-pawn recapture of the same White knight.",
+        "If claiming the final price of the longer Ne5 line, include the later a5/d4 pawn trade."
+      ],
+      "not_required_for_primary": [
+        "Every subsequent quiet king move",
+        "The late a5/d4 pawn trade when the answer is explicitly limited to the earlier rook episode"
+      ],
+      "unsupported_extensions": [
+        "A forced rook plan",
+        "A free b6 pawn",
+        "A proven explanation of the evaluation difference"
+      ]
+    },
+    {
+      "game_id": "wch2016-04",
+      "written_at_utc": "2026-10-04T03:11:54.874160+00:00",
+      "facts_sha256": "43da49241f866a1310004287070a61b833caa50edc0829adc244e8e39fa7275d",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:evidence:candidate-comparison:b37f4acfc2e24109172b685aa6821552217609f942d9fa9817b9a4050237f1fb",
+          "reference_line_id": "move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:line:9fcc5a3ef2b3bd8602a33ae6a64f268b421189abe74089037fe4223f54fbf082",
+          "candidate_line_id": "move-review:26750f02d6b7778e02332bcebf9624b20dd8a80a37f8ec4a1386b4a1cc843c14:31:d5e4:line:f272f59c76697e594ea80ffd69f2980acf5b6f99dbb3fde8a03cf9182c3e0f92"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What is actually exchanged after the immediate central capture, compared with the c5 continuation?",
+      "bounded_answer": "dxe4 dxe4 immediately exchanges central pawns. In the supplied c5 line Bxh6 gains a pawn, but the later Nxe4/Rxe4/f5/fxe4 sequence exchanges Black knight for White rook; its apparent knight loss is not free.",
+      "required_if_claimed": [
+        "The immediate dxe4 gain includes the actual d-pawn recapture.",
+        "A c5-line central-exchange claim includes White rook loss by fxe4 at offset 12 as well as Nxe4/Rxe4; if aggregating its net result, the two pawn losses on each side belong to that account.",
+        "A Bxh6 claim is bounded to the recorded continuation; no g-pawn capture or forced sacrifice is present.",
+        "If describing the dxe4 arm's later minor-piece trades, retain their actual pawn recaptures and subsequent Qxc4 recovery."
+      ],
+      "not_required_for_primary": [
+        "Every unrelated later minor-piece trade in the dxe4 arm"
+      ],
+      "unsupported_extensions": [
+        "That c5 necessarily gives up a knight for nothing",
+        "An unprovided gxh6 reply",
+        "A forced tactical cause for every c5 reply"
+      ]
+    },
+    {
+      "game_id": "wch2016-05",
+      "written_at_utc": "2026-10-04T03:11:54.874160+00:00",
+      "facts_sha256": "f0e63dee9b83521b93bceb46218acaa15634d76129cfc0575c5d40ebfe2d6cb0",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:evidence:candidate-comparison:4bff359b34aa547e2b492d8b73ab1d2295aecdb2b065458deb909bd01943c9f6",
+          "reference_line_id": "move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:line:0de16372f788d5d9d33facc59f337351cf3d3d28ba7bc14a86296f3b1f7f25a7",
+          "candidate_line_id": "move-review:36bbdacb83746025906e079b49ed27662e2393520f333a8c2dfc860d6130a51c:46:f4f3:line:a43319b233fcdc9a3e5c4f1547c5ab5e62cce65c04ded1ccca7406505f91fa76"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What price accompanies the offered bishop in the Kh2 line, and how does this differ from the Rf3 continuation?",
+      "bounded_answer": "Both lines exchange one rook each with Rxf7 Qxf7. The longer Kh2 line then has Bxh3 gxh3 Rxf3 and Qxe5+: Black gives a bishop but takes the h-, f-, and e-pawns. The supplied line answers the final check with Kg2.",
+      "required_if_claimed": [
+        "Any rook-gain claim includes Qxf7 recapturing that same rook.",
+        "A bishop gain or kingside attack claim in the Kh2 arm retains Bxh3/gxh3, Rxf3, Qxe5+, and the actual response to that check.",
+        "Initial support from Rf3 cannot be called persistent after that same rook is captured on f7.",
+        "Initial king support of h3 is not an actual king recapture: the provided response is gxh3."
+      ],
+      "not_required_for_primary": [
+        "Every intervening rook and queen maneuver unless claiming why the attack works"
+      ],
+      "unsupported_extensions": [
+        "A free bishop",
+        "That the king necessarily recaptures on h3",
+        "That an initial support edge guarantees lasting king safety"
+      ]
+    },
+    {
+      "game_id": "wch2016-06",
+      "written_at_utc": "2026-10-04T03:15:16.665317+00:00",
+      "facts_sha256": "c33e0fa77ebbc931902c6d10abe511da7ff08d0fb4bad45ed10a5347e05ef797",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:evidence:candidate-comparison:39a04bbea5687e72b24a727261d901335b741aa6689f854554d6dc4bddef4c66",
+          "reference_line_id": "move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:line:6a5d0ded8b5e3dcc527f83d9ad858f3c81b262160de86a726c70711155999262",
+          "candidate_line_id": "move-review:b24a8bff18b4d6be0a0120fff7a486df3168dec9aab3f0a8f0406056e2173784:47:c5b4:line:908132cac30bd4bea38264458450274b87a270dc8a7b49a511db8eb703c7fbfa"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "How does pushing the g-pawn change the bishop response compared with capturing the b4 pawn immediately?",
+      "bounded_answer": "Both supplied lines take the same b4 pawn with the c-pawn. The g5 line first attacks the bishop on f4, followed by Bg3; f4 subsequently attacks it on g3, followed by Bf2. The immediate cxb4 line later exchanges queens with Qxd7 Bxd7.",
+      "required_if_claimed": [
+        "A pawn-gain comparison acknowledges that cxb4 occurs in both supplied lines.",
+        "A bishop-displacement claim retains the actual g5/Bg3 and, if extending the episode, f4/Bf2 responses.",
+        "A queen-gain or simplification claim in the cxb4 arm includes the actual bishop recapture of the same White queen."
+      ],
+      "not_required_for_primary": [
+        "Every later queen and rook maneuver",
+        "The later queen exchange when the answer is limited to the bishop displacement"
+      ],
+      "unsupported_extensions": [
+        "That g5 wins the bishop",
+        "That cxb4 is unique to one choice",
+        "That either line is forced"
+      ]
+    },
+    {
+      "game_id": "candidates2018-01",
+      "written_at_utc": "2026-10-04T03:15:16.665317+00:00",
+      "facts_sha256": "7387c40b11d3648a7039cb80a49790eb556ddbf9320c74ae9dbbbe06cded9a50",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:evidence:candidate-comparison:3a12c1d0336ea749af51b86b2b858145475d44a88d7338080f37b73260ced62b",
+          "reference_line_id": "move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:line:b1dc4f34242b42086b7fe3b119508a95d5da775c14fd8540268c9c2debc13e54",
+          "candidate_line_id": "move-review:c1ff63a141617959267ad4a954695927ce5c85f0be6a119b3384ae9d09dc7258:38:b1b5:line:21efe3533698d91f2e33edf703acf905e90654d66b283955a678a25f4bc4b49a"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What is the actual price of attacking and capturing the queen with Rb5 compared with taking the bishop immediately?",
+      "bounded_answer": "Rb5 attacks the a5 queen, and its line eventually captures it with Rxa5. Black has already taken c3; after the queen capture Black takes the e2 bishop on d3 and the b1 rook on a5, while White captures the d4 bishop and then loses its d2 bishop to bxa5. This is a material trade, not a free queen. The cxd4 arm takes a bishop but loses that pawn and later exchanges rook for knight.",
+      "required_if_claimed": [
+        "A queen-gain claim includes the later White rook and both White bishop losses, the Black bishop recovery, and the prior c3 pawn price if describing the whole root choice.",
+        "The separate Rxd3/Bxd3 rook exchange does not become a free rook gain.",
+        "A cxd4 bishop-gain claim includes exd4 taking the same White pawn; if extending to the rook episode, include Nxd3/Bxd3.",
+        "A final material comparison includes the later pawn captures at g7/f6/a4 in Rb5 or h7 in cxd4 rather than comparing unequal endpoints silently."
+      ],
+      "not_required_for_primary": [
+        "Every quiet queen/rook/knight maneuver",
+        "The late extra pawn captures when the scope is explicitly the queen trade through bxa5"
+      ],
+      "unsupported_extensions": [
+        "A free queen",
+        "A queen for just one rook",
+        "That merely attacking Qa5 proves Rb5 is good",
+        "A forced continuation"
+      ]
+    },
+    {
+      "game_id": "candidates2018-02",
+      "written_at_utc": "2026-10-04T03:15:16.665317+00:00",
+      "facts_sha256": "80ada6581589a3fcd405dcedd8a0185debd75bb7b593890e8ae94878dc3ffcee",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:evidence:candidate-comparison:1c5c12c2783fab9136db62b1a4c42a634a9afac480bc8972ff36b022dd79bdd7",
+          "reference_line_id": "move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:line:8803b8116c90412c5916ac90a6d5c1f72792da5e061e7decfb1a4014c587621b",
+          "candidate_line_id": "move-review:6d6ba17cc3190a6c1a5a551ba8ce185d6a9cbf778121329f0326dd9f717d6929:39:d8b6:line:d5831478d6def9cb5f392e35319a41105f3bab29bda8807d75210788f85d6121"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What happens to the minor pieces after Nxe5 in the two queen-move continuations?",
+      "bounded_answer": "Both lines have Nxe5 Bxe5 f6, so White loses e5 while taking Black knight. In Qb6, White subsequently lets that bishop be captured with fxe5 and later takes that pawn with Qxe5. In Qe7, Nxh7 Kxh7 sacrifices the other White knight for a pawn and the attacked bishop retreats with Bf4.",
+      "required_if_claimed": [
+        "A Black e5-pawn gain includes Bxe5 taking the knight.",
+        "A White knight-gain or bishop-safety claim in the Qb6 arm includes the f6 attack, actual fxe5 bishop loss, and any recovery included in its stated price.",
+        "An h7-pawn gain or bishop-escape claim in the Qe7 arm includes Kxh7 taking the White knight and the actual Bf4 retreat.",
+        "A queenside pawn-price claim distinguishes axb3/axb3 in Qb6 from the shorter recorded Qe7 endpoint; do not invent a missing recapture.",
+        "A full Qb6 result includes the exact later rook/pawn/queen exchanges, not just its first minor-piece capture."
+      ],
+      "not_required_for_primary": [
+        "The later rook and queen exchange in Qb6 when describing only the minor-piece response",
+        "Every preparatory queen move"
+      ],
+      "unsupported_extensions": [
+        "A free knight",
+        "A free h7 pawn",
+        "That Qe7 proves permanent protection of e5",
+        "An unprovided axb3 reply after the shorter Qe7 line"
+      ]
+    },
+    {
+      "game_id": "candidates2018-03",
+      "written_at_utc": "2026-10-04T03:15:16.665317+00:00",
+      "facts_sha256": "6856c8562672b2770ecfc1f864f644854097c98bed95df28cba4a459dde69925",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:evidence:candidate-comparison:abd372da6a1f89b0128573ff1b46f40ac84134077d871aaa5f45cf476ee335f6",
+          "reference_line_id": "move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:line:31dd8ae48740ddaf7669445788c9ac5473f8908907b9e4ab709cf7c5af6d8611",
+          "candidate_line_id": "move-review:2ffa706625de0ff5c640bf5fdd6da73ecba56af136946f526c26810c841eef8b:46:g2f1:line:7a1c22ff1224203884837da45c61eed09c963c94eb931081991d2b2e7c375f00"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "How do the two legal king responses continue, and what material changes accompany their later rook exchanges?",
+      "bounded_answer": "The starting White king on g2 is checked along the g-file by Qg5; Kf1 and Kh1 are legal responses. In both continuations White eventually loses the original h2 pawn, captures c6 with its rook, and exchanges rooks with a queen recapture. The longer Kf1 line also captures f7.",
+      "required_if_claimed": [
+        "The root king move is an answer to the actual queen check, rather than merely optional king improvement.",
+        "An h-pawn loss or c-pawn gain claim includes the paired pawn capture if stating the price of that episode.",
+        "A rook-capture claim includes the queen recapture of the same Black rook; in Kf1 the resulting check is answered with Kh7.",
+        "A final material comparison distinguishes the later f7 gain in Kf1 from the shorter Kh1 endpoint."
+      ],
+      "not_required_for_primary": [
+        "Every intermediate king, queen and rook move"
+      ],
+      "unsupported_extensions": [
+        "A permanent king-safety conclusion",
+        "A free rook",
+        "A forced f7 pawn win from the root move alone"
+      ]
+    },
+    {
+      "game_id": "candidates2018-04",
+      "written_at_utc": "2026-10-04T03:18:25.630017+00:00",
+      "facts_sha256": "362e53da77a308bd81cebc56eafc1c21d770eba9308a550b371f1f1c3582d75c",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:evidence:candidate-comparison:168d07ad8dc5ea84a8e8d655b1edd4313670d3098dd3b4e01505cbf1488fdbd8",
+          "reference_line_id": "move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:line:8d73644c9864c5e256875b805a96028be5b6e2e35f7dc49ada2d709dd7eb0871",
+          "candidate_line_id": "move-review:e550717cc134d13ddd056d8d01fe969089d4fbf3bb36d003861a7ee2f56a3a75:39:b5c4:line:d2462645bf4db59cc9310549806c07910e73f1eb69298766c0875af31fc92781"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "How is the initial pawn exchange recaptured, and does the later d5 capture actually gain material?",
+      "bounded_answer": "bxc4 Bxc4 exchanges pawns and places White bishop on c4 before Ne5/Be2. In the Ne5 arm cxb5 axb5 trades the same original c- and b-pawns, leaving Black a-pawn on b5. The later d5 captures are equal exchanges, including every actual recapture.",
+      "required_if_claimed": [
+        "A c4- or b5-pawn gain includes the bishop or a-pawn recapture respectively.",
+        "A bishop-displacement claim includes its actual Ne5 attack and Be2 retreat in bxc4.",
+        "A gain from Rxd5 in bxc4 includes Rxd5 Nxd5 Nxd5, trading a rook and knight on each side.",
+        "A gain from Nxd5 in Ne5 includes the White Nxd5 recapture; a later rook gain includes Qxc2."
+      ],
+      "not_required_for_primary": [
+        "The later independent c2 rook exchange when explaining the initial pawn recapture"
+      ],
+      "unsupported_extensions": [
+        "A free pawn, knight or rook",
+        "That both arms have the same pawn structure after different recaptures"
+      ]
+    },
+    {
+      "game_id": "candidates2018-05",
+      "written_at_utc": "2026-10-04T03:18:25.630017+00:00",
+      "facts_sha256": "2ebffddea326d78db34886732d69a12465fe827c4ea34d36dc7306163a11ea43",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:evidence:candidate-comparison:65540c59d20bd110cd1d940614faf19651a05350afdfec52310ae1614ad53c99",
+          "reference_line_id": "move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:line:deede1d76c9cdc83156bb71c645b0859bc9e9721e24ac344c4bfc6c2a503dc48",
+          "candidate_line_id": "move-review:bd53101430c72a010aba9b28e755a10a4544b7ade06cbf2557b4f45968eef1dd:46:c3c4:line:0736e014b5d5bc479a7b10bd9498c3669e1501a97cec71ceb9fb28cf42d6b7d6"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What does the queen on d1 actually recover after the bishop captures f1, and at what cost?",
+      "bounded_answer": "In Qd1, Black bishop goes Bb5/Bc4 and takes the f1 rook with Bxf1; Qxf1 recovers that bishop, leaving a rook exchanged for a bishop. The c4 continuation has pawn trades instead, including Qxf4 against Bxc5/Bxb4 and a later hxg4/fxg4 exchange.",
+      "required_if_claimed": [
+        "Queen support or recovery on f1 includes the preceding White rook loss; recovering the bishop is not saving that rook.",
+        "A c4-line material result includes White f4 pawn loss alongside bishop captures at c5/b4, and any g/h pawn exchange within its stated account.",
+        "A claim about Rc3 usage includes b4 attacking that rook and its actual Rd3 retreat."
+      ],
+      "not_required_for_primary": [
+        "All later pawn maneuvers in c4 when describing only the f1 exchange"
+      ],
+      "unsupported_extensions": [
+        "That Qd1 preserves the f1 rook",
+        "A free bishop from Qxf1",
+        "A forced rook trap inferred from the provided bishop route alone"
+      ]
+    },
+    {
+      "game_id": "candidates2018-06",
+      "written_at_utc": "2026-10-04T03:18:25.630017+00:00",
+      "facts_sha256": "e310777ec15d328b1aac10a7eac8303e988b11981de0fcacf96bfe22113d3181",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:evidence:candidate-comparison:95684ec396273dcfa4b7f958d28c9e3f0aec42b5f613abec7c0e6119e404b26c",
+          "reference_line_id": "move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:line:1ef9929d558d9bc890ab04398d346babc0e34a0ec57240626f062994f849fad3",
+          "candidate_line_id": "move-review:c8e6dd2f861ca47bc0013bc09673ecbead6f20074e813b11bea8b60149622ff3:31:h7h6:line:b72032669666c838ba8ccb56463bba6026260b0d896a1c766c46c76dafb109aa"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "Is the same attacked White knight displaced or exchanged in the two lines?",
+      "bounded_answer": "h6 attacks the g5 knight, which retreats via Ne4/Nc5 and is later exchanged with Bxc5 dxc5. Bxg5 Bxg5 exchanges that same original White knight for the same Black bishop immediately, with a different recapturer.",
+      "required_if_claimed": [
+        "A h6 displacement claim includes the actual Ne4 retreat and does not imply that the knight is never exchanged.",
+        "A bishop-capture claim includes dxc5 or Bxg5 recapturing the Black bishop, with original identities retained.",
+        "A final Bxg5-arm material price includes the later N/B exchange and Qxc7 if extending that far.",
+        "A rook or queen exchange claim retains the exact recapture, including the Nxe8 reply to Rxe8+ in h6."
+      ],
+      "not_required_for_primary": [
+        "The later independent rook/queen exchanges and c7 pawn gain when describing the initial minor-piece choice"
+      ],
+      "unsupported_extensions": [
+        "That h6 permanently saves the g5 knight",
+        "A free knight",
+        "That Bxg5 wins an entire bishop or knight without a recapture"
+      ]
+    },
+    {
+      "game_id": "wch2024-01",
+      "written_at_utc": "2026-10-04T03:18:25.630017+00:00",
+      "facts_sha256": "03ca01f9170c5a7d1d420c5d2ed8c331cde03c45e0dea6fb6d20ae455763fc26",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:evidence:candidate-comparison:bfdd73477b8a0ef7415e41598e46c1405be9dce77478c92e9c4a720aea578c31",
+          "reference_line_id": "move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:line:e1bede287a77ace46cb210532b9c92c2720b756c44e27d29bf365ce11c84f9ab",
+          "candidate_line_id": "move-review:7f26cf2e7d96cd2b6fd34bc6253a0fecb4dfbcfbc2bc008912ac07a2b5a401f5:38:a1c1:line:60069c1b105ea4650f65fcabba130b33bc575853db442f7d0cf3ed8ce3709e66"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What happens to the c3 pawn under the two rook orders, and what other price accompanies the Rfe1 continuation?",
+      "bounded_answer": "Rac1 gives the c1 rook a clear line to support c3; the supplied arm later exchanges queens with Qxe3 Bxe3. In Rfe1, Qxc3 Qxb4 removes both c3 and b4 pawns, and Rxc8+ Bxc8 exchanges one rook each.",
+      "required_if_claimed": [
+        "A c3-support comparison tracks the same original c3 pawn and Black queen across both arms.",
+        "A Rfe1 pawn-price claim retains both Qxc3 and Qxb4 if explaining the recorded queenside loss, rather than only one pawn.",
+        "A rook-gain or removal-of-check claim includes Bxc8 as the actual recapture and check response.",
+        "A queen-gain claim in Rac1 includes Bxe3 recapturing that same queen."
+      ],
+      "not_required_for_primary": [
+        "All subsequent quiet kingside pawn and king moves"
+      ],
+      "unsupported_extensions": [
+        "That support proves no legal reply can ever take c3",
+        "A free Black rook",
+        "That Rfe1 is punished in every possible continuation"
+      ]
+    },
+    {
+      "game_id": "wch2024-02",
+      "written_at_utc": "2026-10-04T03:18:25.630017+00:00",
+      "facts_sha256": "9bd259c03ea2181980f26fe471c57fd0991c03c6e2274a18b8235fd4821b6007",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:evidence:candidate-comparison:9038ec3c201b9a0f1663d8226cc0b45360520dc2cf8485959985f2197898040b",
+          "reference_line_id": "move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:line:08c79c79c11a0068b6299c88988a3606179184acecd7ea8c8e0716e50efad867",
+          "candidate_line_id": "move-review:1bd2550384b5f86e60017a61a0b836bb553752907964c57fdd78c89b5f30430d:39:d4c6:line:a1df10547d3c68bbcfdb628914b4f24390e4d2cc356e1a2adc733d10fe1181a6"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "Which choice retains the originally attacked d4 knight, and what is traded instead?",
+      "bounded_answer": "Nd7 moves the other Black knight; the original d4 knight is still taken by Nxd4, followed by cxd4 taking the White knight. Nc6 moves that original d4 knight away. Its provided line instead trades rooks with Rxd1 Nxd1.",
+      "required_if_claimed": [
+        "The subject is the same original d4 knight, even though Nd7 and Nc6 move different Black knights.",
+        "An escape or preservation claim is bounded to the original Ne2 attack and the recorded continuation.",
+        "The Nd7 price includes cxd4 recovering the White knight; the Nc6 price includes Nxd1 recovering the Black rook."
+      ],
+      "not_required_for_primary": [
+        "The later repeated knight route in Nc6"
+      ],
+      "unsupported_extensions": [
+        "A free knight or rook",
+        "That Nd7 avoids the attack on the d4 knight",
+        "Permanent safety of the knight against all future attacks"
+      ]
+    },
+    {
+      "game_id": "wch2024-03",
+      "written_at_utc": "2026-10-04T03:21:03.096352+00:00",
+      "facts_sha256": "5fe4d2def93eae97a60bf8d60c4875d3fb4247058d913bcbdb2c5dfd7a03e73a",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:evidence:candidate-comparison:9fb57e181dd05f0ce22e0e79af62442988339956b9a4fbf857d282983d89e1dd",
+          "reference_line_id": "move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:line:316270d069b1240278ace1277eab7560b5237707f6bde157c8ccc553eeaf6b22",
+          "candidate_line_id": "move-review:b1be5bfeacaa12b79d4fc36a29651716757d1cf09f7e2f074e77391aa3ed04d9:38:f3e4:line:3d8376f465ecc504e3153eb8bf01f7eff05d8ad8c6c7c3c682ebf1fc687ddfac"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What does taking the c2 bishop cost when the e-pawn or the knight attacks d2?",
+      "bounded_answer": "Rc1 allows e3; after Rxc2 the pawn captures White d2 knight with check and Rxd2 recovers that pawn. In fxe4, White removes that pawn immediately, but the g7 knight later takes d4/b3 and the same d2 knight before Rxd2. Neither line wins the c2 bishop without other material changing.",
+      "required_if_claimed": [
+        "A c2-bishop gain claim in Rc1 includes exd2+ and the actual Rxd2 response, with the captured pawn's original e4 identity.",
+        "A corresponding fxe4 bishop-price claim includes the knight captures at d4/b3/d2 and its Rxd2 removal when the account covers that episode.",
+        "Removal of the e4 pawn prevents that specific pawn advance, not every later loss of the d2 knight.",
+        "A final Rc1 result includes the later b4/c6 pawn sequence and equal rook exchange, rather than projecting its intermediate gain to the endpoint."
+      ],
+      "not_required_for_primary": [
+        "Every later rook and bishop maneuver outside the selected c2/d2 episode"
+      ],
+      "unsupported_extensions": [
+        "A free bishop",
+        "That fxe4 keeps d2 knight alive throughout the provided line",
+        "That e3 itself is proven a forced or winning threat"
+      ]
+    },
+    {
+      "game_id": "wch2024-04",
+      "written_at_utc": "2026-10-04T03:21:03.096352+00:00",
+      "facts_sha256": "65aa6b4feb1a675f3a096f15d79d1cedef280f3599872858335388826587573f",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:evidence:candidate-comparison:6a13472d20b673a6afebe7909ad8eae10c850f26f90e803a12471159d69ca7b6",
+          "reference_line_id": "move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:line:03fe595dde99445aa9dc5096771ab99245cfe7f23c3a83a8840a6db7f86cb9c9",
+          "candidate_line_id": "move-review:3fded4ea5084e87ad0e3bb5dc303fcc03ff3e5ebba85c0873d8d711be4778d89:47:e7e4:line:7814d4833625a2ab6aab3fa955536d3e912037c9aff006e4143b02dd40d3f7ad"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "Do the two capture orders both win the original e4 knight, and who recaptures on d1?",
+      "bounded_answer": "Qxe4 takes the original White knight in both supplied arms. With immediate Qxe4, Rxd1+ is answered by Rxd1; with immediate Rxd1+, Qxd1 recaptures before Qxe4. The rook exchanges are equal, and the later queen exchange in the latter arm is also equal.",
+      "required_if_claimed": [
+        "Both arms track the same original e4 knight rather than treating different root movers as different targets.",
+        "Any d1 rook-gain claim includes the actual rook or queen recapture that answers the check.",
+        "If stating the final price of Rxd1+, include Qxd1+ Rxd1 as an equal queen exchange and the equal c/b pawn trade."
+      ],
+      "not_required_for_primary": [
+        "Every quiet move before the later queen trade"
+      ],
+      "unsupported_extensions": [
+        "A free rook or queen",
+        "That one arm alone wins e4",
+        "That a checking rook capture alone explains the whole material result"
+      ]
+    },
+    {
+      "game_id": "wch2024-05",
+      "written_at_utc": "2026-10-04T03:21:03.096352+00:00",
+      "facts_sha256": "7eb5d41089c6e8fa7ee4d6d641c6fced3bb3bbc1f69371372bc228015d2532a8",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:evidence:candidate-comparison:bfafad0f132bf68c04ad1f00f174d6cb723198e46121cb15a2457cfde8945ecb",
+          "reference_line_id": "move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:line:c89abdd1a03cd5d8d56b18f68ea2116e71d888941ab45ffe3497a03a061849c8",
+          "candidate_line_id": "move-review:767b7d7a516d9e0bfd60c108a45aa32637a85d2d8a109caa4511f562f16224a5:46:c2d3:line:a2e89bc374384c959d5c86d0f05a695d388280ae7c884bbb02cf5aaac55e0965"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "How do the choices deal with the original d3 knight attacking the e1 rook and e5 pawn?",
+      "bounded_answer": "Bxd3 removes that knight but cxd3 exchanges White bishop for it. Rb1 moves the attacked e1 rook away and its provided reply Nxe5 takes the other original target, e5 pawn. The same attacker and both target identities matter.",
+      "required_if_claimed": [
+        "A Bxd3 knight-gain claim includes cxd3 losing the same White bishop.",
+        "A Rb1 escape claim preserves the concurrent price Nxe5 taking e5 instead; an initial b2-support claim is limited to its actual episode, not all later pawn survival.",
+        "A later b2-pawn capture or rook-gain claim in Bxd3 includes Rxb2 Rxb2 Nxb2, equal rook exchange with White pawn lost.",
+        "A final Rb1 material claim includes the b/c pawn trade, bishop exchange, and later a4 pawn loss."
+      ],
+      "not_required_for_primary": [
+        "Every subsequent king approach and distant pawn trade when discussing the initial attacker"
+      ],
+      "unsupported_extensions": [
+        "A free knight",
+        "That moving the rook saves both original attacked targets",
+        "That support from b1 guarantees b2 pawn survives every continuation"
+      ]
+    },
+    {
+      "game_id": "wch2024-06",
+      "written_at_utc": "2026-10-04T03:21:03.096352+00:00",
+      "facts_sha256": "e43c0d32bacc521f66d64d41dba0c4eb5413953d23bfa88448c8e1623d65e872",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:evidence:candidate-comparison:e2bf6318ac6b2cb21a48fb38631415c70008749c97b0ea7742dce8da87ac0573",
+          "reference_line_id": "move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:line:a36d8bb2bb55f10a8b38967951ff0917c2a05dedc0f66966a8fc8b974828dd96",
+          "candidate_line_id": "move-review:a07e635ced25031a5d50c85a9044cf96003f3373225225bf896f05ebd2ac2f60:47:g5e7:line:5a090e28542671a3b274573b07f27ce0dd1a88f2e490ccdeb776c1141e22a5d1"
+        }
+      ],
+      "product_prose_read_before_record": false,
+      "primary_question": "What remains of the apparent queen or rook gain in the two heavy-piece continuations?",
+      "bounded_answer": "The Qh4 line exchanges both rook pairs and trades one a/h pawn each, then exchanges queens with Qxd5 cxd5. In Qe7, Qxd8 Rxd8 Rxd8+ trades White queen for both Black rooks, so Black capturing the queen is not a free queen win.",
+      "required_if_claimed": [
+        "A Qe7 queen-gain claim includes the preceding White Qxd8 and following Rxd8+ with Kg7 answering the check; price is queen against two rooks.",
+        "Any Qh4 rook-gain claim includes the exact queen recapture on d2 or d8; the resulting d8 check is answered by Kh7.",
+        "A Qh4 queen-gain claim includes cxd5 taking the same Black queen.",
+        "An h2-pawn gain comparison includes Qxa5 if stating the price of that pawn-trade episode, and does not equate a pass threat with a forced real continuation."
+      ],
+      "not_required_for_primary": [
+        "All later quiet pawn advances after the stated exchange"
+      ],
+      "unsupported_extensions": [
+        "A free queen or rook",
+        "That Qh4 forces the h2 capture from the root position",
+        "A proven engine-score cause from material count alone"
+      ]
+    }
+  ]
+}

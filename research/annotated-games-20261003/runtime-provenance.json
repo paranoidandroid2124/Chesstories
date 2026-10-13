@@ -1,0 +1,33 @@
+{
+  "head": "5b6bc8c4d6069360e93c7efd91309ed35d670f08",
+  "branch": "codex/commentary-foundation",
+  "baseline_manifest": "target\\content-selection-20261002\\verified\\manifest.json",
+  "baseline_manifest_sha256": "5ee1769c92ee3445a15459fd1c1a31775728c8cc46feda573d9e0ce32e46d5e7",
+  "verification": [
+    {
+      "kind": "source_hashes",
+      "checked": 71,
+      "mismatches": []
+    },
+    {
+      "kind": "compiled_class_hashes",
+      "checked": 1695,
+      "mismatches": []
+    }
+  ],
+  "product_edited_for_this_task": false,
+  "probe_location": "target/annotated-games-20261003/probe-classes",
+  "final_verification_utc": "2026-10-02T17:44:07.379292+00:00",
+  "final_verification": [
+    {
+      "kind": "source_hashes",
+      "checked": 71,
+      "mismatches": []
+    },
+    {
+      "kind": "compiled_class_hashes",
+      "checked": 1695,
+      "mismatches": []
+    }
+  ]
+}

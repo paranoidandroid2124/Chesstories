@@ -1,0 +1,3884 @@
+{
+  "schema_version": 1,
+  "written_utc": "2026-10-04T07:30:31.230528+00:00",
+  "task": "원래 선택된 체스 주장에 필요한 응수·대가의 동적 관계 귀속을 읽기 전용으로 감사",
+  "method": {
+    "product_llm": false,
+    "product_source_modified": false,
+    "new_engine_execution": false,
+    "product_reducer_reexecution": false,
+    "new_corpus_samples_read": false,
+    "docker_browser_http": false,
+    "protected_data_read": false,
+    "audited_old_published_failures": 5,
+    "old_published_working_comparators": 1,
+    "loaded_saved_snapshot_filter": [
+      "wch2016-09",
+      "wch2016-11",
+      "candidates2018-09",
+      "candidates2018-10",
+      "wch2024-12",
+      "wch2024-09"
+    ],
+    "position_check_tool": "python-chess 1.11.2",
+    "position_check_method": "선택된 저장 start_fen/fen_after의 기하학적 공격·절대 핀·현재 차례의 합법 포획만 독립 확인; null/턴 변경/탐색 없음",
+    "offset_definition": "offset은 0부터 시작하는 실제 저장 수 위치. prefix_count는 그 수 직전까지 둔 수의 개수; occurrence_id와 line_id가 수 참조의 권위. SAN 일치만으로 사건을 동일시하지 않음."
+  },
+  "limitations": [
+    "공개 summary_question은 역할, 정확 수 refs, coverage/proof를 공개하지만 내부 CommentaryAnswer.Statement 종류나 runtime branch trace를 담지 않는다. 타입 후보와 구체적 제외 입구는 저장 결과+정적 소스에 근거한 감사이며 새로운 live reducer guard trace가 아니다.",
+    "새 구현 및 테스트 결과를 검증하지 않았다. parent가 구현·재생할 후보와 미해결 관계 경계를 분리했다.",
+    "모든 저장 수순의 끝은 line_end이다. 관측 거래의 종료/물질 변화량을 게임 종결, 강제 수순, 실제 평가값, 마지막 물질 우세로 확대하지 않는다.",
+    "이미 열어 본 다섯 실패와 한 작동 대조는 회귀·원인 감사 자료다. 새로운 일반화 품질 검증으로 계산하지 않는다.",
+    "C18-10의 관측 나이트 반포획 관계는 확인했으나 root Bxf4 비교로의 자동 필수 대가 귀속은 미해결이다.",
+    "감사 종료 시 parent 병행 수정으로 RootQuestionSummary/MoveWorkProjection의 현재 SHA가 initial scope와 달랐다. 제외 입구와 source anchors는 감사 중 읽은 initial scope판 기준이며, 새 변경의 효과는 이 읽기 전용 감사로 검증하지 않는다."
+  ],
+  "source_anchors": [
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "sha256_at_final_audit_read": "5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d",
+      "matches_parent_initial_scope_hash": true,
+      "anchors": {
+        "typed_action": 18,
+        "typed_material": 21,
+        "typed_material_events": 25,
+        "typed_target_response": 39,
+        "typed_support_retention": 87
+      },
+      "analysed_anchor_version": "parent_initial_scope_source",
+      "analysed_source_sha256": "5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d",
+      "final_observed_source_hash_note": "작성 말미의 현재 파일 SHA. parent가 병행 수정하므로 initial scope와 달라도 본 감사가 제품 소스를 변경한 증거는 아니며, 아래 행번호/조건을 새 구현의 성공 검증으로 취급하지 않는다."
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+      "sha256_at_final_audit_read": "5498b0208c7638f2405a880d465b0213e28ccd2e752eb3fb5cbed052003f3efd",
+      "matches_parent_initial_scope_hash": true,
+      "anchors": {
+        "physical_identity_and_actor_end": 728,
+        "capture_link_producer": 766,
+        "scheduling_only_identity_closure": 772,
+        "ledger_interval_other_target_gain": 791,
+        "support_comparisons": 816,
+        "recovery_loss_producer": 845,
+        "capture_exposure_type": 1018,
+        "capture_exposure_producer": 1038
+      },
+      "analysed_anchor_version": "parent_initial_scope_source",
+      "analysed_source_sha256": "5498b0208c7638f2405a880d465b0213e28ccd2e752eb3fb5cbed052003f3efd",
+      "final_observed_source_hash_note": "작성 말미의 현재 파일 SHA. parent가 병행 수정하므로 initial scope와 달라도 본 감사가 제품 소스를 변경한 증거는 아니며, 아래 행번호/조건을 새 구현의 성공 검증으로 취급하지 않는다."
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256_at_final_audit_read": "95d6c6c48100daba3b24754509430c3ef2ed1d74835d0b8f9f799c7cf5f122b6",
+      "matches_parent_initial_scope_hash": false,
+      "anchors": {
+        "arm_at_control_covers": 480,
+        "physical_recovery": 542,
+        "account_seed_span": 569,
+        "first_reply_counter": 593,
+        "check_reply_closure": 602,
+        "sole_lost_defender": 615,
+        "delayed_capture_link_guard": 647,
+        "other_gain_endpoint_guard": 663,
+        "role_vector_sign_guard": 674,
+        "price_closure_completion": 708
+      },
+      "analysed_anchor_version": "parent_initial_scope_source",
+      "analysed_source_sha256": "aa8a2a46f6e008d7a8177976e5fffc0dc089219ff6bbf53ce4bbd783b6b8b268",
+      "final_observed_source_hash_note": "작성 말미의 현재 파일 SHA. parent가 병행 수정하므로 initial scope와 달라도 본 감사가 제품 소스를 변경한 증거는 아니며, 아래 행번호/조건을 새 구현의 성공 검증으로 취급하지 않는다."
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256_at_final_audit_read": "5d55edbc1cb49dffdd8f1ceef54f9016d92091fb448e51aea70a247ebe1686ba",
+      "matches_parent_initial_scope_hash": false,
+      "anchors": {
+        "physical_history_material_selection": 2859,
+        "physical_fallback_answer": 2973,
+        "common_completion": 2985,
+        "common_conditions": 3037,
+        "original_selected_seed_boundary": 3091,
+        "complete_selected_prices": 3103,
+        "root_gate": 3124,
+        "fork_seed_gate": 3133,
+        "support_seed_gate": 3155,
+        "persistent_root_support_target_price": 3188,
+        "all_current_price_seeds": 3197,
+        "existing_selected_material_pending": 3227,
+        "overlap_join_recalculation": 3242,
+        "existing_target_response_actions": 3290
+      },
+      "analysed_anchor_version": "parent_initial_scope_source",
+      "analysed_source_sha256": "d84ad623cd0a16229e04a5d283b5d492333bc9c8b205534e58f08434d0c0547b",
+      "final_observed_source_hash_note": "작성 말미의 현재 파일 SHA. parent가 병행 수정하므로 initial scope와 달라도 본 감사가 제품 소스를 변경한 증거는 아니며, 아래 행번호/조건을 새 구현의 성공 검증으로 취급하지 않는다."
+    }
+  ],
+  "source_records": [
+    {
+      "file": "research/relationship-delivery-20261004/report.json",
+      "sha256_file": "4952f8c01e0d9b85a52a22023a03bc169a8cc3a14b9308b96b2a20b3d88dea0c"
+    },
+    {
+      "file": "research/relationship-delivery-20261004/v6-core-price-ownership-diagnosis.json",
+      "sha256_file": "6b453726ab13cdb40b4069f5932caf2e84d44d233f0dac42e9aed46f94009c2c"
+    },
+    {
+      "file": "research/relationship-delivery-20261004/fresh-product-readings-final.json",
+      "sha256_file": "81600cd41fdf35fb7e9c9d53f29af7907c325c1383667116690edd6506a93098"
+    },
+    {
+      "file": "research/relation-coverage-map-20261004/atlas-spec.json",
+      "sha256_file": "371939ac167e738b364cdf24665c64a580b48a7108314571629e22f0fc4695bc"
+    }
+  ],
+  "common_findings": [
+    {
+      "id": "T1",
+      "status": "정적 코드와 저장 결과에서 확인",
+      "finding": "동적 관계 조사가 이미 존재하지만 본문 가격 seed는 원래 offset0 지원·회피/TargetResponse.start0로 주로 제한된다. 선택된 뒤쪽 Action/MaterialEvents가 previous(false)에만 남아 가격 확장이 이어지지 않는다.",
+      "evidence": [
+        "MWP3124–3197",
+        "MWP3227–3265",
+        "모든 audited public question은 selected_comparison"
+      ]
+    },
+    {
+      "id": "T2",
+      "status": "정적 생산 코드에서 확인",
+      "finding": "CaptureLink는 이전 포획 수행자가 나중 잡힌 물리적 신원 연결이다. OtherTargetGain는 음수 원장 구간의 열린 손실 anchor이며 질문 소유/원인/강제성을 증명하지 않는다. RecoveryLoss는 이런 연결 수행자의 나중 제거다. ActorEnd는 전체 제공 경로 끝 상태다.",
+      "implication": "owner를 먼저 정하고 그 안의 정확 실제 자료로 계산해야 한다. 같은 actor 또는 반대 부호 포획이라는 이유로 자동 소유 확대하지 않는다."
+    },
+    {
+      "id": "T3",
+      "status": "기존 관계 재사용 가능한 후보",
+      "finding": "선택된 지원 역할의 종료와 동일 지원 대상의 손실(C18-09), 선택 blocker departure의 CaptureExposure→실제 포획→recapture(W24-12)는 좌표/SAN/고정 간격 없이 관계·실제 수 사용으로 조합할 수 있다.",
+      "implementation_success_claimed": false
+    },
+    {
+      "id": "T4",
+      "status": "실제 작동 대조 확인",
+      "finding": "W24-09는 root 지원이 실제 recapture 뒤에도 동일 나이트를 계속 지원하고, 가격1/2/3이 public covered/proof에 남는다. 그래서 root·지속 지원 기준 자체는 쓸 수 있지만 이를 모든 dynamic story의 필수 형식으로 강제하면 과소포함된다."
+    },
+    {
+      "id": "T5",
+      "status": "실제 과도 확대 반례 확인",
+      "finding": "C18-10의 Qxd6/Qxc5/Qxb5는 모두 같은 퀸의 axb5 제거20으로 CaptureLink가 이어진다. 선택된 모든 MaterialEvents에 Arm.account(focus=capturer)를 열면 그 퀸의 새 대상 거래와 전 생애를 따라갈 위험이 있다.",
+      "implication": "계산 완결성은 범위 확장 정책이 아니며 관계 변화/현재 claim 종료에서 owner를 닫아야 한다."
+    }
+  ],
+  "cases": [
+    {
+      "public_alias": "W16-09",
+      "failure": "Qxd5의 룩 획득과 Bxf4의 나이트 제거를 말하면서, 같은 백 퀸의 Rxd5 손실을 기본 가격에서 제외한다.",
+      "selected_anchor_offsets": [
+        14,
+        16
+      ],
+      "required_missing_offsets": [
+        17
+      ],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "제공 Rg1 수순의 Qxd5와 Bxf4에 의한 획득",
+        "source_statement_candidate": [
+          "MaterialEvents(reference, events at 14 and 16)",
+          "Action/Check of Nf4+ if carried as response context"
+        ],
+        "typing_status": "공개 summary_question은 내부 Statement 종류를 직렬화하지 않는다. 실제 내부 종류는 physical history/material 제작 경로를 정적으로 대조한 후보이며 실행 추적에서 확인한 것으로 주장하지 않는다."
+      },
+      "ownership": {
+        "status": "실제 국소 포획 주장에 대해서는 기존 신원·응수 관계로 범위 정당화 가능; 새 구현 통과는 미검증",
+        "subjects": [
+          "white:queen:d1",
+          "white:bishop:e3",
+          "black:knight:h5",
+          "black:rook:b8"
+        ],
+        "anchor": 14,
+        "pre_action_prefix": 14,
+        "end": 17,
+        "price_offsets": [
+          14,
+          16,
+          17
+        ],
+        "start_reason": "이미 선택된 Qxd5가 실제로 잡은 룩과 그 수행자인 원래 d1 퀸의 가격을 평가한다. 이전 Rxd5(9)는 다른 룩이 다른 기물을 잡은 사건이므로 같은 SAN으로 연결하지 않는다.",
+        "response_reason": "Nf4+는 같은 Qd5와 백 킹을 공격하며, Bxf4가 체크를 해결해도 별개의 흑 룩 d8의 Qd5 공격은 지속된다. 실제 다음 Rxd5가 그 퀸을 제거한다.",
+        "end_reason": "선택된 획득의 수행자가 같은 d5 칸에서 제거된 실제 포획(17)로 국소 가격이 닫힌다. Nf4+/Bxf4 중간 강제 응수도 같은 범위에 남긴다.",
+        "not_claimed": [
+          "Rg1 이후 모든 응수에서 퀸을 잃는다",
+          "최선 수순의 강제성이나 평가차 원인을 증명했다"
+        ],
+        "observed_price_ledger": {
+          "perspective": "white",
+          "event_deltas_cp": [
+            {
+              "offset": 14,
+              "delta_cp": 500
+            },
+            {
+              "offset": 16,
+              "delta_cp": 300
+            },
+            {
+              "offset": 17,
+              "delta_cp": -900
+            }
+          ],
+          "sum_delta_cp": -100,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false
+        }
+      },
+      "existing_relation_witnesses": [
+        "CaptureLink 14→17 elapsed 3",
+        "ActorEnd of capture14 is captured by17",
+        "RecoveryLoss 9→14→17 (물리적 상위 거래 자료; 앞선9를 자동 포함할 소유 근거는 아님)"
+      ],
+      "blocking_conditions": [
+        "completeSelectedPrices seeds에는 선택 MaterialEvents 자체가 없고, Action/TargetResponse seed는 offset0/start0로 제한된다(3124–3197).",
+        "기존 MaterialEvents 14/16은 previous(false)에만 들어가며 새로운 관계 account가 없으면 interval 확장과 가격 재계산을 하지 않는다(3227–3265).",
+        "Arm.account의 delayed forward CaptureLink는 root mover에 제한되는 경로도 있으므로, 단순 root gate 삭제만으로 모든 비루트 포획자의 가격이 해결된다고 단정할 수 없다(647–657)."
+      ],
+      "negative_scope": "선택된 포획 14의 실제 제거 가격17은 포함한다. 앞선9→14 관계의 존재만으로 이전 희생·보상의 모든 사건까지 같은 본문 가격으로 확대하지 않는다.",
+      "minimum_candidate": "선택된 실제 포획 주장의 수행자·공격 지속성·체크 응수로 bounded owner를 세우고 기존14→17 신원 링크를 그 범위 내에서 사용한다.",
+      "game_id": "wch2016-09",
+      "arm": "reference",
+      "request_id": "fresh-wch2016-09-47",
+      "comparison_id": "comparison:move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:candidate-comparison:326c93d7a5ffe56dd2d6a02cf9b8d3eb08b7739efa60acb8ab7ee4e0c93025ee",
+      "path_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-09-obligation-facts.json",
+      "source_facts_file_sha256": "ed636bf8895951154572cc77be10ab0062b46a1aff44af8767e136f332e3e20e",
+      "published_facts_canonical_sha256": "ed636bf8895951154572cc77be10ab0062b46a1aff44af8767e136f332e3e20e",
+      "published_snapshot_canonical_sha256": "93bc7dec0aae0c3b986ac67ec4453caeb4aa85935cc83f43762be6500aec9367",
+      "original_product_state": {
+        "assessment_state": "current",
+        "verification": {
+          "state": "complete",
+          "target_depth": 16,
+          "reason": "initial_verification",
+          "trigger_work_ids": [],
+          "completed_depth": 16,
+          "stop_reason": null
+        },
+        "basic_length": 2588,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            7,
+            8,
+            9
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            6,
+            7,
+            8,
+            9,
+            13,
+            14,
+            15,
+            16,
+            20
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            6,
+            7,
+            8,
+            9,
+            13,
+            14,
+            15,
+            16,
+            20
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 1,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            5,
+            16
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            5,
+            16
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            5,
+            16
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 2,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            14
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            14
+          ],
+          "required_offsets_on_audited_path": [
+            14
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 3,
+          "role": "reply",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [],
+          "required_offsets_on_audited_path": [],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [
+        {
+          "game_id": "wch2016-09",
+          "arm": "reference",
+          "source_index": 17,
+          "san": "Rxd5",
+          "uci": "d8d5",
+          "original_victim": "True:queen:d1",
+          "original_capturer": "False:rook:b8",
+          "reference": {
+            "line_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114",
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        }
+      ],
+      "exact_step_evidence": [
+        {
+          "offset": 9,
+          "san": "Rxd5",
+          "uci": "d8d5",
+          "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:47266d237a848c49799aa0e50f40a337d7c02b4f2afb31505d4d2a76ef78ba7a",
+          "original_actor": "False:rook:d8",
+          "original_victim": "True:bishop:b3",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 9,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:47266d237a848c49799aa0e50f40a337d7c02b4f2afb31505d4d2a76ef78ba7a",
+            "move_uci": "d8d5",
+            "side": "black",
+            "from": "d8",
+            "to": "d5",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": -300,
+            "balance_cp": 0,
+            "capture": {
+              "role": "bishop",
+              "square": "d5",
+              "value_cp": 300,
+              "recapture": "proven"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "ply_offset": 9,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:47266d237a848c49799aa0e50f40a337d7c02b4f2afb31505d4d2a76ef78ba7a",
+            "source_id": "d5c145ef62ad48f3311dd72fe77b9038058f96932635cbb516f03537940ae68c",
+            "original_actor": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "black",
+              "role": "rook",
+              "square": "d8"
+            },
+            "original_victim": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "white",
+              "role": "bishop",
+              "square": "b3"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551"
+            }
+          }
+        },
+        {
+          "offset": 14,
+          "san": "Qxd5",
+          "uci": "d1d5",
+          "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b94a1f0d19b917c82bbbbc7316700302cf53174ee7d1b46c98b843bf318280d9",
+          "original_actor": "True:queen:d1",
+          "original_victim": "False:rook:d8",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 14,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b94a1f0d19b917c82bbbbc7316700302cf53174ee7d1b46c98b843bf318280d9",
+            "move_uci": "d1d5",
+            "side": "white",
+            "from": "d1",
+            "to": "d5",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": 500,
+            "balance_cp": 500,
+            "capture": {
+              "role": "rook",
+              "square": "d5",
+              "value_cp": 500,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551",
+            "ply_offset": 14,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b94a1f0d19b917c82bbbbc7316700302cf53174ee7d1b46c98b843bf318280d9",
+            "source_id": "0a398c870f01988f905d8624a29ca1bd8d793614e7fc406b6c507275d4bb77c3",
+            "original_actor": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "white",
+              "role": "queen",
+              "square": "d1"
+            },
+            "original_victim": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "black",
+              "role": "rook",
+              "square": "d8"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:080fd2109729c383702058d135dcd701ec04acf62645380142a308fe80f9333b"
+            }
+          }
+        },
+        {
+          "offset": 15,
+          "san": "Nf4+",
+          "uci": "h5f4",
+          "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:8ffa8fd62ad6b32fae62bcf88b43a472e5ae516edf7acc9ad4d29e8dc3b8727d",
+          "original_actor": "False:knight:h5",
+          "original_victim": null,
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 16,
+          "san": "Bxf4",
+          "uci": "h6f4",
+          "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:2a47774b7132a02e9aad5749ba9af4ef8cd3ba49e5021f95ac05c666a27f2565",
+          "original_actor": "True:bishop:e3",
+          "original_victim": "False:knight:h5",
+          "role_before": "bishop",
+          "role_after": "bishop",
+          "material_event": {
+            "ply_offset": 16,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:2a47774b7132a02e9aad5749ba9af4ef8cd3ba49e5021f95ac05c666a27f2565",
+            "move_uci": "h6f4",
+            "side": "white",
+            "from": "h6",
+            "to": "f4",
+            "before_role": "bishop",
+            "after_role": "bishop",
+            "promotion_gain_cp": 0,
+            "delta_cp": 300,
+            "balance_cp": 800,
+            "capture": {
+              "role": "knight",
+              "square": "f4",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:7d3690a3f6a138ef74d6663285ad0253d46a192fd82670a351fd1c819bf4fc6b",
+            "ply_offset": 16,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:2a47774b7132a02e9aad5749ba9af4ef8cd3ba49e5021f95ac05c666a27f2565",
+            "source_id": "62b4af2bc58e0d74b018d98fd55cc281d4bd57a0d96b930d77da11700fd4ea21",
+            "original_actor": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "white",
+              "role": "bishop",
+              "square": "e3"
+            },
+            "original_victim": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "black",
+              "role": "knight",
+              "square": "h5"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+              "piece": {
+                "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+                "side": "white",
+                "role": "bishop",
+                "square": "f4"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 17,
+          "san": "Rxd5",
+          "uci": "d8d5",
+          "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9",
+          "original_actor": "False:rook:b8",
+          "original_victim": "True:queen:d1",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 17,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9",
+            "move_uci": "d8d5",
+            "side": "black",
+            "from": "d8",
+            "to": "d5",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": -900,
+            "balance_cp": -100,
+            "capture": {
+              "role": "queen",
+              "square": "d5",
+              "value_cp": 900,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:080fd2109729c383702058d135dcd701ec04acf62645380142a308fe80f9333b",
+            "ply_offset": 17,
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9",
+            "source_id": "efece6bd525d1d63df4dfc187bbd321eb1ba688c097038832cb3b2d1f88b31e5",
+            "original_actor": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "black",
+              "role": "rook",
+              "square": "b8"
+            },
+            "original_victim": {
+              "position_id": "27a15326ee65d7118ced865c64fae39ef8e851b68859ab3704591a5a03468c9a",
+              "side": "white",
+              "role": "queen",
+              "square": "d1"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+              "piece": {
+                "position_id": "4d3aa9fb0749c64618b1960a461b42e0312b6e832af75f448b38828cb68137d4",
+                "side": "black",
+                "role": "rook",
+                "square": "d5"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:0024061ed233604c14eeef47d99682632575e2a9d0e213ed710e3fd195e47388",
+            "capture_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 7,
+              "capture_event_id": 8
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "capture_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 8,
+              "capture_event_id": 9
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "capture_event_id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551",
+            "elapsed_plies": 5,
+            "offsets": {
+              "loss_event_id": 9,
+              "capture_event_id": 14
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551",
+            "capture_event_id": "continuation-event:080fd2109729c383702058d135dcd701ec04acf62645380142a308fe80f9333b",
+            "elapsed_plies": 3,
+            "offsets": {
+              "loss_event_id": 14,
+              "capture_event_id": 17
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:ef721c82feb2e0951e9832be7d7b3dd4df8dbaf2f766a94af0668d85ae6dbbe1",
+            "gain_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "offsets": {
+              "loss_event_id": 5,
+              "gain_event_id": 8
+            }
+          }
+        ],
+        "recovery_losses": [
+          {
+            "loss_event_id": "continuation-event:0024061ed233604c14eeef47d99682632575e2a9d0e213ed710e3fd195e47388",
+            "recovery_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "later_loss_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "offsets": {
+              "loss_event_id": 7,
+              "recovery_event_id": 8,
+              "later_loss_event_id": 9
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "recovery_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "later_loss_event_id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551",
+            "offsets": {
+              "loss_event_id": 8,
+              "recovery_event_id": 9,
+              "later_loss_event_id": 14
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "recovery_event_id": "continuation-event:e88ecbc498eb5c451885eb0f088e0a98ca1e8812e3905bd5bb4d313a48712551",
+            "later_loss_event_id": "continuation-event:080fd2109729c383702058d135dcd701ec04acf62645380142a308fe80f9333b",
+            "offsets": {
+              "loss_event_id": 9,
+              "recovery_event_id": 14,
+              "later_loss_event_id": 17
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:ef721c82feb2e0951e9832be7d7b3dd4df8dbaf2f766a94af0668d85ae6dbbe1",
+            "recovery_event_id": "continuation-event:ae6a7133d5c6fc2e589c70cb548d8837fabf8fa9322f1dcf91a98995d8fe12e3",
+            "later_loss_event_id": "continuation-event:715074bc040b7b1ade61c0c770b6448720e10991704088542cb2e5e699812e60",
+            "offsets": {
+              "loss_event_id": 5,
+              "recovery_event_id": 8,
+              "later_loss_event_id": 9
+            }
+          }
+        ]
+      },
+      "position_checks": [
+        {
+          "prefix_count": 15,
+          "fen": "3r2k1/5pbp/R5pB/3Q3n/7P/5P2/5PK1/8 b - - 0 31",
+          "actor_square": "d8",
+          "target_square": "d5",
+          "actor_role": "rook",
+          "target_role": "queen",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 16,
+          "fen": "3r2k1/5pbp/R5pB/3Q4/5n1P/5P2/5PK1/8 w - - 1 32",
+          "actor_square": "f4",
+          "target_square": "d5",
+          "actor_role": "knight",
+          "target_role": "queen",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 16,
+          "fen": "3r2k1/5pbp/R5pB/3Q4/5n1P/5P2/5PK1/8 w - - 1 32",
+          "actor_square": "f4",
+          "target_square": "g2",
+          "actor_role": "knight",
+          "target_role": "king",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 17,
+          "fen": "3r2k1/5pbp/R5p1/3Q4/5B1P/5P2/5PK1/8 b - - 0 32",
+          "actor_square": "d8",
+          "target_square": "d5",
+          "actor_role": "rook",
+          "target_role": "queen",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 20,
+        "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:2986c802f363b8fae3b3965ea6ef0e1c7632d23a53d8b6af3d02432db3d3edfd"
+      }
+    },
+    {
+      "public_alias": "W16-11",
+      "failure": "Re1의 Rxe4 폰 획득과 룩 교환은 말하지만 먼저 dxc3로 잃는 c3 폰이 본문 가격에서 빠진다.",
+      "selected_anchor_offsets": [
+        0,
+        2,
+        5,
+        6
+      ],
+      "required_missing_offsets": [
+        1
+      ],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "cxd4와 Re1의 선택 차이, Re1 후 Rxe4와 그 수행 룩의 교환",
+        "source_statement_candidate": [
+          "Action(Re1, attack e4)",
+          "MaterialEvents at2/5/6 or Material containing these captured events"
+        ],
+        "typing_status": "공개 기본 단위의 가격 소유·정확 수 참조와 정적 생산 경로를 대조했다. 내부 Statement 덤프는 없다."
+      },
+      "ownership": {
+        "status": "같은 비교 대상과 최초 응수·반응으로 범위 정당화 가능; 새 구현 통과는 미검증",
+        "subjects": [
+          "black:pawn:d4",
+          "white:pawn:c3",
+          "white:rook:f1",
+          "black:rook:e8"
+        ],
+        "anchor": 0,
+        "price_start": 1,
+        "end": 6,
+        "price_offsets": [
+          1,
+          2,
+          5,
+          6
+        ],
+        "start_reason": "대안 cxd4는 같은 원래 c3 백 폰으로 원래 d4 흑 폰을 잡는다. Re1 쪽에서 그 동일 흑 폰이 dxc3로 동일 백 폰을 잡는 것이 선택의 최초 실제 응수이므로, 뒤 Rxe4 획득만 평가할 수 없다.",
+        "response_reason": "Re1이 e4를 실제 공격하고 Rxe4로 사용하며, 그 룩은 Rxe4(5)에 제거되고 dxe4(6)로 회복된다. Qb6+/Kh1은 그 포획 묶음 사이 실제 체크·응수이다.",
+        "end_reason": "원래 f1 룩의 제거와 그 흑 룩의 실제 회복 포획6에서 해당 룩 거래가 닫힌다.",
+        "not_claimed": [
+          "Qxa3(9)가 같은 중앙 교환의 필수 대가다",
+          "이 물질 회계만으로 평가 동등 또는 전략적 우열을 확정한다"
+        ],
+        "observed_price_ledger": {
+          "perspective": "white",
+          "event_deltas_cp": [
+            {
+              "offset": 1,
+              "delta_cp": -100
+            },
+            {
+              "offset": 2,
+              "delta_cp": 100
+            },
+            {
+              "offset": 5,
+              "delta_cp": -500
+            },
+            {
+              "offset": 6,
+              "delta_cp": 500
+            }
+          ],
+          "sum_delta_cp": 0,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false
+        }
+      },
+      "existing_relation_witnesses": [
+        "OtherTargetGain 1→2",
+        "CaptureLink 2→5 elapsed3 and5→6 elapsed1",
+        "RecoveryLoss 1→2→5 and2→5→6",
+        "reference root cxd4 has same original actor c3 pawn and victim d4 pawn as candidate dxc3 reversed"
+      ],
+      "blocking_conditions": [
+        "Rxe4(2)가 선택된 material에 있지만 현재 completeSelectedPrices의 seed가 되지 않으므로 first-response account가 열리지 않는다.",
+        "Arm.account 593–599에는 실제 최초 reply1과 root counter2를 함께 남기는 처리 자체가 이미 있다. 신규 범용 교환 그래프를 만들 필요는 없다."
+      ],
+      "negative_scope": "같은 white d3 pawn이 dxe4 뒤 전진한다는 이유로 뒤 Qxa3의 별도 a3 폰 손실까지 같은 central account에 넣지 않는다. 본문이 따로 택한 그 주장에는 별도 소유 범위를 적용한다.",
+      "minimum_candidate": "루트 공격의 실제 첫 사용 Rxe4를 원래 선택 Action과 연결하여 existing first reply/counter account를 전달 경계에서 사용한다.",
+      "game_id": "wch2016-11",
+      "arm": "candidate",
+      "request_id": "fresh-wch2016-11-47",
+      "comparison_id": "comparison:move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:candidate-comparison:2b014a7aec6b1a5a2faeba7fd985d647551e9f817ebc501b1115d1136dac7732",
+      "path_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-11-obligation-facts.json",
+      "source_facts_file_sha256": "79407f5a3e575adda27536e322563a40f7cdbfb66e86ae2cb7c69574712f30d9",
+      "published_facts_canonical_sha256": "79407f5a3e575adda27536e322563a40f7cdbfb66e86ae2cb7c69574712f30d9",
+      "published_snapshot_canonical_sha256": "f31f10b8753c9701f73f3f923734d8bde24bed004327cffb95d6d64d99e40856",
+      "original_product_state": {
+        "assessment_state": "current",
+        "verification": {
+          "state": "complete",
+          "target_depth": 17,
+          "reason": "child_challenge",
+          "trigger_work_ids": [
+            "work:3"
+          ],
+          "completed_depth": 17,
+          "stop_reason": null
+        },
+        "basic_length": 974,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            2,
+            5,
+            6,
+            9
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6,
+            8,
+            9,
+            18
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6,
+            8,
+            9,
+            18
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 1,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [],
+          "required_offsets_on_audited_path": [],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [
+        {
+          "game_id": "wch2016-11",
+          "arm": "candidate",
+          "source_index": 1,
+          "san": "dxc3",
+          "uci": "d4c3",
+          "original_victim": "True:pawn:c3",
+          "original_capturer": "False:pawn:d4",
+          "reference": {
+            "line_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff",
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        }
+      ],
+      "exact_step_evidence": [
+        {
+          "offset": 0,
+          "san": "Re1",
+          "uci": "f1e1",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:726ed3b718d5e59b3b84c803064b694d43fa0f72a9972c73a2fb5221aa829750",
+          "original_actor": "True:rook:f1",
+          "original_victim": null,
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 1,
+          "san": "dxc3",
+          "uci": "d4c3",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8",
+          "original_actor": "False:pawn:d4",
+          "original_victim": "True:pawn:c3",
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "material_event": {
+            "ply_offset": 1,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8",
+            "move_uci": "d4c3",
+            "side": "black",
+            "from": "d4",
+            "to": "c3",
+            "before_role": "pawn",
+            "after_role": "pawn",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "c3",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:6a62127de4ddb8b3d25cbd9c87aa52ba9d9044aaf0e61e03603e45a90da1f639",
+            "ply_offset": 1,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8",
+            "source_id": "a3307f32803f11db05236c9560070fe845b294bbd5ef3aa680c0377914943cc4",
+            "original_actor": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "black",
+              "role": "pawn",
+              "square": "d4"
+            },
+            "original_victim": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "white",
+              "role": "pawn",
+              "square": "c3"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+              "piece": {
+                "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+                "side": "black",
+                "role": "pawn",
+                "square": "c3"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 2,
+          "san": "Rxe4",
+          "uci": "e1e4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:e18a9c47e4f80f63eabf51f2300de24f073586208662e6d9565fbf2455e99863",
+          "original_actor": "True:rook:f1",
+          "original_victim": "False:pawn:e4",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 2,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:e18a9c47e4f80f63eabf51f2300de24f073586208662e6d9565fbf2455e99863",
+            "move_uci": "e1e4",
+            "side": "white",
+            "from": "e1",
+            "to": "e4",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": 100,
+            "balance_cp": 0,
+            "capture": {
+              "role": "pawn",
+              "square": "e4",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:b24dec22ea8f9bb34b33a395f36759e5c8897d144cfb8935a0fd8477978bc8fa",
+            "ply_offset": 2,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:e18a9c47e4f80f63eabf51f2300de24f073586208662e6d9565fbf2455e99863",
+            "source_id": "cb99d4242f8bcccbb20be9885189241ae728392d9065a734b827476f16bc87d7",
+            "original_actor": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "white",
+              "role": "rook",
+              "square": "f1"
+            },
+            "original_victim": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "black",
+              "role": "pawn",
+              "square": "e4"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf"
+            }
+          }
+        },
+        {
+          "offset": 3,
+          "san": "Qb6+",
+          "uci": "e6b6",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:6dc04f2d1afd70617059582282fc3ba185bd1e333877043d1f94698f0537b5ab",
+          "original_actor": "False:queen:e6",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 4,
+          "san": "Kh1",
+          "uci": "g1h1",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:0d59bd9b09a10a10ad9202accdd746813f22306d306daf1a22b582f80d1c24c2",
+          "original_actor": "True:king:g1",
+          "original_victim": null,
+          "role_before": "king",
+          "role_after": "king",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 5,
+          "san": "Rxe4",
+          "uci": "e8e4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:124d11f88009c71487d5db42e4aab62098f146ffd043c96ce164bc79153a0da6",
+          "original_actor": "False:rook:e8",
+          "original_victim": "True:rook:f1",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 5,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:124d11f88009c71487d5db42e4aab62098f146ffd043c96ce164bc79153a0da6",
+            "move_uci": "e8e4",
+            "side": "black",
+            "from": "e8",
+            "to": "e4",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": -500,
+            "balance_cp": -500,
+            "capture": {
+              "role": "rook",
+              "square": "e4",
+              "value_cp": 500,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf",
+            "ply_offset": 5,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:124d11f88009c71487d5db42e4aab62098f146ffd043c96ce164bc79153a0da6",
+            "source_id": "c3cbf11d2f91768688498e46c0998dab2c9c06259f7c73ba4eaa5e3dbb77e0f6",
+            "original_actor": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "black",
+              "role": "rook",
+              "square": "e8"
+            },
+            "original_victim": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "white",
+              "role": "rook",
+              "square": "f1"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:d30e4b166fac6548ec90faff7cf190de84301d29109b0a2fc7df71545f098d15"
+            }
+          }
+        },
+        {
+          "offset": 6,
+          "san": "dxe4",
+          "uci": "d3e4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:c6af882432f5218ce7ddd524574f907a2d711de9aa21ef1acadc9861b0bfcd73",
+          "original_actor": "True:pawn:d3",
+          "original_victim": "False:rook:e8",
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "material_event": {
+            "ply_offset": 6,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:c6af882432f5218ce7ddd524574f907a2d711de9aa21ef1acadc9861b0bfcd73",
+            "move_uci": "d3e4",
+            "side": "white",
+            "from": "d3",
+            "to": "e4",
+            "before_role": "pawn",
+            "after_role": "pawn",
+            "promotion_gain_cp": 0,
+            "delta_cp": 500,
+            "balance_cp": 0,
+            "capture": {
+              "role": "rook",
+              "square": "e4",
+              "value_cp": 500,
+              "recapture": "proven"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:d30e4b166fac6548ec90faff7cf190de84301d29109b0a2fc7df71545f098d15",
+            "ply_offset": 6,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:c6af882432f5218ce7ddd524574f907a2d711de9aa21ef1acadc9861b0bfcd73",
+            "source_id": "2711f1a35323b097d147fa49d40e46950a54b5f8c3b43efa0b11d21364a2fb97",
+            "original_actor": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "white",
+              "role": "pawn",
+              "square": "d3"
+            },
+            "original_victim": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "black",
+              "role": "rook",
+              "square": "e8"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+              "piece": {
+                "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+                "side": "white",
+                "role": "pawn",
+                "square": "e6"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 9,
+          "san": "Qxa3",
+          "uci": "d6a3",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:ebb1a8cc805a67fda2ab06e6089537bdeacf13e1dc46a7943bec4320814438ee",
+          "original_actor": "False:queen:e6",
+          "original_victim": "True:pawn:a3",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 9,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:ebb1a8cc805a67fda2ab06e6089537bdeacf13e1dc46a7943bec4320814438ee",
+            "move_uci": "d6a3",
+            "side": "black",
+            "from": "d6",
+            "to": "a3",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "a3",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:79e90eb80e03b6fb6a020aef7508a429f59a5284a4e12ac8330f619c7b2983b8",
+            "ply_offset": 9,
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:ebb1a8cc805a67fda2ab06e6089537bdeacf13e1dc46a7943bec4320814438ee",
+            "source_id": "634c366ca85e46bb4c3301b9eb6aaefd1f31b34850c3dcc68bc0f0d19bb47cfd",
+            "original_actor": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "black",
+              "role": "queen",
+              "square": "e6"
+            },
+            "original_victim": {
+              "position_id": "efc6ea6516832a83f9dd67feb56b10dce28a0eb3d0a9e8aeb0f5ad31e7d510c0",
+              "side": "white",
+              "role": "pawn",
+              "square": "a3"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+              "piece": {
+                "position_id": "2c309569f3799f3ec5440f3421928c3e5dc1c12750f10dcfe677f8e0d3ce1f91",
+                "side": "black",
+                "role": "queen",
+                "square": "d4"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:b24dec22ea8f9bb34b33a395f36759e5c8897d144cfb8935a0fd8477978bc8fa",
+            "capture_event_id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf",
+            "elapsed_plies": 3,
+            "offsets": {
+              "loss_event_id": 2,
+              "capture_event_id": 5
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf",
+            "capture_event_id": "continuation-event:d30e4b166fac6548ec90faff7cf190de84301d29109b0a2fc7df71545f098d15",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 5,
+              "capture_event_id": 6
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:6a62127de4ddb8b3d25cbd9c87aa52ba9d9044aaf0e61e03603e45a90da1f639",
+            "gain_event_id": "continuation-event:b24dec22ea8f9bb34b33a395f36759e5c8897d144cfb8935a0fd8477978bc8fa",
+            "offsets": {
+              "loss_event_id": 1,
+              "gain_event_id": 2
+            }
+          }
+        ],
+        "recovery_losses": [
+          {
+            "loss_event_id": "continuation-event:b24dec22ea8f9bb34b33a395f36759e5c8897d144cfb8935a0fd8477978bc8fa",
+            "recovery_event_id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf",
+            "later_loss_event_id": "continuation-event:d30e4b166fac6548ec90faff7cf190de84301d29109b0a2fc7df71545f098d15",
+            "offsets": {
+              "loss_event_id": 2,
+              "recovery_event_id": 5,
+              "later_loss_event_id": 6
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:6a62127de4ddb8b3d25cbd9c87aa52ba9d9044aaf0e61e03603e45a90da1f639",
+            "recovery_event_id": "continuation-event:b24dec22ea8f9bb34b33a395f36759e5c8897d144cfb8935a0fd8477978bc8fa",
+            "later_loss_event_id": "continuation-event:5d58654b8d37b768c873d02e92e497bd41a4f4b41eaf9cfa389ee50bf0486fbf",
+            "offsets": {
+              "loss_event_id": 1,
+              "recovery_event_id": 2,
+              "later_loss_event_id": 5
+            }
+          }
+        ]
+      },
+      "position_checks": [
+        {
+          "prefix_count": 1,
+          "fen": "4r1k1/6pp/p3q3/1p4Q1/3pp3/P1PP3P/2P3P1/4R1K1 b - - 1 24",
+          "actor_square": "d4",
+          "target_square": "c3",
+          "actor_role": "pawn",
+          "target_role": "pawn",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 2,
+          "fen": "4r1k1/6pp/p3q3/1p4Q1/4p3/P1pP3P/2P3P1/4R1K1 w - - 0 25",
+          "actor_square": "e1",
+          "target_square": "e4",
+          "actor_role": "rook",
+          "target_role": "pawn",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 18,
+        "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:c46fe6546a877a4a7004df277ddb21c33f7698593c859821b00ea2f1f72880b8"
+      },
+      "reference_root_contrast": {
+        "path_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:6f3370ad58c9fa9e9139aab7ba84e399ed1e35b5ee97fbe528a0e69e4fcc4d66",
+        "step0": {
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:f0a4b712ccb51b5897ed61b8230697d81e2dd1d5845606129fce46d8cdf398ee",
+          "uci": "c3d4",
+          "san": "cxd4",
+          "fen_after": "4r1k1/6pp/p3q3/1p4Q1/3Pp3/P2P3P/2P3P1/5RK1 b - - 0 24",
+          "mover_path_start_identity": "True:pawn:c3",
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "captured_path_start_identity": "False:pawn:d4"
+        }
+      }
+    },
+    {
+      "public_alias": "C18-09",
+      "failure": "Qa3의 b2 지원과 Qxa7의 a7 폰 획득을 선택했지만, 같은 b2 폰의 Qxb2 손실이 본문에서 빠진다.",
+      "selected_anchor_offsets": [
+        16,
+        18
+      ],
+      "required_missing_offsets": [
+        19
+      ],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "Qa3의 같은 b2 폰 지원 기능과 이후 Qxa7에서 사용하는 퀸 기동",
+        "source_statement_candidate": [
+          "Action(Qa3 at16, Detail.Support(Qa3, Pb2, opposition))",
+          "MaterialEvents Qxa7 at18"
+        ],
+        "typing_status": "지원·획득은 공개 기본 영어와 정확 ref에서 확인했으나 내부 Action 인스턴스는 덤프하지 않았다. 생산 경로의 후보 타입이다."
+      },
+      "ownership": {
+        "status": "기존 선택 지원 대상·실제 지원 종료·포획으로 범위 정당화 가능; 새 구현 통과는 미검증",
+        "subjects": [
+          "white:queen:d4",
+          "white:pawn:b2",
+          "black:queen:e7"
+        ],
+        "anchor": 16,
+        "price_start": 18,
+        "end": 19,
+        "price_offsets": [
+          18,
+          19
+        ],
+        "start_reason": "본문이 택한 지원 역할의 시작은 루트가 아니라 실제 Qa3(16)이다. 지원 대상은 원래 b2 폰으로 고정한다.",
+        "response_reason": "같은 백 퀸은 Qa3 후 Rxd5(17) 응수까지 b2를 지원하다 Qxa7(18)로 지원을 끝낸다. 동일 흑 퀸의 b2 공격과 대상의 신원·위치는 유지되고 실제 Qxb2(19)가 뒤따른다.",
+        "end_reason": "선택된 a7 폰 획득과 지원하던 b2 폰의 실제 손실을 서로 다른 칸의 가격으로 함께 전달하면 해당 국소 주장에 필요한 폰 대가가 닫힌다.",
+        "not_claimed": [
+          "지원 전에는 Qxb2가 합법적이지 않았다",
+          "Qa3가 b2를 모든 응수에서 지켰다",
+          "Qd3 선택의 평가차 원인을 이 폰 교환만으로 설명했다"
+        ],
+        "observed_price_ledger": {
+          "perspective": "white",
+          "event_deltas_cp": [
+            {
+              "offset": 18,
+              "delta_cp": 100
+            },
+            {
+              "offset": 19,
+              "delta_cp": -100
+            }
+          ],
+          "sum_delta_cp": 0,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false
+        }
+      },
+      "existing_relation_witnesses": [
+        "same original provider white Qd4 and target white Pb2 via PreparedPaths",
+        "supports at prefixes17/18, support absent at19; enemy Qe7 currentlye5 legal b2 capture at19",
+        "OtherTargetGain 15→18 exists but is previous e4 pawn bookkeeping; no18→19 link",
+        "ActorEnd of white queen is present, so captured-actor-only logic cannot recover b2 price"
+      ],
+      "blocking_conditions": [
+        "selected support16 is excluded by move.offset==0/root(move) (3110–3170).",
+        "targetPrices requires provider support state constant1..loss and attacker covers0..loss (3188–3195); simply permitting nonzero anchors while retaining global/root checks still rejects this actual support-ending story.",
+        "selected gain18 remains previous(false), so missing target19 is not inserted."
+      ],
+      "negative_scope": "Rxd5(17)는 원래 c3 폰을 잡는 별도 손실이다. 지원 대상 b2와 다른 물리적 대상이므로 앞뒤 시간 인접만으로 local18–19 가격에 포함하지 않는다.",
+      "minimum_candidate": "지원 관계가 변한 실제 selected action까지 유효기간을 추적하고, 같은 지원 대상의 관측 손실을 선택한 지원 주장의 귀결로 보완한다. 지원 종료 후의 전 수순이나 모든 폰 손실을 따라가지 않는다.",
+      "game_id": "candidates2018-09",
+      "arm": "reference",
+      "request_id": "fresh-candidates2018-09-31",
+      "comparison_id": "comparison:move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:candidate-comparison:7e5c9d763a632c4780a75fe3231a06b6071bcaf9d51c66ebc9bf973e06050ca9",
+      "path_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-09-obligation-facts.json",
+      "source_facts_file_sha256": "458e18624ac9efdcae3a3fe9fb5ab1043a6105c83588a8393f8e64581757aa11",
+      "published_facts_canonical_sha256": "458e18624ac9efdcae3a3fe9fb5ab1043a6105c83588a8393f8e64581757aa11",
+      "published_snapshot_canonical_sha256": "1863fd9bd2b22ef702d959e07c321382994a7b1bae73df5a9be73fc0e2540e0a",
+      "original_product_state": {
+        "assessment_state": "needs_refresh",
+        "verification": {
+          "state": "stopped",
+          "target_depth": 33,
+          "reason": "child_challenge",
+          "trigger_work_ids": [
+            "work:3"
+          ],
+          "completed_depth": 16,
+          "stop_reason": "search_budget_exhausted"
+        },
+        "basic_length": 2121,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            18
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            15,
+            16,
+            18,
+            21,
+            25
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            15,
+            16,
+            18,
+            21,
+            25
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 1,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            15
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            15
+          ],
+          "required_offsets_on_audited_path": [
+            15
+          ],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [
+        {
+          "game_id": "candidates2018-09",
+          "arm": "reference",
+          "source_index": 19,
+          "san": "Qxb2",
+          "uci": "e5b2",
+          "original_victim": "True:pawn:b2",
+          "original_capturer": "False:queen:e7",
+          "reference": {
+            "line_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        }
+      ],
+      "exact_step_evidence": [
+        {
+          "offset": 15,
+          "san": "fxe4",
+          "uci": "f5e4",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:8728c8779841faeb64fd80db4492b159c0891be1cc712d2cebec5526677b931b",
+          "original_actor": "False:pawn:f7",
+          "original_victim": "True:pawn:e4",
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "material_event": {
+            "ply_offset": 15,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:8728c8779841faeb64fd80db4492b159c0891be1cc712d2cebec5526677b931b",
+            "move_uci": "f5e4",
+            "side": "black",
+            "from": "f5",
+            "to": "e4",
+            "before_role": "pawn",
+            "after_role": "pawn",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "e4",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:276387d31d28ff66dc58c19a7eb1586df7f105df3534e58b99adda4898f7aaee",
+            "ply_offset": 15,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:8728c8779841faeb64fd80db4492b159c0891be1cc712d2cebec5526677b931b",
+            "source_id": "e95bb1e33eb50662a715a3a509e53037e32dda9c18636c26f8cd927d503efa35",
+            "original_actor": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "black",
+              "role": "pawn",
+              "square": "f7"
+            },
+            "original_victim": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "white",
+              "role": "pawn",
+              "square": "e4"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+              "piece": {
+                "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+                "side": "black",
+                "role": "pawn",
+                "square": "e4"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 16,
+          "san": "Qa3",
+          "uci": "d3a3",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:ff8f63ccca9c2d3ac4fba715b6979a778a2a6b4a6e5cc1ecb59b6a61d8350441",
+          "original_actor": "True:queen:d4",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 17,
+          "san": "Rxd5",
+          "uci": "d8d5",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:cc7f21644a17f5e86709278bd288224d122d4eb51ee3e4bf829d03e5b85225f5",
+          "original_actor": "False:rook:a8",
+          "original_victim": "True:pawn:c3",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 17,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:cc7f21644a17f5e86709278bd288224d122d4eb51ee3e4bf829d03e5b85225f5",
+            "move_uci": "d8d5",
+            "side": "black",
+            "from": "d8",
+            "to": "d5",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -200,
+            "capture": {
+              "role": "pawn",
+              "square": "d5",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:7c14b9ec09014412ee7e2cac301b0e2757714d8879127817de4dab73df5fb122",
+            "ply_offset": 17,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:cc7f21644a17f5e86709278bd288224d122d4eb51ee3e4bf829d03e5b85225f5",
+            "source_id": "e67c19ed09cc27885d5b9418a7985a725e8f89c0315df3907e82840b35392cb3",
+            "original_actor": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "black",
+              "role": "rook",
+              "square": "a8"
+            },
+            "original_victim": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "white",
+              "role": "pawn",
+              "square": "c3"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+              "piece": {
+                "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+                "side": "black",
+                "role": "rook",
+                "square": "d5"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 18,
+          "san": "Qxa7",
+          "uci": "a3a7",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:f5d2bcce302fdd0c96bffcd851f398ab91544eddafc62949df3acb1cf57f6689",
+          "original_actor": "True:queen:d4",
+          "original_victim": "False:pawn:a7",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 18,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:f5d2bcce302fdd0c96bffcd851f398ab91544eddafc62949df3acb1cf57f6689",
+            "move_uci": "a3a7",
+            "side": "white",
+            "from": "a3",
+            "to": "a7",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": 100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "a7",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:3f8f338c5f7a7eec7dc56d91840a8c3be0425eee2c3ad14c6dbaac70225ec61e",
+            "ply_offset": 18,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:f5d2bcce302fdd0c96bffcd851f398ab91544eddafc62949df3acb1cf57f6689",
+            "source_id": "ef016bad7d3db57d1527af8c4035a1a55f58cb9a37f87a4d412e2f76632880ea",
+            "original_actor": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "white",
+              "role": "queen",
+              "square": "d4"
+            },
+            "original_victim": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "black",
+              "role": "pawn",
+              "square": "a7"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+              "piece": {
+                "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+                "side": "white",
+                "role": "queen",
+                "square": "a3"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 19,
+          "san": "Qxb2",
+          "uci": "e5b2",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e",
+          "original_actor": "False:queen:e7",
+          "original_victim": "True:pawn:b2",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 19,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e",
+            "move_uci": "e5b2",
+            "side": "black",
+            "from": "e5",
+            "to": "b2",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -200,
+            "capture": {
+              "role": "pawn",
+              "square": "b2",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:d1940e14e28f43468a8f2492fa7910f756de693f50cb3a14d36708d6f427611c",
+            "ply_offset": 19,
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e",
+            "source_id": "b696efd140aa7a65c38a516743ae82ebfdddb725975271a1061e45e098cd832e",
+            "original_actor": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "black",
+              "role": "queen",
+              "square": "e7"
+            },
+            "original_victim": {
+              "position_id": "36084d6f46b3aa54b4b8d66e51f85929c2f09d8600e4bc57dced5b76298e623b",
+              "side": "white",
+              "role": "pawn",
+              "square": "b2"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+              "piece": {
+                "position_id": "6fdc9c20686a37961ad771b2f3e4c35dbcadf1968289e4452d0e62b5eb50527d",
+                "side": "black",
+                "role": "queen",
+                "square": "c6"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:3ed238a1df73472b346d5e20d0abc9f670f245d9194ad4c0c7596d1ab64800de",
+            "capture_event_id": "continuation-event:e7abb4bc40f020ceec9fdf7e916de12c2112c52a96123d353bd1a932bdf0cdb2",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 11,
+              "capture_event_id": 12
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:e7abb4bc40f020ceec9fdf7e916de12c2112c52a96123d353bd1a932bdf0cdb2",
+            "capture_event_id": "continuation-event:7c14b9ec09014412ee7e2cac301b0e2757714d8879127817de4dab73df5fb122",
+            "elapsed_plies": 5,
+            "offsets": {
+              "loss_event_id": 12,
+              "capture_event_id": 17
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:276387d31d28ff66dc58c19a7eb1586df7f105df3534e58b99adda4898f7aaee",
+            "gain_event_id": "continuation-event:3f8f338c5f7a7eec7dc56d91840a8c3be0425eee2c3ad14c6dbaac70225ec61e",
+            "offsets": {
+              "loss_event_id": 15,
+              "gain_event_id": 18
+            }
+          }
+        ],
+        "recovery_losses": [
+          {
+            "loss_event_id": "continuation-event:3ed238a1df73472b346d5e20d0abc9f670f245d9194ad4c0c7596d1ab64800de",
+            "recovery_event_id": "continuation-event:e7abb4bc40f020ceec9fdf7e916de12c2112c52a96123d353bd1a932bdf0cdb2",
+            "later_loss_event_id": "continuation-event:7c14b9ec09014412ee7e2cac301b0e2757714d8879127817de4dab73df5fb122",
+            "offsets": {
+              "loss_event_id": 11,
+              "recovery_event_id": 12,
+              "later_loss_event_id": 17
+            }
+          }
+        ]
+      },
+      "position_checks": [
+        {
+          "prefix_count": 17,
+          "fen": "2krr3/ppp4p/8/2pPq1Bn/4p1pP/Q5P1/PP3P1K/R3R3 b - - 1 24",
+          "actor_square": "a3",
+          "target_square": "b2",
+          "actor_role": "queen",
+          "target_role": "pawn",
+          "friendly_support": true,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 18,
+          "fen": "2k1r3/ppp4p/8/2prq1Bn/4p1pP/Q5P1/PP3P1K/R3R3 w - - 0 25",
+          "actor_square": "a3",
+          "target_square": "b2",
+          "actor_role": "queen",
+          "target_role": "pawn",
+          "friendly_support": true,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 19,
+          "fen": "2k1r3/Qpp4p/8/2prq1Bn/4p1pP/6P1/PP3P1K/R3R3 b - - 0 25",
+          "actor_square": "a7",
+          "target_square": "b2",
+          "actor_role": "queen",
+          "target_role": "pawn",
+          "friendly_support": true,
+          "geometric_control": false,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 19,
+          "fen": "2k1r3/Qpp4p/8/2prq1Bn/4p1pP/6P1/PP3P1K/R3R3 b - - 0 25",
+          "actor_square": "e5",
+          "target_square": "b2",
+          "actor_role": "queen",
+          "target_role": "pawn",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 25,
+        "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:6f04322eb1d55a76588f2e4569c58f3be6544423bfd035d9173bdb70e5afc953"
+      }
+    },
+    {
+      "public_alias": "C18-10",
+      "failure": "현재 기본 가격이 Qxc5의 흑 나이트 획득을 말하지만 그 직전 Raxb8로 백 나이트가 잡힌 상대 가격을 담지 않는다.",
+      "selected_anchor_offsets": [
+        15
+      ],
+      "required_missing_offsets": [
+        14
+      ],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "Bxf4 수순에 선택된 Qxc5 실제 포획 사실",
+        "source_statement_candidate": [
+          "MaterialEvents(reference, capture15), alongside selected root Bxf4 capture0",
+          "Action(Qxc5, target b5/end former pawn attack) from separate selected history"
+        ],
+        "typing_status": "공개 basic cost 단위는 Bxf4/Qxc5 두 포획을 담는다. 원래 기본 질문이 흑 c5 나이트의 회피/교환을 소유한 TargetResponse라고 확인할 payload는 없다. Qc7→Ne5의 나이트 대응 본문은 다른 exf4 경로이다."
+      },
+      "ownership": {
+        "status": "관측된 국소 반포획 가격의 관계 후보는 확인 가능; 현재 루트 질문으로의 자동 귀속은 미해결",
+        "subjects": [
+          "white:queen:b4",
+          "black:knight:d7",
+          "white:knight:c6",
+          "black:rook:a8"
+        ],
+        "conditional_anchor": 15,
+        "price_start_if_local_capture_claim_owned": 14,
+        "end_if_local_capture_claim_owned": 15,
+        "price_offsets_if_owned": [
+          14,
+          15
+        ],
+        "start_reason": "Qxd6 이후 동일 백 Qd6가 원래 흑 Nd7/currentc5를 공격한다. 흑은 그 대상이 공격받은 상태에서 원래 Ra8로 별도 원래 백 Nc6/currentb8를 잡는다(Raxb8). 흑 나이트와 백 퀸의 물리적 신원·위치 및 들어오는 공격이 그 선택을 지나 유지된다.",
+        "response_reason": "그 실제 흑 선택 다음 동일 퀸이 실제 Qxc5로 공격받던 동일 나이트를 잡는다. 단지 반대 부호의 인접 두 포획이 아니라 지속하는 특정 피공격 대상 + 다른 대상 포획 선택 + 실제 대응 사용이라는 후보 관계이다.",
+        "end_reason": "국소 Qxc5 가격을 소유한 경우에는 두 나이트의 실제 교환14–15를 답할 수 있다. 그 뒤 bxa4/Qb5/퀸 교환은 새 대상·행동이므로 이 나이트 가격의 끝으로 삼지 않는다.",
+        "required_missing_ownership_evidence": "현재 originally selected root comparison이 왜 이 c5 나이트의 국소 가격을 기본 핵심으로 택했는지 질문/claim owner가 명시돼 있지 않다. MaterialEvents15가 선택되었다는 사실만으로 Bxf4의 필수 대가, 회피 실패, 강제 교환을 증명할 수 없다.",
+        "not_claimed": [
+          "Raxb8 때문에 Qxc5가 새로 가능해졌다",
+          "흑은 Raxb8 외 응수가 없었다",
+          "Bxf4가 두 나이트 교환을 강제했다",
+          "global OtherTargetGain가 local14→15를 증명했다"
+        ],
+        "observed_price_ledger": {
+          "perspective": "black",
+          "event_deltas_cp": [
+            {
+              "offset": 14,
+              "delta_cp": 300
+            },
+            {
+              "offset": 15,
+              "delta_cp": -300
+            }
+          ],
+          "sum_delta_cp": 0,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false
+        }
+      },
+      "existing_relation_witnesses": [
+        "no CaptureLink14→15: distinct capturers/victims",
+        "global OtherTargetGain is0→13,0→15,0→19; local14→15 absent",
+        "CaptureLinks13→20,15→20,19→20 share same white queen later removed20",
+        "actual Raxb8 legal atprefix14; same white Qd6→black Nc5 control at14/15; actual Qxc5 legal at15"
+      ],
+      "blocking_conditions": [
+        "Qxc5 is previous selected material, not root action/support/fork seed, hence no new account.",
+        "OtherTargetGain producer anchors earliest open negative ledger interval at root Bxf4(0), so it does not provide the local white-knight-loss14→black-knight-gain15 relation. Requiring that link alone would incorrectly exclude an observed knight exchange.",
+        "Calling Arm.account on every selected MaterialEvents with focus=original capturer would follow white queen through later Qxb5/axb5 to20, mixing independent targets."
+      ],
+      "negative_scope": "13/15/19 all have same-capturer CaptureLink to20 but their different targets/queen routes do not make one causal price episode. Alternative exf4 line Bxg6/hxg6 is not narrated as a selected basic gain and is not charged as a missing basic price in this audit.",
+      "minimum_candidate": "First specify whether currently selected MaterialEvents15 owns an observed local capture/reply price. If yes, use persistent incoming-target attack and actual other-target countercapture as bounded14–15 candidate; if not, preserve unresolved status or move unowned later gain to detail instead of pretending an initial Bxf4 cost.",
+      "game_id": "candidates2018-10",
+      "arm": "reference",
+      "request_id": "fresh-candidates2018-10-48",
+      "comparison_id": "comparison:move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:candidate-comparison:5af58618b5a5be4841f3ebfef4174a519db38a6a004e9024abddd24e6d2cdfc0",
+      "path_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-10-obligation-facts.json",
+      "source_facts_file_sha256": "33e125e38d11e716fed60d9052ced53becd92d5eaa7581c21c78bbc0d7f1115c",
+      "published_facts_canonical_sha256": "33e125e38d11e716fed60d9052ced53becd92d5eaa7581c21c78bbc0d7f1115c",
+      "published_snapshot_canonical_sha256": "cf9db84ec8658728af1b5d067aeb0afe16218f29cf904f888ed5b2ebe9a5de3d",
+      "original_product_state": {
+        "assessment_state": "current",
+        "verification": {
+          "state": "complete",
+          "target_depth": 16,
+          "reason": "initial_verification",
+          "trigger_work_ids": [],
+          "completed_depth": 16,
+          "stop_reason": null
+        },
+        "basic_length": 3111,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "reply",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            15,
+            16,
+            20,
+            23
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5,
+            15,
+            16,
+            20,
+            23
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 1,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            16,
+            19,
+            20
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            16,
+            19,
+            20
+          ],
+          "required_offsets_on_audited_path": [
+            16,
+            19,
+            20
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 2,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            0,
+            15
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            15
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            15
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 3,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [],
+          "required_offsets_on_audited_path": [],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 4,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [],
+          "required_offsets_on_audited_path": [],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [
+        {
+          "game_id": "candidates2018-10",
+          "arm": "reference",
+          "source_index": 14,
+          "san": "Raxb8",
+          "uci": "a8b8",
+          "original_victim": "True:knight:c6",
+          "original_capturer": "False:rook:a8",
+          "reference": {
+            "line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100",
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        }
+      ],
+      "exact_step_evidence": [
+        {
+          "offset": 5,
+          "san": "Qc7",
+          "uci": "a5c7",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:d32c303cfaf743f87461cfd0719cbf7ecc1157c5cdc81fbf0d375cdeb021ad99",
+          "original_actor": "True:queen:b4",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 6,
+          "san": "Nc5",
+          "uci": "d7c5",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:f8d241facb191ec00da2fbbf6a161cac5598c85f331067c82727a023b06c94f9",
+          "original_actor": "False:knight:d7",
+          "original_victim": null,
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 11,
+          "san": "Nb8",
+          "uci": "c6b8",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:13a8a7d5502f8f018c2bcfd0fcc9e8b535e2b8e187f9fd3526a4845622ce8aba",
+          "original_actor": "True:knight:c6",
+          "original_victim": null,
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 12,
+          "san": "Rf8",
+          "uci": "f6f8",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:8d31b6425c1c2bc719457ad84de4c5a124505a197ae0235d61769c68968e2f9b",
+          "original_actor": "False:rook:f6",
+          "original_victim": null,
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 13,
+          "san": "Qxd6",
+          "uci": "c7d6",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:da29030a809dafebc5a12d61cb8392a3421ed9a7d3aa2b786f522b781dcd59ee",
+          "original_actor": "True:queen:b4",
+          "original_victim": "False:pawn:d6",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 13,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:da29030a809dafebc5a12d61cb8392a3421ed9a7d3aa2b786f522b781dcd59ee",
+            "move_uci": "c7d6",
+            "side": "white",
+            "from": "c7",
+            "to": "d6",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": 200,
+            "capture": {
+              "role": "pawn",
+              "square": "d6",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:df132467e7d7c77cd81abd4c36c1beb9c82c71c3f66675fd5aae9db822a84dcf",
+            "ply_offset": 13,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:da29030a809dafebc5a12d61cb8392a3421ed9a7d3aa2b786f522b781dcd59ee",
+            "source_id": "ea9735a58286d6f88118ae82ae752d35392e6a60b21ce90312739e4992d3fc13",
+            "original_actor": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "white",
+              "role": "queen",
+              "square": "b4"
+            },
+            "original_victim": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "black",
+              "role": "pawn",
+              "square": "d6"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e"
+            }
+          }
+        },
+        {
+          "offset": 14,
+          "san": "Raxb8",
+          "uci": "a8b8",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c",
+          "original_actor": "False:rook:a8",
+          "original_victim": "True:knight:c6",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 14,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c",
+            "move_uci": "a8b8",
+            "side": "black",
+            "from": "a8",
+            "to": "b8",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": 300,
+            "balance_cp": 500,
+            "capture": {
+              "role": "knight",
+              "square": "b8",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:d741fbe6bdae5eebb2dec4b969a6b9079aeadffba3cd59faa83afca5f7082718",
+            "ply_offset": 14,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c",
+            "source_id": "0260f1e6b2d8d4d9e588b31bff3a015025b77b6acee0a5097ed08c9bb1f5304f",
+            "original_actor": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "black",
+              "role": "rook",
+              "square": "a8"
+            },
+            "original_victim": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "white",
+              "role": "knight",
+              "square": "c6"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+              "piece": {
+                "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+                "side": "black",
+                "role": "rook",
+                "square": "b8"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 15,
+          "san": "Qxc5",
+          "uci": "d6c5",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd",
+          "original_actor": "True:queen:b4",
+          "original_victim": "False:knight:d7",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 15,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd",
+            "move_uci": "d6c5",
+            "side": "white",
+            "from": "d6",
+            "to": "c5",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -300,
+            "balance_cp": 200,
+            "capture": {
+              "role": "knight",
+              "square": "c5",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:b9c9a46a19e3a73ed437939e3d1f40bc2c98d61d4a0f7ccda911c94d4cc25df5",
+            "ply_offset": 15,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd",
+            "source_id": "e3dde3aa9603fe812abfde65967a9126759c068da4a2a4a268ad93c96ad8eb49",
+            "original_actor": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "white",
+              "role": "queen",
+              "square": "b4"
+            },
+            "original_victim": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "black",
+              "role": "knight",
+              "square": "d7"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e"
+            }
+          }
+        },
+        {
+          "offset": 18,
+          "san": "Qb5",
+          "uci": "e2b5",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:8129adfef3e97766a5d4e8f8fa2557b1bd3cd29317cdc29ded64cb80936cc293",
+          "original_actor": "False:queen:e2",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 19,
+          "san": "Qxb5",
+          "uci": "c5b5",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:fa48907b8e15129d8d52b147d131adcd9e847fa54c55c19a74463ac126d293ad",
+          "original_actor": "True:queen:b4",
+          "original_victim": "False:queen:e2",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 19,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:fa48907b8e15129d8d52b147d131adcd9e847fa54c55c19a74463ac126d293ad",
+            "move_uci": "c5b5",
+            "side": "white",
+            "from": "c5",
+            "to": "b5",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -900,
+            "balance_cp": -600,
+            "capture": {
+              "role": "queen",
+              "square": "b5",
+              "value_cp": 900,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:ef629b1aa1c4e6cf586021c201094d0e6e818d5716eb653d0cb2e80f24fe0ee2",
+            "ply_offset": 19,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:fa48907b8e15129d8d52b147d131adcd9e847fa54c55c19a74463ac126d293ad",
+            "source_id": "bfee621c7b5727becd26c188c25510b3fc9ae04a231e4b90e1128e5a5f031d40",
+            "original_actor": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "white",
+              "role": "queen",
+              "square": "b4"
+            },
+            "original_victim": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "black",
+              "role": "queen",
+              "square": "e2"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e"
+            }
+          }
+        },
+        {
+          "offset": 20,
+          "san": "axb5",
+          "uci": "a6b5",
+          "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:3f79737cd3e7502ae9b324272e282da6adc5a8f24a95d0efd8b3f90df9bc73c7",
+          "original_actor": "False:pawn:a6",
+          "original_victim": "True:queen:b4",
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "material_event": {
+            "ply_offset": 20,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:3f79737cd3e7502ae9b324272e282da6adc5a8f24a95d0efd8b3f90df9bc73c7",
+            "move_uci": "a6b5",
+            "side": "black",
+            "from": "a6",
+            "to": "b5",
+            "before_role": "pawn",
+            "after_role": "pawn",
+            "promotion_gain_cp": 0,
+            "delta_cp": 900,
+            "balance_cp": 300,
+            "capture": {
+              "role": "queen",
+              "square": "b5",
+              "value_cp": 900,
+              "recapture": "proven"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "ply_offset": 20,
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:3f79737cd3e7502ae9b324272e282da6adc5a8f24a95d0efd8b3f90df9bc73c7",
+            "source_id": "16dc934afd4726999ef49fef66c2f69f9cfb6f1418f6f78eacb395fe9f01e525",
+            "original_actor": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "black",
+              "role": "pawn",
+              "square": "a6"
+            },
+            "original_victim": {
+              "position_id": "88975de8770c959eeeabf239b99b2455e28b47bc770a1e84690a2bf34fcb2de1",
+              "side": "white",
+              "role": "queen",
+              "square": "b4"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+              "piece": {
+                "position_id": "ac629dbd196ada96dbd4bb630c4991f481c2dd991b580fd5969341c82488b3ac",
+                "side": "black",
+                "role": "pawn",
+                "square": "b4"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:df132467e7d7c77cd81abd4c36c1beb9c82c71c3f66675fd5aae9db822a84dcf",
+            "capture_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "elapsed_plies": 7,
+            "offsets": {
+              "loss_event_id": 13,
+              "capture_event_id": 20
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:b9c9a46a19e3a73ed437939e3d1f40bc2c98d61d4a0f7ccda911c94d4cc25df5",
+            "capture_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "elapsed_plies": 5,
+            "offsets": {
+              "loss_event_id": 15,
+              "capture_event_id": 20
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:ef629b1aa1c4e6cf586021c201094d0e6e818d5716eb653d0cb2e80f24fe0ee2",
+            "capture_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 19,
+              "capture_event_id": 20
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "gain_event_id": "continuation-event:df132467e7d7c77cd81abd4c36c1beb9c82c71c3f66675fd5aae9db822a84dcf",
+            "offsets": {
+              "loss_event_id": 0,
+              "gain_event_id": 13
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "gain_event_id": "continuation-event:b9c9a46a19e3a73ed437939e3d1f40bc2c98d61d4a0f7ccda911c94d4cc25df5",
+            "offsets": {
+              "loss_event_id": 0,
+              "gain_event_id": 15
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "gain_event_id": "continuation-event:ef629b1aa1c4e6cf586021c201094d0e6e818d5716eb653d0cb2e80f24fe0ee2",
+            "offsets": {
+              "loss_event_id": 0,
+              "gain_event_id": 19
+            }
+          }
+        ],
+        "recovery_losses": [
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "recovery_event_id": "continuation-event:df132467e7d7c77cd81abd4c36c1beb9c82c71c3f66675fd5aae9db822a84dcf",
+            "later_loss_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "offsets": {
+              "loss_event_id": 0,
+              "recovery_event_id": 13,
+              "later_loss_event_id": 20
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "recovery_event_id": "continuation-event:b9c9a46a19e3a73ed437939e3d1f40bc2c98d61d4a0f7ccda911c94d4cc25df5",
+            "later_loss_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "offsets": {
+              "loss_event_id": 0,
+              "recovery_event_id": 15,
+              "later_loss_event_id": 20
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:fe1ce9f6e8214703ed355a1d2b5d606caf6fd7e031c1b9d00d6340eeebf14f74",
+            "recovery_event_id": "continuation-event:ef629b1aa1c4e6cf586021c201094d0e6e818d5716eb653d0cb2e80f24fe0ee2",
+            "later_loss_event_id": "continuation-event:704769c45bcbd83036f88eaae7945100b1e0d2ad60ebf5baf11acf493e484f5e",
+            "offsets": {
+              "loss_event_id": 0,
+              "recovery_event_id": 19,
+              "later_loss_event_id": 20
+            }
+          }
+        ]
+      },
+      "position_checks": [
+        {
+          "prefix_count": 14,
+          "fen": "rN3r1k/6pp/p2Q3b/1pnPp3/P3B3/5P2/1PP1q3/1K3RR1 b - - 0 31",
+          "actor_square": "a8",
+          "target_square": "b8",
+          "actor_role": "rook",
+          "target_role": "knight",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 14,
+          "fen": "rN3r1k/6pp/p2Q3b/1pnPp3/P3B3/5P2/1PP1q3/1K3RR1 b - - 0 31",
+          "actor_square": "d6",
+          "target_square": "c5",
+          "actor_role": "queen",
+          "target_role": "knight",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 15,
+          "fen": "1r3r1k/6pp/p2Q3b/1pnPp3/P3B3/5P2/1PP1q3/1K3RR1 w - - 0 32",
+          "actor_square": "d6",
+          "target_square": "c5",
+          "actor_role": "queen",
+          "target_role": "knight",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 23,
+        "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:f0742e0c85a9f18e2203c8eed6a174b6998c731331cf9644d3b467350c37d94c"
+      }
+    },
+    {
+      "public_alias": "W24-12",
+      "failure": "Nxe3/Nxg2의 두 비숍 획득과 Kxg2의 나이트 손실은 말하지만 Rxd7의 흑 퀸 손실과 Bxd7의 룩 회복이 함께 빠진다.",
+      "selected_anchor_offsets": [
+        8,
+        12,
+        14,
+        15
+      ],
+      "required_missing_offsets": [
+        13,
+        16
+      ],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "Bf6 제공 수순에서 원래 b6 나이트가 실제 잡은 폰·비숍과 그 나이트가 제거되는 가격",
+        "source_statement_candidate": [
+          "MaterialEvents(candidate, captures8/12/14/15)",
+          "Action(Nxe3 at12, actual vacated blocker) if selected movement role is retained"
+        ],
+        "typing_status": "selected basic cost의 capture ownership은 공개 exact covered refs로 확인했다. 내부 Statement 덤프는 없으므로 생성 경로상의 MaterialEvents 후보 타입으로 기록한다."
+      },
+      "ownership": {
+        "status": "기존 선택된 나이트 행동의 CaptureExposure 및 실제 회복 관계로 범위 정당화 가능; 새 구현 통과는 미검증",
+        "subjects": [
+          "black:knight:b6",
+          "black:queen:d8",
+          "white:rook:d1",
+          "black:bishop:g6"
+        ],
+        "anchor": 12,
+        "price_start": 12,
+        "end": 16,
+        "price_offsets": [
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "already_selected_earlier_same_actor_price_offset": 8,
+        "combined_offsets_if_same_owned_capture_account": [
+          8,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "start_reason": "본문이 택한 Nxe3(12)는 d5의 실제 blocker 나이트를 옮기면서 같은 국면의 백 Rd1→흑 Qd7 경로를 연다. 저장 CaptureExposure는 그 정확 occurrence, vacated blocker, Ray/Control, legal d1d7를 이미 담는다.",
+        "response_reason": "실제 바로 뒤 Rxd7(13)가 그 열린 경로로 흑 퀸을 잡는다. 그 룩은 d7에 남고 흑 Bf5의 공격은 그 뒤에도 유지된다. 나이트의 Nxg2/Kxg2 가격14–15와 별도로 실제 Bxd7(16)가 룩을 회복한다.",
+        "end_reason": "선택한 길 개방이 사용된 포획 수행 룩의 실제 제거16으로 해당 후속 가격이 닫힌다. 이미 같은 소유 나이트의 폰 획득8을 포함하는 기본 가격과 합치면8–16의 모든 실제 물질 변화가 필요하다.",
+        "not_claimed": [
+          "이 가격만으로 Bf6의 평가차 원인을 확정했다",
+          "line_end(17)가 게임 종결이다",
+          "모든 열린 CaptureExposure가 실제 위협/필수 비용이다"
+        ],
+        "observed_price_ledger": {
+          "perspective": "black",
+          "event_deltas_cp": [
+            {
+              "offset": 12,
+              "delta_cp": 300
+            },
+            {
+              "offset": 13,
+              "delta_cp": -900
+            },
+            {
+              "offset": 14,
+              "delta_cp": 300
+            },
+            {
+              "offset": 15,
+              "delta_cp": -300
+            },
+            {
+              "offset": 16,
+              "delta_cp": 500
+            }
+          ],
+          "sum_delta_cp": -100,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false,
+          "combined_with_selected8_net_cp": 0
+        }
+      },
+      "existing_relation_witnesses": [
+        "CaptureExposure Nxe3 prefix13→legal Rxd7 target original black Qd8; vacated original black Nb6 atd5",
+        "CaptureLink13→16 elapsed3; white Rook actorEnd captured by16",
+        "CaptureLinks8→15,12→15,14→15",
+        "OtherTargetGain13→14; RecoveryLoss8→13→16 and13→14→15"
+      ],
+      "blocking_conditions": [
+        "selected later gains12/14 are not seed producers at common boundary.",
+        "Even Arm.account on Nxe3 focused on knight captures12/14 and its removal15 does not by itself own another actor rook13 queen capture; needs actual vacated-blocker/reply relation.",
+        "OtherTargetGain13→14 missing13 has its own CaptureLink13→16; guard RootQuestionSummary669 blocks adding a missing endpoint with any capture link.",
+        "Initial vector of two bishop gains and one knight loss is mixed signs by roles, so groups widening initial677 does not run. Sign/balance heuristics cannot substitute exposure ownership."
+      ],
+      "negative_scope": "Stored available captures after d5/Nxg2/Nxe4 that the actual line does not play (e.g. bishop captures b2 or queen captures h6) are not mandatory observed price events. Nxe4(17) is outside the selected knight/exposure/recovery episode; do not extend to line end just to include every later capture.",
+      "minimum_candidate": "Use already existing CaptureExposure only when originally selected action/capture moved the recorded blocker and actual opponent reply plays one recorded legal capture; bind its physical recapture to observed attacker persistence and selected account, then reuse common price calculation.",
+      "game_id": "wch2024-12",
+      "arm": "candidate",
+      "request_id": "fresh-wch2024-12-40",
+      "comparison_id": "comparison:move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:candidate-comparison:7903e970648af7730b44ce6e79d00553ea12d3e3acb8b33912bcde03dbb7f403",
+      "path_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-12-obligation-facts.json",
+      "source_facts_file_sha256": "69144c8089671d45719fe9434ce75fb0f549d06aa68317b183e92a11fb92ac1a",
+      "published_facts_canonical_sha256": "69144c8089671d45719fe9434ce75fb0f549d06aa68317b183e92a11fb92ac1a",
+      "published_snapshot_canonical_sha256": "ef2d29fae5204425a05cec96cd8c7ebe6bba1ed19757e9d0c29dbd5146c3cd9c",
+      "original_product_state": {
+        "assessment_state": "current",
+        "verification": {
+          "state": "complete",
+          "target_depth": 16,
+          "reason": "initial_verification",
+          "trigger_work_ids": [],
+          "completed_depth": 16,
+          "stop_reason": null
+        },
+        "basic_length": 2118,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            8,
+            12,
+            14,
+            15
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            3,
+            6,
+            7,
+            8,
+            11,
+            12,
+            14,
+            15
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            3,
+            6,
+            7,
+            8,
+            11,
+            12,
+            14,
+            15
+          ],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [
+        {
+          "game_id": "wch2024-12",
+          "arm": "candidate",
+          "source_index": 13,
+          "san": "Rxd7",
+          "uci": "d1d7",
+          "original_victim": "False:queen:d8",
+          "original_capturer": "True:rook:d1",
+          "reference": {
+            "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        },
+        {
+          "game_id": "wch2024-12",
+          "arm": "candidate",
+          "source_index": 16,
+          "san": "Bxd7",
+          "uci": "f5d7",
+          "original_victim": "True:rook:d1",
+          "original_capturer": "False:bishop:g6",
+          "reference": {
+            "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d"
+          },
+          "diagnostic_class": "high",
+          "core_covered": false,
+          "core_proof": false,
+          "core_inline": false,
+          "detail_covered": true,
+          "detail_proof": true
+        }
+      ],
+      "exact_step_evidence": [
+        {
+          "offset": 4,
+          "san": "Qd7",
+          "uci": "d8d7",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:89a0e271abf34b1ddd7337949cae2b822a13f1dcd5ddf058232b61eb44141019",
+          "original_actor": "False:queen:d8",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 7,
+          "san": "d5",
+          "uci": "d4d5",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:6cd0720c38ad56f660f372409215082355d25546795167767083a29fdc34dae3",
+          "original_actor": "True:pawn:d4",
+          "original_victim": null,
+          "role_before": "pawn",
+          "role_after": "pawn",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 8,
+          "san": "Nbxd5",
+          "uci": "b6d5",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:b8c8ef81e391e3f9bf7790c5a8d0717b02b335778a00981c48d450266f161b32",
+          "original_actor": "False:knight:b6",
+          "original_victim": "True:pawn:d4",
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": {
+            "ply_offset": 8,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:b8c8ef81e391e3f9bf7790c5a8d0717b02b335778a00981c48d450266f161b32",
+            "move_uci": "b6d5",
+            "side": "black",
+            "from": "b6",
+            "to": "d5",
+            "before_role": "knight",
+            "after_role": "knight",
+            "promotion_gain_cp": 0,
+            "delta_cp": 100,
+            "balance_cp": 100,
+            "capture": {
+              "role": "pawn",
+              "square": "d5",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:822fca99ff516e31a6d5a6e4136376c76e215d061d311742b54713d70861111f",
+            "ply_offset": 8,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:b8c8ef81e391e3f9bf7790c5a8d0717b02b335778a00981c48d450266f161b32",
+            "source_id": "53eb2b9468e777c1c71064a3ff9f0e65f06fc2c2cdee3a6b7ac314e6474b15aa",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "knight",
+              "square": "b6"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "pawn",
+              "square": "d4"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03"
+            }
+          }
+        },
+        {
+          "offset": 12,
+          "san": "Nxe3",
+          "uci": "d5e3",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:2df9491a548e12b8dc69d5d8a4b0f6aedc2b42480fb5976e8d277d48f25ccf18",
+          "original_actor": "False:knight:b6",
+          "original_victim": "True:bishop:e3",
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": {
+            "ply_offset": 12,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:2df9491a548e12b8dc69d5d8a4b0f6aedc2b42480fb5976e8d277d48f25ccf18",
+            "move_uci": "d5e3",
+            "side": "black",
+            "from": "d5",
+            "to": "e3",
+            "before_role": "knight",
+            "after_role": "knight",
+            "promotion_gain_cp": 0,
+            "delta_cp": 300,
+            "balance_cp": 400,
+            "capture": {
+              "role": "bishop",
+              "square": "e3",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:4f311bf1e41936273152f4b92fe27f1a3039304fb0d6a1bba77959fd239093bd",
+            "ply_offset": 12,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:2df9491a548e12b8dc69d5d8a4b0f6aedc2b42480fb5976e8d277d48f25ccf18",
+            "source_id": "fad79c59d17b16f97f1663f562d5de04be146234498798a9afc8f0d83bdc83f1",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "knight",
+              "square": "b6"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "bishop",
+              "square": "e3"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03"
+            }
+          }
+        },
+        {
+          "offset": 13,
+          "san": "Rxd7",
+          "uci": "d1d7",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93",
+          "original_actor": "True:rook:d1",
+          "original_victim": "False:queen:d8",
+          "role_before": "rook",
+          "role_after": "rook",
+          "material_event": {
+            "ply_offset": 13,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93",
+            "move_uci": "d1d7",
+            "side": "white",
+            "from": "d1",
+            "to": "d7",
+            "before_role": "rook",
+            "after_role": "rook",
+            "promotion_gain_cp": 0,
+            "delta_cp": -900,
+            "balance_cp": -500,
+            "capture": {
+              "role": "queen",
+              "square": "d7",
+              "value_cp": 900,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "ply_offset": 13,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93",
+            "source_id": "e6d40961c37738c3c7a149f024bbbc6fd31f240e1c78f23d78317273dff2daba",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "rook",
+              "square": "d1"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "queen",
+              "square": "d8"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:48fceacd223f32aad95117f733f6ea7781dea8b1c0a5f84bb545e7649e4eba2e"
+            }
+          }
+        },
+        {
+          "offset": 14,
+          "san": "Nxg2",
+          "uci": "e3g2",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:c02dfe3f59c53a109b82046ba5c26ce02bcd466ed990acbf8f4b51554f8f22d9",
+          "original_actor": "False:knight:b6",
+          "original_victim": "True:bishop:g2",
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": {
+            "ply_offset": 14,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:c02dfe3f59c53a109b82046ba5c26ce02bcd466ed990acbf8f4b51554f8f22d9",
+            "move_uci": "e3g2",
+            "side": "black",
+            "from": "e3",
+            "to": "g2",
+            "before_role": "knight",
+            "after_role": "knight",
+            "promotion_gain_cp": 0,
+            "delta_cp": 300,
+            "balance_cp": -200,
+            "capture": {
+              "role": "bishop",
+              "square": "g2",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:bbb6185e5f6ca1acf8a37d3183d399a344c44036816d6e41f415f6dba914b183",
+            "ply_offset": 14,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:c02dfe3f59c53a109b82046ba5c26ce02bcd466ed990acbf8f4b51554f8f22d9",
+            "source_id": "acc0dc80c8f0a6037ad4509e926f282fd485eca4968f1a0549370495b43e5dce",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "knight",
+              "square": "b6"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "bishop",
+              "square": "g2"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03"
+            }
+          }
+        },
+        {
+          "offset": 15,
+          "san": "Kxg2",
+          "uci": "h2g2",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:1cd5119699572f8bd8892c66cccf51b0dd551dc4c6b35ed947be35eeefe93f70",
+          "original_actor": "True:king:h2",
+          "original_victim": "False:knight:b6",
+          "role_before": "king",
+          "role_after": "king",
+          "material_event": {
+            "ply_offset": 15,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:1cd5119699572f8bd8892c66cccf51b0dd551dc4c6b35ed947be35eeefe93f70",
+            "move_uci": "h2g2",
+            "side": "white",
+            "from": "h2",
+            "to": "g2",
+            "before_role": "king",
+            "after_role": "king",
+            "promotion_gain_cp": 0,
+            "delta_cp": -300,
+            "balance_cp": -500,
+            "capture": {
+              "role": "knight",
+              "square": "g2",
+              "value_cp": 300,
+              "recapture": "proven"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03",
+            "ply_offset": 15,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:1cd5119699572f8bd8892c66cccf51b0dd551dc4c6b35ed947be35eeefe93f70",
+            "source_id": "b57109f027a5ac06565f6ac571d55294a45800b9f8f91fed0aa011147726d328",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "king",
+              "square": "h2"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "knight",
+              "square": "b6"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": {
+                "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+                "side": "white",
+                "role": "king",
+                "square": "g2"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 16,
+          "san": "Bxd7",
+          "uci": "f5d7",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d",
+          "original_actor": "False:bishop:g6",
+          "original_victim": "True:rook:d1",
+          "role_before": "bishop",
+          "role_after": "bishop",
+          "material_event": {
+            "ply_offset": 16,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d",
+            "move_uci": "f5d7",
+            "side": "black",
+            "from": "f5",
+            "to": "d7",
+            "before_role": "bishop",
+            "after_role": "bishop",
+            "promotion_gain_cp": 0,
+            "delta_cp": 500,
+            "balance_cp": 0,
+            "capture": {
+              "role": "rook",
+              "square": "d7",
+              "value_cp": 500,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:48fceacd223f32aad95117f733f6ea7781dea8b1c0a5f84bb545e7649e4eba2e",
+            "ply_offset": 16,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d",
+            "source_id": "22ce75c5ac40dc704d840d13bb23c6bfb38d33bd173f89d1e9d7287aff12e6e9",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "bishop",
+              "square": "g6"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "rook",
+              "square": "d1"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": {
+                "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+                "side": "black",
+                "role": "bishop",
+                "square": "d7"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 17,
+          "san": "Nxe4",
+          "uci": "c3e4",
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:490defedcaf4915e60e9be615492564391b44bb3c13082c50a3f5cd9899af30d",
+          "original_actor": "True:knight:b5",
+          "original_victim": "False:pawn:e4",
+          "role_before": "knight",
+          "role_after": "knight",
+          "material_event": {
+            "ply_offset": 17,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:490defedcaf4915e60e9be615492564391b44bb3c13082c50a3f5cd9899af30d",
+            "move_uci": "c3e4",
+            "side": "white",
+            "from": "c3",
+            "to": "e4",
+            "before_role": "knight",
+            "after_role": "knight",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "e4",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:1ced18d919e177ddf7effc800f79dd3f4d6e2fd9a1494172fd0d3af738a5c876",
+            "ply_offset": 17,
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:490defedcaf4915e60e9be615492564391b44bb3c13082c50a3f5cd9899af30d",
+            "source_id": "3dbaaaaaef5238b1f42649fba80fde6bfcef5dccc3d2bf407e8a6cb2e58b96f6",
+            "original_actor": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "white",
+              "role": "knight",
+              "square": "b5"
+            },
+            "original_victim": {
+              "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+              "side": "black",
+              "role": "pawn",
+              "square": "e4"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+              "piece": {
+                "position_id": "dfe0143bf94456667355de3b5b726c642a20725f379c12f6d4d6dd3ef46b4ef6",
+                "side": "white",
+                "role": "knight",
+                "square": "e4"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:822fca99ff516e31a6d5a6e4136376c76e215d061d311742b54713d70861111f",
+            "capture_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03",
+            "elapsed_plies": 7,
+            "offsets": {
+              "loss_event_id": 8,
+              "capture_event_id": 15
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:4f311bf1e41936273152f4b92fe27f1a3039304fb0d6a1bba77959fd239093bd",
+            "capture_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03",
+            "elapsed_plies": 3,
+            "offsets": {
+              "loss_event_id": 12,
+              "capture_event_id": 15
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:bbb6185e5f6ca1acf8a37d3183d399a344c44036816d6e41f415f6dba914b183",
+            "capture_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 14,
+              "capture_event_id": 15
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "capture_event_id": "continuation-event:48fceacd223f32aad95117f733f6ea7781dea8b1c0a5f84bb545e7649e4eba2e",
+            "elapsed_plies": 3,
+            "offsets": {
+              "loss_event_id": 13,
+              "capture_event_id": 16
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:822fca99ff516e31a6d5a6e4136376c76e215d061d311742b54713d70861111f",
+            "gain_event_id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "offsets": {
+              "loss_event_id": 8,
+              "gain_event_id": 13
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "gain_event_id": "continuation-event:bbb6185e5f6ca1acf8a37d3183d399a344c44036816d6e41f415f6dba914b183",
+            "offsets": {
+              "loss_event_id": 13,
+              "gain_event_id": 14
+            }
+          }
+        ],
+        "recovery_losses": [
+          {
+            "loss_event_id": "continuation-event:822fca99ff516e31a6d5a6e4136376c76e215d061d311742b54713d70861111f",
+            "recovery_event_id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "later_loss_event_id": "continuation-event:48fceacd223f32aad95117f733f6ea7781dea8b1c0a5f84bb545e7649e4eba2e",
+            "offsets": {
+              "loss_event_id": 8,
+              "recovery_event_id": 13,
+              "later_loss_event_id": 16
+            }
+          },
+          {
+            "loss_event_id": "continuation-event:7c1e664d93931c0b2014ed65993a3f7580b61b9ee94e0a43fa8ee60deb69da09",
+            "recovery_event_id": "continuation-event:bbb6185e5f6ca1acf8a37d3183d399a344c44036816d6e41f415f6dba914b183",
+            "later_loss_event_id": "continuation-event:832323adbd0e3e1fb17704b7d5efb73fc3dbffddfd2b7178cafb31c81b214b03",
+            "offsets": {
+              "loss_event_id": 13,
+              "recovery_event_id": 14,
+              "later_loss_event_id": 15
+            }
+          }
+        ]
+      },
+      "position_checks": [
+        {
+          "prefix_count": 12,
+          "fen": "1r2r1k1/1ppqnpp1/5b1p/p2n1b2/2P1p2P/P1N1B1P1/1P2NPBK/2QRR3 b - - 3 26",
+          "actor_square": "d1",
+          "target_square": "d7",
+          "actor_role": "rook",
+          "target_role": "queen",
+          "friendly_support": false,
+          "geometric_control": false,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 13,
+          "fen": "1r2r1k1/1ppqnpp1/5b1p/p4b2/2P1p2P/P1N1n1P1/1P2NPBK/2QRR3 w - - 0 27",
+          "actor_square": "d1",
+          "target_square": "d7",
+          "actor_role": "rook",
+          "target_role": "queen",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "white",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 14,
+          "fen": "1r2r1k1/1ppRnpp1/5b1p/p4b2/2P1p2P/P1N1n1P1/1P2NPBK/2Q1R3 b - - 0 27",
+          "actor_square": "f5",
+          "target_square": "d7",
+          "actor_role": "bishop",
+          "target_role": "rook",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 16,
+          "fen": "1r2r1k1/1ppRnpp1/5b1p/p4b2/2P1p2P/P1N3P1/1P2NPK1/2Q1R3 b - - 0 28",
+          "actor_square": "f5",
+          "target_square": "d7",
+          "actor_role": "bishop",
+          "target_role": "rook",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 17,
+        "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:490defedcaf4915e60e9be615492564391b44bb3c13082c50a3f5cd9899af30d"
+      },
+      "owned_capture_exposure_evidence": [
+        {
+          "kind": "capture_exposure",
+          "prefix_moves_uci": [
+            "e7f6",
+            "g1e2",
+            "g6h7",
+            "c3c2",
+            "d8d7",
+            "h3h4",
+            "c6e7",
+            "d4d5",
+            "b6d5",
+            "c2c1",
+            "h7f5",
+            "b5c3",
+            "d5e3"
+          ],
+          "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:2df9491a548e12b8dc69d5d8a4b0f6aedc2b42480fb5976e8d277d48f25ccf18",
+          "before_position_id": "c6eeb89f89287b0831d33381656d39686a1d6c5854b5a146e85be6dae1165bab",
+          "position_id": "d6b2f74fb11d4e350c0df2f68f6ac66a983e6f27de8573171088fe64298b2548",
+          "original_attacker": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "white",
+            "role": "rook",
+            "square": "d1"
+          },
+          "attacker": {
+            "position_id": "d6b2f74fb11d4e350c0df2f68f6ac66a983e6f27de8573171088fe64298b2548",
+            "side": "white",
+            "role": "rook",
+            "square": "d1"
+          },
+          "original_target": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "black",
+            "role": "queen",
+            "square": "d8"
+          },
+          "target": {
+            "position_id": "d6b2f74fb11d4e350c0df2f68f6ac66a983e6f27de8573171088fe64298b2548",
+            "side": "black",
+            "role": "queen",
+            "square": "d7"
+          },
+          "vacated_blockers": [
+            {
+              "original": {
+                "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+                "side": "black",
+                "role": "knight",
+                "square": "b6"
+              },
+              "before": {
+                "position_id": "c6eeb89f89287b0831d33381656d39686a1d6c5854b5a146e85be6dae1165bab",
+                "side": "black",
+                "role": "knight",
+                "square": "d5"
+              }
+            }
+          ],
+          "ray_source_id": "233be87ed78545813969035967f7289468036c5085e0d768d75f0985ab145737",
+          "control_source_ids": [
+            "ef1993e016aa72fb8a75c207d7db0cf3681bde749970be3b198411f3a59acdf8"
+          ],
+          "moves_uci": [
+            "d1d7"
+          ],
+          "source_ids": [
+            "e6d40961c37738c3c7a149f024bbbc6fd31f240e1c78f23d78317273dff2daba"
+          ],
+          "legal_inventory_complete": true
+        }
+      ],
+      "not_automatically_owned_available_exposures": [
+        {
+          "offset": 7,
+          "moves_uci": [
+            "f6b2"
+          ],
+          "original_attacker": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "black",
+            "role": "bishop",
+            "square": "e7"
+          },
+          "original_target": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "white",
+            "role": "pawn",
+            "square": "b2"
+          }
+        },
+        {
+          "offset": 14,
+          "moves_uci": [
+            "c1h6"
+          ],
+          "original_attacker": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "white",
+            "role": "queen",
+            "square": "c3"
+          },
+          "original_target": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "black",
+            "role": "pawn",
+            "square": "h6"
+          }
+        },
+        {
+          "offset": 17,
+          "moves_uci": [
+            "f6b2"
+          ],
+          "original_attacker": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "black",
+            "role": "bishop",
+            "square": "e7"
+          },
+          "original_target": {
+            "position_id": "c2c6720d5fe8f79b722c3b070bd0244d85e65f1f0f31086066e7e7923b2291ba",
+            "side": "white",
+            "role": "pawn",
+            "square": "b2"
+          }
+        }
+      ]
+    },
+    {
+      "public_alias": "W24-09-working",
+      "failure": null,
+      "selected_anchor_offsets": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "required_missing_offsets": [],
+      "original_selected_content": {
+        "question": "selected_comparison",
+        "claim": "Qb5 supports c5 pawn and b6 knight; actual captures lose pawn/knight for bishop",
+        "source_statement_candidate": [
+          "Action(Qb5 at0, Support)",
+          "Material or MaterialEvents with1/2/3"
+        ],
+        "typing_status": "공개 가격 소유와 root support gate 성립 조건을 정적으로 대조했다. 정확한 내부 호출 분기는 실행 추적으로 확정하지 않았다."
+      },
+      "ownership": {
+        "status": "기존 공개 출력에서 가격 전달은 작동한 대조. 영어 가독성과 질문 선택의 성공과는 별개.",
+        "subjects": [
+          "white:queen:b1",
+          "white:pawn:c5",
+          "white:knight:b6",
+          "black:queen:a7",
+          "black:bishop:e7"
+        ],
+        "anchor": 0,
+        "price_start": 1,
+        "end": 3,
+        "price_offsets": [
+          1,
+          2,
+          3
+        ],
+        "start_reason": "선택 Qb5는 offset0 루트 지원 행동이다. 같은 b6 나이트는 흑 퀸의 공격을 받고 Qb5 후 백 퀸의 지원을 받는다.",
+        "response_reason": "Bxc5/Qxc5의 폰·비숍 거래 뒤, 백 퀸은 c5에서도 동일 b6 나이트를 계속 지원한다. 실제 흑 Qxb6가 그것을 잡는다.",
+        "end_reason": "1–3의 가격은 폰과 나이트를 내주고 비숍을 얻는다. 모든 SAN을 본문에 직접 쓰지 않아도 structured covered/proof가 가격 소유를 확인한다.",
+        "observed_price_ledger": {
+          "perspective": "white",
+          "event_deltas_cp": [
+            {
+              "offset": 1,
+              "delta_cp": -100
+            },
+            {
+              "offset": 2,
+              "delta_cp": 300
+            },
+            {
+              "offset": 3,
+              "delta_cp": -300
+            }
+          ],
+          "sum_delta_cp": -100,
+          "is_engine_evaluation": false,
+          "is_final_remaining_material_advantage": false
+        }
+      },
+      "existing_relation_witnesses": [
+        "CaptureLink1→2",
+        "OtherTargetGain2→3",
+        "root support present atprefix1 and3; same enemy queen attack on knight persists"
+      ],
+      "blocking_conditions": [],
+      "negative_scope": "가격 소유는 작동한 대조다. 검증 needs_refresh와 파편화된 1,731자 기본 설명까지 품질 성공으로 계산하지 않는다.",
+      "minimum_candidate": "Preserve root support case while extending dynamic selected anchors. Do not regress by forcing every proof SAN to be spoken.",
+      "game_id": "wch2024-09",
+      "arm": "candidate",
+      "request_id": "fresh-wch2024-09-47",
+      "comparison_id": "comparison:move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:candidate-comparison:4c545a24392ec2072e34909b24316383c88006a64796348643c9c07b3053eac6",
+      "path_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:91317ddd01ffe99d72c154dff5d0e091ca4c0c95edcb45e5d19bd8b27cae0273",
+      "source_facts_file": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-09-obligation-facts.json",
+      "source_facts_file_sha256": "1699ea7873591e18c3d7b29e34565b497d941b2aba1eaf074ad5f3389d1b6070",
+      "published_facts_canonical_sha256": "1699ea7873591e18c3d7b29e34565b497d941b2aba1eaf074ad5f3389d1b6070",
+      "published_snapshot_canonical_sha256": "c620e961e4ca07f8224e428ecba28f637a8019f7b851736b859b03e3e672a3a8",
+      "original_product_state": {
+        "assessment_state": "needs_refresh",
+        "verification": {
+          "state": "stopped",
+          "target_depth": 16,
+          "reason": "initial_verification",
+          "trigger_work_ids": [],
+          "completed_depth": null,
+          "stop_reason": "search_budget_exhausted"
+        },
+        "basic_length": 1731,
+        "summary_kind": "question_answer"
+      },
+      "original_selected_public_units": [
+        {
+          "index": 0,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [
+            1,
+            2,
+            3
+          ],
+          "proof_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5
+          ],
+          "required_offsets_on_audited_path": [
+            0,
+            1,
+            2,
+            3,
+            5
+          ],
+          "internal_statement_type_exposed": false
+        },
+        {
+          "index": 1,
+          "role": "cost",
+          "covered_offsets_on_audited_path": [],
+          "proof_offsets_on_audited_path": [],
+          "required_offsets_on_audited_path": [],
+          "internal_statement_type_exposed": false
+        }
+      ],
+      "missing_price_exact_diagnostics": [],
+      "exact_step_evidence": [
+        {
+          "offset": 0,
+          "san": "Qb5",
+          "uci": "b1b5",
+          "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:ae8facadd42dd90375aabc0530e770a49931396e90738cfba84cd18e112c3aa3",
+          "original_actor": "True:queen:b1",
+          "original_victim": null,
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": null,
+          "continuation_event": null
+        },
+        {
+          "offset": 1,
+          "san": "Bxc5",
+          "uci": "e7c5",
+          "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:1629d3a7536654fe4e827214d7862be7d9303fe6d1c7efebb7de5e33ffaabfe8",
+          "original_actor": "False:bishop:e7",
+          "original_victim": "True:pawn:c5",
+          "role_before": "bishop",
+          "role_after": "bishop",
+          "material_event": {
+            "ply_offset": 1,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:1629d3a7536654fe4e827214d7862be7d9303fe6d1c7efebb7de5e33ffaabfe8",
+            "move_uci": "e7c5",
+            "side": "black",
+            "from": "e7",
+            "to": "c5",
+            "before_role": "bishop",
+            "after_role": "bishop",
+            "promotion_gain_cp": 0,
+            "delta_cp": -100,
+            "balance_cp": -100,
+            "capture": {
+              "role": "pawn",
+              "square": "c5",
+              "value_cp": 100,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:15b4181d2f0c9e5b70503343e094693df404298bc6b662d8cf43f6b1937d9672",
+            "ply_offset": 1,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:1629d3a7536654fe4e827214d7862be7d9303fe6d1c7efebb7de5e33ffaabfe8",
+            "source_id": "1b54ab21aecdf6661059fbbff3ada94123f5476ff70c7a96e17ee8152b47a99c",
+            "original_actor": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "black",
+              "role": "bishop",
+              "square": "e7"
+            },
+            "original_victim": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "white",
+              "role": "pawn",
+              "square": "c5"
+            },
+            "actor_end": {
+              "state": "captured",
+              "position_id": "e3cc2b17f465e91b90bf72a5f6d6777910bd44592e97b9d31d26cf10f9ce74e3",
+              "piece": null,
+              "removed_by_event_id": "continuation-event:7b312ebe7b88141060cbe6e0be9a0225e7def84f00f2c225c2ee26f54bc910f2"
+            }
+          }
+        },
+        {
+          "offset": 2,
+          "san": "Qxc5",
+          "uci": "b5c5",
+          "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:9ff9cb2a949316c2a443ee68e2e33d052c96cfb46422f2aecec2b1f93a876217",
+          "original_actor": "True:queen:b1",
+          "original_victim": "False:bishop:e7",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 2,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:9ff9cb2a949316c2a443ee68e2e33d052c96cfb46422f2aecec2b1f93a876217",
+            "move_uci": "b5c5",
+            "side": "white",
+            "from": "b5",
+            "to": "c5",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": 300,
+            "balance_cp": 200,
+            "capture": {
+              "role": "bishop",
+              "square": "c5",
+              "value_cp": 300,
+              "recapture": "proven"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:7b312ebe7b88141060cbe6e0be9a0225e7def84f00f2c225c2ee26f54bc910f2",
+            "ply_offset": 2,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:9ff9cb2a949316c2a443ee68e2e33d052c96cfb46422f2aecec2b1f93a876217",
+            "source_id": "3c89460e95d0041cff7f892892e5cbe090d2c6f713e6bda5b0fd8703f63f219d",
+            "original_actor": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "white",
+              "role": "queen",
+              "square": "b1"
+            },
+            "original_victim": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "black",
+              "role": "bishop",
+              "square": "e7"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "e3cc2b17f465e91b90bf72a5f6d6777910bd44592e97b9d31d26cf10f9ce74e3",
+              "piece": {
+                "position_id": "e3cc2b17f465e91b90bf72a5f6d6777910bd44592e97b9d31d26cf10f9ce74e3",
+                "side": "white",
+                "role": "queen",
+                "square": "e5"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        },
+        {
+          "offset": 3,
+          "san": "Qxb6",
+          "uci": "a7b6",
+          "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:f4d91ba9eed1e456fb988bf9877216c4fe227a06ab93db488e2932cd737068c4",
+          "original_actor": "False:queen:a7",
+          "original_victim": "True:knight:b6",
+          "role_before": "queen",
+          "role_after": "queen",
+          "material_event": {
+            "ply_offset": 3,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:f4d91ba9eed1e456fb988bf9877216c4fe227a06ab93db488e2932cd737068c4",
+            "move_uci": "a7b6",
+            "side": "black",
+            "from": "a7",
+            "to": "b6",
+            "before_role": "queen",
+            "after_role": "queen",
+            "promotion_gain_cp": 0,
+            "delta_cp": -300,
+            "balance_cp": -100,
+            "capture": {
+              "role": "knight",
+              "square": "b6",
+              "value_cp": 300,
+              "recapture": "excluded"
+            }
+          },
+          "continuation_event": {
+            "id": "continuation-event:6564fd9ac66227b78555b7057be36474366a89d6fd19ebcb4881a31b0f81ea44",
+            "ply_offset": 3,
+            "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:f4d91ba9eed1e456fb988bf9877216c4fe227a06ab93db488e2932cd737068c4",
+            "source_id": "4a5ee9a8ab4ed497dbad7c13c992b6eda7c20f80e0a372fa7546134c7d818d3f",
+            "original_actor": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "black",
+              "role": "queen",
+              "square": "a7"
+            },
+            "original_victim": {
+              "position_id": "aeb2bf07e12a761974846752a02ca4d2f2902564d65c54ddd9266553e095d505",
+              "side": "white",
+              "role": "knight",
+              "square": "b6"
+            },
+            "actor_end": {
+              "state": "present",
+              "position_id": "e3cc2b17f465e91b90bf72a5f6d6777910bd44592e97b9d31d26cf10f9ce74e3",
+              "piece": {
+                "position_id": "e3cc2b17f465e91b90bf72a5f6d6777910bd44592e97b9d31d26cf10f9ce74e3",
+                "side": "black",
+                "role": "queen",
+                "square": "b6"
+              },
+              "removed_by_event_id": null
+            }
+          }
+        }
+      ],
+      "actual_recorded_links": {
+        "capture_links": [
+          {
+            "loss_event_id": "continuation-event:15b4181d2f0c9e5b70503343e094693df404298bc6b662d8cf43f6b1937d9672",
+            "capture_event_id": "continuation-event:7b312ebe7b88141060cbe6e0be9a0225e7def84f00f2c225c2ee26f54bc910f2",
+            "elapsed_plies": 1,
+            "offsets": {
+              "loss_event_id": 1,
+              "capture_event_id": 2
+            }
+          }
+        ],
+        "other_target_gains": [
+          {
+            "loss_event_id": "continuation-event:7b312ebe7b88141060cbe6e0be9a0225e7def84f00f2c225c2ee26f54bc910f2",
+            "gain_event_id": "continuation-event:6564fd9ac66227b78555b7057be36474366a89d6fd19ebcb4881a31b0f81ea44",
+            "offsets": {
+              "loss_event_id": 2,
+              "gain_event_id": 3
+            }
+          }
+        ],
+        "recovery_losses": []
+      },
+      "position_checks": [
+        {
+          "prefix_count": 1,
+          "fen": "1r4k1/q3bppp/rN2pn2/1QP5/8/5BP1/4PP1P/2RR2K1 b - - 2 24",
+          "actor_square": "b5",
+          "target_square": "b6",
+          "actor_role": "queen",
+          "target_role": "knight",
+          "friendly_support": true,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 3,
+          "fen": "1r4k1/q4ppp/rN2pn2/2Q5/8/5BP1/4PP1P/2RR2K1 b - - 0 25",
+          "actor_square": "c5",
+          "target_square": "b6",
+          "actor_role": "queen",
+          "target_role": "knight",
+          "friendly_support": true,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": null,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        },
+        {
+          "prefix_count": 3,
+          "fen": "1r4k1/q4ppp/rN2pn2/2Q5/8/5BP1/4PP1P/2RR2K1 b - - 0 25",
+          "actor_square": "a7",
+          "target_square": "b6",
+          "actor_role": "queen",
+          "target_role": "knight",
+          "friendly_support": false,
+          "geometric_control": true,
+          "actor_absolutely_pinned": false,
+          "actual_side_to_move": "black",
+          "actual_capture_legal_now": true,
+          "interpretation_limit": "합법성은 실제 차례의 공격자가 상대 기물을 잡는 경우만 기록했다. 아군 지원 또는 차례가 아닌 쪽의 기하학적 공격은 실제 합법 수로 해석하지 않는다."
+        }
+      ],
+      "source_ending": {
+        "kind": "line_end",
+        "ply_offset": 5,
+        "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:ea43df62e093bb37ab68755b62d7666f0bf47f57c97e57dab22b47f2a0d772fe"
+      }
+    }
+  ],
+  "minimal_common_proposals": [
+    {
+      "order": 1,
+      "proposal": "현재 Answer/Section/Statement를 입력으로 삼아 원래 선택된 claim의 실제 anchor·대상 original identity·역할을 읽는다. 기존 PreparedPath/Arm/graph relation을 재사용하고 별도 일반 그래프나 SAN/영어 파싱을 만들지 않는다.",
+      "important_boundary": "MWP3091이 이미 원래 selectedAnswer.core statements만 seed input으로 주는 경계는 유지. conditions 추가 단계에서 생긴 부수 facts를 새 핵심 episode로 승격하지 않는다."
+    },
+    {
+      "order": 2,
+      "proposal": "root 고정 검사들을 선택 anchor별 실제 시작 count와 관계 역할에 맞추되, 지속 공격/지원이 끝난 경우를 단순 부정이 아닌 선택 행동의 실제 변화로 읽는다. 원래 대상의 실제 포획·회복이 어떻게 주장 의미를 바꾸는지 확인해야 범위를 확장한다.",
+      "not_proposed": [
+        "move.offset==0/start==0 조건을 일괄 삭제",
+        "모든 material seed의 actor lifetime 추적",
+        "elapsed==1 대신 더 큰 숫자로 제한 늘리기"
+      ]
+    },
+    {
+      "order": 3,
+      "proposal": "선택된 행동의 포획 수행자 제거, 최초 실제 상대 응수와 사용, 지원 대상 후속 손실, 실제 blocker departure→legal capture→실제 회복을 소유 근거로 사용한다. 존재하는 CaptureLink/RecoveryLoss는 범위를 닫는 신원 증거이며 그 자체로 owner는 아니다.",
+      "pattern_names_are_not_completion_criteria": true
+    },
+    {
+      "order": 4,
+      "proposal": "소유 범위가 정당화되면 그 범위의 source_material 전 변화를 기존 CommentaryMaterialAccount로 계산한다. 직접 증명 refs/실제 가격 events/체크 응수 refs를 구분하고, 같은 actual material event 공유만으로 기존 price owner를 합치는 경계는 보존한다.",
+      "risk": "긴 hull interval을 만들기 전에 owner 범위가 왜 연속인지 확인. 관련 없는 새 거래를 중간에 끼워 넣는 interval 확장은 다시 정보 나열 또는 비용 왜곡이 된다."
+    },
+    {
+      "order": 5,
+      "proposal": "C18-10처럼 현재 답의 owner와 물리적 거래를 구분할 수 없는 경우 unresolved로 남기거나 그 부수 gain을 상세로 옮기는 판단이 필요하다. 관측된 나이트 교환을 말할 수 있다는 것과 루트 선택의 핵심으로 올려야 한다는 판단은 별개이다.",
+      "implementation_can_precede_full_policy": true,
+      "claim": "기존에 선택한 주장의 가격 보존 범위에서 좁게 개선할 수 있으나 모든 중요도 정책의 완성은 아니다."
+    }
+  ],
+  "focused_regression_candidates_not_run": [
+    {
+      "case": "W16-09",
+      "positive": "gain14+counter-knight16+same-capturer-loss17 preserved",
+      "negative": "earlier9 not included solely from9→14 ancestor link; sameSAN Rxd5 occurrences not conflated"
+    },
+    {
+      "case": "W16-11",
+      "positive": "first dxc3 loss1 +Rxe4 gain2 +rook removal5/recovery6",
+      "negative": "different a3 pawn Qxa3 at9 not admitted solely because later/opposite sign"
+    },
+    {
+      "case": "C18-09",
+      "positive": "support16 actual departure18 and same b2 target loss19",
+      "negative": "provider unknown remains unknown; unrelated d5 pawn loss17 not support-b2 price"
+    },
+    {
+      "case": "C18-10",
+      "positive": "only when explicit local Qxc5 claim owner, persistent c5-target attack with actual Raxb8→Qxc5 permits observed knight-price candidate",
+      "negative": "no automatic initialBxf4 cause/forced threat; no queen-life13→20/15→20/19→20 merge"
+    },
+    {
+      "case": "W24-12",
+      "positive": "exact exposure by selected Nxe3 + actual Rxd7 + stationary-captor Bxd7 recovery; all knight account costs preserved",
+      "negative": "available capture not played is not observed mandatory price; later Nxe4 not absorbed automatically"
+    },
+    {
+      "case": "W24-09",
+      "positive": "already delivered pawn/knight-for-bishop price survives dynamic-owner change",
+      "negative": "do not require every proofSAN inline; do not promote fragmented basic to readability success"
+    }
+  ],
+  "completion": "정적 귀속 감사와 구현 후보 자료 작성까지만 완료. 제품 개선 성공·새 일반화 검증·전체 선택 정책 완료는 판정하지 않았다.",
+  "validation": {
+    "json_readable": true,
+    "source_ending_all_line_end": true,
+    "missing6_core_false_detail_true": true,
+    "exact_occurrence_ids_consistent": true,
+    "owned_W24_exposure_d1d7": true,
+    "C18_10_other_gain_anchor0_not14": true,
+    "product_tests_executed": false,
+    "position_check_assertions_passed": 20
+  }
+}

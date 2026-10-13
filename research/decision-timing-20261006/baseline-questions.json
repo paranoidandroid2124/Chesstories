@@ -1,0 +1,788 @@
+[
+  {
+    "id": "C03",
+    "proposals": [
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "h6"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Qc8"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Nbd7"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Qc8"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Nbd7",
+              "Ne8"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Nbd7"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "Na6 Rd1 Rc8 e5 Nd7 a3 c5 dxc5 bxc5 cxd5 exd5 Nc4",
+            "pair": [
+              "dxc4",
+              "Nc7"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "h6"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "c5"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Nbd7"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "Na6 a3 c5 cxd5 exd5 e5 Nd7 Rd1 Nc7 b4 c4 Nf1 a5 b5",
+            "pair": [
+              "Nxb5",
+              "a4"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Nbd7"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Qc8"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Na6",
+              "Nbd7"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B03",
+    "proposals": [
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Bb5",
+              "Bc4"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Bb5",
+              "Nc3"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Bb5",
+              "d4"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Nc3",
+              "Bc4"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Nc3",
+              "Bb5"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "better"
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "Bb5",
+              "Nc3"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "Bb5 a6 Ba4 Nf6 O-O",
+            "pair": [
+              "Nxe4",
+              "b5"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "Bb5",
+              "Nc3"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "Bb5 a6 Ba4 Nf6 O-O",
+            "pair": [
+              "Nxe4",
+              "b5"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "S4",
+    "proposals": [
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Nc4"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Bh4"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Rd8"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Rd8",
+              "d5"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Rd8",
+              "Qc5"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "Rd8",
+              "d5"
+            ],
+            "state": "stopped",
+            "stop": "prerequisite_unresolved",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "Rd8 Rg1 Qc5 Ne2 Na4 Qd2 Qa3 Qc1 Qxc1+ Rxc1 Bg5 Rcd1 h4 Ka1 Nb6 c4",
+            "pair": [
+              "Nxc4",
+              "Rc8"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_other_capture",
+            "prefix": "Rd8 Rg1 Qc5 Ne2 Na4 Qd2 Qa3 Qc1 Qxc1+ Rxc1 Bg5 Rcd1 h4 Ka1 Nb6 c4",
+            "pair": [
+              "Nxc4",
+              "bxc4"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Rd8"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Na4"
+            ],
+            "state": "stopped",
+            "stop": "no_executable_work",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Rd8"
+            ],
+            "state": "stopped",
+            "stop": "prerequisite_unresolved",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "d5 Rg1 Na4 Ne2 Qc5",
+            "pair": [
+              "Qxd5",
+              "Ka1"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_other_capture",
+            "prefix": "d5 Rg1 Na4 Ne2 Qc5",
+            "pair": [
+              "Qxd5",
+              "exd5"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Rd8"
+            ],
+            "state": "stopped",
+            "stop": "prerequisite_unresolved",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "d5 Rg1 Na4 Ne2 Qc5 Ka1",
+            "pair": [
+              "dxe4",
+              "Qe3"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-sacrifice",
+        "comparisons": [
+          {
+            "id": "sacrifice_value",
+            "prefix": "",
+            "pair": [
+              "d5",
+              "Rd8"
+            ],
+            "state": "stopped",
+            "stop": "prerequisite_unresolved",
+            "relation": null
+          },
+          {
+            "id": "sacrifice_decline",
+            "prefix": "d5 Rg1 Na4 Ne2 Qc5 Qxd5 Qe3 Rg2 Rd8 Qxd8+ Bxd8 Rxd8+ Kh7 g5",
+            "pair": [
+              "Qxe4",
+              "Nb2"
+            ],
+            "state": "stopped",
+            "stop": "search_budget_exhausted",
+            "relation": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "S2",
+    "proposals": [
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "h4"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "Rhf1"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "Rhd1"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-plan-counter",
+        "comparisons": [
+          {
+            "id": "contrast_strength",
+            "prefix": "Qa3",
+            "pair": [
+              "Nf6",
+              "Qf6"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Rhd1",
+              "Qa3"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "better"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Rhd1",
+              "g4"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-plan-counter",
+        "comparisons": [
+          {
+            "id": "contrast_strength",
+            "prefix": "Qa3",
+            "pair": [
+              "Nf6",
+              "Qe7"
+            ],
+            "state": "stopped",
+            "stop": "investigation_limit",
+            "relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-alternative",
+        "comparisons": [
+          {
+            "id": "contrast_value",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "Rhf1"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "Nd2"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-preparation-effect",
+        "comparisons": [
+          {
+            "id": "contrast_immediate",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "h4"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      },
+      {
+        "producer": "C-opponent-choice",
+        "comparisons": [
+          {
+            "id": "contrast_opponent_choice",
+            "prefix": "",
+            "pair": [
+              "Qa3",
+              "Nd2"
+            ],
+            "state": "answered",
+            "stop": null,
+            "relation": "worse"
+          }
+        ]
+      }
+    ]
+  }
+]

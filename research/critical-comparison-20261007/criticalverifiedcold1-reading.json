@@ -1,0 +1,217 @@
+[
+  {
+    "id": "T20Cold",
+    "result": {
+      "game_id": "T20Cold",
+      "elapsed_ms": 9041,
+      "works": 4,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 3185.568,
+      "begin_journal": 3.378,
+      "engine_rpc": 1430.923,
+      "engine_journal": 6.452,
+      "report_rpc": 4125.834,
+      "report_journal": 285.284
+    },
+    "text": "After g5, Black's pawn on g5 now targets White's pawn on h4. hxg4 clears h5; h5 later occupies that square in this line. h5 moves the pawn out of the attack from Black's pawn on g5. After c5, the white pawn originally on h4 is still present on h5. After g4, White's pawn on g4 now targets Black's pawn on h5. The black pawn originally on h5 is still present on g4 after hxg4 and after c5. After g5, Black's pawn on f6 adds support to Black's pawn on g5, which is under attack from White's pawn on h4. hxg4 captures the white pawn on g4. The recorded continuation is Ke6.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "cost",
+      "reply"
+    ],
+    "verification": {
+      "state": "stopped",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": null,
+      "stop_reason": "search_budget_exhausted"
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 206,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 21,
+          "nodes": 39474,
+          "engineTimeMs": 62,
+          "executorElapsedMs": 198,
+          "bestmoveUci": "e5e6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 1
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 40
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 56,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 17,
+          "nodes": 12221,
+          "engineTimeMs": 7,
+          "executorElapsedMs": 55,
+          "bestmoveUci": "g6g5"
+        },
+        "roots_returned": [
+          {
+            "move": "g6g5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 18
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 39
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 188,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 40,
+          "nodes": 364000,
+          "engineTimeMs": 120,
+          "executorElapsedMs": 184,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 2
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 2
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 3
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:3",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 802,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 802,
+          "observedNodes": 2000385,
+          "engineTimeMs": 737,
+          "diagnostic": "{\"lastDepth\":12,\"pvDepths\":[12,12],\"bounds\":[null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      }
+    ]
+  }
+]

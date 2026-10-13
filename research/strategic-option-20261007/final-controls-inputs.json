@@ -1,0 +1,232 @@
+{
+  "cases": [
+    {
+      "id": "H02",
+      "category": "quiet_important",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "e7e6",
+        "b1c3",
+        "e6d5",
+        "c4d5",
+        "d7d6",
+        "e2e4",
+        "g7g6",
+        "f2f4",
+        "f8g7",
+        "g1f3",
+        "e8g8",
+        "f1e2",
+        "b8d7",
+        "e1g1",
+        "f8e8",
+        "d1c2",
+        "d8e7"
+      ],
+      "fen": "r1b1r1k1/pp1nqpbp/3p1np1/2pP4/4PP2/2N2N2/PPQ1B1PP/R1B2RK1 w - - 9 12",
+      "mainline_san": "d4 Nf6 c4 c5 d5 e6 Nc3 exd5 cxd5 d6 e4 g6 f4 Bg7 Nf3 O-O Be2 Nbd7 O-O Re8 Qc2 Qe7",
+      "played_san": "Nd2",
+      "lines": [
+        [
+          "f3d2"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1e1",
+        "e2d3"
+      ],
+      "alternatives_san": [
+        "Re1",
+        "Bd3"
+      ],
+      "source": "John Doknjas, Opening Repertoire The Modern Benoni, PDF pages59-60 (printed58-59), Game7 variation12Nd2?!; successor12...Nb6 diagram visually checked.",
+      "human_task": "Nd2 supports e4 but withdraws the active f3 knight. Test whether ...Nb6 and the threat ...Nfxd5 make this natural defence inferior to Re1; explain the concrete enabled response and its cost.",
+      "falsifiers": [
+        "Do not claim ...Nb6 forces material gain from one PV.",
+        "The queen on c2 and bishop on e2 must be tracked; an attack count is not a proof of an unanswerable threat.",
+        "If modern equal-depth analysis does not separate the alternatives, report the book hypothesis as unconfirmed."
+      ],
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "engine_output_previously_read": true
+    },
+    {
+      "id": "C03",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "g1f3",
+        "g8f6",
+        "g2g3",
+        "f8e7",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c7c6",
+        "d1c2",
+        "b7b6",
+        "b1d2",
+        "c8b7",
+        "e2e4"
+      ],
+      "fen": "rn1q1rk1/pb2bppp/1pp1pn2/3p4/2PPP3/5NP1/PPQN1PBP/R1B2RK1 b - - 0 9",
+      "mainline_san": "d4 d5 c4 e6 Nf3 Nf6 g3 Be7 Bg2 O-O O-O c6 Qc2 b6 Nbd2 Bb7 e4",
+      "played_san": "Nbd7",
+      "lines": [
+        [
+          "b8d7"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "b8a6"
+      ],
+      "alternatives_san": [
+        "Na6"
+      ],
+      "human_task": "Judge a routine developing move by whether it gives White an effective central advance and leaves Black unable to challenge the wedge in time.",
+      "hypothesis": "After Nbd7, e5 gains time against Nf6, closes Bb7 and leaves weaker central counterplay than Na6 followed by c5. Test each link separately.",
+      "falsifiers": [
+        "e5 is legal after both moves: legality alone proves no timing difference.",
+        "A strong response after Nbd7 challenges the centre comparably.",
+        "Na6 does not improve the relevant central response or the engine rejects the book preference."
+      ],
+      "source": {
+        "book": "The Catalan: move by move",
+        "pdf": "C:\\Codes\\Chesstories\\target\\human-commentary-reading-20261006\\catalan.pdf",
+        "pdf_pages": [
+          6,
+          7,
+          8
+        ],
+        "diagram": "PDF8 upper left after Nbd7 visually checked"
+      },
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "engine_output_previously_read": true
+    },
+    {
+      "id": "D06",
+      "initial_fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "mainline_san": "",
+      "played_san": "Re1",
+      "lines": [
+        [
+          "f1e1"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1f6"
+      ],
+      "alternatives_san": [
+        "Rxf6"
+      ],
+      "human_task": "Explain the first checking reply and lost queen-capture opportunity with their consequences.",
+      "hypothesis": "Moving the f1 rook permits a dangerous Qf2+ reply; the alternative captures the queen and pays the rook.",
+      "falsifiers": [
+        "Qf2 is already equally effective against the alternative.",
+        "The stated follow-up can be avoided by an adequate tested defense."
+      ],
+      "source": null,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "engine_output_previously_read": true
+    },
+    {
+      "id": "R01",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f4",
+        "d6e6"
+      ],
+      "fen": "8/8/4kp2/2p5/ppp1PK2/P1P3P1/1P6/8 w - - 4 38",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "source": "Book counter-control: opponent b3 reserve remains; early g4 still fails.",
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "engine_output_previously_read": true
+    },
+    {
+      "id": "R02",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3e2",
+        "d6e5",
+        "e2e3",
+        "e5d6",
+        "e3d2",
+        "b4b3",
+        "d2e3",
+        "d6e5",
+        "e3f3",
+        "e5d6",
+        "f3f4",
+        "d6e6"
+      ],
+      "fen": "8/8/4kp2/2p5/p1p1PK2/PpP3P1/1P6/8 w - - 6 43",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "source": "Book late use after Black spent b3: g4 gives way to Kf5.",
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "engine_output_previously_read": true
+    },
+    {
+      "id": "T09h3",
+      "category": "new_reference_under_v13",
+      "initial_fen": "8/7p/6p1/5p2/2k2P2/4KP2/7P/8 w - - 0 43",
+      "move_prefix_uci": [],
+      "fen": "8/7p/6p1/5p2/2k2P2/4KP2/7P/8 w - - 0 43",
+      "played_san": "h3",
+      "lines": [
+        [
+          "h2h3"
+        ]
+      ],
+      "source": "100 Endgame Patterns personal reading PDF62-63, Montoya-Lopez Spanish U14 Championship2020. Diagram visually checked.",
+      "human_task": "Test spending h3 before the king opposition maneuver. The book uses h3 later after Ke2 Kc3 Ke3 Kc2 Ke2 h6. Premature h3 is our hypothesis, not an error label quoted from the book.",
+      "history_limit": "Diagram and side-to-move known; earlier history unavailable. No repetition or fifty-move inference from the zero clock.",
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "falsifiers": [
+        "No loss or necessity claim from book prose alone.",
+        "No transfer success for a generic pawn/king description or an unknown comparison."
+      ],
+      "already_open_development": true
+    }
+  ],
+  "rule_freeze_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\strategic-option-20261007\\final-freeze.json",
+  "rule_freeze_sha256": "b3a2746f807ebca41625ddd4ee36c586581b8b9bbfddc4fa4a48d5b73db88e88"
+}

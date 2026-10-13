@@ -1,0 +1,459 @@
+{
+  "sealed_utc": "2026-10-08T23:44:32.281392+00:00",
+  "new_engine_queries": 0,
+  "source_whole_reports_sha256": "92bb4e998560f81074238c155af7e9b8899a2faa89b6d5990693a8eac24a5b38",
+  "source_final_snapshot_sha256": "3ccdcd6b3913624059105603387676f780ab5930228377aed31c5035da501820",
+  "cycles": [
+    {
+      "parent_prefix": [
+        "f3e3",
+        "e5e6"
+      ],
+      "full_work": "work:6",
+      "full_values": [
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 446
+          }
+        },
+        {
+          "move": "e3d2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 445
+          }
+        },
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 445
+          }
+        }
+      ],
+      "named_work": "work:7",
+      "named_values": [
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 198
+          }
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 3
+          }
+        }
+      ],
+      "named_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "g3g4",
+          "e3f4"
+        ]
+      },
+      "conflict_depth": 16,
+      "child_work": "work:8",
+      "child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f4",
+        "f7f6"
+      ],
+      "child_values": [
+        {
+          "move": "f4g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 481
+          }
+        },
+        {
+          "move": "f4e3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 479
+          }
+        }
+      ],
+      "renewed_full_work": "work:9",
+      "renewed_full_depth": 16,
+      "question_id": "comparison-conflict:ddc1d06f7eeecd9e90242a2318e6090aecde86b7d202f41dc4f5dec97d8976f7"
+    },
+    {
+      "parent_prefix": [
+        "f3e3",
+        "e5e6"
+      ],
+      "full_work": "work:9",
+      "full_values": [
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 447
+          }
+        },
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 439
+          }
+        },
+        {
+          "move": "e3d2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 412
+          }
+        }
+      ],
+      "named_work": "work:10",
+      "named_values": [
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 259
+          }
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          }
+        }
+      ],
+      "named_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "g3g4",
+          "e3f4"
+        ]
+      },
+      "conflict_depth": 16,
+      "child_work": "work:11",
+      "child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f4"
+      ],
+      "child_values": [
+        {
+          "move": "e6f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 515
+          }
+        },
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 517
+          }
+        }
+      ],
+      "renewed_full_work": "work:12",
+      "renewed_full_depth": 16,
+      "question_id": "comparison-conflict:292649a184e64ab59eef3dada933ab7c25ad08a6d0212d9fa3c63069c4b36c3d"
+    },
+    {
+      "parent_prefix": [
+        "f3e3",
+        "e5e6"
+      ],
+      "full_work": "work:12",
+      "full_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 478
+          }
+        },
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 478
+          }
+        },
+        {
+          "move": "e3d2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 477
+          }
+        }
+      ],
+      "named_work": "work:13",
+      "named_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 195
+          }
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          }
+        }
+      ],
+      "named_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "g3g4",
+          "e3f3"
+        ]
+      },
+      "conflict_depth": 16,
+      "child_work": "work:14",
+      "child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3"
+      ],
+      "child_values": [
+        {
+          "move": "e5e6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 427
+          }
+        },
+        {
+          "move": "e5d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 563
+          }
+        }
+      ],
+      "renewed_full_work": "work:15",
+      "renewed_full_depth": 16,
+      "question_id": "comparison-conflict:69bf0206ba018a79a42f91608c39d4e5190e107b0a20c5112f0388002225e1fb"
+    },
+    {
+      "parent_prefix": [
+        "f3e3",
+        "e5e6"
+      ],
+      "full_work": "work:15",
+      "full_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 440
+          }
+        },
+        {
+          "move": "e3d2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 417
+          }
+        },
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 417
+          }
+        }
+      ],
+      "named_work": "work:16",
+      "named_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 235
+          }
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          }
+        }
+      ],
+      "named_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "g3g4",
+          "e3f3"
+        ]
+      },
+      "conflict_depth": 16,
+      "child_work": "work:17",
+      "child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3",
+        "e5e6",
+        "e3f4"
+      ],
+      "child_values": [
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 392
+          }
+        },
+        {
+          "move": "e6d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 554
+          }
+        }
+      ],
+      "renewed_full_work": "work:18",
+      "renewed_full_depth": 16,
+      "question_id": "comparison-conflict:0297062463dc42bcbe4131d08bcc69602cd2cb28da0da0a0c767363d08304538"
+    },
+    {
+      "parent_prefix": [
+        "f3e3",
+        "e5e6"
+      ],
+      "full_work": "work:18",
+      "full_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 471
+          }
+        },
+        {
+          "move": "e3d2",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 469
+          }
+        },
+        {
+          "move": "e3f4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 456
+          }
+        }
+      ],
+      "named_work": "work:19",
+      "named_values": [
+        {
+          "move": "e3f3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 222
+          }
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 5
+          }
+        }
+      ],
+      "named_restriction": {
+        "kind": "restricted",
+        "moves_uci": [
+          "g3g4",
+          "e3f3"
+        ]
+      },
+      "conflict_depth": 16,
+      "child_work": "work:20",
+      "child_prefix": [
+        "f3e3",
+        "e5e6",
+        "e3f3",
+        "e6e5",
+        "f3e3",
+        "e5e6",
+        "e3f4",
+        "e6d7"
+      ],
+      "child_values": [
+        {
+          "move": "f4f5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 539
+          }
+        },
+        {
+          "move": "e4e5",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 415
+          }
+        }
+      ],
+      "renewed_full_work": "work:21",
+      "renewed_full_depth": 16,
+      "question_id": "comparison-conflict:4bc8e69f7406bc4fa8572592f679e605103a2b19d89e3a5c719d013029cd60be"
+    }
+  ],
+  "all_five_parent_depths": 16,
+  "not_Kf2": "Actual selected other moves change Kf4 to Kf3; no Kf2 values inserted.",
+  "no_child_numeric_graft": "Child values answer only the child prefix; new full and named receipts own each parent value.",
+  "convergence": "Five current epoch renewals are genuine completed comparisons; no resolved parent certificate or monotonic-strength convergence is claimed."
+}

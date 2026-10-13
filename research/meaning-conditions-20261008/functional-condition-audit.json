@@ -1,0 +1,1953 @@
+{
+  "schema": "functional-condition-audit.v1",
+  "recorded_utc": "2026-10-08T05:28:39.165161+09:00",
+  "agent": "functional_condition_audit",
+  "worktree": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "scope": "Read-only source, stored actual reports, prior research records, and selected previously extracted reference pages. Product edits belong to root.",
+  "new_engine_execution": false,
+  "product_edits": false,
+  "new_tests_executed": false,
+  "main_finding": "The runtime already distinguishes observed facts, same-position move value, and conditional applicability in several places. The missing generalization is not another motif detector: exact realization events are currently used both to guard a concrete story and to keep its question eligible, and some comparisons with the same reference move contaminate that eligibility across separately owned returned lines. Independent value tests can preserve a useful choice but do not supply its strategic causal interpretation.",
+  "confirmed_findings": [
+    {
+      "id": "utility_beyond_legality",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 364
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 401
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "line": 1688
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+          "line": 609
+        }
+      ],
+      "details": [
+        "Preparation discovery does generate legal/legal comparison questions and records root-owned control/location differences; this is not total absence of the question.",
+        "MechanismWitness only joins legal capture response differences or the same original action becoming illegal after changing preparation while intervening moves match exactly. FunctionalEffect admits a cleared destination or opened action control. Equal legality with altered strategic usefulness does not become a verified mechanism merely because root scores differ.",
+        "ReserveEntryValue is a concrete existing model for an available option absent from the refreshed PV: query it at its original owned position against the currently chosen alternative, then retain the legal option only if its own value receipt is comparable. It proves retained usefulness of this tested option, not sole causal contribution to the original root difference."
+      ],
+      "forbidden_shortcut": "Changing legal/illegal matching to also allow legal/legal without a separate functional outcome and owned value test would promote unrelated geometric effects plus a favorable PV into a reason."
+    },
+    {
+      "id": "same_reference_different_receipt_pollution",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 331
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "line": 1565
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "line": 1569
+        }
+      ],
+      "details": [
+        "Member.current collects every Event fact whose source is Comparison(id, reference) and whose comparison prefix/reference move equal Key.anchor/Key.move. It does not distinguish current_sacrifice_* from returned_*.",
+        "In SG02 sacrifice_value and sacrifice_other_capture are both prefix=[] reference=f7f3, but their reference continuations come from different receipts. The returned_sacrifice_other_capture gain event is therefore used to withdraw the root material idea even while its current_sacrifice group is supported.",
+        "Do not explain the first candidate failure merely as sibling propagation. In report 3 it has its own Member.current event_absent triggers from returned_sacrifice_other_capture. The second candidate has its own root-current and returned-root absent events. Both then make the Key group withdrawn."
+      ]
+    },
+    {
+      "id": "event_absence_is_bounded_realization_failure",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "line": 131
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+          "line": 184
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 327
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 818
+        }
+      ],
+      "details": [
+        "Event matching checks an actor/victim/destination within a fixed [fromPly, throughPly) interval. Discovery usually copies one-ply events; changing a move order or capturer can yield event_absent even if a related functional result survives elsewhere.",
+        "The reader correctly distinguishes event_absent from path_end, unavailable identity/material, and false expected values. Absence is not_applicable for the exact finite witness, while unresolved short continuations remain partial.",
+        "Member.absent treats either refuted or event_absent as withdrawal. Idea.withdrawn aggregates tracking members. CurrentQuestions then drops every member entry of that idea, so this affects pending comparisons, continuation work, and public candidates, not just wording.",
+        "Removing the withdrawal filter alone is unsafe: it would resurrect old realized compensation, allow failed subcontexts into readiness, and can spend work on historical branches after a genuine root replacement."
+      ]
+    },
+    {
+      "id": "SG02_question_perspective_is_not_rook_offer",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "line": 1465
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "line": 1481
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 783
+        }
+      ],
+      "details": [
+        "The stored SG02 C-sacrifice candidates concern white material loss starting with black Rxf3 removing the original white f3 pawn. They are not candidates proving compensation for Black sacrificing the original f7 rook.",
+        "The observed best line declines the rook. Because no black rook loss is observed on that branch, keeping the old white-loss candidates alive cannot by itself explain why Rxf3 keeps the d5 bishop or why gxf3 is poor.",
+        "The all-investor material deficit generator deliberately asks about observed deficits rather than intended sacrifice. This scope is valid for its question but different from the human root comparison in SG02."
+      ]
+    },
+    {
+      "id": "question_focus_reuse_has_strict_scope",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 514
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "line": 749
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2150
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2910
+        }
+      ],
+      "details": [
+        "QuestionFocus already keeps one exact mechanism and its comparison owner together and moves supplementary facts to detail. It can be reused when an existing control/location condition and its action test truly match the original physical pieces and owned action.",
+        "Current QuestionFocus is not a generic container for a strategy label or for any supported FactGroup: it expects the legal-response/enablement mechanism above and a concrete physical use.",
+        "MoveWorkProjection then requires the exact action at the declared use, matched typed meanings, and complete price accounts. A new functional interpretation should meet those conditions or use a narrow existing typed Section; do not fabricate a focus only to shorten the output."
+      ]
+    }
+  ],
+  "SG02_exact_replayed_trace": {
+    "version": "optionv3",
+    "replay_manifest": "target/decision-timing-20261006/optionbookdiagnostic1/manifest.json",
+    "report_count": 4,
+    "clock": "Stored reports replayed with a fixed research clock; this trace is not a latency experiment.",
+    "steps": [
+      {
+        "command": "begin",
+        "report_number": 0,
+        "verification": "pending",
+        "sacrifice_proposals": []
+      },
+      {
+        "command": "report",
+        "report_number": 1,
+        "verification": "pending",
+        "sacrifice_proposals": []
+      },
+      {
+        "command": "report",
+        "report_number": 2,
+        "verification": "complete",
+        "sacrifice_proposals": [
+          {
+            "id": "discovery:85eea0a482cd469e146e5fab70867a61be5a60b61e6d46cc616120a8e0412456",
+            "live": true,
+            "heads": [
+              [
+                "sacrifice_observed",
+                "sacrifice_current",
+                "sacrifice_value",
+                "sacrifice_other_capture"
+              ],
+              [
+                "sacrifice_reply_sacrifice_value_context"
+              ],
+              [
+                "sacrifice_reply_sacrifice_other_capture_context"
+              ]
+            ],
+            "root_named_current_group": {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            },
+            "comparison_readings": [
+              {
+                "id": "sacrifice_value",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              },
+              {
+                "id": "sacrifice_other_capture",
+                "state": "awaiting_engine",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "member_current_event_count": 18,
+            "withdrawal_triggers": [],
+            "current_named_event_states": [
+              {
+                "id": "current_sacrifice_loss_0_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_0",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_file_f",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "loss_boundary": 1,
+            "loss_subject": {
+              "side": "white",
+              "role": "pawn",
+              "original_square": "f3"
+            },
+            "loss_prefix": [
+              "f7f3"
+            ]
+          }
+        ]
+      },
+      {
+        "command": "report",
+        "report_number": 3,
+        "verification": "complete",
+        "sacrifice_proposals": [
+          {
+            "id": "discovery:85eea0a482cd469e146e5fab70867a61be5a60b61e6d46cc616120a8e0412456",
+            "live": false,
+            "heads": [
+              [
+                "sacrifice_observed",
+                "sacrifice_current",
+                "sacrifice_value",
+                "sacrifice_other_capture"
+              ],
+              [
+                "sacrifice_reply_sacrifice_value_context"
+              ],
+              [
+                "sacrifice_reply_sacrifice_other_capture_context"
+              ]
+            ],
+            "root_named_current_group": {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            },
+            "comparison_readings": [
+              {
+                "id": "sacrifice_value",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              },
+              {
+                "id": "sacrifice_other_capture",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              }
+            ],
+            "member_current_event_count": 18,
+            "withdrawal_triggers": [
+              {
+                "id": "returned_sacrifice_other_capture_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "returned_sacrifice_other_capture_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_other_capture_sacrifice_gain_11_role,Path(returned_sacrifice_other_capture,Comparison(sacrifice_other_capture,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,pawn,b2)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_other_capture_sacrifice_gain_11",
+                "reading": {
+                  "id": "returned_sacrifice_other_capture_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_other_capture_sacrifice_gain_11,Path(returned_sacrifice_other_capture,Comparison(sacrifice_other_capture,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,pawn,b2)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              }
+            ],
+            "current_named_event_states": [
+              {
+                "id": "current_sacrifice_loss_0_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_0",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_file_f",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "loss_boundary": 1,
+            "loss_subject": {
+              "side": "white",
+              "role": "pawn",
+              "original_square": "f3"
+            },
+            "loss_prefix": [
+              "f7f3"
+            ]
+          },
+          {
+            "id": "discovery:205fd199cc0389f5d584b0eef01de49ef26d7b1cad1704d9228e3c622e622904",
+            "live": false,
+            "heads": [
+              [
+                "sacrifice_observed",
+                "sacrifice_current",
+                "sacrifice_value",
+                "sacrifice_other_capture"
+              ],
+              [
+                "sacrifice_reply_sacrifice_value_context"
+              ],
+              [
+                "sacrifice_reply_sacrifice_other_capture_context"
+              ]
+            ],
+            "root_named_current_group": {
+              "id": "sacrifice_current",
+              "state": "partial",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            },
+            "comparison_readings": [
+              {
+                "id": "sacrifice_value",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              },
+              {
+                "id": "sacrifice_other_capture",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              }
+            ],
+            "member_current_event_count": 33,
+            "withdrawal_triggers": [
+              {
+                "id": "current_sacrifice_gain_7_role",
+                "reading": {
+                  "id": "current_sacrifice_gain_7_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_7_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,before,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_gain_7",
+                "reading": {
+                  "id": "current_sacrifice_gain_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_7,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,after,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(removed))"
+              },
+              {
+                "id": "current_sacrifice_check_7",
+                "reading": {
+                  "id": "current_sacrifice_check_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_check_7,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(check,None,None,None,Some(black),None),Event(check,1,after,7,8,Some(Piece(white,rook,d1)),None,None),None,Some(present))"
+              },
+              {
+                "id": "current_sacrifice_loss_8_role",
+                "reading": {
+                  "id": "current_sacrifice_loss_8_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_loss_8_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,before,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_loss_8",
+                "reading": {
+                  "id": "current_sacrifice_loss_8",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_loss_8,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,after,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(removed))"
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "current_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_11_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "reading": {
+                  "id": "current_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_11,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_7_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_7_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_7_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,before,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_7",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_7,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,after,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_check_7",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_check_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_check_7,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(check,None,None,None,Some(black),None),Event(check,1,after,7,8,Some(Piece(white,rook,d1)),None,None),None,Some(present))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_loss_8_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_loss_8_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_loss_8_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,before,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_loss_8",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_loss_8",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_loss_8,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,after,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_11_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_11",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_11,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              }
+            ],
+            "current_named_event_states": [
+              {
+                "id": "current_sacrifice_loss_0_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_0",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_7_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_7",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_check_7",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_8_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_8",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_file_f",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "loss_boundary": 1,
+            "loss_subject": {
+              "side": "white",
+              "role": "pawn",
+              "original_square": "f3"
+            },
+            "loss_prefix": [
+              "f7f3"
+            ]
+          }
+        ]
+      },
+      {
+        "command": "report",
+        "report_number": 4,
+        "verification": "complete",
+        "sacrifice_proposals": [
+          {
+            "id": "discovery:85eea0a482cd469e146e5fab70867a61be5a60b61e6d46cc616120a8e0412456",
+            "live": false,
+            "heads": [
+              [
+                "sacrifice_observed",
+                "sacrifice_current",
+                "sacrifice_value",
+                "sacrifice_other_capture"
+              ],
+              [
+                "sacrifice_reply_sacrifice_value_context"
+              ],
+              [
+                "sacrifice_reply_sacrifice_other_capture_context"
+              ]
+            ],
+            "root_named_current_group": {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            },
+            "comparison_readings": [
+              {
+                "id": "sacrifice_value",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              },
+              {
+                "id": "sacrifice_other_capture",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              }
+            ],
+            "member_current_event_count": 18,
+            "withdrawal_triggers": [
+              {
+                "id": "returned_sacrifice_other_capture_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "returned_sacrifice_other_capture_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_other_capture_sacrifice_gain_11_role,Path(returned_sacrifice_other_capture,Comparison(sacrifice_other_capture,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,pawn,b2)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_other_capture_sacrifice_gain_11",
+                "reading": {
+                  "id": "returned_sacrifice_other_capture_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_other_capture_sacrifice_gain_11,Path(returned_sacrifice_other_capture,Comparison(sacrifice_other_capture,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,pawn,b2)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              }
+            ],
+            "current_named_event_states": [
+              {
+                "id": "current_sacrifice_loss_0_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_0",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_file_f",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "loss_boundary": 1,
+            "loss_subject": {
+              "side": "white",
+              "role": "pawn",
+              "original_square": "f3"
+            },
+            "loss_prefix": [
+              "f7f3"
+            ]
+          },
+          {
+            "id": "discovery:205fd199cc0389f5d584b0eef01de49ef26d7b1cad1704d9228e3c622e622904",
+            "live": false,
+            "heads": [
+              [
+                "sacrifice_observed",
+                "sacrifice_current",
+                "sacrifice_value",
+                "sacrifice_other_capture"
+              ],
+              [
+                "sacrifice_reply_sacrifice_value_context"
+              ],
+              [
+                "sacrifice_reply_sacrifice_other_capture_context"
+              ]
+            ],
+            "root_named_current_group": {
+              "id": "sacrifice_current",
+              "state": "stopped",
+              "stop_reason": "not_required_for_decision",
+              "band": null,
+              "relation": null
+            },
+            "comparison_readings": [
+              {
+                "id": "sacrifice_value",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              },
+              {
+                "id": "sacrifice_other_capture",
+                "state": "answered",
+                "stop_reason": null,
+                "band": "separated",
+                "relation": "worse"
+              }
+            ],
+            "member_current_event_count": 33,
+            "withdrawal_triggers": [
+              {
+                "id": "current_sacrifice_gain_7_role",
+                "reading": {
+                  "id": "current_sacrifice_gain_7_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_7_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,before,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_gain_7",
+                "reading": {
+                  "id": "current_sacrifice_gain_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_7,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,after,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(removed))"
+              },
+              {
+                "id": "current_sacrifice_check_7",
+                "reading": {
+                  "id": "current_sacrifice_check_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_check_7,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(check,None,None,None,Some(black),None),Event(check,1,after,7,8,Some(Piece(white,rook,d1)),None,None),None,Some(present))"
+              },
+              {
+                "id": "current_sacrifice_loss_8_role",
+                "reading": {
+                  "id": "current_sacrifice_loss_8_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_loss_8_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,before,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_loss_8",
+                "reading": {
+                  "id": "current_sacrifice_loss_8",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_loss_8,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,after,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(removed))"
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "current_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_11_role,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "reading": {
+                  "id": "current_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(current_sacrifice_gain_11,Path(current_sacrifice,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_7_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_7_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_7_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,before,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_7",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_7,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,c8)),None,None,None,None),Event(capture,1,after,7,8,Some(Piece(white,rook,d1)),Some(Piece(black,rook,c8)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_check_7",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_check_7",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_check_7,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(check,None,None,None,Some(black),None),Event(check,1,after,7,8,Some(Piece(white,rook,d1)),None,None),None,Some(present))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_loss_8_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_loss_8_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_loss_8_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,before,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_loss_8",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_loss_8",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_loss_8,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(white,rook,d1)),None,None,None,None),Event(capture,1,after,8,9,Some(Piece(black,king,g8)),Some(Piece(white,rook,d1)),None),None,Some(removed))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_11_role",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_11_role",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_11_role,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(role,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,before,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(rook))"
+              },
+              {
+                "id": "returned_sacrifice_value_sacrifice_gain_11",
+                "reading": {
+                  "id": "returned_sacrifice_value_sacrifice_gain_11",
+                  "state": "not_applicable",
+                  "stop_reason": "event_absent",
+                  "band": null,
+                  "relation": null
+                },
+                "requirement": "Fact(returned_sacrifice_value_sacrifice_gain_11,Path(returned_sacrifice_value,Comparison(sacrifice_value,reference),false),Predicate(presence,Some(Piece(black,rook,f7)),None,None,None,None),Event(capture,1,after,11,12,Some(Piece(white,queen,b4)),Some(Piece(black,rook,f7)),None),None,Some(removed))"
+              }
+            ],
+            "current_named_event_states": [
+              {
+                "id": "current_sacrifice_loss_0_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_0",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_7_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_7",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_check_7",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_8_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_8",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10_role",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_loss_10",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11_role",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_gain_11",
+                "state": "not_applicable",
+                "stop_reason": "event_absent",
+                "band": null,
+                "relation": null
+              },
+              {
+                "id": "current_sacrifice_file_f",
+                "state": "supported",
+                "stop_reason": null,
+                "band": null,
+                "relation": null
+              }
+            ],
+            "loss_boundary": 1,
+            "loss_subject": {
+              "side": "white",
+              "role": "pawn",
+              "original_square": "f3"
+            },
+            "loss_prefix": [
+              "f7f3"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "minimal_safe_modification_path": [
+    {
+      "step": 1,
+      "change": "Separate applicability of the root question and receipt from applicability of each realized return subcontext.",
+      "reuse": "FactGroup all/any, generated arm head ownership, comparisonContexts, and the existing returned_* subcontexts already express different finite witnesses.",
+      "concrete": "For C-sacrifice root tracking, identify the facts explicitly owned by sacrifice_current instead of scanning every same-prefix Comparison(reference) event. Keep returned_<comparison> facts under that comparison-specific realization subcontext. Do not weaken the facts or mark missing events supported.",
+      "required_integration": "A root question that remains current still cannot publish or rank the missing compensation subcontext as established. Member.explains, observedReturn/currentConfirmed, readiness, and synthesis must be checked at the same comparison arm scope. A local current-filter edit is not by itself sufficient proof of this integration.",
+      "limit": "This fixes cross-receipt contamination for a material question; it does not discover SG02 bishop utility."
+    },
+    {
+      "step": 2,
+      "change": "When a concrete realization changes, retain only the still-owned decision/question and current certified facts; reopen the functional question if its minimum premise survives.",
+      "reuse": "Existing CompareMoves receipt and finite Fact/FactComparison readings; do not add a parallel evidence graph or copy source receipts.",
+      "concrete": "The old event interval remains not_applicable. Search the current owned continuation for a replacement only under the same original actor/target/purpose and evaluate the option independently if it is available but unplayed. Do not replace Key.branch by a fuzzy move/role label, and do not borrow another history.",
+      "unknown": "If the current line does not witness the relevant option or a required value comparison is incomplete, retain a candidate/unverified question. Do not convert missing witness to either strategic refutation or success.",
+      "limit": "A surviving useful option can be described as available/useful in the tested scope. Root cause or uniqueness requires further counter/functional outcome evidence."
+    },
+    {
+      "step": 3,
+      "change": "Complete the critical counter comparisons before deciding whether a stable functional explanation exists.",
+      "reuse": "Existing same-position CompareMoves and exact response pools; root performs actual extended runs.",
+      "SG02_required": "Complete Rxf3 versus Bxf3/Re8, and after Rxf3 complete the strongest legal reply search including Qd2 and gxf3. Read refusal and accepted sacrifice as separate branches with the same original bishop identity. Follow the Qd2 exchange defense far enough to assess the pressure that remains.",
+      "SG13_required": "Finish the already generated Bxh4 versus g5 comparison after Qd7 and inspect checking resources on both actual returned lines. A useful queen control fact on g4 alone does not explain victory or prove absence of other checks.",
+      "latency": "Measure end-to-end and query-specific time for this completed experiment before selecting a product response-time policy. Do not call more elapsed time itself semantic success."
+    },
+    {
+      "step": 4,
+      "change": "Once the functional witness exists, assemble a small answer using existing typed meanings and closure.",
+      "reuse": "QuestionFocus where an actual certified mechanism fits; otherwise existing Sections/ControlContrast/CheckSequence/Material/PieceExchange with root owner and completion.",
+      "concrete": "Lead with the actual assessment and its scope, include the strong reply and necessary concession, and move unrelated relations to detail only after their independent obligations are checked.",
+      "limit": "One correct sacrifice story cannot justify globally reducing protected episodes. Retain the old price/meaning regression cases."
+    }
+  ],
+  "claim_levels": [
+    {
+      "level": "factual difference",
+      "requirements": "Tracked original piece survives/moves, legal rows, certified control/location or actual material changes.",
+      "licensed": "Rxf3 retains the original bishop on d5; Bxf3 moves that bishop. Qd7 controls g4 at this position.",
+      "not_licensed": "The retained bishop is the reason for all engine advantage, or Qd7 removes every possible perpetual."
+    },
+    {
+      "level": "tested option value",
+      "requirements": "Same position/history/side, owned engine receipts at adequate comparable depth, lower/close/unknown handled explicitly.",
+      "licensed": "This tested available option is not inferior under this bounded comparison, or this refusal/counter is stronger than the named alternative.",
+      "not_licensed": "Every legal alternative is inferior or the strategy is forced unless the whole relevant response class was searched and its scope remains explicit."
+    },
+    {
+      "level": "functional result against a counter",
+      "requirements": "Certified condition is used by the same physical pieces; actual counter and result maintain/lose that function; necessary prices included; strongest sampled counter retained.",
+      "licensed": "In the tested acceptance branch the bishop contributes to the attack; in the Qd2 branch exchanges limit it. In this checked comparison one counter changes the checking resource.",
+      "not_licensed": "Causal attribution of the entire evaluation difference when candidate moves also change other features."
+    },
+    {
+      "level": "root human judgment",
+      "requirements": "The prior levels tied back to the original choice plus the opponent best-reply scope and result; evaluation stable enough for the claimed qualitative judgment.",
+      "licensed": "Conditional attack/compensation versus accurate defense, limited pressure or uncertainty, with the critical response.",
+      "not_licensed": "Winning attack from a cooperative acceptance line, practical swindle success as objective proof, or unique best move from close scores."
+    }
+  ],
+  "required_falsification_checks": [
+    {
+      "case": "same_root_reference_separate_receipts",
+      "check": "Two root-prefix comparisons share reference move but have distinct owned reference PVs. Root current facts supported; returned facts for the other comparison event_absent. Preserve the root question/value receipt while rejecting only the missing returned realization. Do not claim compensation from it.",
+      "existing_gap": "SacrificeQuestionTest 274 covers a shorter child at prefix [f1f7], not another comparison at root prefix []."
+    },
+    {
+      "case": "root_replaced_by_stronger_decline",
+      "check": "A deeper root refresh changes acceptance to decline. Withdraw the historical accepted-loss story and do not issue work under its obsolete branch. Keep refreshed root verdict and its exact receipt.",
+      "must_preserve": "SacrificeQuestionTest 186-228."
+    },
+    {
+      "case": "utility_not_just_legality",
+      "check": "Both branches keep the action legal; one loses the relevant defensive resource/value. A geometric fact cannot establish benefit until the owned comparison and concrete use/result agree. Also include two equally useful legal choices.",
+      "existing_scope": "PreparationCausalityTest 225 certifies a changed defender with legal/legal capture but deliberately does not certify strength."
+    },
+    {
+      "case": "changed_order_same_function",
+      "check": "The observed compensation event disappears at the old ply but an independently tested useful option survives at its decision. Do not fake a played event, and do not reuse the old one-ply fact as proof of a new location/time.",
+      "existing_pattern": "AvailableEntryTest and reserveEntryValue; needs non-endgame source scenes."
+    },
+    {
+      "case": "changed_order_function_really_fails",
+      "check": "The move remains legal but a stronger reply removes the useful function or the option is materially worse. Keep the old event absent and narrow/retire the functional claim.",
+      "required": "Pair with the previous positive, including a counter that changes a piece identity or later price."
+    },
+    {
+      "case": "uncompleted_comparison",
+      "check": "Short/unknown/timeout result remains candidate or needs refresh; complete it once in extended research and re-read the actual meaning and cost. No success from merely receiving an engine answer."
+    },
+    {
+      "case": "two_independent_important_questions",
+      "check": "A small functional answer must retain an independent immediate check/price/duty answer; old selectionv3/v5 regressions must remain observable.",
+      "required": "Prices include used supporter later loss, cross-square countercaptures and exact check replies."
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-10-01 or earlier",
+      "commit": "5b6bc8c4d6",
+      "finding": "Current-as-all-reference-events, exact current sacrifice observations, returned reply subcontexts, Mechanism/QuestionFocus and whole-question withdrawal are already present in this committed implementation. The current problem is a preexisting structural boundary, not a new absence of the idea."
+    },
+    {
+      "date": "2026-10-02",
+      "record": "research/content-selection-20261002/implementation.json",
+      "finding": "A single verified QuestionFocus can carry exact condition/use/prices and push unrelated facts to detail, but retained master replays had no such verified focus/investigations; no production question-discovery gain established."
+    },
+    {
+      "date": "2026-10-04~05",
+      "record": "research/importance-expression-audit-20261005/result.json",
+      "finding": "Selectionv3/v5 narrowing caused important meaning and price regressions; broad protection and narrow new path accumulated. This is why loosening protection or simply broadening eligibility is inadequate."
+    },
+    {
+      "date": "2026-10-06",
+      "record": "research/bottleneck-resolution-20261006/audit.json",
+      "finding": "A prior audit already proposed concrete falsifiable functional claims, preserving duties/options against actual replies, and testing counterexamples. Repeating those words alone is not a new design."
+    },
+    {
+      "date": "2026-10-07",
+      "record": "research/strategic-option-20261007/findings.json",
+      "finding": "Available-entry value path addressed one bounded useful-choice/PV-refresh issue; book central answers remained 0/6. SG02 event coupling and SG13 investigation-limit counter remained actual inputs."
+    }
+  ],
+  "reference_reading": {
+    "source": "target/strategic-option-20261007/books/supergm-pages.json",
+    "selected_pages": [
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      471,
+      472,
+      474,
+      475,
+      476
+    ],
+    "lesson": "In Puzzle 2, the d5 bishop and tactical punishment of gxf3 make the rook offer effective, while Qd2/Re3/Rc3 leads to major liquidation and approximately drawable pressure. In Puzzle 13, finding why Bd5 fails to Bxh4 leads to Qd7, followed by testing g5. The book experiment supports looking for strong refutations, not a universal percentage allocation or automatic causal inference.",
+    "reading_limit": "Read previously extracted local source text for these selected pages; no new diagrams rendered by this child, no whole-book claim."
+  },
+  "not_concluded": [
+    "No product source was edited by this agent.",
+    "No independent engine comparison was run by this agent.",
+    "This trace establishes a concrete code dependency failure, not all reasons for missing SG02 strategic meaning.",
+    "No general sacrifice-compensation solver or universal engine-value causal explanation is claimed."
+  ],
+  "source_hashes": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "07163dd5bb0c70a7dbc6dd42e54c932974ae11a432287318db0207fca5607eb4"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "sha256": "3b1429dd42ada39781e638473a7b30897c25095cf63cbfbf6abefef14681415e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+      "sha256": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+      "sha256": "82a0f1e4d9db7235d3851b123a10b8c111629b255a9c20a4da88e252085cb0d6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+      "sha256": "7305de25af51df169a0fbeaa7aaff072ad9508db7e20de4065da9e55c95f5416"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "26a2e41e1da2bb3b56dee1aea7bf4fd1ae3f3e6ae460d9ecf6d906241d4c6428"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "sha256": "c5d9449526f196dd30785156ee0da851475b2cd72497a8f748da9efa5a11623b"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/SacrificeQuestionTest.scala",
+      "sha256": "808bc83c7e3cedb5ef9616313e59014aa96ab50246cc5c023f6a8929e081c197"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/PreparationCausalityTest.scala",
+      "sha256": "29339e866246da9ad2426cb5dc6a29ad3d378bb427207fee1d5a512049b4d146"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryIdeaIdentityTest.scala",
+      "sha256": "b72ed65edddee3180f530081442d64ef14f50367f40c1fadb8dbd65867ae243a"
+    },
+    {
+      "path": "target\\decision-timing-20261006\\optionbookdiagnostic1\\dependency-readings.json",
+      "sha256": "5440968f4f3b3f2f326d02805974caaa92628c559c01dad6ce65327e306cda0d"
+    },
+    {
+      "path": "target/decision-timing-20261006/optionbookdiagnostic1/manifest.json",
+      "sha256": "e64905363ab436c4a611e7b6bbcaa3ef9d87b89d90da4a6805a6ecaa40cf3324"
+    },
+    {
+      "path": "research/bottleneck-resolution-20261006/audit.json",
+      "sha256": "ef52e0ce6e530abd31520e521aa4a673889a840352ec3861717d5145565dceb8"
+    },
+    {
+      "path": "research/importance-expression-audit-20261005/result.json",
+      "sha256": "79832b0b62384e50fd671fa32961b09529ed82a8d7b2f90fb29d7b5e93e79288"
+    },
+    {
+      "path": "research/selection-cause-audit-20261005/result.json",
+      "sha256": "674981bd865fd6ed03d4c04bc69b6e4c786afbd9c51f810254bc90104fe19ee7"
+    },
+    {
+      "path": "research/content-selection-20261002/implementation.json",
+      "sha256": "11a8d6e5bae4b0956a047a0bd68a0501b1c97b38f11c64697f9ab37ce0463444"
+    }
+  ],
+  "test_preparation": {
+    "recorded_utc": "2026-10-08T05:37:22.563353+09:00",
+    "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/MeaningConditionScopeTest.scala",
+    "sha256": "951b899e2a1e90783308ceb090dd1dcd756189630033676777f5936a7027d1d4",
+    "compiled_by_this_agent": false,
+    "run_by_this_agent": false,
+    "product_edits_by_this_agent": false,
+    "expectation": "The root current question and pair receipt survive absence of a separately owned return, while the completed missing-return comparison cannot borrow original compensation. A genuinely changed root still withdraws the old realization, and an unanswered comparison remains investigable/candidate.",
+    "fixture": "Legal exposed SG02 original/changed continuations and legal root alternatives; generated C-sacrifice requirements, live FactReader results, synthetic Answer metadata and ranking relations. No engine-strength conclusion.",
+    "tests": [
+      "another root receipt cannot withdraw the still-current original question",
+      "a completed receipt with missing returns cannot borrow another receipt compensation",
+      "a stale sibling realization cannot displace a still-current sibling",
+      "a refreshed root that actually loses the named story still withdraws that realization",
+      "an unanswered comparison remains investigable without establishing its return or compensation",
+      "a stronger tested alternative revises ranking while exact old observations remain facts"
+    ],
+    "implementation_refinement": "Do not put a comparison own returned result group into its scheduling prerequisites: that makes an answer prerequisite for its query. Keep admission for unanswered comparisons, but require the exact comparison return subcontext before treating its completed receipt as an observed compensation explanation. Root tracking can use the explicit sacrifice_current group rather than every same-anchor reference Event.",
+    "existing_checks_to_keep": "SacrificeQuestionTest 186-228 stronger decline/root refresh, 274-293 unresolved child versus current root; these were read, not executed by this agent.",
+    "limits": "The material question in this fixture concerns the original white f3 pawn loss. Passing its scope tests does not discover the black bishop utility or prove rook compensation."
+  },
+  "followup_meaning_and_legal_option_value_review": {
+    "scope": "읽기 전용 현행 source review와 새 5사례의 고정 책 기준 대조. 제품 편집·새 엔진 실행·테스트 실행 없음.",
+    "meaningv2_review": {
+      "read_source_version": "104644b97d2291a391f9c818fefc74cd5e5833acac571e36ad2cb12b94c1a163",
+      "correct_boundary": "sacrifice_current의 explicit group에 root current의 추적 범위를 묶고, 완료된 각 reply의 sacrifice_reply_<id>가 전부 supported일 때만 그 reply의 보상 실현을 설명에 사용하는 분리는 정확하다. root pair의 점수와 원래 질문을 유지하면서 다른 receipt에서 사라진 반환 실현을 차용하지 않는 데 필요한 변경이다.",
+      "unanswered_boundary": "비교가 미완료이면 기존 comparisonContext를 입장 근거로 유지한다. 자기 returned group을 scheduling head에 넣어 답을 얻기 전에 답의 증거를 요구하는 순환을 만들지 않는다.",
+      "missing_case_sent_to_parent": {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+        "lines": [
+          334,
+          457,
+          459
+        ],
+        "issue": "compensationFacts가 current를 사용하지만 current는 Event만 수집한다. sacrifice_current에는 Discovery 1533의 sacrifice_file_<file>도 들어가며 그 Fact는 Ply이다. 체크/포획 없이 열린 파일만 남는 기존 위치적 보상은 hasReturn에서 누락될 수 있다.",
+        "smallest_fix": "currentScope의 group member id에 해당하는 supported Fact 전체를 compensationFacts로 읽는다. current의 Event 기반 철회 추적과 compensationFacts의 증거 범위는 같은 List를 공유할 필요가 없다.",
+        "needed_regression": "supported current loss와 supported current_sacrifice_file_<file>, 후속 gain/check/promotion 없는 fixture에서 hasReturn=true이고 다른 comparison의 파일/포획을 가져오지 않는지 확인. completed returned group이 absent/partial이면 그 reply는 보상 설명이 없어야 한다.",
+        "implementation_status": "이 에이전트는 수정하지 않음. parent에게 메시지 전달. 마지막 읽은 source에는 아직 Event-only 코드가 있음."
+      },
+      "claim_ceiling": [
+        "같은 anchor/reference를 공유하는 별도 receipt의 사건 부재 때문에 supported인 원래 root 질문과 점수를 함께 철회하는 문제를 줄인다고 평가할 수 있다.",
+        "다른 root receipt의 관찰을 완료된 reply의 보상 실현으로 차용하는 문제를 막는다고 평가할 수 있다.",
+        "같은 root realization 내부의 모든 역사 사건을 철회 조건으로 두는 범위는 여전히 넓다. 사건 순서가 달라져도 전략적 의미가 남는지를 보편적으로 해결했다는 평가는 불가하다.",
+        "SG02의 이 material fixture는 백 f3 폰의 손실 질문이다. 흑의 비숍 d5를 보존하는 가치나 룩 희생의 충분한 보상을 입증한 테스트가 아니다.",
+        "sacrifice_current/returned_<id> 범위는 생성된 C-sacrifice 경로에 대한 명시적 수정이다. group이 없는 다른 producer의 모든 CompareMoves에 적용되는 일반 보상 소유권 보장으로 확대하지 않는다."
+      ],
+      "parent_test_report": {
+        "reported_to_agent": "parent가 meaningv1에서 새 테스트의 4개 실패(원래 질문 철회, 보상 차용, stale sibling, revised)를 재현했다고 전달했다. meaningv2는 검토 요청 시 컴파일 중이었다.",
+        "independently_executed_by_this_agent": false,
+        "not_inferred": "meaningv2의 테스트 통과, 실제 SG02 기본 출력의 의미 해명 성공은 이 메시지만으로 주장하지 않음."
+      }
+    },
+    "baseline_comparison": {
+      "source": "research/strategic-option-20261007/mcNewBefore180-reading.json",
+      "source_sha256": "4f634cbe152f7b516d71fe53c629bf95eb9a308c1b9b15607151b71f188ccbb6",
+      "fixed_theory": "research/meaning-conditions-20261008/theory-functional-conditions.json",
+      "fixed_theory_sha256": "f751f4f06a43ff8302bb5cdc47fa51628c366168e6769ac041e0e70eb6b8b76e",
+      "all_five_completed": true,
+      "all_five_pending_false": true,
+      "runtime_range_ms": [
+        6007,
+        24246
+      ],
+      "works_range": [
+        3,
+        5
+      ],
+      "meaning": "기본 출력은 모두 selected_comparison, assessment current였다. 필요한 책의 질문을 전달하지 않은 사례에도 job은 completed였다. 이 파일만으로는 시간 부족을 첫 실패 지점으로 확정할 수 없다.",
+      "first_failure_limit": "이 reading 파일에는 후보와 Statement의 구체 인스턴스, 생성/거절/선택의 이유가 없다. 여기서 확인하는 것은 기본 해설의 전달 결손과 기존 code 경로의 제약이며, 각 사례의 첫 내부 실패는 별도 dependency/candidate trace가 필요하다.",
+      "cases": [
+        {
+          "id": "MC-SG14",
+          "elapsed_ms": 24246,
+          "works": 4,
+          "already_present": [
+            "Qb3와 Rb1의 d4 지원 차이",
+            "a6에 비숍이 움직이는 실제 대응",
+            "Ne7 뒤 비숍 교환과 Qxb5+ 체크/차단",
+            "양쪽 교환 가격은 상세에 있음"
+          ],
+          "human_missing": "Qb3가 비숍의 쓸 만한 퇴로를 보존하고, a6에 강제 교환과 퀸 공격으로 템포를 얻는 계획의 가격을 바꾼다는 연결이 없다. 시작 문장은 Qb3 뒤 퀸의 다음 움직임을 나열하며, d4 지원 상실이 큰 비교 요점처럼 앞에 나온다.",
+          "frozen_criterion": "...a6 자체가 불법일 필요는 없다. Be2도 두 분기에서 합법이지만 ...Nxd4로 Bd7-Qa4 선이 열리는 문제, 중앙 교환 뒤 ...Qa5+에 Qb4로 응할 수 있는 차이가 중요하다. ...Ne7로 균형이면 예방 목적만 남기고 강제 이점은 철회한다.",
+          "evidence_needed": "Qb3와 비교 후보 뒤 동일 ...a6 및 비숍 퇴각을 admitted branch로 둔다. Bd7의 퀸 공격, Qa5+ 뒤 왕 체크와 Ba3 방어, Qb4의 합법/실행 가능성을 해당 차례에 확인한다. 그 퇴각의 유용성은 같은 노드의 Be2/Bxc6 등 선택 비교와 필요한 가격으로 검사한다.",
+          "current_reference_warning": "baseline의 실제 비교 상대는 Rb1이다. 책의 O-O 또는 Qc2와 비교한 사실을 Rb1에 그대로 붙이지 않는다. source가 있는 별도 root comparison을 완료하거나 실제 Rb1 branch에서 같은 조건을 독립 확인해야 한다.",
+          "existing_statements": [
+            "ControlContrast",
+            "Action(Evades)",
+            "BlockedAttack",
+            "CheckStatus/CheckSequence",
+            "TargetOutcome",
+            "MaterialBalance/MaterialEvents"
+          ],
+          "claim_ceiling": "검사한 ...a6/중앙 교환 분기에서 좋은 퇴로와 대응을 남긴다고 설명. 모든 방어 아래 큰 우열이나 root 점수 차이의 유일한 원인으로 확대하지 않는다."
+        },
+        {
+          "id": "MC-SG32",
+          "elapsed_ms": 10887,
+          "works": 4,
+          "already_present": [
+            "Kh2와 Qg5의 실제 공격/퀸 교환 수순",
+            "후속 폰 공격과 회피",
+            "양쪽 교환 가격"
+          ],
+          "human_missing": "Kh2 자체의 왕 배치와 ...Qa7+ 체크 템포 감소가 설명되지 않는다. recorded continuation is Kh2라는 문장이 기본에 있으나 왕 수의 역할을 말하지 못한다.",
+          "frozen_criterion": "Ne5는 처음부터 합법이다. Ng4가 떠나면 ...Qa7+에 응해야 하고, Kh2 뒤 같은 ...Qa7은 체크가 아니므로 공격 선택을 계속할 차례가 남는다. 퀸 교환과 ...g5 또는 ...Qc6의 정확한 방어가 있으면 편한 배치라는 한정된 목적을 유지한다.",
+          "evidence_needed": "같은 ...Qa7을 Kh2와 다른 root/직접 Ne5의 admitted branch에서 검사한다. 왕 위치와 currentCheckSources, Ne5/Qe7의 legal resource를 그 차례에 확인한다. 강한 즉시 체크/교환 반론은 별도 조사한다. 점수 gap이 close/equal이어도 체크 여부와 차례의 실제 차이는 사실이다.",
+          "existing_statements": [
+            "CheckStatus",
+            "CheckSequence",
+            "ControlContrast",
+            "Continuation",
+            "Action",
+            "MaterialBalance"
+          ],
+          "why_current_reply_space_not_drop_in": "ReplySpace는 root가 비왕 동료의 퇴각 칸을 차지하고 세 수 모두 quiet인 경우를 검증한다. 왕 이동과 실제 체크를 이 타입에 집어넣으면 계약을 깨뜨린다.",
+          "claim_ceiling": "...Qa7의 체크 템포를 줄이고 공격/교환 선택을 편하게 한다는 짧은 기본 목적. 모든 체크 소멸, 강제 승리, 엔진의 작은 점수 차이 원인은 주장하지 않는다."
+        },
+        {
+          "id": "MC-SGET05",
+          "elapsed_ms": 16718,
+          "works": 5,
+          "already_present": [
+            "Rxe7의 비숍 포획",
+            "반대편 bxc3의 나이트 손실과 bxc3 재포획이 기본에 있음",
+            "Rxe7 뒤 d7 폰 지원",
+            "d7 폰의 유한 수순 끝 생존과 여러 교환"
+          ],
+          "human_missing": "간단한 포획의 평가와 남은 통과 폰의 방어 부담을 중심 답으로 조직하지 않는다. 필요한 가격 자체가 없는 실패로 분류하면 잘못이다.",
+          "frozen_criterion": "기물 양쪽의 교환 가격을 포함하고 간단히 좋은 선택임을 설명하면 충분하다. Ne4 등 다른 좋은 후보가 틀린 수일 필요는 없고, d7 폰의 존재만으로 즉시 승격 강제를 말하지 않는다.",
+          "evidence_needed": "이미 선택한 capture account의 앞 교환 구간을 MaterialBalance로 요약하고 d7의 지원/공격 상태를 짧게 연결한다. 폰 때문에 흑이 수비에 묶인다는 더 강한 주장에는 ...Rad8/...Nd5 등 제거/봉쇄 자원의 별도 비교가 필요하다. 실제 pawn removal 후 기물 이익으로 전환하는 분기는 별도 읽고 폰 영구 생존을 보편 조건으로 만들지 않는다.",
+          "existing_statements": [
+            "MaterialBalance",
+            "PieceExchange",
+            "Action(Capture)",
+            "TargetDefense",
+            "SupportRecapture",
+            "TargetOutcome",
+            "PiecePresence"
+          ],
+          "claim_ceiling": "양쪽 가격을 포함한 단독 포획 목적은 비교 우열 증명이 없어도 전달 가능. 통과 폰이 장기적으로 모든 방어를 묶는다는 결론은 추가 검사 후 제한해서 말한다."
+        },
+        {
+          "id": "MC-SWMARCO",
+          "elapsed_ms": 6007,
+          "works": 3,
+          "already_present": [
+            "Rxc7+ Kb8 c6와 c6 Kb8 Rxc7의 같은 위치 수렴",
+            "c7 폰 포획",
+            "뒤의 다른 capture 가격은 상세"
+          ],
+          "human_missing": "객관적으로 진 국면에서 ...bxc6의 정확한 방어와 ...Be5를 유도했을 때의 함정이 구분되지 않는다. 수렴만으로는 같은 위치에 닿기 전에 제공한 상대 선택의 유용성을 읽을 수 없다.",
+          "frozen_criterion": "c6 bxc6는 흑의 승리를 유지하고 c6 Be5는 승격/중간수로 승리를 잃는다. 두 조건부 분기와 실전 목적을 구분하되 상대가 Be5를 실제로 선택하지 않아도 함정 목적을 설명할 수 있다.",
+          "evidence_needed": "c6 뒤 opponent-choice의 bxc6/Be5를 동일 노드에서 비교하고, Be5 branch의 첫 핵심 승격/체크/중간수와 가격을 확인한다. 최선의 거절이 이긴다는 사실은 구원 주장만 반박하며 조건부 함정 질문 자체를 없애지 않는다.",
+          "existing_statements": [
+            "Convergence",
+            "MaterialEvents",
+            "CheckSequence",
+            "TargetOutcome",
+            "Terminal",
+            "Continuation"
+          ],
+          "claim_ceiling": "객관적으로 여전히 진 상태이며, 확인한 ...Be5 수용에만 조건부 함정이 있다는 설명. 실제 승리나 저자의 심리 설명으로 강제 구원/실수 확률을 계산했다고 말하지 않는다."
+        },
+        {
+          "id": "MC-SWARIO",
+          "elapsed_ms": 14670,
+          "works": 5,
+          "already_present": [
+            "Bxd5의 폰 포획",
+            "Rf5로 비숍 공격을 회피하는 실제 거절",
+            "Bxd5가 d파일을 막는 실제 관계",
+            "늦은 교환/체크 가격"
+          ],
+          "human_missing": "Bxd5의 조건부 유혹과 Bc5를 두었을 때 ...Rd4가 Qf2-Bc5 및 Rd1-Bd5 두 연결을 끊는 기능이 없다. Rg4 arm의 Bc5를 Bxd5의 수용 분기로 가져오면 receipt 차용이다.",
+          "frozen_criterion": "Bc5 뒤 ...Rd4에도 Bxf8/Rxd4/Bxd4는 모두 합법이다. 유용성이 바뀌는 이유는 Bxf8 Rxd1+, Rxd4 Bxc5, Bxd4 Bxf3와 ...exd4의 가격이며, Rf5/a3로 거절하면 백의 승리가 남는다.",
+          "evidence_needed": "Bxd5 뒤 Bc5/Rf5 또는 a3를 동일 노드에서 비교해 유혹의 조건부 범위를 정한다. Bc5 Rd4의 해당 차례에서 두 ControlState/BlockedAttack을 확인하고 세 legal capture 선택을 전부 검사한다. Rxd4 Bxc5 뒤 Qxc5가 막히는 실제 자기 rook blocker, Bxf8 뒤 Rxd1+ 체크 가격, Bxd4 뒤 비숍 포획과 ...exd4를 각 receipt로 읽는다.",
+          "existing_statements": [
+            "Action(ChangedLines)",
+            "ControlState/ControlContrast",
+            "BlockedAttack",
+            "SupportRecapture",
+            "PieceExchange",
+            "MaterialEvents",
+            "CheckSequence"
+          ],
+          "root_and_child_scope": "...Rd4의 의미를 입증하는 결정은 Bxd5의 root가 아니라 Bc5 이후 nested node다. 이를 root Bxd5의 객관적 구원으로 승격시키지 않는다. Bc5가 실제 분석 대상인 경우에는 그 실수 이유가 중심 답이 되고, Bxd5가 분석 대상이면 조건부 유혹과 정상 거절이 중심 답이 된다.",
+          "claim_ceiling": "확인한 Bc5 수용의 중간수 함정과 검사한 포획들의 가격. 모든 유혹이 강제이거나 Bxd5가 균형을 보장한다고 말하지 않는다. 세 선택 중 미완료가 있으면 ‘어느 기물로 잡아도’를 확정하지 않는다."
+        }
+      ]
+    },
+    "shared_evidence_path_proposal": {
+      "starting_point": "이미 있는 C-preparation-effect/preparation-alternative와 CurrentDuty의 두 child CompareMoves, Fact/FactComparison/FactGroup/Reading, comparisonContext를 사용한다. 별도 motif 이름·점수·새 광범위 보호를 더하지 않는다.",
+      "existing_code_contracts": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "lines": [
+            1688,
+            1702,
+            1733,
+            1746
+          ],
+          "fact": "이미 합법인 목적 행동도 reference_action/alternative_action과 contrast_context로 질문 후보에 들어갈 수 있다. legal/legal 질문이 없는 것이 아니라 유용성 증거를 focus로 전달하는 계약이 좁다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "lines": [
+            405,
+            434,
+            536,
+            562
+          ],
+          "fact": "현재 Mechanism/QuestionFocus는 root-owned 조건과 정확한 legal response 변화에 묶인다. legal/legal과 root score gap만으로 이 Boolean을 true로 만들면 인과를 과장한다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "lines": [
+            1001,
+            1084
+          ],
+          "fact": "CurrentDuty는 동일 reply 뒤 두 root arm에서 이미 합법인 pawn plan을 실제 adjustment와 비교한다. 하지만 quiet roots, 비왕/비폰 departure, 정확히 3ply, 나중의 pawn plan이라는 좁은 수순 형태다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+          "lines": [
+            90,
+            111
+          ],
+          "fact": "CurrentDuty reader는 이미 root/actual/alternative child answer를 별도로 소유한다. 아직 supported context 전부와 2ply prefix를 요구한다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+          "lines": [
+            1787,
+            1789
+          ],
+          "fact": "CurrentDuty의 두 child 비교는 조사 우선순위에 연결되어 있다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+          "lines": [
+            457,
+            495
+          ],
+          "fact": "rootContext는 ReplySpace/Reserve*를 전달하지만 CurrentDuty는 전달하지 않는다. 완료된 유용성 비교가 본문에 연결되는 작은 경로가 필요하다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+          "lines": [
+            18,
+            73
+          ],
+          "fact": "ReplyConstraint는 세 quiet 수, 비왕 challenged, root가 차지한 퇴각 칸 계약이다. Kh2/체크 또는 Rd4의 가격 변화를 넣기 위해 이 guard를 무작정 삭제하는 것은 잘못이다."
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "lines": [
+            14,
+            302
+          ],
+          "fact": "이미 ControlState/Contrast, TargetDefense, CheckStatus/Sequence, Support*, TargetOutcome, MaterialBalance 등을 갖는다. 이 사실/가격을 새 motif마다 반복할 필요가 없다."
+        }
+      ],
+      "minimal_sequence": [
+        "먼저 CurrentDuty의 완료된 기존 reader를 Context로 넘겨 실제 두 child receipt를 기본 답에서 읽는 좁은 전달을 구현한다. root 점수/상태와 local usefulness 판정은 분리한다. 가격/체크 완료는 completePairAnswer의 기존 경계를 거친다.",
+        "C-preparation-effect의 reference_action/alternative_action, root-owned effects에서 action에 직접 연결된 최소 condition group만 읽는 view를 만들거나 CurrentDuty view를 확장한다. 생성된 모든 역사 Event를 의미 생존 조건으로 복사하지 않는다. support/control/check/location은 사실 종류이고 motif 점수 목록이 아니다.",
+        "이미 합법인 plan의 조건 차이를 평가하려면, 각 arm의 실제 동일 또는 명시적으로 대응하는 opponent 자원 뒤 같은 plan과 다른 선택을 CompareMoves로 평가한다. 각 prefix는 그 receipt와 source branch의 물리 기물/차례에 묶는다. 고정 3ply가 아니라 실제 decision node와 certified action identity를 사용한다.",
+        "두 arm의 child 선택 비교는 각자 같은 위치에서 plan과 response/adjustment를 비교한 결과다. 서로 다른 위치에서 얻은 절대 cp를 빼고 condition의 causal contribution으로 계산하지 않는다. 같은 노드에서 선택의 상대적 가격/실행을 읽는다.",
+        "강한 상대 응수의 비교가 먼저 끝난 뒤 기능의 가치와 가격을 읽는다. 약한 책의 branch는 유용한 hypothesis지만 실제 가장 강한 방어의 대체물이 아니다. 현재 주요 PV에 없더라도 source와 legal/positional witness가 있으면 그 기능 질문을 조사할 수 있다.",
+        "표현은 기존 typed Statement의 작은 Section으로 조건 차이, 실제 또는 명시적 조건부 use, 필요한 가격을 연결한다. 단순 조건의 존재, 특정 응수 아래 가치, 전체 root 평가의 주된 이유라는 세 강도를 서로 승격시키지 않는다.",
+        "Kh2의 같은 Qa7에서 체크 여부/그 차례의 응수 차이처럼 독립 사실로 짧은 목적을 설명할 수 있는 경우는 separated root score나 새 전략적 가치 증명을 먼저 요구하지 않는다. 비교가 없으면 한정된 역할을 설명하고 score gap 원인은 남겨 둔다.",
+        "수렴은 뒤의 같은 위치를 증명할 뿐 중간에 제공한 상대 선택의 가치까지 같다고 증명하지 않는다. c6/Bxd5의 조건부 함정은 정확한 거절과 수용을 별도 child로 읽는다."
+      ],
+      "do_not_change": [
+        "legal/legal이라는 이유만으로 Mechanism을 true로 만들지 않는다.",
+        "supported root control과 root 점수의 우열만으로 모든 조건을 ‘평가 원인’으로 출력하지 않는다.",
+        "Unknown/partial returned group이나 incomplete child search를 보상 부재/전략 실패로 처리하지 않는다.",
+        "실제 main PV의 Event 부재를 strategic question의 부재로 바꾸지 않는다. 특정 realization만 해당 source 범위에서 철회한다.",
+        "핵심 의미를 짧게 하려고 기존 가격 보호를 무조건 삭제하지 않는다. 새 작은 답의 실제 actionReferences/covered와 완료한 가격이 원래 의무를 지불해야 한다.",
+        "모든 체스 목적을 root가 새로 합법화한 action으로 강제 변환하지 않는다. 유용한 선택, 수비 부담, 체크 템포, 조건부 함정은 범위가 다른 주장이다."
+      ],
+      "required_counterexamples": [
+        "조건은 그대로 있고 action은 합법이지만 더 강한 reply가 그 plan의 가치를 없애는 경우: 조건 사실 유지, 가치 주장 축소.",
+        "현재 PV에 action이 없지만 같은 decision node의 owned child receipt에서 그 option이 여전히 comparable인 경우: 사용 가능 질문 유지, 강제 use 문장 없음.",
+        "양쪽 plan이 모두 legal이고 비슷하게 좋은 경우: 기본 목적은 정상 답, 허구의 우열 없음.",
+        "check/control 상태는 좋아졌지만 더 강한 즉시 체크/교환이 있는 경우: 그 한 자원의 템포 개선만 인정하거나 safety 범위를 수정.",
+        "Bxd5 Rf5/a3처럼 유혹 거절이 전체 구원만 반박하는 경우: forced salvation 철회, 조건부 함정 설명 유지.",
+        "Rd4 뒤 세 포획 중 하나만 끝낸 경우: 완료한 선택의 가격만 말하고 세 선택 전부를 반박했다고 계산하지 않음.",
+        "Qb3의 current root reference가 책의 O-O 대신 Rb1으로 바뀐 경우: 다른 비교의 좋은 퇴로 증명을 Rb1 receipt에 차용하지 않음.",
+        "Rxe7처럼 단독 목적과 필수 가격이 이미 충분한 경우: 가치 차이를 찾기 위해 필요 없는 비교를 기본 답에 추가하지 않음.",
+        "같은 기능이 다른 event order/다른 좋은 선택으로 실현되는 경우: 넓은 옛 Event 목록 대신 작은 condition/read receipt로 특정 realization과 기능 질문을 나눠야 함."
+      ],
+      "success_criterion": "새 motif 수나 조사 work 수가 아니라, 고정된 사람 질문의 필요한 응수와 가격을 basic에서 회수할 수 있고, 강한 반례에서는 같은 규칙으로 주장 범위를 줄이는지 본다. 필요한 비교의 완료 여부, 내용의 정확성, 기본 전달은 따로 기록한다."
+    },
+    "recorded_utc": "2026-10-08T05:57:17.7265355+09:00"
+  },
+  "bounded_conditional_response_integration": {
+    "trigger": "Fresh SG13 main PV chooses Qxf7/Qxf7/Bxf7 after Bd5 Bxh4 and Qh5 after Qd7. A later source-witness-only Qg4 scanner would miss a still-relevant conditional function.",
+    "implementation_scope": "기존 changedControls/opponent_entry의 짧은 local resource proof를 확장한다. 제품 소스/테스트 실행/엔진 실행은 이 에이전트가 하지 않았다. 아래 합법/기하는 python-chess만으로 검사했다.",
+    "guards": [
+      "현재 root pair와 정확한 원래 기물에 바인딩한다. 초기 위치/anchor, 두 root move, 원래 provider/enemy/victim, required predicate, decision node가 식별자의 일부여야 한다.",
+      "root-owned condition은 root transition 자체의 before/after control 또는 원래 king 위치 변화로 증명한다. 처음 source의 전체 future Event 목록은 current의 의미 조건에 넣지 않는다.",
+      "current root의 Ply(1) condition은 Comparison(root id, arm)에서 읽는다. 조건부 capture/recapture/check의 Declared branch는 별도 hypothetical group에 둔다. 현재 PV suffix가 그 named branch와 같아야 한다는 조건을 다시 추가하지 않는다.",
+      "양쪽 root 뒤 동일한 enemy의 동일 victim capture가 실제 legal inventory에 있어야 한다. 그 capturer를 잡는 즉시 own legal recapture만 secondary candidate로 열고, 그 뒤 현재 legal enemy check resources 중 root-controlled destination에 연결되는 도착을 검사한다. 실제 main source에 없는 gxh4도 이 구체적 capture relation에서 정당화된다.",
+      "가능하면 두 root에서 같은 intervening UCI를 재생한다. 양쪽 모두 legal, 동일 원래 actors/targets, 같은 차례의 check/capture arrival인지 확인한다. 한쪽이 illegal/short/incomplete이면 해당 proof는 unknown/refuted scope이며 성공으로 계산하지 않는다.",
+      "control 차이가 arrival/response phase까지 유지되는지 읽는다. 그 뒤 무관한 PV 종료까지 같은 queen square와 event order가 유지돼야 한다는 조건은 요구하지 않는다.",
+      "arrival 뒤 같은 original provider의 legal_capture를 확인한다. geometric control만으로 pin/왕 노출을 무시해 포획이 가능하다고 말하지 않는다. 다른 provider가 같은 응수를 할 수 있는 경우도 전체 응수 인벤토리에서 확인하며, 특정 provider의 추가 선택을 모든 응수의 차이로 확대하지 않는다.",
+      "king tempo의 경우 같은 enemy arrival와 원래 king의 현재 위치 및 currentCheckSources를 확인한다. Kh2의 위치 이동에 귀속되는 check/noncheck 차이를 읽고, 같은 nonking action의 legal response 차이까지 bound한다. root separated score는 이 사실 목적의 gate가 아니다.",
+      "secondary Declared/PreparedPath probe를 accepted-source later-goal로 다시 넣어 자기 후보를 재생성하지 않는다. internal probes never provide later goals 경계를 유지하고 이 view의 법칙/관계 witness로만 읽는다.",
+      "새 PV의 first reply가 바뀌어도 기존 named capture가 현재 양쪽 root에서 계속 legal이고 root condition이 supported이면 조건부 질문은 유지할 수 있다. capture 자체가 사라지거나 원래 capturer/victim이 바뀌면 그 realization은 폐기한다.",
+      "강한 실제 reply를 조사하지 않은 상태에서 local legal/check proof를 root 전체 승리/우열의 이유로 승격시키지 않는다. gxh4/Qg4가 best/forced라는 주장을 하지 않는다."
+    ],
+    "fact_integration": {
+      "reuse": "Fact(Ply), FactComparison(different), FactGroup(all), Declared, Comparison(root,arm), existing supported/observed/partial reader. root condition group과 hypothetical local branch group을 나눈다.",
+      "root_group": "현재 pair의 각 root 직전/직후 relevant condition과 source identity만 포함. same-root full future event survival을 요구하지 않음.",
+      "local_group": "first capture/own recapture/check 도착의 board witness, 그 차례 king check state, 동일 original provider의 legal reply fact를 각각 포함. source가 hypothetical임을 scope로 보존.",
+      "reader": "새 chess authority를 만들지 않고 기존 supported Fact를 exact path/piece/ply로 묶는 작은 view를 CommentaryIdea에서 만든다. 기본 전달용 context는 answered root owner와 해당 local group을 전달한다. strategy adopted/state와 engine score relation은 독립 유지.",
+      "statement": "최소 LegalReplyOption 또는 ConditionalResponse를 position witness로 두어 가능한 응수만 말한다. actionReferences=Nil, covered=Nil. root 두 선택과 실제 first reply의 action/가격은 기존 core 및 completePairAnswer가 따로 지불한다. 실제 채택된 capture/recapture receipt가 있을 때만 기존 Action/PieceExchange/MaterialEvents를 쓰고 관찰된 응수로 표현한다.",
+      "why_not_plain_checkstatus": "현재 CheckStatus와 ControlContrast의 기본 actionReferences는 references이다. hypothetical checking arrival를 그대로 선택한 행동으로 올리면 전체 실제 check reply/capture 가격까지 새 기본 의무로 요구할 수 있다. 가능한 행동의 position witness와 선택한 action episode를 구분해야 긴 서사가 다시 쌓이지 않는다.",
+      "why_not_a_new_motif_path": "SAN/사례/역할 이름으로 분기하지 않는다. root-owned condition, 동일 named resource, 실제 legal response라는 공통 read contract를 쓰고, check/control은 이미 있는 사실 종류다. 같은 계약이 queenside/check resources에도 적용되고 반례에서 동일하게 거절해야 한다.",
+      "scope_limit": "Rd4처럼 모든 포획이 legal이지만 후속 중간수와 material price가 다른 경우는 이 legal-response proof만으로 입증되지 않는다. 기존 child CompareMoves와 완결 가격이 별도로 필요하다. H05/희생의 전체 전략 의미를 이 local probe 한 개로 해결했다고 평가하지 않는다."
+    },
+    "legal_only_fixtures": [
+      {
+        "id": "SG13-local-positive",
+        "initial_fen": "4Q3/5pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 w - - 2 30",
+        "left": [
+          "e8d7",
+          "f6h4",
+          "g3h4",
+          "f3g4"
+        ],
+        "right": [
+          "c6d5",
+          "f6h4",
+          "g3h4",
+          "f3g4"
+        ],
+        "shared_tail_san": "Bxh4 gxh4 Qg4+",
+        "left_control_g4_after_each": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "right_control_g4_after_each": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "both_final_white_in_check": true,
+        "left_original_queen_capture": "d7g4 / Qxg4",
+        "right_original_queen_capture": null,
+        "test_assertion": "root-owned control changes a conditional check response even when neither latest main PV contains gxh4/Qg4. Do not say Qg4 is illegal or no longer checks; both are false."
+      },
+      {
+        "id": "Kh2-v-Qg5-check-tempo",
+        "initial_fen": "3Q1nk1/1q1p2pp/p3p3/1p6/4P1N1/5PP1/PPr3P1/3R2K1 w - - 0 1",
+        "left": [
+          "g1h2",
+          "b7a7"
+        ],
+        "right": [
+          "d8g5",
+          "b7a7"
+        ],
+        "left_white_in_check": false,
+        "right_white_in_check": true,
+        "same_original_knight_action": "g4e5 / Ne5",
+        "left_knight_action_legal": true,
+        "right_knight_action_legal": false,
+        "test_assertion": "실제 baseline의 Qg5 pair에도 동일 Qa7 자원이 있다. close/equal root score는 check-tempo 사실 설명을 막지 않아야 한다. Qa7이 최강이라는 증명은 아니다."
+      },
+      {
+        "id": "SG13-control-blocked-negative",
+        "initial_fen": "4Q3/5pkp/2Bp1bp1/4pP2/1P2P2P/5qP1/5P2/6K1 w - - 2 30",
+        "mutation": "원래 SG13에 f5 백 폰 추가",
+        "all_same_fourply_moves_legal": true,
+        "left_original_queen_capture": null,
+        "right_original_queen_capture": null,
+        "test_assertion": "Same root names/shared capture/check sequence does not suffice. f5 blocks Qd7-g4; old control proof and purpose must not survive."
+      },
+      {
+        "id": "SG13-other-defender-negative-for-global-claim",
+        "initial_fen": "4Q3/5pkp/2Bp1bp1/4p3/1P2P2P/5qP1/4BP2/6K1 w - - 2 30",
+        "mutation": "원래 SG13에 e2 백 비숍 추가",
+        "left_legal_checker_captures": [
+          "d7g4 / Qxg4",
+          "e2g4 / Bxg4"
+        ],
+        "right_legal_checker_captures": [
+          "e2g4 / Bxg4"
+        ],
+        "test_assertion": "The original queen gains a response only after Qd7, but the other root still has Bxg4. Keep provider-specific factual option; reject no-answer/forced-perpetual/evaluation-cause wording without separate value proof."
+      }
+    ],
+    "additional_test_matrix": [
+      "same condition/use phase remains but future main PV or event order changes: retain local factual function.",
+      "current root condition actually lost, source conditional line still stored: no fresh root purpose.",
+      "one matched tail illegal or replay inventory incomplete: no positive result; preserve unknown.",
+      "same square but another original checking queen or another recaptured victim: do not join proof halves.",
+      "different current first replies Qxf7/Qh5 do not by themselves refute the still-legal bounded named branch.",
+      "gxh4 option displayed without assuming it forced; Qxf7 remains actual recorded choice and its price is preserved.",
+      "Kh2 removes Qa7 check but another strong immediate check or queen trade exists: keep single-resource fact, retract total-safety/forced-win claim.",
+      "legal legal action with unchanged response/price: no utility proof merely from root score gap.",
+      "selected actual root captures/checks still receive their price and reply even when hypothetical fact has no actionReferences."
+    ],
+    "test_source_status": "parent에게 generic 함수 signature를 요청했다. signature가 아직 없는 단계에서는 compiling test를 만들어 구현 계약을 추측하지 않고, 결정적 FEN/trace/반례와 필요한 assert를 제공했다. 새 엔진/검사 실행 없음.",
+    "recorded_utc": "2026-10-07T21:08:22.6882920+00:00"
+  },
+  "functional_reply_test_preparation": {
+    "recorded_utc": "2026-10-07T21:34:12.560159+00:00",
+    "owned_edits": [
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/FunctionalReplyReadingTest.scala",
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/MeaningConditionScopeTest.scala"
+    ],
+    "product_edits": false,
+    "engine_execution_by_this_agent": false,
+    "compile_or_test_execution_by_this_agent": false,
+    "validation_reported_by_parent": {
+      "build": "meaningv7",
+      "run": "mcFunctional7",
+      "passed_tests": 23,
+      "suites": [
+        "FunctionalReplyReadingTest (10)",
+        "MeaningConditionScopeTest (6)",
+        "FirstReplyCompletionTest (7)"
+      ],
+      "saved_actual_SG13_replay": "valid true; functional_response basic lead confirmed by parent",
+      "source": "parent collaboration message; not independent engine or test execution by this agent"
+    },
+    "pending_additions_after_reported_23_pass": [
+      "FunctionalReplyReadingTest: current root pair Qg5/Kh2, played Kh2, separate reverse function_root Kh2/Qg5 receipt with exact line and occurrence ownership; equal Close synthetic scores; no superiority/win claim.",
+      "MeaningConditionScopeTest: quiet Re2 Bxh2 Re3 opens h-file at Ply(3), with no gain/check/promotion Event; preserve receipt-local positional return while adequacy stays candidate."
+    ],
+    "functional_test_count": 11,
+    "scope_test_count": 7,
+    "positive_scope": [
+      "Original SG13 queen e8 gains g4 control after Qd7; against the legal conditional Bxh4 gxh4 Qg4+ sequence, Qxg4 is available only to that same original queen in the reference arm.",
+      "Current main PV need not select gxh4. Changing the first current root defence preserves the local factual proof when the root-owned condition remains supported.",
+      "A complete certified longer path may supply the declared bounded prefix; option offset and rendered/reference sequences must stay bound to proof length.",
+      "King relocation can remove the checking tempo of the same Qa7 while an originally legal Ne5 remains playable. A close/equal root score does not suppress that independently certified purpose."
+    ],
+    "negative_scope": [
+      "Another bishop e2 can capture the checker after the alternative: factual same-queen contrast remains valid, but the option must not become the central basic reason.",
+      "Current live/context lost or incomplete: historical Declared local facts cannot supply current purpose or successful proof.",
+      "f4-f5 temporarily blocks Qd7-g4; later fxg6 restores it. Matching endpoint legal captures do not prove continuous original root support.",
+      "Foreign packet paths, wrong original actor or checker, wrong legal last option, short certified path and mismatched root occurrence/receipt cannot be combined.",
+      "Conditional witnesses have actionReferences Nil and covered Nil; actual selected root captures retain their own protected material price."
+    ],
+    "orientation_limit_found": {
+      "product_location": "CommentaryDiscovery.king-tempo originally required root king location != reference king location.",
+      "actual_case": "SG32 engine reference Qg5, played alternative Kh2: king relocation lives on the second arm.",
+      "separation": "Direction limitation can prevent discovery even with enough replay and a legal observed plan; distinguish it from PV frontier or elapsed budget limits.",
+      "parent_action": "Parent refactored existing typed inspection to evaluate both pair orientations for meaningv8; this agent added reverse ownership regression."
+    },
+    "not_concluded": [
+      "Provider-specific legal response contrast is not proof that Qg4 is the best defence, gxh4 is forced, the root move wins, or it causes the whole engine score difference.",
+      "Kh2 against Qa7 does not prove absence of other checking resources or evaluate Ne5 strength.",
+      "The open file is an observed positional consequence to investigate. No adequate-compensation verdict follows from file_occupancy=open.",
+      "This addition still does not establish the value of an already legal option whose response legality remains unchanged; H05-type strategic option value and strongest-refutation completion need their separate comparisons."
+    ],
+    "test_source_sha256": {
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/FunctionalReplyReadingTest.scala": "26200e31e31e07271707493a0cee2a9971a452955690a3a8e8fb031ca3a785ee",
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/MeaningConditionScopeTest.scala": "a6e8cd503734ff04dc75eb5bb7bcf56dc9970a684d41cc7c12c55915900c1cc6"
+    }
+  },
+  "both_legal_option_price_review": {
+    "recorded_utc": "2026-10-07T22:02:24.708201+00:00",
+    "fixture_path": "research/meaning-conditions-20261008/functional-reply-price-fixtures.json",
+    "fixture_sha256": "e345bbbb0305e54205a1c02da9c48d1060ab3879df68bf66073d087800fb22dc",
+    "engine_executed_by_this_agent": false,
+    "scala_compile_or_tests_executed_by_this_agent": false,
+    "product_edits": false,
+    "books_reread_directly": {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/Think Like a Super-GM - Reading Edition.pdf",
+      "pdf_pages": [
+        156,
+        157,
+        158,
+        159
+      ],
+      "page_render_visually_checked": 157,
+      "reading_skill": "C:/Users/양자/.codex/skills/pdf/SKILL.md"
+    },
+    "main_finding": "The exact same original Nf3 can legally capture the exact same original Nc6 on d4 in both SG14 Qb3 and Bc5/O-O branches. What changes is the original Qa4 queen price left to original Bd7 after that choice, not the action legality.",
+    "phase": "Common resource4; same own Nf3xd4 option5; compare opponent capture of original protected Qa4 at the new opponent turn5; certify alt Bd7xa4 price6. The same d7a4 UCI remains a legal quiet Ba4 on the reference side.",
+    "mode_boundary": "Retain legacy alternative-illegal proof requirements. Add an explicit optional price mode in which both own options are legal, while the different opponent target-capture predicate after them and its exact alternative physical realization carry the meaning.",
+    "identity_counter": "Toy FEN 6k1/3b4/8/8/p7/8/8/Q2Q2K1 w - - 0 1: Qd1xa4 and Qa1xa4 followed by d7a4 are all legal. Both Bxa4 rows capture a white queen currently on a4, but remove different original queens. Current role/color/square, move UCI and material value cannot substitute for original-target identity.",
+    "other_price_gate": "Adding Black Rb2 preserves every SG14 local path. Bd7 cannot capture the original Qb3 after the reference option, but Rb2xb3 can. The specific Bd7 contrast remains true; stronger central usability/safety wording needs rejection.",
+    "known_own_provider_price": "Bg7xd4 remains legal against the used original Nf3 on both sides. Avoid safe/free-knight wording. A separate declared cxd4/Qa5+/Qb4 line is conditional and does not make cxd4 forced.",
+    "own_alternatives": "Bc5 a6 Bxc6 Bxc6 Qb3 Bxf3 gxf3 avoids the hypothetical Be2/Nxd4 story. After Bc5 a6 Be2 Nxd4, Qb3 Nxf3+ gxf3 avoids queen capture with its own material/structure cost. Neither legal alternative is called best without the required comparison.",
+    "book_limits": "The book treats O-O as a natural move that reaches comfortable Black equality with Bxc6, specifically criticizes Be2 after O-O, and retains Rd1 instead of cxd4 after Qc2 central exchange. Ne7 reaches equality after Qb3 through exchanges. Conditional price evidence cannot justify calling every O-O/Bc5 a blunder or claiming Qb3 wins.",
+    "runtime_validation_plan": [
+      "Positive actual Qb3/Bc5 root receipt and independent price paths; current main PV does not need to select a6/Be2.",
+      "Both action legal only with explicit price mode; legacy unknown/missing price cannot downgrade to generic legal-is-useful acceptance.",
+      "Another reference capture of the protected original queen blocks central promotion.",
+      "Equivalent absent immediate price on Qb3/Qc2 must not emit this contrast; later Qa5+ needs its own phase.",
+      "Wrong original target/capturer, foreign receipt, illegal or missing sixth move cannot realize the price.",
+      "Same-UCI same-current-queen-square physical identity negative must remain distinct.",
+      "Longer witness suffix and changed PV preserve bounded proof while actual root costs stay protected."
+    ],
+    "new_scala_test_plan": "FunctionalReplyPriceTest.scala, independent of existing 11 FunctionalReplyReadingTest and 7 MeaningConditionScopeTest. Parent will confirm model field names before typed test source is written.",
+    "scala_tests_prepared_after_confirmed_model": "chesstory-runtime/src/test/scala/io/chesstory/runtime/FunctionalReplyPriceTest.scala",
+    "scala_test_count": 13
+  },
+  "functional_reply_price_test_preparation": {
+    "recorded_utc": "2026-10-07T22:26:41.467390+00:00",
+    "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/FunctionalReplyPriceTest.scala",
+    "test_count": 13,
+    "sha256": "2d28147d2445bfe5eab4f69a7448dc7ed1c7f754420c645ed1071cbfa78e745c",
+    "synthetic_scores_and_receipts": true,
+    "all_declared_paths_legally_replayed": true,
+    "scala_tests_executed_by_this_agent": false,
+    "engine_executed_by_this_agent": false,
+    "guards": [
+      "same original own action in both arms",
+      "same original opponent price target",
+      "quiet same UCI is not named target capture",
+      "alternative sixth step fully legal and owned",
+      "legacy alternative-illegal mode unchanged",
+      "other reference capture defeats central usability",
+      "unknown/refuted live condition rejects purpose",
+      "current PV and longer witness suffix do not change bounded proof",
+      "equal immediate capture prices do not prove useful location difference",
+      "same current piece role/square is not same original victim"
+    ],
+    "parent_validation": {
+      "path": "target/decision-timing-20261006/mcFunctional11/run.log",
+      "run": 87,
+      "passed": 85,
+      "failed": 2,
+      "agent_read_saved_run_log": true,
+      "meaning": "This agent did not execute the tests. Both failed assertions exposed overbroad test expectations rather than established product correctness defects. Revised fixtures await parent recheck."
+    },
+    "reviewed_test_corrections": [
+      {
+        "previous_expectation": "Every material event from selected_comparison fallback core must remain in the new basic core.",
+        "why_too_broad": "completePairAnswer with empty lead puts the whole two-PV material ledger into fallback core. It does not identify every event as an independently verified root use or selected-purpose price. The actual Bc5 a6 Bxc6 Bxc6 exchange concerns original Bb5/Nc6 rather than the hypothetical Nf3 recapture or original Qa4 location.",
+        "replacement": "Every historical recorded actual capture must still be available in core+details. A separate actual Bc5 Nxd4 Nxd4 Bxd4 fixture requires all first-reply capture, recapture and used original Nf3 subsequent loss in core, and verifies final original Nf3 removal.",
+        "guard_unchanged": "No weakening of actual root captures, checks, selected support-price closure, or independent verified root-use protection."
+      },
+      {
+        "previous_expectation": "Automatic discovery must generate the same price-purpose candidate after adding Black Rb2.",
+        "why_too_broad": "Rb2 also geometrically exposes the candidate Be2 retreat to ...Rxe2. The candidate prerequisite/safety gate may legitimately refuse this automatic purpose while the narrower Bd7-originalQa4 price contrast remains true.",
+        "replacement": "Construct original-owned legal conditional paths and synthetic exact current root receipt directly; valid() must retain Bd7-specific fact, withAnswer() must reject promotion because Rb2xb3 still captures original Qa4.",
+        "guard_unchanged": "The test does not force the producer to bypass unsafe-retreat or root condition gates."
+      }
+    ],
+    "actual_first_reply_fixture_scope": "The already generated ...a6 conditional price question is re-read on owned new packet paths with a newly owned current root receipt. New ...Nxd4 current first reply is not required to rediscover the absent quiet ...a6 challenge; all original scope facts are re-read."
+  },
+  "sg32_last_saved_execution_audit": {
+    "file": "research/meaning-conditions-20261008/functional-reply-sg32-audit.json",
+    "sha256": "037f1db503bae03eff889e63dda3d511cf4f817fd092daff3ed8e603efb41bdb",
+    "first_missing_dependency": "Current root comparison receipt after child_challenge target depth23; prior complete root depth16 is deliberately outdated. New root depth23 exhausted per-work engine time5000ms despite total180000ms request budget.",
+    "separate_semantic_counter": "Saved Qg5 action target was already achieved in alternative root; parent adds same original actor current square guard and this agent adds explicit counter test.",
+    "reading_test_count": 12,
+    "reading_test_sha256": "a090cb75edcefe792238c548b7b1e7dde3738f1134e81f23e2aaee5b375933c5",
+    "engine_executed_by_this_agent": false,
+    "scala_compile_or_tests_executed_by_this_agent": false,
+    "parent_reported_independent_research_completion": {
+      "root23_elapsed_ms": 4803,
+      "root23_nodes_approx": 6150000,
+      "pair23_elapsed_ms": 3351,
+      "Qa7_response_comparisons_each_depth": 23,
+      "Qa7_comparison_elapsed_ms": [
+        7500,
+        7000
+      ],
+      "source": "Trusted parent message; child has not replayed saved independent engine receipts.",
+      "reported_to_product": false,
+      "meaning": "Shows that old5m-node/5-second profile was insufficient for at least some required comparisons. Completion time alone does not establish the root value explanation or strongest reply."
+    }
+  },
+  "child_challenge_ui_test_preparation": {
+    "recorded_utc": "2026-10-07T22:34:42.091718+00:00",
+    "test_file": "lila-docker/repos/lila/ui/analyse/tests/moveReview.test.ts",
+    "test_file_sha256": "5ee41ca2298735a79719fde73ee0427efbb87ccde079555ecee28e1d1f4cbcda",
+    "new_test_count": 5,
+    "fixture_file": "judgment-evaluation/fixtures/public-commentary-v6/child-challenge-root-sg32-pending-produced.json.gz",
+    "fixture_sha256": "0bd8c9cb4bdec792c7c5f509d0705429003293fcc885455e09bed9be13f8aed1",
+    "fixture_source": "Exact unmodified request and snapshot from meaningv10 MC-SG32 journal row6, before work3 root23 execution.",
+    "original_positive": {
+      "purpose": "root_search",
+      "depth": 23,
+      "nodes": 5000000,
+      "movetime_ms": 5000,
+      "max_search_elapsed_ms": 6000
+    },
+    "expanded_positive": {
+      "purpose": "root_search",
+      "depth": 23,
+      "nodes": 40000000,
+      "movetime_ms": 8000,
+      "max_search_elapsed_ms": 9000,
+      "verification": {
+        "state": "pending",
+        "reason": "child_challenge",
+        "target_depth": 23
+      }
+    },
+    "rejects": [
+      "initial verification reason",
+      "wrong target depth",
+      "wrong work depth",
+      "matching shallow8 target/work",
+      "absent verification",
+      "stopped verification",
+      "complete verification",
+      "not_required verification",
+      "mixed or enlarged nodes/time/elapsed limits",
+      "foreign legal history step",
+      "foreign initial board",
+      "foreign search board",
+      "restricted root work"
+    ],
+    "main_edited_by_this_agent": false,
+    "engine_report_generated_by_this_agent": false,
+    "ui_tests_executed_by_this_agent": false
+  }
+}

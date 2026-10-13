@@ -1,0 +1,325 @@
+{
+  "created_at_utc": "2026-10-04T05:36:32.146339+00:00",
+  "task_started_utc": "2026-10-04T01:04:11+00:00",
+  "elapsed_hours_at_report": 4.539,
+  "status": {
+    "structural_medium_term_unit_complete": true,
+    "phase1_release_quality_met": false,
+    "general_optimal_question_policy_complete": false
+  },
+  "conclusion": "관계패턴은 실제 정체성·공격·지원·포획·회복을 보존하는 공통 처리로 구현할 수 있습니다. 새 기본 해설의 실패는 뒤에서 생긴 응수와 가격을 선택한 설명 구간에 귀속하지 못하고 주변 사실을 계속 본문에 선택하는 데 모입니다. 좁은 SAN 특례를 더하지 않고도 구현 효과가 있었으나, 이번 단위로 핵심 선택과 자연스러운 짧은 본문의 일반화가 완성되지는 않았습니다.",
+  "actual_change_scope": {
+    "runtime_main_files": [
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+        "initial_sha256": "672ae21d82468ac09e7d9416e7d709bf09f9bbff6a7b671579dda69209c46dc7",
+        "v6_sha256": "4f63ebfa8143867149784268d71c0860ca4e446ecd789dadc7404672e257bcf0"
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+        "initial_sha256": "34ad5f8194cc2b25345a5632a08d679c354ed25b9c2d6880879d7afffd99b75a",
+        "v6_sha256": "d84ad623cd0a16229e04a5d283b5d492333bc9c8b205534e58f08434d0c0547b"
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+        "initial_sha256": "89b761b9f6000316ccdae9d85c86dff9c7b50a513120149a35c16059a8ea2efb",
+        "v6_sha256": "aa8a2a46f6e008d7a8177976e5fffc0dc089219ff6bbf53ce4bbd783b6b8b268"
+      }
+    ],
+    "test_files": [
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryAnswerTest.scala",
+        "initial_sha256": "9df2d7b8d90c15def01e80b2df764e041cdadee9b584248834676a34b59b9eb4",
+        "v6_sha256": "f0d450e4fbd0c640f84ec157dda3dff5c072ad2b249d144757a05ea416c44883"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+        "initial_sha256": "0426f88de1af2ea25c6fcc9679c746181151a1c5b3a348de8d0d7281cafb4654",
+        "v6_sha256": "096d423a7f512a50bc9d4bcb3aa0d934e9a9381ddee6ff7aaf7306f51cf1ddc4"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/PracticalDecisionTest.scala",
+        "initial_sha256": "6cb70e4f8db6f1cdc8e9c35fa41db6c43bd4cb1d062d0d48b3f15c077f049ed1",
+        "v6_sha256": "bea7ca55b1a26291deb97de9d219b18b1093d4db2e8629af13f6afab286a011c"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/ReferenceMeaningDeliveryTest.scala",
+        "initial_sha256": "023ed2e258169e3ee8af6c973ac49ad5fb52780f8e8a985a5b7eafb1a458fff3",
+        "v6_sha256": "0c9c37228e4f8e259cf6b9eb1339e65a2a610bd6649c5e6bd3da51b73551f755"
+      }
+    ],
+    "supporting_files": [
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "judgment-evaluation/schemas/public-v6/move-observations.schema.json"
+    ],
+    "total_product_and_test_files_changed_since_start": 9,
+    "attribution": "기존 WIP를 복원해 시작 SHA와 대조했습니다. commonReading→completeSelectedConditions→realize는 시작부터 있던 경로이며, 이번에는 그 안의 관계 가격·승격·표현 소유·proof 전달을 강화했습니다."
+  },
+  "adopt": [
+    "원래 선택 대상과 같은 실제 공격자의 다른 대상 가격을 양쪽 수순에서 보존하는 처리.",
+    "지원의 실제 사용, 지원 기물 손실, 실제 회복을 기존 포획 연결과 원래 기물 정체성으로 묶는 처리. provider 새 입구의 고정 후속 거리 제한은 연속 지원·공격 검증으로 대체.",
+    "선택 계정 구간의 실제 물질 변화와 승격의 원래 정체성/현재 역할 문맥을 보존하는 처리.",
+    "본문 내용·표현한 typed statement·증명/재생 참조의 구분. 실제 표현된 기물 가격으로 완결성을 검증하며 모든 증명 SAN의 발화를 요구하지 않음.",
+    "원래 core 응수·대가 의무의 검사와 public proof_moves 전달. 기본과 상세 및 기존 정확한 SAN 연결 재사용.",
+    "폰 목적지와 통과 칸을 typed pawn advance에서 읽는 기존 프런트 계약 오류 수정."
+  ],
+  "not_enabled_or_not_proved": [
+    "자동 threat 조사는 계속 기본값 꺼짐. 이번 신규36국면은 일반 비교로 실행했으며 자동 패스 후보 조사가 기본 해설을 개선한다는 결과는 확보하지 않음.",
+    "제품 언어모델 미사용.",
+    "새 중요도 그래프·범용 선택 프레임워크·특정 SAN/좌표 예외 없음. 기존 account의 인접 보상/범위 확장 및 표현 내부의 일부 의미 결합은 남음.",
+    "완결성 자동 검사 통과를 자연스러운 해설 또는 인간 독자 이해로 확대하지 않음."
+  ],
+  "regression": {
+    "games": 10,
+    "jobs": 900,
+    "paired_comparison_jobs": 896,
+    "reports": 3840,
+    "controls": {
+      "jobs": 900,
+      "fully_replayed_readable_jobs": 900,
+      "statuses": {
+        "fully_replayed": 900
+      },
+      "reading_errors": 0,
+      "exact_matched_report_prefix": 3840,
+      "controls_exact_among_complete": {
+        "request_fen_exact": 900,
+        "original_packet_flag_exact": 900,
+        "report_count_exact": 900,
+        "work_trace_exact": 900,
+        "candidate_ids_exact": 900,
+        "pair_path_ids_moves_exact": 900,
+        "verification_exact": 900,
+        "assessment_exact": 900,
+        "assessment_state_exact": 900,
+        "line_material_ledgers_exact": 900
+      },
+      "changed_basic_jobs": 224,
+      "summary_unavailable_changed_jobs": 0,
+      "before_no_basic_jobs": 22,
+      "after_no_basic_jobs": 22,
+      "cost_delivery_changed_jobs": 218,
+      "cost_owned_capture_projection_changed_jobs": 46,
+      "before_jobs_with_exact_repeated_sentences": 149,
+      "after_jobs_with_exact_repeated_sentences": 139,
+      "before_repeated_sentence_excess": 243,
+      "after_repeated_sentence_excess": 225
+    },
+    "extra_controls": {
+      "progress": 900,
+      "assessment_scope": 900,
+      "proposal_sources": 900,
+      "requirement_states": 900,
+      "public_path_count": 900
+    },
+    "original_clean_jobs": 802,
+    "original_partial_jobs": 98,
+    "summary": "전 보고를 같은 작업 키로 재생. 기본 본문224·가격 전달218·Cost 포획 소유46건 변화는 변경 범위이며 정확도 개선율이 아님. 새 본문 부재0; v5에서 사라졌던 G5p64 한 건은 회복했으나 2,005자·종료 문장 중복으로 가독성 성공은 아님."
+  },
+  "generalization": {
+    "first18": {
+      "positions": 18,
+      "basic_available": 17,
+      "useful_and_complete": 5,
+      "important_price_omission_positions": 5,
+      "high_confidence_price_omission_positions": 3,
+      "claim_scope_sensitive_price_omission_positions": 2,
+      "price_scope_confusion_positions": 1,
+      "no_answer": 1,
+      "selected_episode_closed_positions": 11,
+      "needs_refresh": 1,
+      "unsupported_threat_or_attack_resolution_observed": 0,
+      "quality_threshold": {
+        "useful_and_complete_min": 14,
+        "important_price_omissions_max": 0,
+        "unsupported_threat_or_attack_resolution_max": 0
+      },
+      "quality_threshold_met": false
+    },
+    "final18": {
+      "positions": 18,
+      "basic_available_original_public_decoder": 17,
+      "basic_available_after_contract_fix": 18,
+      "primary_useful_and_complete": 4,
+      "auxiliary_semantically_useful_and_complete": 8,
+      "both_arms_semantically_closed_but_diffuse": 8,
+      "high_confidence_important_price_omission_positions": 5,
+      "high_confidence_missing_physical_items": 6,
+      "claim_scope_sensitive_price_omission_positions": 2,
+      "question_selection_or_contrast_failure_positions": 5,
+      "main_answer_fragmentation_failure_positions": 4,
+      "unsupported_threat_or_attack_resolution_observed": 0,
+      "needs_refresh": 4,
+      "quality_threshold": {
+        "useful_and_complete_min": 14,
+        "important_price_omissions_max": 0,
+        "unsupported_threat_or_attack_resolution_max": 0
+      },
+      "quality_threshold_met": false
+    },
+    "design": "TWIC WCC2016/Candidates2018/WCC2024 각 행사 실제 기보 6+6, 총36개 서로 다른 게임. 한 기보 한 국면. 코드·추출 기준 고정, 초기 unrestricted D16 비메이트 |White cp|≤100. 실제 수 이후 평가 벌어짐으로 배제하지 않음. 대응·가격 의무는 해당 본문을 보기 전에 기록.",
+    "not_paired": "첫18과 마지막18은 서로 다른 게임/입력이므로 5→4 또는 5→8을 개선/퇴보의 인과 추정으로 읽지 않음.",
+    "scope": "개발 자료10기보 및 첫18과 마지막18의 분리는 확인. 오래된 모든 보호 코퍼스와의 전역 비노출은 주장하지 않음. 세 행사와 좁은 선수군/중반 중심 추출의 제한이 남음.",
+    "human_readers": 0
+  },
+  "remaining_general_patterns": [
+    {
+      "pattern": "앞선 지출과 뒤의 획득",
+      "evidence": [
+        "wch2016-11 dxc3→Rxe4",
+        "candidates2018-10 Raxb8→Qxc5"
+      ],
+      "problem": "다른 칸의 앞선 손실이 선택한 획득의 실제 가격인데, capture seed 중심 처리에서 빠집니다."
+    },
+    {
+      "pattern": "후속 공격과 방어 선택의 다른 가격",
+      "evidence": [
+        "wch2016-09 Nf4+→Bxf4→Rxd5"
+      ],
+      "problem": "공격자를 제거한 응수가 다른 대상의 손실까지 해결했다는 뜻은 아닙니다. 초기 관계 gate만으로 뒤의 실제 fork 응수를 설명하기 어렵습니다."
+    },
+    {
+      "pattern": "지원의 실제 사용과 다른 대상 방치",
+      "evidence": [
+        "candidates2018-09 Qa3→Qxa7→Qxb2",
+        "wch2024-09 Qb5→Qxc5→Qxb6 (가격은 전달됨)"
+      ],
+      "problem": "같은 기물의 복수 대상과 실제 이동이 바꾼 지원을 선택 구간에서 읽어야 합니다. 전체 생애를 모두 연결하거나 공격 부재를 추정해서는 안 됩니다."
+    },
+    {
+      "pattern": "선 비우기의 가격과 회복",
+      "evidence": [
+        "wch2024-12 Nxe3→Rxd7→Nxg2→Kxg2→Bxd7"
+      ],
+      "problem": "선택한 포획이 비운 선의 실제 사용과 퀸 손실·룩 회복이 한 설명 구간으로 묶이지 않습니다."
+    }
+  ],
+  "next_bounded_task": {
+    "time_box_hours": [
+      6,
+      8
+    ],
+    "objective": "기존 QuestionFocus와 실제 행동·응수 연결에 선택한 설명 구간의 소유를 명시하고, 그 답을 바꾸는 앞선 지출·후속 손실·회복만 본문 내용으로 고른다.",
+    "order": [
+      "이번5실패를 기존 source 관계로 다시 묶어 질문 대상·실제 행동·응수·가격·관측 종료를 한 selected answer 안에 귀속; 새 그래프나 문구별 분기 만들지 않기.",
+      "지원/공격이 나중에 생기거나 바뀌는 조건을 actual action/reply anchor에서 읽기. 같은 capturer/반대 물질 부호/일정 거리라는 이유만으로 묶지 않기.",
+      "실제 획득·손실·회복을 설명하는 구간과 관측 종료를 typed answer에 남기고, 답의 의미를 바꾸지 않는 target/presence/이동 이력은 상세에 유지.",
+      "영어는 그 선택 결과만 표현. 한 문장 강제·접속사 추가·SAN 등장 수를 개선 기준으로 쓰지 않기.",
+      "필요한 변경 검사와 이번5가격실패·4주제파편·4비교미완성 회귀 후 코드를 고정하고 다른 실제6기보로 작은 비노출 확인. 같은900건의 불필요한 반복은 줄이기."
+    ],
+    "stop": "선택 구간이 source 가격과 정확한 응수/회복을 소유하는 코드, 같은 입력 전후, 새6기보 판독 및 남은 실패를 남기면 종료. 기존14/18·대가누락0 전체 품질 기준을 작은 연구 판정으로 대체하지 않음."
+  },
+  "execution_and_checks": {
+    "tests": {
+      "suites": [
+        "CommentaryAnswerTest",
+        "CommentaryDependencyTest",
+        "CommentaryEnglishCompositionTest",
+        "CommentaryIdeaIdentityTest",
+        "RootQuestionAnswerTest",
+        "RootThreatAnswerTest",
+        "CommentaryMaterialAccountTest",
+        "MeaningCompositionTest",
+        "ReferenceMeaningDeliveryTest",
+        "PracticalDecisionTest"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 90.303,
+      "log": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\test-run-v6.log",
+      "count": 272,
+      "junit_measured_seconds": 89.166,
+      "log_sha256": "e268df476056f2aacd3acfbd35c3f23582adf94d574c3cafe8f8a46ea3099803",
+      "main_compile": {
+        "exit_code": 0,
+        "elapsed_seconds": 45.687
+      },
+      "test_compile": {
+        "exit_code": 0,
+        "elapsed_seconds": 24.06
+      },
+      "scope": "Direct cached Scala 3.7.4/Java21 compiler, 71 main sources and ten selected test suites. Not the official full build."
+    },
+    "frontend": {
+      "cases": 33,
+      "regression_cases": 15,
+      "fresh_cases": 18,
+      "publicly_decoded": 33,
+      "summary_candidates": 33,
+      "preserved_summaries": 33,
+      "fully_checked_summaries": 33,
+      "unavailable_notices_checked": 0,
+      "exact_san_actions_checked": 2672,
+      "max_unit_proof_refs": 23,
+      "max_unit_required_refs": 23,
+      "max_unit_covered_refs": 13
+    },
+    "issued_works": 90,
+    "whole_reports_accepted": 79,
+    "search_limit_failures": 6,
+    "original_public_decoder_failure": 1,
+    "cancelled": 4,
+    "open_issued": 0,
+    "partial_completed_packets": 0,
+    "assessment_current": 14,
+    "assessment_needs_refresh": 4,
+    "verification_complete": 15,
+    "verification_stopped": 3,
+    "selected_job_median_ms": 6058,
+    "first_selected_job_ms": 10596,
+    "repeated_selected_median_ms": 5958,
+    "engine_preparation_ms": 307,
+    "performance_limit": "SF18 WASM 단독 실행기, Threads2/Hash16, 작업 제한30초. 엔진 준비는 별도. 웹/모바일/통신/정식 빌드 시간은 측정하지 않음.",
+    "node_scope": "Node22.20으로 실제 공개 decoder와 VNode renderer를 JSDOM에서 검사. 정식 프런트 빌드가 요구하는 Node24.12 환경 검증은 아님.",
+    "schema": {
+      "v6-schema-v6-cases.json": {
+        "scope": "Actual summary_question only, using the checked-in complete local $defs; not the full response schema.",
+        "counts": {
+          "snapshots": 15,
+          "summaries": 15,
+          "valid": 15
+        },
+        "failures": [],
+        "schema_sha256": "68d79c4183e69361f77b4fa54fe8ab5ecf09532ec84e953f3a9b69a069ff3480",
+        "input_sha256": "bba4fac74aa3fd1943cd1880bbb5a14242159c3fb43f0b370413f4bc5db4176f"
+      },
+      "v6-schema-v6-fresh-attempts.json": {
+        "scope": "Actual summary_question only, using the checked-in complete local $defs; not the full response schema.",
+        "counts": {
+          "snapshots": 22,
+          "summaries": 22,
+          "valid": 22
+        },
+        "failures": [],
+        "schema_sha256": "68d79c4183e69361f77b4fa54fe8ab5ecf09532ec84e953f3a9b69a069ff3480",
+        "input_sha256": "9774cfab35c8b7c2253eba62d5021f9a50c7bb7b6cbf8c5552271e1945cb85dc"
+      }
+    },
+    "protected_historical_files": 43,
+    "old_manifest_fields_preserved": 13
+  },
+  "provenance": {
+    "manifest.json": "7489719f467acf704708c7572525f44af6bc8a76584734693d8f8921a2884753",
+    "freeze-v5.json": "4f30132ccc5dc9f5c2af972ebe6bdc9178f52d670981f76bc02d8a507e31a94d",
+    "freeze-v6.json": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+    "structure-audit-v6.json": "c3a0a778c0964e33ebca90a385d0c52836f6331ec61bb05af2d298424fa3f7e0",
+    "v6-replay-control.json": "7884ecc14d4eff5d7e5dc545daa8ae0947c6a7b33f63e363cda69bfb22e7a755",
+    "v6-price-changes-compact.json": "d2f6fe675880bce279fd4e6ac9b9b67ebe74c5027ad08f4003ed53ef4f03ed26",
+    "same-input-before-after.json": "031765eabdbed4456dffbc0cab68aa3fbb41969c72161e479928678871c27ec4",
+    "independent-obligations.json": "e9469aa1ea049ff792008735477e9dd88fe90c4569310ce6581caa53a48d8f69",
+    "independent-obligations-final.json": "4e9f40551a76802b5519933a0123cf2b119cc33d7b847d2bb7766b8994e48c62",
+    "fresh-content-assessment.json": "8eccb8bb40ff56248bc9c3697e5dd8871b8da7799e25629e56dec8b07dd9dc25",
+    "fresh-content-assessment-final.json": "3fd5cfc5d5b7dcead66e8e627795dc47e25a455a3f5a8af923a3baddf0cdd683",
+    "v6-supplementary-reading-final.json": "2228d00c9c2d4c07fda11e59b212d71c1d68f5007d14e1b5b4ee52f4193778bd",
+    "v6-core-price-ownership-diagnosis.json": "6b453726ab13cdb40b4069f5932caf2e84d44d233f0dac42e9aed46f94009c2c",
+    "post-freeze-public-contract-fix.json": "8c053d9b5ddbe7a8966c604fff56115d2034e3da6b19137efc7f3d870d6c7294",
+    "v6-execution-audit.json": "2b2f0173cf346436c4593660016a6187e74504ba6ca2ecdb6df231fdd05953cf",
+    "v6-execution-diagnostics.json": "a1ebc042580ccb660b726109405e563bed756ded3a677565ee4ce1dbb62b8f08",
+    "v6-frontend-after-contract-results.json": "e5020434d059b60e10288e7a1bc45e24385359a782f5364db0911d1ab332141b",
+    "final-source-control.json": "45b0d208adaefd9d6bccf386fb0aff7cce4f032844161da5a0497bc54bf81b71",
+    "v6-tests.json": "511c6262126dbc747d3a319dcf70ebd78d630cc96202066aacfc1203d2e378c8",
+    "v6-schema-v6-cases.json": "9218bc49a337ecc61a03c740767e69efb314095190616345b9dca951fdc3c9b3",
+    "v6-schema-v6-fresh-attempts.json": "19ba7a351b77a140f19a11b96b29a2f6f7afbea74b4e6cb3908a7adb6625c348",
+    "generalization-final-candidates/selection-policy.json": "22c8bf7839ec6ec00dbed52a34a8db171474e4347420a834c9ce93fdd4034259",
+    "generalization-final-candidates/candidate-registry.json": "1c9a04dd4eed47739d4490fb7719239cb64957c263112b51d5e8ec5643918bd9"
+  }
+}

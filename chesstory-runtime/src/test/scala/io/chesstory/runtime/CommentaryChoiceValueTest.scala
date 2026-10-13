@@ -127,6 +127,21 @@ class CommentaryChoiceValueTest extends munit.FunSuite:
     val pool = search(source, paths, receipt(source, "full", List(leader -> -300, other -> 0)))
     assert(read(source, paths, question(other), List(pool, pair), pool.work.engineProfile.wireId, 16).isEmpty)
 
+  test("stable relative order does not erase a material absolute-value conflict"):
+    val source = packet()
+    val paths = ObservedLineProtocol.prepare(source)
+    val pool = search(source, paths, receipt(source, "stable-leader", List(leader -> -300, other -> 0)))
+    val pair = search(source, paths, receipt(source, "shifted-values",
+      List(resource -> 700, leader -> 300), restricted = true))
+    val searches = List(pool, pair)
+    val selection = new CommentaryComparisonConflict.Selection(source, pool, searches)
+    assert(!selection.rankingReversed, "the named comparison still prefers the same leader")
+    val missing = selection.valueConflict(Set(resource, leader)).get
+    assertEquals(missing.move, leader)
+    assertEquals(survey(source, List(root), searches, pool.work.engineProfile.wireId, 16), Some(pool))
+    assertEquals(resolve(source, paths, question(), searches, pool.work.engineProfile.wireId, 16), Left(missing))
+    assert(read(source, paths, question(), searches, pool.work.engineProfile.wireId, 16).isEmpty)
+
   test("a current full survey can itself own a close resource comparison without a duplicate query"):
     val source = packet()
     val paths = ObservedLineProtocol.prepare(source)

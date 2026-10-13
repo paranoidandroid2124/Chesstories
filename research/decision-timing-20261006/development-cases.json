@@ -1,0 +1,317 @@
+{
+  "created_utc": "2026-10-05T23:02:53.519124+00:00",
+  "scope": "Predeclared human judgments and refutable hypotheses before fresh product output. Book judgments are hypotheses, not engine facts.",
+  "cases": [
+    {
+      "id": "B03",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "mainline_san": "e4 e5 Nf3 Nc6",
+      "played_san": "Nc3",
+      "lines": [
+        [
+          "b1c3"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1b5"
+      ],
+      "alternatives_san": [
+        "Bb5"
+      ],
+      "human_task": "Explain a sound development move without inventing a defect from a small score change.",
+      "hypothesis": "Nc3 develops and supports e4; a meaningful preference for Bb5 requires a separate verified comparison.",
+      "falsifiers": [
+        "Reference ranking or gap fails to remain stable under comparable deeper analysis.",
+        "Claimed disadvantage is also present after the alternative."
+      ],
+      "source": null,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D05",
+      "initial_fen": "r7/1k6/8/4p3/7p/5N2/8/6K1 b - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "r7/1k6/8/4p3/7p/5N2/8/6K1 b - - 0 1",
+      "mainline_san": "",
+      "played_san": "Re8",
+      "lines": [
+        [
+          "a8e8"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "a8a1"
+      ],
+      "alternatives_san": [
+        "Ra1+"
+      ],
+      "human_task": "Preserve known winning status of both moves; do not present a finite scalar preference as a proved defect.",
+      "hypothesis": "Both moves retain a tablebase win with matching reported DTZ and DTM; check and pawn-defense roles differ.",
+      "falsifiers": [
+        "A claim of lost winning status contradicts stored tablebase evidence.",
+        "Equal tablebase results alone do not establish equal practical difficulty."
+      ],
+      "source": null,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D06",
+      "initial_fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "mainline_san": "",
+      "played_san": "Re1",
+      "lines": [
+        [
+          "f1e1"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1f6"
+      ],
+      "alternatives_san": [
+        "Rxf6"
+      ],
+      "human_task": "Explain the first checking reply and lost queen-capture opportunity with their consequences.",
+      "hypothesis": "Moving the f1 rook permits a dangerous Qf2+ reply; the alternative captures the queen and pays the rook.",
+      "falsifiers": [
+        "Qf2 is already equally effective against the alternative.",
+        "The stated follow-up can be avoided by an adequate tested defense."
+      ],
+      "source": null,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "C03",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "d7d5",
+        "c2c4",
+        "e7e6",
+        "g1f3",
+        "g8f6",
+        "g2g3",
+        "f8e7",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c7c6",
+        "d1c2",
+        "b7b6",
+        "b1d2",
+        "c8b7",
+        "e2e4"
+      ],
+      "fen": "rn1q1rk1/pb2bppp/1pp1pn2/3p4/2PPP3/5NP1/PPQN1PBP/R1B2RK1 b - - 0 9",
+      "mainline_san": "d4 d5 c4 e6 Nf3 Nf6 g3 Be7 Bg2 O-O O-O c6 Qc2 b6 Nbd2 Bb7 e4",
+      "played_san": "Nbd7",
+      "lines": [
+        [
+          "b8d7"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "b8a6"
+      ],
+      "alternatives_san": [
+        "Na6"
+      ],
+      "human_task": "Judge a routine developing move by whether it gives White an effective central advance and leaves Black unable to challenge the wedge in time.",
+      "hypothesis": "After Nbd7, e5 gains time against Nf6, closes Bb7 and leaves weaker central counterplay than Na6 followed by c5. Test each link separately.",
+      "falsifiers": [
+        "e5 is legal after both moves: legality alone proves no timing difference.",
+        "A strong response after Nbd7 challenges the centre comparably.",
+        "Na6 does not improve the relevant central response or the engine rejects the book preference."
+      ],
+      "source": {
+        "book": "The Catalan: move by move",
+        "pdf": "C:\\Codes\\Chesstories\\target\\human-commentary-reading-20261006\\catalan.pdf",
+        "pdf_pages": [
+          6,
+          7,
+          8
+        ],
+        "diagram": "PDF8 upper left after Nbd7 visually checked"
+      },
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "S4",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "d7d6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "a7a6",
+        "c1e3",
+        "e7e5",
+        "d4b3",
+        "c8e6",
+        "f2f3",
+        "h7h5",
+        "f1e2",
+        "b8d7",
+        "f3f4",
+        "a8c8",
+        "f4f5",
+        "e6c4",
+        "e2c4",
+        "c8c4",
+        "d1d3",
+        "d8c7",
+        "e1c1",
+        "b7b5",
+        "c1b1",
+        "f8e7",
+        "h2h3",
+        "e8g8",
+        "g2g4",
+        "c4c3",
+        "b2c3",
+        "c7c6",
+        "e3g5",
+        "f8c8",
+        "h1e1",
+        "d7b6",
+        "g5f6",
+        "e7f6",
+        "b3c1"
+      ],
+      "fen": "2r3k1/5pp1/pnqp1b2/1p2pP1p/4P1P1/2PQ3P/P1P5/1KNRR3 b - - 1 22",
+      "mainline_san": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e5 Nb3 Be6 f3 h5 Be2 Nbd7 f4 Rc8 f5 Bc4 Bxc4 Rxc4 Qd3 Qc7 O-O-O b5 Kb1 Be7 h3 O-O g4 Rxc3 bxc3 Qc6 Bg5 Rc8 Rhe1 Nb6 Bxf6 Bxf6 Nc1",
+      "played_san": "Rd8",
+      "lines": [
+        [
+          "c8d8"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "d6d5",
+        "b6c4"
+      ],
+      "alternatives_san": [
+        "d5",
+        "Nc4"
+      ],
+      "human_task": "Distinguish the cost of delaying d5 from the cost of moving the rook off the c-file; do not merge unproved causes.",
+      "hypothesis": "Immediate d5 keeps the c-file rook available for Rc4 and central/queenside pressure, while Rd8 gives White Rg1 and counterplay. Test exd5, Ne2 and Rg1 and alternative Black responses.",
+      "falsifiers": [
+        "Black can recover the same pressure after Rd8 and Rg1.",
+        "A tested defense refutes the immediate d5 line.",
+        "The difference is adequately explained by a separate forcing tactic rather than timing."
+      ],
+      "source": {
+        "book": "Understanding Before Moving 3: Sicilian Structures Part 1",
+        "pdf": "C:\\Codes\\Chesstories\\target\\human-commentary-reading-20261006\\sicilian\\source.pdf",
+        "pdf_pages": [
+          38,
+          39,
+          40,
+          41,
+          42
+        ],
+        "game": "Movsesian-Grooten, Cappelle la Grande 1998",
+        "diagram": "PDF39 lower right after Nc1 visually checked"
+      },
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "S2",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "d7d6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "a7a6",
+        "c1e3",
+        "e7e5",
+        "d4b3",
+        "c8e6",
+        "f2f3",
+        "h7h5",
+        "c3d5",
+        "e6d5",
+        "e4d5",
+        "b8d7",
+        "d1d2",
+        "g7g6",
+        "e1c1",
+        "d7b6",
+        "d2a5",
+        "f8h6",
+        "e3h6",
+        "h8h6",
+        "g2g3",
+        "e8f8",
+        "c1b1",
+        "f8g7",
+        "f1e2",
+        "h6h8",
+        "c2c4",
+        "a8c8",
+        "d1c1",
+        "f6d7"
+      ],
+      "fen": "2rq3r/1p1n1pk1/pn1p2p1/Q2Pp2p/2P5/1N3PP1/PP2B2P/1KR4R w - - 3 20",
+      "mainline_san": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e5 Nb3 Be6 f3 h5 Nd5 Bxd5 exd5 Nbd7 Qd2 g6 O-O-O Nb6 Qa5 Bh6 Bxh6 Rxh6 g3 Kf8 Kb1 Kg7 Be2 Rh8 c4 Rc8 Rc1 Nfd7",
+      "played_san": "Rhd1",
+      "lines": [
+        [
+          "h1d1"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "h1f1"
+      ],
+      "alternatives_san": [
+        "Rhf1"
+      ],
+      "human_task": "Explain Rhd1 as support for d5/c5 and Rhf1 as preparation for f4 without inventing superiority.",
+      "hypothesis": "Two useful plans exist; Rhd1 changes support of d5 so c4 can advance, but Black Nc5 can contest this plan and must not be ignored.",
+      "falsifiers": [
+        "The claimed c5 plan ignores an effective Nc5 response.",
+        "A modern concrete refutation makes one plan materially worse.",
+        "Support geometry is mistaken for proof that c5 succeeds."
+      ],
+      "source": {
+        "book": "Understanding Before Moving 3: Sicilian Structures Part 1",
+        "pdf": "C:\\Codes\\Chesstories\\target\\human-commentary-reading-20261006\\sicilian\\source.pdf",
+        "pdf_pages": [
+          151,
+          152,
+          153,
+          154
+        ],
+        "game": "Topalov-Wojtaszek, Skopje 2015",
+        "diagram": "PDF153 after Rhd1 visually checked; c1+d1 rooks, Nb3, Qa5, d5/c4 pawns match replay."
+      },
+      "provided_future_lines": false,
+      "provided_scores": false
+    }
+  ]
+}

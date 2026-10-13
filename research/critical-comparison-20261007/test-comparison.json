@@ -1,0 +1,43 @@
+{
+  "tests_per_run": 333,
+  "current_passed": 316,
+  "current_failed": 17,
+  "new_current_failure_names": [],
+  "failures_reproduced_in_goal_start_product": [
+    "HTTP v6 completes a focused review from one browser-owned engine report(io.chesstory.runtime.RuntimeProtocolTest)",
+    "HTTP v6 route keeps Stockfish work in the browser and stops an executor failure(io.chesstory.runtime.RuntimeProtocolTest)",
+    "a pinned geometric recapturer does not become a legal recapture or safety claim(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix(io.chesstory.runtime.LineContinuationJobTest)",
+    "a supplied support extension is investigated when current premises are absent without washing its provenance(io.chesstory.runtime.LineContinuationJobTest)",
+    "a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture(io.chesstory.runtime.LineContinuationJobTest)",
+    "development uses canonical history and is not inferred from a home-square departure(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "missing prior controls suppress the negative king-entry premise but unrelated after controls do not(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "missing support premise removes only the dependent note and preserves the independent attack(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "one observed king constraint discovers the recapture choice and supplements every omitted recapturer(io.chesstory.runtime.LineContinuationJobTest)",
+    "opened-ray occupancy survives missing controls at its occupied endpoint(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "partial opposition controls retain independently supported pressure clauses(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "passed-pawn wording distinguishes maintained, created and unknown prior state(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "pawn-block and current-file notes survive absent mover controls(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "resource-only R1 notes survive absent observations using the typed legal catalogue(io.chesstory.runtime.MoveWorkProjectionTest)",
+    "the remaining slot surveys an unobserved support use at the exact recapture peer frontier(io.chesstory.runtime.LineContinuationJobTest)",
+    "typed projection is deterministic, read-only and delivered with resolvable public resource IDs(io.chesstory.runtime.MoveWorkProjectionTest)"
+  ],
+  "old_failures_changed": [
+    "a ready root dependency precedes a downstream fact after the stronger reply changes(io.chesstory.runtime.CriticalComparisonSchedulingTest)",
+    "prepared paths preserve summaries and selection but cannot cross packet owners(io.chesstory.runtime.CommentarySelectionTest)",
+    "the mandatory verified focus can use the selected reply allowance once, leaving delivery time(io.chesstory.runtime.ProgressiveCommentaryJobTest)",
+    "the selected counter gets its bounded allowance before optional work, retaining position and owners(io.chesstory.runtime.ReserveEntryTest)"
+  ],
+  "scope": "Identical compiled test classes against source-hash-verified reservev43 goal-start product and current criticalv7. Broad current run uses portable scheduler fixture overlay. The baseline broad overlay path was not loaded correctly; its scheduler fixture failure is not counted as a semantic improvement. The actual prior scheduler behavior failure has a separate same-prefix v3 control.",
+  "earlier_harness_attempts": [
+    "criticalv5 and v6 subset compile lacked test fixtures; retained compile failures, no product compile failure",
+    "initial broad run lacked fixture resources and correct working directory",
+    "currentbroad/currentbroadfinal scheduler overlay path corrected in currentbroadcorrected"
+  ],
+  "ui_targeted": {
+    "tests": 78,
+    "passed": 78
+  },
+  "ui_broad": "Historical-control UI suites have the same 67 remaining failing test names and no new failures. Control is older dutyv4 UI, not exact goal-start UI. Existing produced-fixture expectations and PGN test teardown failures remain; no green whole-UI claim.",
+  "typescript_full_analyse_build": "node node_modules/typescript/bin/tsc -b ui/analyse/tsconfig.json --force: exit0 on2026-10-07, current goal UI sources."
+}

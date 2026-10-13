@@ -1,0 +1,37 @@
+{
+  "research_question": "What recurring choices in question discovery, content selection and answer delivery prevent a useful concise basic explanation?",
+  "coverage": "All 900 actual move events in ten master games; no move chosen because product output failed.",
+  "corpus_selection": "Chess Fundamentals Part II Games 1–10, in book order. Selection fixed before outputs. All standard starting positions.",
+  "information_difference": "Independent reasoning sees the entire actual score and sometimes source annotations. Product receives only history through the focus and its own engine lines. Later actual moves are hypotheses, not mandatory product facts.",
+  "judgement": "LLM research reading, not independent human-reader evaluation. Automated structure/legality observations are separated from content judgement.",
+  "balance_stratification": {
+    "basis": "First admitted unrestricted depth>=16 root evaluation before the played move, White perspective",
+    "balanced_abs_cp_max": 100,
+    "mate_scores": "not balanced",
+    "missing_evaluation": "unknown, retained"
+  },
+  "quality_labels": [
+    "useful bounded answer",
+    "useful but diluted",
+    "unfocused answer",
+    "incomplete/unavailable",
+    "no answer"
+  ],
+  "failure_boundaries": [
+    "question/discovery",
+    "answer selection",
+    "composition/delivery",
+    "runtime/time/verification",
+    "outside phase1 or incompatible line"
+  ],
+  "important_cost": "A witnessed reply, recapture, loss, defence or ending that changes a displayed claim. Not every capture anywhere in a PV.",
+  "not_completion_test": "This open, author-biased research corpus does not replace the frozen 14/18 release threshold or any protected heldout.",
+  "product_llm": false,
+  "product_edits": false,
+  "docker": false,
+  "browser_or_http": false,
+  "automatic_threat_probe": false,
+  "diagnostic_budget_ms_per_move": 30000,
+  "whole_game_ui_deadline_applied": false,
+  "phase2": "Long-term plan, lasting weakness, human preference, unique/best/forced win require more than source annotation or one supplied PV."
+}

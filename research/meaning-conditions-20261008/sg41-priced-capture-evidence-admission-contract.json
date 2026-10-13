@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T02:17:33.700398+00:00",
+  "scope": "Generic admission contract for an already legal opposing action when a cheap denial disappears but a costly capture remains. This is a design/reading artifact, not a product implementation or an engine result.",
+  "book_criteria_fixed_before_current_schema_inspection": true,
+  "future_product_output_read": false,
+  "engine_executed": false,
+  "main_tests_or_ui_edited": false,
+  "preserved_records_sha256": {
+    "independent-theory-controls.json": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+    "independent-functional-followup-product-inputs.json": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "functional-followup-basic-v24b-human-reading.json": "a426cb0c2194f51c6a9c368a019236cd928a9def49061b203a24c64e365ef0df",
+    "functional-followup-basic-v26-human-reading.json": "c0440da7ae1252643cc224cef852d81b5278201db80d68a15f7df81946970c25",
+    "h05-book-and-late-wait-human-criteria.json": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+    "h05-basic-v26-human-reading.json": "d297bf99627d1425a44a16697936bd93fbcce41e818af0981f35e6d4f099e7dc",
+    "sg41-priced-capture-and-mover-commentary-criteria.json": "ff51aa5c8689d6e5fe478fba3adea3376ab6ece745e7afc5d25eb55b6b8efb05",
+    "sg41-minimum-priced-utility-unit.json": "fbffeab879262ef10d639c2cafad6920076b493026bd31a5a6ac902710904ce3",
+    "sg41-played-nd5-development-plan.json": "fd2bc03e5ee9e0fbb057cff0150a888c2e8c093df0c09509f890dee812fcb5bc",
+    "priced-capture-admission-book-controls.json": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e"
+  },
+  "current_allowed_schema_sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\FunctionalReplyReading.scala",
+      "sha256": "f694d5d12cca6c8337c188acb7c05fb5d9456cc3e69f228c3e23d92bfb024391",
+      "line_count": 244
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryAnswer.scala",
+      "sha256": "b01cb058517e107892007a0a1ad6aa07894f303b11a84a4428bf010aa03799b3",
+      "read_scope": "Only LegalReplyOption's definition and immediately adjacent documentation."
+    }
+  ],
+  "source_and_search_provenance": {
+    "sg41_book_source": {
+      "book_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "book_sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+      "reading_edition_pages_reread": [
+        413,
+        414,
+        415,
+        416,
+        417,
+        418
+      ],
+      "diagrams_or_page_layout_visually_checked_this_phase": [
+        413,
+        418
+      ],
+      "earlier_diagram_pages_checked": [
+        414,
+        415,
+        416
+      ],
+      "source_pdf_footer_pages": "489–497",
+      "completed_comparisons_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\independent-minimum-batch-driver\\summary.json",
+      "completed_comparisons_sha256": "1b3c2cbe72fd6f41789dfce2c26f0fa697c1e394a01345762df225e065c84a19",
+      "full_book_or_general_product_success_claim": false
+    },
+    "other_book_controls_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\priced-capture-admission-book-controls.json",
+    "other_book_controls_sha256": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e",
+    "existing_completed_values_not_new_product_receipts": true,
+    "standalone_evidence_does_not_automatically_complete_product_obligations": true
+  },
+  "semantic_unit": {
+    "name": "conditional denial resource and price",
+    "question": "The opposing action was already legal. Did our choice remove an effective cheap way to stop it, and does a remaining way stop the same useful plan at an acceptable price against best choices?",
+    "not_equivalent_questions": [
+      "Is the action legal?",
+      "Can a remaining piece capture its actor?",
+      "Can that capture achieve the same useful denial after strongest recaptures and forcing replies?",
+      "Does the action remain valuable against the opponent's strongest alternative defense?",
+      "Does this local consequence explain the original numerical move judgment?"
+    ],
+    "sg41_grounding": {
+      "legal_availability": "Nd5 is legal in both states. Losing Pe6xd5 does not make the knight immune: Rc5xd5 remains legal.",
+      "price": "An effective substitute must survive White's best capture response at an acceptable price. Here ...exd5 exchanges a pawn for the knight, while ...Rxd5 allows White Pe4xd5 and gives a rook for the knight. Later pawn prices and compensation also matter.",
+      "strong_counter": "After ...exf5 Nd5, the strongest returned Black response is ...fxe4, not constructed ...Rxd5. Its removal of Pe4 changes the defender; Rd1 then supports Nd5. Later ...Be6 applies new pressure and White may move Nb4 while preserving activity.",
+      "usefulness": "The disappearance of the cheap pawn capture makes Nd5 a more usable option at the declared depth despite the remaining rook attack. It does not prove that Nd5 is forced, every attack is harmless, or Black has no effective defense.",
+      "original_root_judgment": "This is a concrete consequence of Black ...exf5. It is not by itself a mistake verdict or the exclusive cause of Red1's best evaluation. Black ...a5 still allows White Ne2; a bad optional Nd5 continuation cannot rank a5 as a forced winning defense."
+    }
+  },
+  "minimum_evidence_inventory": [
+    {
+      "id": "E1-owned-matched-action",
+      "required": [
+        "Canonical root position, actual legal history, branch prefix, side to move and stable original actors.",
+        "The same opposing actor/action destination is legally available in both inspected states, or the claim is explicitly only about one current state.",
+        "If paired histories differ, label them as matched counterfactual states; do not merge their line occurrences or receipts into one real history."
+      ],
+      "reject_if": "Synthetic side-to-move changes, legality inferred only from geometry, actor identities replaced by square names, or unowned branch positions."
+    },
+    {
+      "id": "E2-lost-effective-resource",
+      "required": [
+        "A replayed predicate for the original guard/capturer before and after the condition change.",
+        "The specific cheap denial action is legal in the retained state and unavailable in the changed state at the actual relevant turn.",
+        "The denial target is the same actor after the opposing action, not merely another piece occupying the same square."
+      ],
+      "fact_limit": "A disappeared legal capture proves a resource change, not the resource's global effectiveness or the target plan's value."
+    },
+    {
+      "id": "E3-complete-immediate-response-inventory",
+      "required": [
+        "For every surviving legal target capturer under the claim, enumerate every immediate legal recapture of that capturer in the resulting actual position.",
+        "Capture/recapture legality must include king exposure, pinned pieces, checks, en passant, promotion choices and side to move. Geometric attackers are a separate inventory.",
+        "An empty recapture list must carry a complete-enumeration marker; not searched or unavailable data cannot be represented as an empty list.",
+        "Retain stable actor ledger and captured roles for each branch. A recapture reaching the same final material count does not establish identical activity or compensation."
+      ],
+      "sg41_example": "...Rxd5 permits both R4xd5 and Pe4xd5 before and after Pe6 moves. Every choice must be allowed; the voluntary rook-only chain cannot be imposed as White's best response.",
+      "fact_limit": "An immediate ledger can say a rook is given for a knight in that branch. It cannot say the sacrifice is unsound without checking forcing replies and compensation."
+    },
+    {
+      "id": "E4-forcing-replies-and-compensation",
+      "required": [
+        "After capture and each relevant recapture, allow all immediate legal responses, including forcing checks, interpositions, mate threats, recapture refusal, intermediate moves and promotions.",
+        "The opponent may choose a non-recapture that is stronger. A capture's credible price must be measured against that choice rather than against a selected worse recapture.",
+        "State the horizon and material/terminal result separately. Continuing attack, king safety, activity, passed pawns, fortresses or practical pressure may compensate a nominal exchange cost."
+      ],
+      "book_countercontrols": [
+        "PC-SG14-TIMELY-EXCHANGE-PLAN",
+        "PC-SG48-SAME-KNIGHT-CAPTURE-FORCING-REPLY",
+        "PC-SW-SMERDON-EXCHANGE-PRACTICAL-RESISTANCE"
+      ],
+      "reject_if": "Nominal R-for-N is used as a universal bad-capture rule, no immediate recapture is used as a safe-capture rule, or a game result is used as forced compensation proof."
+    },
+    {
+      "id": "E5-owned-strongest-alternative-defense",
+      "required": [
+        "A completed unrestricted legal-root counter search at the exact descendant position and history, with current owner IDs and explicit search budget/limits.",
+        "At least the strongest returned counter, near-equal consequential alternatives and any declared refutation that tests an essential condition must be accounted for.",
+        "A named-only query does not own the phrase strongest defense. Full legal eligibility and individually scored/completed alternatives must be reported separately.",
+        "If the full counter search or a required followup is unfinished, admit only completed facts and leave utility unresolved."
+      ],
+      "sg41_example": "After ...exf5 Nd5, owned ...fxe4 must be considered before weak ...Rxd5. The former removes the pawn defender and changes the continuation even though it does not directly capture the knight.",
+      "scope_limit": "Unrestricted top3 means all legal root moves were eligible at that search bound, not that each root and each later response was separately depth-complete."
+    },
+    {
+      "id": "E6-adequate-function-after-response",
+      "required": [
+        "Specify the minimum function that must remain: adequate defense, a valuable entry, consequential pressure, a useful change of plan, or another concrete result.",
+        "Prove that role at the later actual turn. A new defender must legally respond at an acceptable price, not merely geometrically control the square.",
+        "Permit a changed adequate defender and changed realization. Do not require the original defender or target square to survive forever unless that persistence is essential to the claim.",
+        "Keep new attacks and necessary prices. Do not call the action useful merely because it remains legal under the strongest reply."
+      ],
+      "sg41_example": "After ...fxe4 R4xe4, Pe4 is gone but Rd1 can recapture ...Rxd5. Later ...Be6 can make White choose Nb4; that changed realization can preserve activity without permanent Nd5 occupation."
+    },
+    {
+      "id": "E7-numeric-owner-and-causal-scope",
+      "required": [
+        "Numerical receipts must identify request/root FEN/history, candidate pair, mover orientation, line occurrences, depth/nodes/time, terminal kind, completion status and bound semantics.",
+        "A descendant Nd5 price gap is not the earlier Black a5/exf5 root gap, and neither is automatically Red1's highest-value cause.",
+        "A receipt for an earlier Black context comparison cannot validate the actually played White Nd5's ranking versus its own current alternatives.",
+        "Root error or superiority claims require current owned consequential comparison evidence. Exclusive cause additionally needs counterfactual/reply robustness; do not infer it from two correlated evaluations."
+      ],
+      "sg41_example": "White can choose Ne2 after ...a5 instead of the expensive optional Nd5. That bad descendant cannot make a5 a forced winning root defense."
+    }
+  ],
+  "admission_levels": [
+    {
+      "level": "Factual conditional price",
+      "required": [
+        "E1",
+        "E2",
+        "E3 for the price branches actually described"
+      ],
+      "allowed_words": "The pawn capture is no longer available. The rook capture is legal; if White chooses this recapture, the immediate exchange is a rook for a knight.",
+      "forbidden_inferences": "Therefore the knight is safe, Nd5 is useful against strongest defense, the sacrifice is bad, our root move is better, or the engine gap is explained.",
+      "basic_purpose_admission": "May contribute a concise, explicitly conditional tradeoff when directly relevant to what the actual move changes. It is not a complete mistake/superiority reason and cannot displace a necessary verified reply or price."
+    },
+    {
+      "level": "Bounded useful opposing option",
+      "required": [
+        "E1-E6",
+        "exact descendant numerical owner from E7 when usefulness uses numerical evidence"
+      ],
+      "allowed_words": "At the completed declared bound, this is a usable activity option against the strongest tested defense, with these prices and this changed realization.",
+      "forbidden_inferences": "Only good response, all attacks harmless, forced win, timeless objective theorem, or original root cause.",
+      "basic_purpose_admission": "Can organize the central answer when the useful option is relevant to the actual move judgment and the counter/price is delivered. A changed main PV alone does not withdraw it if its functional conditions remain verified."
+    },
+    {
+      "level": "Actual root judgment or ranking explanation",
+      "required": [
+        "E1-E7, current root owner and consequential alternatives",
+        "separate stability/robustness evidence if the asserted small gap or exclusive cause needs it"
+      ],
+      "allowed_words": "The actually played move loses this opportunity or accepts this cost compared with the current tested better alternative; the claim is bounded to these owned comparisons.",
+      "forbidden_inferences": "Borrowed book score, borrowed standalone receipt, older Black context pair, or distant optional bad response is the cause of the current White numerical verdict."
+    }
+  ],
+  "missing_or_unfinished_evidence_policy": {
+    "complete_board_fact_incomplete_counter_search": "Keep the scoped fact/price as partial meaning. Do not label utility complete or mark the core evaluation explained.",
+    "nominal_cost_without_forcing_checks": "Describe the immediate ledger only. SG48 shows why this must not become an effectiveness verdict.",
+    "new_defender_unverified": "Keep defender existence as a geometric observation or pursue the legal capture response; do not admit adequate defense yet.",
+    "named_counter_complete_wholelegal_incomplete": "A named defense is tested; strongest defense and useful scope remain unresolved.",
+    "all_required_comparisons_completed_at_bound": "Admit only the result actually covered, with remaining depth/stability limits. Completion time is not a semantic success measure."
+  },
+  "existing_representation_assessment": {
+    "bounded_fact_possible_without_new_producer": true,
+    "qualified_conclusion": "The existing C-reply-function requirement schema and Proof's separate condition/effect/action/path fields can encode the SG41 fact. This is representability, not evidence that the current producer already discovers/emits that request or that current admission is sufficient.",
+    "conceptual_black_root_payload": {
+      "reference_root": "Black ...exf5",
+      "alternative_root": "Black ...a5",
+      "condition": "location of original Black Pe6",
+      "reference_common_action_prefix": [
+        "e6f5",
+        "c3d5"
+      ],
+      "alternative_common_action_prefix": [
+        "a6a5",
+        "c3d5"
+      ],
+      "action": "legal_move by original White Nc3 to d5, legal in both states",
+      "effect": "legal_capture by original Black Pe6 of that original White knight after Nd5",
+      "effect_results": {
+        "reference": "illegal",
+        "alternative": "legal"
+      },
+      "price_path": [
+        "a6a5",
+        "c3d5",
+        "e6d5"
+      ],
+      "claim_scope": "Loss of the cheap pawn capture under the earlier Black context choice; no global White utility or root score claim from this payload alone."
+    },
+    "current_semantic_blockers": [
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\FunctionalReplyReading.scala",
+        "line": 151,
+        "condition": "price branch requires condition.subject == effect.target",
+        "sg41_difference": "The changing location belongs to Pe6, which is effect.subject, not the attacked White knight target."
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\FunctionalReplyReading.scala",
+        "line": 152,
+        "condition": "price branch requires action.kind == legal_capture",
+        "sg41_difference": "The already legal opposing action is quiet Nc3-d5."
+      },
+      {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\FunctionalReplyReading.scala",
+        "line": 216,
+        "condition": "centrality rejects any remaining legal capture of the target",
+        "sg41_difference": "Rc5 remains a legal capturer but may not achieve the same denial at the same price. Its presence should leave utility unresolved until checked, not erase a completed pawn-price fact."
+      }
+    ],
+    "existing_strengths_to_preserve": [
+      "Canonical root/path/actor ownership and replay rather than source text as proof.",
+      "Independent condition and realization paths, so a changed main forecast does not automatically invalidate a still-verified option.",
+      "The documented LegalReplyOption meaning is legality/conditional resource, explicitly not value or the root's whole score.",
+      "No numeric receipt need be invented for a completely reread board fact; a present receipt still must be exactly owned."
+    ],
+    "as_is_not_enough_for_utility": [
+      "Proof.price and LegalReplyOption.price are singular optional paths. They do not themselves assert complete immediate recapture enumeration, best non-recapture choices, or compensation coverage.",
+      "RootOwner.answer is optional and is for the original root pair. It is not automatically a receipt for the strongest descendant counter or a new focused White move's own comparison.",
+      "LegalReplyOption's current references include the selected option and one price move, not a required all-recapture/strong-counter inventory. Extra events somewhere on a path are not equivalent to admitted semantic obligations."
+    ],
+    "smallest_implementation_direction": "Retain the existing producer identity and condition/action/effect vocabulary for factual detection. Generalize the current admission relation by causal orientation, then bind existing owned comparison receipts and complete legal response inventories before admitting usefulness. Do not create a Pe6/Rc5/Nd5-specific rule or merely delete the remaining-capturer guard.",
+    "type_policy_options": "A claim-scope tag or separate factual-versus-valued admission state is sufficient conceptually; the current optional price path can remain the minimal factual witness. Utility needs explicit owned obligations/receipts, whether attached to this statement or supplied by the existing investigation evidence layer. This reading does not choose a new producer or implement a new type.",
+    "current_schema_read_boundary": "Only FunctionalReplyReading.scala and CommentaryAnswer.LegalReplyOption were inspected after book criteria were sealed. Current producer construction, renderer and engine outputs were not inspected in this phase."
+  },
+  "human_basic_answer_examples": {
+    "earlier_Black_exf5_price_only": "...exf5 captures the f5 pawn but removes the e6 pawn's cheap answer to Nd5. A rook capture remains possible, yet ...Rxd5 exd5 would give a rook for the knight.",
+    "actual_White_Nd5_with_e6_held": "The e6 pawn can take the knight on d5. Even with White's best recapture, the immediate exchange gives a knight for a pawn; a different route such as Ne2 avoids that price. A current mistake label needs the owned consequential comparison.",
+    "actual_White_Nd5_with_e6_moved_fact_only": "The knight occupies d5 after the e6 pawn has moved away. A rook capture is still legal, but White can recapture with the e4 pawn; the useful scope still depends on Black's other defenses.",
+    "actual_White_Nd5_with_e6_moved_bounded_utility": "Nd5 is a usable activity choice in the tested position because the cheap pawn capture is gone. Black's stronger ...fxe4 removes the pawn defender, but after R4xe4 the d1 rook can defend the knight; later bishop pressure may require a different knight route. This is an option, not a forced win."
+  },
+  "book_controls_comparison": [
+    {
+      "id": "PC-SG14-TIMELY-EXCHANGE-PLAN",
+      "required_distinction": "sound compensation plan according to the author, not a proved next-move capture",
+      "human_question": "Why prepare a rook-for-knight exchange sacrifice rather than simplify on c1, and what must the sacrifice accomplish?",
+      "scope_limit": "Author's dynamic-balance judgment, not a new bounded engine receipt. No arbitrary later Black move was inserted to claim a proved sound concrete sacrifice."
+    },
+    {
+      "id": "PC-SG48-SAME-KNIGHT-CAPTURE-FORCING-REPLY",
+      "required_distinction": "same rook capture has different forcing-reply consequences after a defensive bishop moves",
+      "human_question": "Why can the rook capture neutralize Nf6 before ...Bxd4, but fail after that bishop move, even without an immediate recapture of the rook?",
+      "scope_limit": "All five legal replies at this already reached knight-check position and the specified checked followups were enumerated. Terminal mates verified by legal move generation; no engine or root best-move search."
+    },
+    {
+      "id": "PC-SW-SMERDON-EXCHANGE-PRACTICAL-RESISTANCE",
+      "required_distinction": "practical compensation and a forced perpetual after an error, with a stronger winning defense preserved",
+      "human_question": "What does the rook-for-knight offer achieve in a difficult position, and why is a later perpetual not proof of objective equality?",
+      "scope_limit": "Source-author objective/practical distinction. All displayed actions are legally replayed; no new engine evaluation of the root or strongest defense was performed."
+    }
+  ],
+  "work_boundary": "Design and legal/source research only. All previous readings, source criteria and main/test files were preserved; no new engine comparison was executed."
+}

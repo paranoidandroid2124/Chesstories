@@ -1,0 +1,546 @@
+{
+  "updated_utc": "2026-10-06T10:38:16.962335+00:00",
+  "first_failures": {
+    "H05_manual": {
+      "facts_supported": 10,
+      "failed_comparisons": [
+        "same_defense: search_budget_exhausted",
+        "late_strength: search_budget_exhausted"
+      ],
+      "basic": "pawn exchanges, not retained option function"
+    },
+    "H02_manual": {
+      "geometry": "Qc2 support of Be2 is present before Nd2 and absent afterward",
+      "refuted": "Nfxd5 after Nd2 Nb6 Bb5 is inferior to Bd7; cannot call the threat effective after the bishop escapes",
+      "supported": "Nfxd5 after Nd2 Nb6 a4 or Re1 gives Black a substantial advantage in depth-22 paired searches"
+    }
+  },
+  "development_controls": {
+    "R01": "g4 still draws while Black has b4-b3; Kf3 wins in depth-26 restricted comparison",
+    "R02": "g4 wins after b4-b3, but king moves also win; never call g4 unique",
+    "R03": "the already spent option has no root winning king move among the examined alternatives"
+  },
+  "functional_scope": [
+    "A pawn wait can preserve the king position while a king retreat opens an entry.",
+    "Some continuations use two consecutive pawn waits with an opposing pawn wait between them.",
+    "A recorded king retreat is not forced: test a legal pawn reply that keeps the entry guarded.",
+    "One verified use is a bounded contribution, not proof of the sole source of the root evaluation gap.",
+    "Keep actual paths, turn, pawn identity, current root ownership, child comparison and capture/check prices."
+  ],
+  "runs": [
+    "reservemechanism1",
+    "reservecontrasts1",
+    "reservebaseline1",
+    "reservemanual1",
+    "reservefunction1",
+    "reserveroots1",
+    "reserverebut1",
+    "reserveuse1",
+    "reservecontrolled1",
+    "reservecontrolled2",
+    "reservefresh1",
+    "reserveallreplies1",
+    "h02threatprobe1",
+    "h02currentchoices1",
+    "h02currentchoices2",
+    "reserveprogress1",
+    "reservecontrolled3",
+    "reservenew1",
+    "reservesteps1",
+    "reservenew2",
+    "reservefresh2",
+    "h02defensemanual1",
+    "reservenew3",
+    "reservefirstmanual1",
+    "reservefirsttiming1",
+    "reservereply1",
+    "reservenew4",
+    "reservematches1",
+    "reservelater1",
+    "reservematchmanual1",
+    "reservehold1",
+    "reserveholdcontrolled1",
+    "reserveholdcontrolled2",
+    "reserveholdfresh2",
+    "reservenew5",
+    "reservekingreply1",
+    "reservekingchain1",
+    "reservekingroom1",
+    "reservethird1",
+    "reservelatecheck1",
+    "reservelatecheck2",
+    "h02currentfresh3",
+    "reservebudgetfresh1",
+    "reservekingclass1",
+    "reserveclassfinish1",
+    "reserveentrychain1",
+    "reservenew6",
+    "reservev20recheck1",
+    "reservev20recheck2",
+    "reservebudgetcomplete1",
+    "h02dutycurrent1",
+    "reserveclosecontrol1",
+    "reservelastwaitcontrol1",
+    "reservetemporepeats1",
+    "reservetemporeplay1",
+    "h02dutyauto3",
+    "reservenew7",
+    "reservebreakrecheck1",
+    "reserveopened35",
+    "reservebreakreplay2",
+    "reservebreakreplay3",
+    "reservenew8",
+    "reservetempodefense1",
+    "reservebreakreplay4",
+    "h02dutycontrol37",
+    "h02dutyrefutation37",
+    "h02queenreply38",
+    "h02rookbackup38",
+    "reserveopened38",
+    "reserveopened38idle",
+    "reservetempodefense18",
+    "reserveopened39",
+    "reservenew9",
+    "reservefinal40",
+    "reserveterminalreplay40",
+    "reserveterminalfresh40",
+    "reserveterminalcomplete40",
+    "reservefinalreplay41",
+    "reservefinalreplay42",
+    "reservefinalreplay43",
+    "reg2016complete42",
+    "reg2024complete42",
+    "reg2016replay43",
+    "reg2024replay43",
+    "reservenormalfinal43"
+  ],
+  "implementation_status": "reservev43 verified. Bounded medium-term milestone completed: H05 full normal-engine functional connection once, one cold theoretical-diagram transferT14, H02 current-duty allocation, old49 preservation. General meaning and repeat reliability unresolved; final fresh H05 partial/T20 failed retained.",
+  "new_refutations": [
+    {
+      "claim": "Guard-preserving f5 is worse than king retreat",
+      "record": "reservefresh1 vs reserveallreplies1",
+      "finding": "At depth16 the pair ranks f5 below Kf7; deeper all-legal searches rank f5 first. Final deeper rows are mixed depths21/22, so a fixed completed depth20 repeat is registered.",
+      "effect": "Remove child score ranking as the explanation. Require independently certified new passed pawn following the tested guarding pawn reply."
+    },
+    {
+      "claim": "Re1 Nb6 e5 is the plan that Nd2 prevents",
+      "record": "h02currentchoices1/2",
+      "finding": "e5 is also inferior to Bb5 and a4 after Re1 Nb6 at depth20; cannot use the simple central-plan contrast.",
+      "effect": "Test a4 in both real roots before attributing functional meaning."
+    },
+    {
+      "claim": "Enabling the existing pass probe should discover the Nb6 threat",
+      "record": "h02threatprobe1",
+      "finding": "It probes the root and played-move position, then tests Nb6 versus immediate Nxe4. It never reaches the quiet Nb6 setup before hypothesizing the subsequent Nfxd5 threat.",
+      "effect": "Keep probeThreats defaultfalse; extending budget alone does not locate the needed question."
+    }
+  ],
+  "current_findings": {
+    "new_cases": "T01-T07 v9 seven boards/eight choices; T08 v10 one board; T09-T11 v13 three boards/four choices: eleven boards/thirteen choices, zero accepted cold functional answers. All now exposed development cases.",
+    "H05": "v18 normal30s job completed first-reply comparison after raising node cap inside the same5s limit. Later wait comparison completed but its following entry question lacked chained source ownership; no functional basic answer in11.647s.",
+    "T08_matched_states": "Both actual current root paths naturally reach equal placements of every tracked original piece except the reserved a-pawn, with the same side to move. No board was edited. Earlier a6 and Ke6 both draw in depth20/24 paired research. Ke6 can defer a6 until later.",
+    "T08_late_test": "After the same Ke6 Kf4 Kf6 a3 continuation, retained a6 holds the guard while king retreats allow entry. The manual public product comparison completed at depth16 with a6=0 and Kg6=White+723. The independent retained all-legal depth20 request stopped at mixed depths17/18; it is not a completed same-depth all-legal proof. The spent-position and after-a6 all-legal searches completed depth20.",
+    "T08_automatic": "v13 controlled actual new work delivered defensive hold answer. v18 normal job delivered bounded offensive waiting/entry/pawn-concession answer in5.833s. Exposed development case, not new-board transfer.",
+    "H02": "Manual normal product job completed the two acceptance comparisons and support facts. After the same Nb6 a4 Nfxd5, exd5 is worse than Qd3 after Nd2, and better after Re1 at depth16. Qc2 support of Be2 is blocked by Nd2 and retained by Re1. This is an investigated conditional line, not a forced capture.",
+    "H02_price": "The legal illustrative Re1 Nb6 a4 Nfxd5 exd5 Bxc3 bxc3 Qxe2 Rxe2 Rxe2 Qxe2 contains the loss of the used rook and the queen recapture. Stopping at the first Rxe2 would omit a required price. This replay alone is not an engine proof that Black chooses Qxe2.",
+    "v10_regression": "35 old inputs:31 fully replayed/4 pending; prior14:13 fully replayed/1 pending. No mandatory core move missing, no lost delivery or discarded price in current snapshots. Changed work limits and missing archived reports are not counted as completed replay. v11 narrowed the longer first-reply allowance to the actual reserve response dependency.",
+    "tests": "v12 44 targeted tests passed. This does not establish transfer. v13 adds historical-prefix rejection before scheduling.",
+    "T09": "v18 normal5.379s job compared h3 with Kd2 as equal, then with worse Kd1 and delivered a hold answer. Reject this as an importance improvement: a known equally good king alternative remains. v20 searches all legal king moves and gates presentation on the best returned king from the covering search.",
+    "T11": "v15 question provenance fix tested; v18 actual normal6.294s job completed without prior generated-arm identity error. Generic long material answer remains; not functional success.",
+    "budget": "T09 v16 had599/600 question requirements; later linked question could not be admitted. v17/v18 reserve80 of the same600 limit for already investigated reserve continuations. Actual first-reply research needed14-18million nodes in3.5-4s; previous5million cap stopped early. v18 selected inquiry permits20million inside unchanged5s and total30s deadline.",
+    "H02_current": "v15 normal16.241s job investigated decisions after14 and9 plies, missing current Nd2/Qc2/Be2 and Nb6/Nfxd5 issue. Manual conditional defense proof remains; no automatic solution yet."
+  },
+  "additional_refutations": [
+    {
+      "claim": "T01 h4 wastes a necessary one-step wait",
+      "record": "reservesteps1",
+      "finding": "h4, h3 and a3 all evaluate as winning at completed depth20; the requested depth26 repeat only completed depth22. No premature-tempo defect claimed."
+    },
+    {
+      "claim": "Every held king position needs the pawn wait immediately",
+      "record": "reservematches1 and reserveholdcontrolled1",
+      "finding": "a6 and Ke6 are equal draws earlier; Ke6 retains a6 for the later critical position. The early comparison must be rejected as a value explanation."
+    },
+    {
+      "claim": "A matching later pawn event identifies the current branch",
+      "record": "reserveholdcontrolled1",
+      "finding": "Two different root PVs both use a6 on ply8; scheduling by that event repeats the obsolete context. Exact full-prefix ownership is necessary before spending a comparison."
+    },
+    {
+      "claim": "A later checking g4 is the necessary reserve use",
+      "record": "reservelatecheck1/2",
+      "finding": "At completed depth20 immediate g4 and several king moves all win. After deferring it, every legal white choice in the examined later position wins. No checking-wait necessity feature added."
+    },
+    {
+      "claim": "Any inferior legal king sample demonstrates a useful waiting option",
+      "record": "reservebudgetfresh1 T09h3",
+      "finding": "The first compared king move Kd2 draws, but the next generated Kd1 loses. Treating the second result as the main reason cherry-picks a weak alternative. v20 requires a covering king-class search and its strongest returned king."
+    }
+  ],
+  "v20_new_cohort": {
+    "boards": 5,
+    "choices": 5,
+    "completed": 5,
+    "functional_candidate": "T14",
+    "other_cases": "T12,T13,T15,T16: no functional explanation",
+    "ui": "5/5 admitted, 12/12 corruptions rejected, 94/94 move links passed",
+    "verification": "T14 root depth22 a3 +885 vs f5 0; late exact-history king-class depth22 f5 +654 vs Kd4/Ke4 0. Earlier same-piece-position history allows winning Kd4. Conditional statement, not earliest necessity or sole root cause.",
+    "cumulative_new_boards": 16,
+    "cumulative_new_choices": 18,
+    "accepted_bounded_functional_cases": 1,
+    "limit": "T14 is a theory diagram. No independent human evaluation or broad generalization."
+  },
+  "h02_current_duty": {
+    "run": "h02dutycurrent1",
+    "normal_30s": true,
+    "elapsed_ms": 14911,
+    "manual_hypotheses": true,
+    "Nd2_Nb6": {
+      "Bb5_white_cp": -57,
+      "a4_white_cp": -202,
+      "punishment": "Nfxd5"
+    },
+    "Re1_Nb6": {
+      "Bb5_white_cp": 63,
+      "a4_white_cp": 51,
+      "reply_after_a4": "Nxe4"
+    },
+    "status": "Questions answered, basic text still long and not organized as current duty."
+  },
+  "v22_finding": "A near-equal first reply was dropped on a 12cp ordering difference. Comparable band now remains eligible. Existing counter meaning only accepted immediate capture producing a passer; H05 b3 instead exhausts the last pawn wait. Completion-source PV can also change the actual king entry square; parent owns the pre-test position, child receipt owns its actual reply/entry.",
+  "v25_normal_repeats": {
+    "run": "reserverepeats1",
+    "trials": 3,
+    "functional_answers": 0,
+    "finding": "Winning continuations often make a late pawn wait optional; searching arbitrary late uses is unstable. All three development trials retained in the denominator."
+  },
+  "v26_early_decision": {
+    "run": "reservetimingauto1",
+    "normal_30s": true,
+    "elapsed_ms": 21198,
+    "works": 8,
+    "first_current_choice": "After Ke3 f6, Kf3 +244 vs g4 0 at common depth16.",
+    "deeper_check": "reservetimingrecheck1: common depth24 Kf3 +644 vs g4 0.",
+    "functional_answer": "Preserved g4 holds Kc3 and guards d4; best returned king Kc2 allows Kd4. The entire legal king class was searched.",
+    "limitation": "Both g4 +677 and best king +502 are winning in the bounded child search. This witnesses a useful contribution, not the entire root win/draw cause. Deeper late-class check ended at mixed depths20/19, so it does not establish a common depth24 comparison.",
+    "ui": "Initial selection rejected due promoted pawn corridor use; fixed role at actual use. Actual output1/1 accepted,10/10 corruptions rejected,18/18 basic move links passed.",
+    "reliability": "One new positive development run; no success-rate estimate from this single run."
+  },
+  "v29_current_duty_progress": {
+    "v28": "Current Nd2 Nb6 Re1 restores Be2 support instead of moving Be2. Narrow departure-only question missed it.",
+    "v29": "Generalized question discovered; runtime stopped on a semantic identity collision when the observed pawn plan moved between source arms/plies.",
+    "v30": "Bound the candidate identity to the exact observed plan path. Main compiled; misplaced new test assertion failed test compilation.",
+    "v31": "Corrected test placement; compilation and new normal engine trial pending.",
+    "status": "No automatic H02 solution claimed yet."
+  },
+  "v33_normal_repeats": {
+    "run": "reservetemporepeats1",
+    "normal_30s": true,
+    "trials": 3,
+    "tempo_answers": 3,
+    "elapsed_ms": [
+      15649,
+      11958,
+      15195
+    ],
+    "scope": "Exposed H05 development board, not a new-board transfer or proof of forced king entry.",
+    "meaning": "Same actual king route restores piece placement with Black to move while the pawn stays on g3. A separate current comparison verifies Kf3 above immediate g4.",
+    "ui": "3/3 admitted,10/10 corruptions rejected,74/74 basic move links passed."
+  },
+  "h02_automatic_current_duty": {
+    "run": "h02dutyauto3",
+    "normal_30s": true,
+    "manual_hypotheses": false,
+    "elapsed_ms": 16751,
+    "works": 5,
+    "Nd2_Nb6": {
+      "Bb5": -56,
+      "a4": -193,
+      "actual_reply": "Nfxd5"
+    },
+    "Re1_Nb6": {
+      "Bb5": 72,
+      "a4": 41,
+      "band": "close"
+    },
+    "result": "Both current-choice inquiries are automatically answered. This fixes investigation allocation; central basic reading is still a long selected_comparison and is not counted as delivered human meaning.",
+    "ui": "1/1 admitted,10/10 corruptions rejected,78/78 basic move links passed."
+  },
+  "v33_regression": {
+    "old35": {
+      "full": 33,
+      "pending_missing_archived_reports": 2
+    },
+    "prior14": {
+      "full": 14,
+      "pending": 0
+    },
+    "lost_delivery": 0,
+    "discarded_prices": 0,
+    "missing_mandatory_core": 0,
+    "prices_moved_to_detail": 6,
+    "limit": "47/49 are exact completed archived replays; the two pending cases are not full passes."
+  },
+  "v33_new_cohort": {
+    "run": "reservenew7",
+    "freeze": "rule-freeze-v33.json",
+    "boards": 4,
+    "choices": 4,
+    "all_completed": true,
+    "T17": "No functional main answer; queenside exchange history misses f7-f6 defense.",
+    "T18": "No invented reserve defect; the tested f4+ is a check, root close comparison, generic support/check explanation.",
+    "T19": "No functional main answer; too many pawn relationships obscure the breakthrough and king route.",
+    "T20": "A valid later defensive wait is selected, but the immediate g4 sacrifice and h-passer are not explained in the basic answer. Record as a useful bounded contribution with wrong central focus, not a successful root explanation.",
+    "accepted_new_central_answers": 0,
+    "ui": "4/4 admitted,13/13 corruptions rejected,102/102 basic move links passed.",
+    "cumulative_new_boards": 20,
+    "cumulative_new_choices": 22,
+    "accepted_cold_bounded_functional_cases": 1,
+    "limit": "T14 remains the sole accepted cold bounded functional case; it is a theory diagram. No broad generalization or independent human trial."
+  },
+  "T20_counterbreak_check": {
+    "run": "reservebreakrecheck1",
+    "scope": "Independent research; no scores or PV supplied to product. T20 was already exposed by this point.",
+    "depth": 22,
+    "root_white_cp": {
+      "g5": 933,
+      "Ke6": 18
+    },
+    "after_Ke6_white_cp": {
+      "Kd4": 0,
+      "g4": -1399
+    },
+    "physical": "After g5 g4 hxg4 h5, h5 is newly passed. After Ke6 g4 hxg4, the original g6 pawn still guards h5; research h5 is met by gxh5.",
+    "limit": "One examined sacrifice continuation and one tested opposing reply comparison; neither asserted forced nor the only winning line."
+  },
+  "v35_opened_positions": {
+    "run": "reserveopened35",
+    "normal_30s": true,
+    "completed": 6,
+    "H05": "Tempo meaning retained in17.530s; later Kxg4 price visible.",
+    "T14": "Bounded guard-holding explanation retained in4.037s.",
+    "C03": "Retreat-square meaning retained in13.685s.",
+    "D06": "Qf2+ and Kh1, Qxe1+ and Kg2, mate and rook price retained in4.010s.",
+    "T20": "8.308s normal job chose ...f5 instead of ...hxg4 after g4. Narrow sacrifice shape failed to deliver the shared h5-guard meaning. Retained as failure.",
+    "H02": "13.429s root alternative now has ...Nxe4 rather than ...Nb6. Duty discovery missed the legal same-Nb6 hypothesis and again searched16 plies later. Retained as a reliability failure.",
+    "ui": "6/6 admitted,13/13 corruptions rejected,172/172 basic move links passed."
+  },
+  "v36_new_cohort": {
+    "run": "reservenew8",
+    "freeze": "rule-freeze-v36.json",
+    "boards": 3,
+    "choices": 3,
+    "completed": 3,
+    "accepted_new_central_answers": 0,
+    "T21": "The counterbreak is correctly investigated, but the advanced guarding pawn itself plays gxh4 before gxh5. Requiring an unchanged square for the guarding pawn rejects an otherwise continuously lost h5 guard. Basic answer remains broad pawn transactions.",
+    "T22": "No invented decisive defect; both finite lines retain material, but the dominant king route is not explained.",
+    "T23": "Support and recapture are described, while the need to break immediately and the separated pawn race remain unexplained.",
+    "ui": "3/3 admitted,10/10 corruptions rejected,72/72 basic move links passed.",
+    "cumulative_new_boards": 23,
+    "cumulative_new_choices": 25,
+    "accepted_cold_bounded_functional_cases": 1,
+    "limit": "T14 is still the sole accepted cold bounded functional case. Later improvements on T20/T21 are exposed development, not cold successes."
+  },
+  "v36_break_variants": {
+    "reservebreakreplay2": "v35,8 exact archived reports,0 new. g4 hxg4 h5 gives a new passer; g6 guard retained in alternative. UI1/1,11 corruptions rejected,38 links passed.",
+    "reservebreakreplay3": "v36,6 exact archived reports,0 new. g4 f5 gxh5 also creates the new passer after loss of the g6 guard. No end-to-end latency claim.",
+    "new_test_summary": "v36 64 targeted tests passed. This does not establish new-board generalization."
+  },
+  "H05_after_cycle_defenses": {
+    "run": "reservetempodefense1",
+    "scope": "Research only, all6 legal black moves requested for each naturally reached board; no board edits.",
+    "retained": "After the actual king cycle all returned black moves are losing in the bounded output. Requested22 but mixed depths19/18.",
+    "spent": "After g4 f6 Ke3, Kd6,b3,Ke6 draw in the returned output; requested22 but mixed depths21/20.",
+    "limit": "The differing legal histories and incomplete common-depth searches cannot be reported as a completed depth22 controlled proof. The recurring defender choices are evidence for the next investigation, not a forced global conclusion."
+  },
+  "v37_break_development": {
+    "run": "reservebreakreplay4",
+    "exact_archived_reports": 7,
+    "new_reports": 0,
+    "meaning": "T21 g5 g4 gxh4 gxh5: original g6 guard stays unable to control h5 even after moving again.",
+    "ui": "1/1 admitted;11 corruptions rejected;24 exact move clicks passed.",
+    "limit": "Exposed replay; no cold success or latency claim."
+  },
+  "H02_refutations_and_function": {
+    "runs": [
+      "h02dutycontrol37",
+      "h02dutyrefutation37",
+      "h02queenreply38",
+      "h02rookbackup38"
+    ],
+    "refuted": [
+      "Restoring bishop support by Re1 after Nd2 Nb6 is not sufficient; both compared current replies lose.",
+      "Bb5 is not the unique adequate response; Rf2 is also among the better replies.",
+      "Qd2 availability does not explain the good branch: Qb3 also wins."
+    ],
+    "supported": "The withdrawn f3 knight no longer backs e1. In a conditional common Bf5/Qb3/Qe3+/exchange/Bd3 continuation, Bxd3 Rxe1+ Nxe1 is available with Nf3; after Nd2, only Bf1/Nf1 answer the check.",
+    "evidence_depth": "Root/current refutations common22; late rook-backup comparison common18; legal replay independently verifies Nxe1 available vs absent.",
+    "limits": "The later common black sequence is not best play on both arms. No mate claim or sole root-score-cause claim. Current queries improve investigation but no H02 central automatic explanation yet."
+  },
+  "v38_reliability": {
+    "loaded_run": "reserveopened38",
+    "concurrent_broad_tests": true,
+    "loaded_failures": [
+      "H05 selected reply exhausted",
+      "T20 focus plus retry exhausted"
+    ],
+    "idle_run": "reserveopened38idle",
+    "normal_30s": true,
+    "H05": "24.402s/7 works, generic material answer; first failure under investigation, retained as failure.",
+    "H02": "17.402s/4 works, both current duty queries answered; generic long output remains.",
+    "T20": "11.962s/6 works, first fresh delivered counterbreak/retained h5 guard. Exposed development success.",
+    "T21": "The selected root alternative changed to f5, whose first reply exf5 captures. The same-reply generator incorrectly required both replies quiet. v39 permits the observed capturing benchmark; its exact trade must be retained.",
+    "cold_denominator": "Unchanged23boards/25choices, sole accepted bounded cold case T14."
+  },
+  "H05_complete_defense_comparison": {
+    "run": "reservetempodefense18",
+    "depth": 18,
+    "all_legal_replies_per_board": 6,
+    "positions": [
+      {
+        "fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 5 38",
+        "turn": "black",
+        "claim_threefold": false,
+        "claim_fifty": false
+      },
+      {
+        "fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P1K3/1P6/8 b - - 1 36",
+        "turn": "black",
+        "claim_threefold": false,
+        "claim_fifty": false
+      }
+    ],
+    "retained_white_cp": {
+      "Kd6": 622,
+      "f5": 740,
+      "b3": 742,
+      "Ke6": 802,
+      "bxc3": 907,
+      "bxa3": 910
+    },
+    "spent_white_cp": {
+      "b3": 8,
+      "Ke6": 9,
+      "Kd6": 10,
+      "f5": 1136,
+      "bxc3": 1371,
+      "bxa3": 1372
+    },
+    "meaning": "Naturally reached states differ only by g3/g4 among pieces and both have Black to move. In the retained board all six finite comparisons favor White decisively; in the spent board b3,Ke6,Kd6 are near equal. The king manoeuvre and retained pawn do change the available defense in this bounded comparison.",
+    "limitations": "Two legal histories and clocks differ; no board edit. Neither can currently claim repetition or50 moves. Not a mathematical forced-win proof, sole root cause, or product receipt."
+  },
+  "H05_v38_recheck_boundary": {
+    "run": "reserveopened38idle",
+    "first_timing_work": "work:2",
+    "basic_after_work2": "Tempo answer correctly delivered using root king cycle and current same-position comparison.",
+    "later": "An unrelated Kf3/Ke2 comparison returned Kf3+410 vs prior+337. Existing comparison-conflict policy called this material, raised required depth to18 and invalidated old16-depth answers. Both rechecks exhausted; final became generic.",
+    "decision": "Keep recorded uncertainty. This is the existing re-verification boundary, not a missing path or UI failure. No success claimed for this final run."
+  },
+  "v39_opened": {
+    "run": "reserveopened39",
+    "normal_30s": true,
+    "H05": "24.439s/7 works, current Tempo answer delivered again. Prior idle v38 final failure remains in record.",
+    "H02": "16.931s/4 works, both current duty questions answered, central meaning still generic and long.",
+    "T20": "10.805s/7 works, current counterbreak proof exists but terminal comparison takes precedence and withReserveBreak only admits selected_comparison. Preserve as selection/composition failure.",
+    "T21": "9.123s/7 works, counterbreak with f5/exf5 benchmark delivered; both gxh4/gxh5 and exf5/gxf5 costs visible. Exposed development success.",
+    "ui": "4/4 admitted,13/13 corruptions rejected,172/172 exact basic move links passed."
+  },
+  "v39_new_cohort": {
+    "run": "reservenew9",
+    "freeze": "rule-freeze-v39.json",
+    "boards": 3,
+    "choices": 3,
+    "completed": 3,
+    "accepted_new_central_answers": 0,
+    "T24": "Generic pawn transactions and queen attacks. d4/e3 central counterplay is present, but why Qd6 restrains it is not explained. No assertion that a4 loses the win.",
+    "T25": "Generic captures and check responses. The difference in king displacement and protection of the passer is not explained.",
+    "T26": "Wrong-bishop rook-pawn draw is visible in the finite trajectory but not certified as a terminal rule outcome or organized in the answer. The observed gxh3 response is compared; later inquiry instead pursues a weaker decline.",
+    "cumulative_new_boards": 26,
+    "cumulative_new_choices": 28,
+    "accepted_cold_bounded_functional_cases": 1,
+    "limit": "Only T14 accepted cold bounded functional answer; theory diagram, not a new real-game success or independent novice test. Latest three failures retained before any further edit."
+  },
+  "v40_final_reliability": {
+    "run": "reservefinal40",
+    "H05": "26.920s, six actual works; Tempo plus Entry meaning delivered, b3 alternative and later exhaustion of all pawn waits included. All four legal final king moves independently checked to release f5; g-pawn later Kxg6 loss retained.",
+    "H02": "32.790s observed end-to-end despite30000ms requested budget. Current inquiries resolved, generic central text remains. Do not claim all final responses finish within30s.",
+    "T14": "12.007s, earlier wait and best king comparable; later necessary use inquiry and retry exhausted. Generic final text, reliability failure retained.",
+    "T20": "8.926s retained partial; new terminal answer carried a supplementary comparison not admitted by the UI question whitelist. Exact rejection preserved, typed terminal witness compatibility fixed and tested.",
+    "C03": "24.436s, retreat-square meaning preserved.",
+    "D06": "7.397s, actual Qf2+/Kh1/Qxe1+/Kg2, mate and rook price preserved.",
+    "T21": "8.272s, changed root PV g5 g4 f5 exf5 Kxf5 no longer has the retained h5 passer witness; generic final, not forced into old story.",
+    "ui_before_fix": "6/7 snapshot selections admitted,13 corruptions rejected; failure kept.",
+    "ui_after_fix": "7/7 retained snapshot selections admitted,13 corruptions rejected,216 exact links passed. UI does not complete a pending engine job."
+  },
+  "H05_final_entry": {
+    "run": "reservefinal40",
+    "legal_audit": "h05-final-entry-legal.json",
+    "first_wait": "After recorded g4, Kd5 releases f4 while b3 preserves that guard.",
+    "last_wait": "In the b3 continuation after g5, Black has exactly four legal moves, all king moves Kf7,Kg7,Kh5,Kh7. Every one allows Kf5.",
+    "limit": "All replies at that exact later position, not proof every earlier defender choice reaches it or that the retained pawn is the sole score cause."
+  },
+  "v40_terminal_composition": {
+    "same_reports": "reserveterminalreplay40: seven exact reports, zero new; early counterbreak added, original terminal and all original core obligations retained.",
+    "ui_recovery": "reserveterminalcomplete40: five exact archived reports plus one genuinely new comparison; job completed, UI1/1,13 corruptions rejected,40 exact links passed. Not end-to-end latency.",
+    "fresh_retry": "reserveterminalfresh40:20.574s, completed and UI1/1; actual quiet Ke6 between g4 and gxh5 rejected by the all-pawn-only interval condition. v41 accepts quiet intervening moves; no opposing pawn structure change.",
+    "price_regression": "v41 new test caught immediate gxh4 countercapture on another square omitted from basic. v42 includes the immediate capture/promotion/check reply; v43 keeps the preceding capture before that reply in chronological order.88 targeted tests pass. Current exact T20 output includes gxh5 followed by gxh4."
+  },
+  "v43_development_replay": {
+    "run": "reservefinalreplay43",
+    "cases": 7,
+    "fully_replayed": 7,
+    "new_engine_reports": 0,
+    "ui_accepted": 7,
+    "corruptions_rejected": 13,
+    "exact_basic_links_passed": 200,
+    "H05": "Full Tempo+Entry explanation from actual normal final40 retained.",
+    "T20": "Latest actual quiet Ke6 continuation now gives the retained h5 guard comparison and ordered gxh5/gxh4 prices.",
+    "limits": "H02,T14,T21 latest generic failures retained; exact replay is not fresh reliability or latency."
+  },
+  "final_fresh43": {
+    "H05": "24.900s,8 works. Tempo/pawn-preserving king cycle delivered; later Entry comparison exhausted.",
+    "T20": "8.592s,5 works. Deep root focus and retry both exhausted; generic final. No retry-until-success."
+  },
+  "final_preservation": {
+    "opened35": {
+      "positions": 35,
+      "fully_replayed": 33,
+      "pending": 2,
+      "text_changed": 3,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 4,
+      "missing_mandatory": 0,
+      "facts_unchanged": 28
+    },
+    "prior14": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "pending": 0,
+      "text_changed": 1,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 2,
+      "missing_mandatory": 0,
+      "facts_unchanged": 13
+    }
+  },
+  "hybrid_completed": {
+    "2016": {
+      "archived": 3,
+      "genuinely_new_reports": 2
+    },
+    "2024": {
+      "archived": 4,
+      "genuinely_new_reports": 3
+    },
+    "current_version_exact_replayed_reports": [
+      5,
+      7
+    ],
+    "current_new_reports": 0,
+    "scope": "Separate new completions, not47/49 becoming49/49 identical historical replay.",
+    "changed_comparison": "2024-09 now selects Qd3 instead of Kg2 and a new Qb5 continuation; five old references are retired with those branches, not unchanged price preservation.",
+    "audit": "hybrid-preservation-v43.json"
+  }
+}

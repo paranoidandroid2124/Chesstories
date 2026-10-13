@@ -1,0 +1,1331 @@
+{
+  "scope": "Completed medium research/implementation/adoption unit. First-stage product release and optimal general importance remain incomplete.",
+  "started_at_utc": "2026-10-04T11:58:57+00:00",
+  "finished_at_utc": "2026-10-04T16:15:58.834630+00:00",
+  "elapsed_hours": 4.284,
+  "hard_deadline_utc": "2026-10-04T21:58:57+00:00",
+  "within_time_limit": true,
+  "product_version": "selectionv10 = frozen selectionv9 chess policy plus contract-only action/proof repair",
+  "implemented": [
+    "Typed answer units distinguish actual expressed actions from position-only proof anchors; basic, detail and exact SAN links retain common ownership.",
+    "The existing physical fallback can select the same original root-capture target and its different observed fate/price across both certified arms. Equal outcomes/prices, unresolved duty, promotion and independent selected mechanisms block replacement.",
+    "Actual supported countercapture can preserve an immediately preceding ally loss with exact original identity, support and legal recapture evidence. An unplayed legal alternative stays evidence only.",
+    "Scoped target-price recovery requires an immediate or continuously verified reply; the existing broader exchange accounts retain their scope.",
+    "Public serializer, frontend decoder and schema now share action_moves and existing observed_capture_target/investigated_mechanism enum values; real roots, capture prices, check replies and recaptures remain checked."
+  ],
+  "opened18": {
+    "denominator": 18,
+    "oracle12_inherited_from_v7": 12,
+    "remaining6_manual_existing_case_reviews": 6,
+    "primary_useful_and_complete": {
+      "ownershipv13": 4,
+      "selectionv9": 5,
+      "threshold": 14,
+      "threshold_met": false
+    },
+    "auxiliary_useful_and_complete": {
+      "ownershipv13": 11,
+      "selectionv9": 14,
+      "does_not_replace_primary_threshold": true
+    },
+    "important_price_omissions": {
+      "ownershipv13_positions": [
+        "candidates2018-10"
+      ],
+      "ownershipv13_items": 1,
+      "selectionv9_positions": [],
+      "selectionv9_items": 0,
+      "scope": "Actually selected bounded claims; conditional/unselected topics remain separate."
+    },
+    "new_unsupported_causal_forced_or_result_claims_observed": 0,
+    "basic_available": 18,
+    "questions": {
+      "selected_comparison": 14,
+      "observed_move_order": 1,
+      "observed_capture_target": 3
+    },
+    "changed_basic_vs_v7": [
+      "wch2016-11"
+    ],
+    "identical_basic_units_to_v7": 17,
+    "identical_detail_units_to_v7": 17,
+    "changed_basic_vs_ownershipv13": [
+      "wch2016-11",
+      "candidates2018-08",
+      "candidates2018-09",
+      "candidates2018-10",
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "new_primary_success_vs_v13": [
+      "candidates2018-11"
+    ],
+    "new_auxiliary_success_vs_v13": [
+      "wch2016-11",
+      "candidates2018-10",
+      "candidates2018-11"
+    ],
+    "focused_initial_capture_cores": [
+      "wch2016-11",
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "focused_initial_capture_cores_primary_success": [
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "W16_10_observed_capture_target_selected": false,
+    "W24_10_observed_capture_target_selected": false,
+    "W24_10_v4_short_core_retained": false,
+    "no_launch_completion_claim": true
+  },
+  "fresh18": {
+    "denominator": 18,
+    "available": 17,
+    "unavailable": [
+      "TAT25-06"
+    ],
+    "reader_confirmed_primary": [
+      "COR06-03",
+      "COR06-09"
+    ],
+    "reader_confirmed_primary_count": 2,
+    "semantic_primary_present_but_organization_borderline": [
+      "TAT25-04"
+    ],
+    "semantic_primary_present_count_including_boundary": 3,
+    "criterion_alignment": "Corus03/09 explicitly admit semantic relation/price coverage despite fragmentation. Tata04 has the same semantic coverage but fails its assessor strict focused-reader judgment. Preserve original judgments and expose this boundary; do not pool incompatible strict-reader scores or claim three polished successful basic answers.",
+    "registered_auxiliary_complete": 13,
+    "auxiliary_does_not_replace_primary_or_full_basic": true,
+    "important_selected_claim_price_omissions": [
+      {
+        "game_id": "COR06-01",
+        "items": [
+          {
+            "claim": "cxb5 captures the black bishop on b5.",
+            "missing": "The next actual ...Rxe3 removes White's original c1 bishop. Without it this selected bishop-gain statement lacks its other-square bishop price.",
+            "detail_preserves_price": true,
+            "failure_boundary": "selected_content_closure",
+            "scope": "Actual paired bishop gain and loss at candidate offsets 14/15. No claim that g4 forces either capture.",
+            "refs": [
+              {
+                "arm": "candidate",
+                "offsets": [
+                  14,
+                  15
+                ],
+                "line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:ccc2e3b1a15651c54112b53ba7e65cdc98e1495cfac28b61ebbf608d3769cee0"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "game_id": "COR06-04",
+        "items": [
+          {
+            "claim": "Qxb7 captures the black pawn on b7.",
+            "missing": "...Rxb2 takes White's original b2 pawn immediately after the recorded ...Rb8/Qa6 chase. The selected gain needs this actual counterprice.",
+            "detail_preserves_price": true,
+            "failure_boundary": "selected_content_closure",
+            "scope": "Candidate offsets 5/6/7/8, same source queen chase and actual countercapture. No forced queen destination or root-caused pawn win is asserted.",
+            "refs": [
+              {
+                "arm": "candidate",
+                "offsets": [
+                  5,
+                  6,
+                  7,
+                  8
+                ],
+                "line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:9999d9b42e52c5756e26771d0d8622dcf5aa9f41eae2203bbd75bdce36ecc834"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "game_id": "TAT25-10",
+        "items": [
+          {
+            "original_victim": "True:pawn:e3",
+            "current_square_when_removed": "f5",
+            "original_capturer": "False:knight:d6",
+            "support_use_key": "r:7",
+            "loss_key": "r:16",
+            "loss_SAN": "Nxf5",
+            "loss_UCI": "h6f5",
+            "basic_loss_meaning": false,
+            "basic_required": false,
+            "basic_proof": false,
+            "basic_covered": false,
+            "detail_loss_meaning": true,
+            "detail_covered": true,
+            "why_mandatory": "Same original actor as the explicitly selected support-use recapturer; its later physical loss closes that chosen explanation. It is also part of the prewritten bounded initial compound price.",
+            "failure_boundary": "already_selected_support_use_not_closed_in_basic",
+            "internal_product_caller_cause_claimed": false
+          }
+        ]
+      }
+    ],
+    "important_price_omission_items": 3,
+    "unsupported_cause_threat_attack_resolution_observed": 0,
+    "unsupported_scope": "Only 17 available original English bodies; unavailable is not certified safe.",
+    "new_capture_target_path_selected": 0,
+    "no_baseline_fresh_quality_run": true,
+    "fresh_scores_are_original_frozen_v9": true,
+    "contract_replay_is_regression_not_new_generalization": true,
+    "independent_human_reader_evaluation": false
+  },
+  "release_gate": {
+    "primary_minimum": "14/18",
+    "important_price_omissions_maximum": 0,
+    "unsupported_threat_or_attack_resolution_maximum": 0,
+    "met": false,
+    "reason": "Even semantic coverage including the boundary is only3/18, selected basic claims have3 important missing prices, and independent human/readability deployment validation is absent."
+  },
+  "execution": {
+    "scope": "Stored work/report/depth and source identity audit only; no basic prose reading.",
+    "requests": 18,
+    "attempts_per_request": 1,
+    "begin_responses": 18,
+    "accepted_jobs": 17,
+    "states": {
+      "completed": 17,
+      "unavailable": 1
+    },
+    "issued_works": 73,
+    "submitted_reports": 73,
+    "completed_exact_depth_reports": 65,
+    "failure_reports": [
+      {
+        "game_id": "COR06-02",
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "engine_failure"
+        },
+        "adapter_generated": true
+      },
+      {
+        "game_id": "COR06-03",
+        "work_id": "work:4",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "search_budget_exhausted"
+        },
+        "adapter_generated": false
+      },
+      {
+        "game_id": "COR06-05",
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "engine_failure"
+        },
+        "adapter_generated": true
+      },
+      {
+        "game_id": "COR06-08",
+        "work_id": "work:3",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "search_budget_exhausted"
+        },
+        "adapter_generated": false
+      },
+      {
+        "game_id": "COR06-11",
+        "work_id": "work:3",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "search_budget_exhausted"
+        },
+        "adapter_generated": false
+      },
+      {
+        "game_id": "TAT25-04",
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "engine_failure"
+        },
+        "adapter_generated": true
+      },
+      {
+        "game_id": "TAT25-05",
+        "work_id": "work:3",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "search_budget_exhausted"
+        },
+        "adapter_generated": false
+      },
+      {
+        "game_id": "TAT25-10",
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "executor_failed",
+          "failure_code": "engine_failure"
+        },
+        "adapter_generated": true
+      }
+    ],
+    "pending_work_preserved": [],
+    "adapter_errors": [
+      {
+        "game_id": "TAT25-06",
+        "request_id": "answer-selection-TAT25-06-31",
+        "elapsed_ms": 150,
+        "work_count": 0,
+        "issued_work_count": 0,
+        "bridge_execution_response_count": 0,
+        "report_submission_attempt_count": 0,
+        "reducer_report_response_count": 0,
+        "state": "unavailable",
+        "stop_condition": null,
+        "adapter_error": "RuntimeError: Public reducer rejected begin; exact response stored",
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0,
+        "obligation_facts_sha256": "51539bf0de52058e4880fbb607d9296a8ff5339e0129933c66b8bcf24b425fe8"
+      }
+    ],
+    "issues": [],
+    "work_purposes": {
+      "root_search": 34,
+      "focus_comparison": 10,
+      "response_comparison": 21
+    },
+    "first_job_engine_ready_jvm_first_begin_ms": 25119,
+    "later_attempt_ms": {
+      "count": 17,
+      "min": 150,
+      "median": 8571,
+      "max": 20267
+    },
+    "later_completed_job_ms": {
+      "count": 16,
+      "min": 3169,
+      "median": 8612.0,
+      "max": 20267
+    },
+    "startups": [
+      {
+        "startup_index": 1,
+        "status": "ready",
+        "adapter_startup_ms": 15033,
+        "raw_ready": {
+          "ready": true,
+          "engine_name": "Stockfish 18",
+          "engine_startup_ms": 348,
+          "boot": [
+            {
+              "sent": "uci"
+            },
+            {
+              "received": "Stockfish 18 by the Stockfish developers (see AUTHORS file)"
+            },
+            {
+              "received": "id name Stockfish 18"
+            },
+            {
+              "received": "id author the Stockfish developers (see AUTHORS file)"
+            },
+            {
+              "received": ""
+            },
+            {
+              "received": "option name Debug Log File type string default <empty>"
+            },
+            {
+              "received": "option name NumaPolicy type string default auto"
+            },
+            {
+              "received": "option name Threads type spin default 1 min 1 max 1024"
+            },
+            {
+              "received": "option name Hash type spin default 16 min 1 max 2048"
+            },
+            {
+              "received": "option name Clear Hash type button"
+            },
+            {
+              "received": "option name Ponder type check default false"
+            },
+            {
+              "received": "option name MultiPV type spin default 1 min 1 max 256"
+            },
+            {
+              "received": "option name Skill Level type spin default 20 min 0 max 20"
+            },
+            {
+              "received": "option name Move Overhead type spin default 10 min 0 max 5000"
+            },
+            {
+              "received": "option name nodestime type spin default 0 min 0 max 10000"
+            },
+            {
+              "received": "option name UCI_Chess960 type check default false"
+            },
+            {
+              "received": "option name UCI_LimitStrength type check default false"
+            },
+            {
+              "received": "option name UCI_Elo type spin default 1320 min 1320 max 3190"
+            },
+            {
+              "received": "option name UCI_ShowWDL type check default false"
+            },
+            {
+              "received": "option name SyzygyPath type string default <empty>"
+            },
+            {
+              "received": "option name SyzygyProbeDepth type spin default 1 min 1 max 100"
+            },
+            {
+              "received": "option name Syzygy50MoveRule type check default true"
+            },
+            {
+              "received": "option name SyzygyProbeLimit type spin default 7 min 0 max 7"
+            },
+            {
+              "received": "option name EvalFile type string default nn-4ca89e4b3abf.nnue"
+            },
+            {
+              "received": "uciok"
+            },
+            {
+              "sent": "setoption name UCI_AnalyseMode value true"
+            },
+            {
+              "sent": "setoption name Analysis Contempt value Off"
+            },
+            {
+              "sent": "setoption name UCI_Chess960 value true"
+            },
+            {
+              "sent": "ucinewgame"
+            },
+            {
+              "sent": "isready"
+            },
+            {
+              "received": "No such option: UCI_AnalyseMode"
+            },
+            {
+              "received": "No such option: Analysis Contempt"
+            },
+            {
+              "received": "readyok"
+            }
+          ]
+        },
+        "engine_ready_before_job": true,
+        "jvm_first_begin_not_in_startup_measurement": true
+      },
+      {
+        "startup_index": 2,
+        "status": "ready",
+        "adapter_startup_ms": 1378,
+        "raw_ready": {
+          "ready": true,
+          "engine_name": "Stockfish 18",
+          "engine_startup_ms": 320,
+          "boot": [
+            {
+              "sent": "uci"
+            },
+            {
+              "received": "Stockfish 18 by the Stockfish developers (see AUTHORS file)"
+            },
+            {
+              "received": "id name Stockfish 18"
+            },
+            {
+              "received": "id author the Stockfish developers (see AUTHORS file)"
+            },
+            {
+              "received": ""
+            },
+            {
+              "received": "option name Debug Log File type string default <empty>"
+            },
+            {
+              "received": "option name NumaPolicy type string default auto"
+            },
+            {
+              "received": "option name Threads type spin default 1 min 1 max 1024"
+            },
+            {
+              "received": "option name Hash type spin default 16 min 1 max 2048"
+            },
+            {
+              "received": "option name Clear Hash type button"
+            },
+            {
+              "received": "option name Ponder type check default false"
+            },
+            {
+              "received": "option name MultiPV type spin default 1 min 1 max 256"
+            },
+            {
+              "received": "option name Skill Level type spin default 20 min 0 max 20"
+            },
+            {
+              "received": "option name Move Overhead type spin default 10 min 0 max 5000"
+            },
+            {
+              "received": "option name nodestime type spin default 0 min 0 max 10000"
+            },
+            {
+              "received": "option name UCI_Chess960 type check default false"
+            },
+            {
+              "received": "option name UCI_LimitStrength type check default false"
+            },
+            {
+              "received": "option name UCI_Elo type spin default 1320 min 1320 max 3190"
+            },
+            {
+              "received": "option name UCI_ShowWDL type check default false"
+            },
+            {
+              "received": "option name SyzygyPath type string default <empty>"
+            },
+            {
+              "received": "option name SyzygyProbeDepth type spin default 1 min 1 max 100"
+            },
+            {
+              "received": "option name Syzygy50MoveRule type check default true"
+            },
+            {
+              "received": "option name SyzygyProbeLimit type spin default 7 min 0 max 7"
+            },
+            {
+              "received": "option name EvalFile type string default nn-4ca89e4b3abf.nnue"
+            },
+            {
+              "received": "uciok"
+            },
+            {
+              "sent": "setoption name UCI_AnalyseMode value true"
+            },
+            {
+              "sent": "setoption name Analysis Contempt value Off"
+            },
+            {
+              "sent": "setoption name UCI_Chess960 value true"
+            },
+            {
+              "sent": "ucinewgame"
+            },
+            {
+              "sent": "isready"
+            },
+            {
+              "received": "No such option: UCI_AnalyseMode"
+            },
+            {
+              "received": "No such option: Analysis Contempt"
+            },
+            {
+              "received": "readyok"
+            }
+          ]
+        },
+        "engine_ready_before_job": true,
+        "jvm_first_begin_not_in_startup_measurement": true
+      }
+    ],
+    "shutdowns": [
+      {
+        "process": "node_bridge",
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      },
+      {
+        "process": "java_reducer",
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      },
+      {
+        "process": "node_bridge",
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      },
+      {
+        "process": "java_reducer",
+        "exit_code": 0,
+        "adapter_forced_kill": false
+      }
+    ],
+    "total_run_elapsed_ms": 203586,
+    "source_class_bridge_identity": "unchanged",
+    "manifest_sha256": "5cd365a75959790c0042385f303082aa22ad3808591f1e1f1bee99522131bad5",
+    "results_sha256": "8e7d577e63eb394fb933a11674057db90123784b2d22492beb89e6ae3a80377a",
+    "certificates": [
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "96668fc752b6c1ee19b5a4d025f38637d359abe0c17aea1b1eab9c4dc9bbebd6"
+      },
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "50f0e9cec710e97c2b1d65bbc785782eb4dd967e5dc4257fafa77baef4c979ab"
+      },
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "1b07282fe6b4fc09410a644030def27232cb00b43f7e17008716f45f7d1c8271"
+      },
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "8e375eeb1c17cb34ed3aa138da96c979d1dccbff2c9ed65ae2a5da8f7b2a89d7"
+      },
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "2dee2a573010572ce67020048409f56c0be38b4151e3cba5f4982efd0c5c2589"
+      },
+      {
+        "game_id": "COR06-01",
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "6798bbb5d95f1dcc80ee34b88b4c5785b40abc021a5a55b7ded1f9a140d559d8"
+      },
+      {
+        "game_id": "COR06-02",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "3f8c1c34be2672cc71285a25a1f3144c14fb99d67026aa10f95622640094804d"
+      },
+      {
+        "game_id": "COR06-02",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "f2cf034e9994e2ec8bd1399065753ee22ddd4afd76e5c5216283ea7551a45f33"
+      },
+      {
+        "game_id": "COR06-03",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "3af10e3657c117dce406bf6a1b3dae694587d4c5125bb5ab8c8479b7fffff649"
+      },
+      {
+        "game_id": "COR06-03",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "0e4eef27ffd969675f80a44bac4150a89bf1334d057bb6c84f4f51fca73b3f25"
+      },
+      {
+        "game_id": "COR06-03",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "6fca0dad4a726801101c751b9669f049ce3a6e9ff0b2e4f2543cef581fadba49"
+      },
+      {
+        "game_id": "COR06-03",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "fa2171d987991f179efd99c6ff1f9eab84b74c5e93437758405c59266b7ef299"
+      },
+      {
+        "game_id": "COR06-04",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "ff2baeb543c71feba3390dbb83b5b7a05a3f7b9535ec7ca2d5abb102f6e0f66b"
+      },
+      {
+        "game_id": "COR06-04",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "451dbe0bd1fc95f3bd9d70067d6ec790f7dc312c2c02f28092f14e1c668ec1ea"
+      },
+      {
+        "game_id": "COR06-04",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "a9c97934075ae245b0880bc9e0366db9879cde598be5f2c12038f0619f818bd4"
+      },
+      {
+        "game_id": "COR06-04",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "fd5a8b0fe07619cd7f3bb07bf17e08cd51ab93dd2908f5ccd2ff45c48f893433"
+      },
+      {
+        "game_id": "COR06-05",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "342c5400b9e1694152767fd44ea417bd15c4ce18cb7223b3fcc0a73975c1c568"
+      },
+      {
+        "game_id": "COR06-05",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "361c8ba278978e98acc9ae7c5c83147e608f88285a4d187b35431ee8922995a1"
+      },
+      {
+        "game_id": "COR06-08",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "0d8a4933ededf3dabca644440d45bde7569d1fee0ce10b28f1a55ebe5eaf223c"
+      },
+      {
+        "game_id": "COR06-08",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "c43306c3afdf1a8a077fe62cf2a4fe160af3c81a9f90905c56bca1ca03048e99"
+      },
+      {
+        "game_id": "COR06-08",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "c685eecf6d10159a4f68ce8effed1cb167cddf73d430fbe254ed733287dbd899"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "d849a72e1ad1a4938308002dac5345770e4ed0d935326ee96656613601924b2b"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "43e16d714c53880aba3d9e4c16e1d22b1cc8129a79f15c9a4717bfa823e6d99f"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "70b6711cf53e9a36068ebad9ceb816aae55471ec6014cdbc2cd0ebfecea30c20"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "17a021b3fb5f046bf47534b501c5ec0745b7d6699296e6382c43297b9c4f385b"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "15b521b95fc40ec305a36e71c6c59c3e74e1d4411f9f68482edfe17481a71669"
+      },
+      {
+        "game_id": "COR06-09",
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "865e3f8261a1f80b84aa7219b9b7fe9f35d0d59f203507943ceb0053817d2c3b"
+      },
+      {
+        "game_id": "COR06-10",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "3d62f6cb9c96eb453b99383674269f5021ede64f6ae78894e8a6ea236ea4a2cd"
+      },
+      {
+        "game_id": "COR06-10",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "a791fb4f0713e953b2f9bb82c2322a04e2e87ecad2853c62d41cbcfcad0dabef"
+      },
+      {
+        "game_id": "COR06-10",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "e443f00d215acd8782f92c4e8abe8a7118c8873d3542f17f4d25f25235f53a44"
+      },
+      {
+        "game_id": "COR06-10",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "4348c5af1ad27217a65fed82ed6694bf93df65ed0dde56c1c4dfb7b08813b8c0"
+      },
+      {
+        "game_id": "COR06-11",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "e04e316a4d81b74c3b42689c21b3e095ad24c16c7900baa1dafcc1f4b4006e78"
+      },
+      {
+        "game_id": "COR06-11",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "f6e7e0100a6a3f4b3377c2fffa6c3b5e019eb733e26741bcd52102f955d1db2e"
+      },
+      {
+        "game_id": "COR06-11",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "e33c16810f414f97bb20c9bde7bad5d0bb3cc4b9f743374ceff3252842b1fc9f"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "775c5626606903cb59c8b2820f893429aedd676c2d60890ac826b16948b63e45"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "8294e92b87caac2ea192c5f1ef0fb18a2a055aba6c66d99f62f0efac8aaee884"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "aa467efab096dad2a02ce5efd46b9cc87d5c016cc0b4ddc0af464d453ed282c1"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "c9108cb331d5d2ba39fc37001e53bc786cd4407bf35f2dea4f815a2c898e43fc"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "6a47f971b67692d72f46db1f6d317e7bd40785e56ddb4e4d7f4340d27d379763"
+      },
+      {
+        "game_id": "TAT25-01",
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "df98859aeeb14d7a4e594e81ec8dc330a379811bcde7818977cccbf31583f103"
+      },
+      {
+        "game_id": "TAT25-03",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "1a3ef06afb1881e37ab468f38524e76da1cf50f59505fed82134fb9cb7477910"
+      },
+      {
+        "game_id": "TAT25-03",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "67b452a65d6449d85cd789720824a4c72167b4996bcdc6dcaaaa48f9c8bd2f39"
+      },
+      {
+        "game_id": "TAT25-03",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "3de8f877c7a3978fa1a9fd4b74a44b3973903e1288fc33435599e9e0ee72b671"
+      },
+      {
+        "game_id": "TAT25-03",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "de75fc5380918f73ae5179e87b0ee6005be872dd3c87cc8c58c2d0552c2b8f9f"
+      },
+      {
+        "game_id": "TAT25-04",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "659f0e8c16f593274d76d21413554c54b643bf8feaa2cb98e90a6fd40faccb92"
+      },
+      {
+        "game_id": "TAT25-04",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "5bf20696d5bb3ae5420816224cebc1cc581232cdf220dc0009d6b28002a644cf"
+      },
+      {
+        "game_id": "TAT25-05",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "d009712d761710b87ed2f62cf91e386897109a615df622ebc77a40a4f02123a5"
+      },
+      {
+        "game_id": "TAT25-05",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "02780c2091fefa1365e0d8017449eb5f3a47dcd2b130160d42e6e0cb0aa9ae75"
+      },
+      {
+        "game_id": "TAT25-05",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "fd178314184d1b82edb3024b6c1818e2c673cac02833938dde1f54246ea2c09e"
+      },
+      {
+        "game_id": "TAT25-07",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "a0252b675038cc88577454f763170870cad2dcb71c11ebfc107075136045b391"
+      },
+      {
+        "game_id": "TAT25-07",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "b86f34fbdec68df58c112f6162178f7b30dda7f0060461f0acc0e80a342febea"
+      },
+      {
+        "game_id": "TAT25-07",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "73ab40e9a6305ee4f001a04a621451f088178494c59f19399e45534b73ba0f39"
+      },
+      {
+        "game_id": "TAT25-07",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "7074429992db885dc5c555fbf82e2b5c371d840e0ac658154d5d2d85e59311c7"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "20142e1ac98dd02f261779fef6cfb087eb9865c06f1b3c39f5cb57e848019670"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 2,
+        "exact_execution_key": "063cca65a45452fae757087b5c94e69cf46c84f948e24ab1fa640012e78ff06a"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "1a06d653521b3502a8d5db427bd7ddddec5ce56f53cd13ce1c4626217c267694"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:3",
+        "purpose": "focus_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "eb3725edc261bf0fbbcfedfd7bcfee7ce29566dad00fe0631ceb3162ece8e90e"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "f4a0c4f90e80cb659f075bb2dcb7c3099fffc4120e19b8bf905bc2db1b76d78a"
+      },
+      {
+        "game_id": "TAT25-09",
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "d0d66f3961c51d010980dee4e4d8950c2690c1aada472bdd8b1e62325bec0c02"
+      },
+      {
+        "game_id": "TAT25-10",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "5456b461a6c75b2986a087932b8c88f5ec55de254c4f00cfd17b64dc71ee5f73"
+      },
+      {
+        "game_id": "TAT25-10",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "6ec13447ffe9607dc7963fb247ffd676995f4723bd9f5f127215fa93ab101f19"
+      },
+      {
+        "game_id": "TAT25-11",
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "depth": 8,
+        "previous_depth": 7,
+        "multi_pv": 3,
+        "exact_execution_key": "69b642a1c163b6d45f9f31d04292b0de28b1424bf4a7d85d3119a560fbf36af1"
+      },
+      {
+        "game_id": "TAT25-11",
+        "work_id": "work:1",
+        "purpose": "root_search",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "ef3bef38a9abdaa7ba721bfdcaf061821f2d83d8363b5199706d7d2a8ec70fa4"
+      },
+      {
+        "game_id": "TAT25-11",
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 3,
+        "exact_execution_key": "9525093c1a6eadc5070f224b326d407aa02b3a218dce081689c3e3511123c4a8"
+      },
+      {
+        "game_id": "TAT25-11",
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "depth": 16,
+        "previous_depth": 15,
+        "multi_pv": 2,
+        "exact_execution_key": "f6449228f645e46f0722b2f158d5770a24d411a2e114d313f8a32c312fef30d8"
+      }
+    ],
+    "limits": [
+      "Warm standalone engine/reducer, not UI or mobile timing",
+      "No retry/cancellation UI simulation; original errors are preserved",
+      "Execution success and exact depth do not establish commentary quality"
+    ]
+  },
+  "timing_scope": {
+    "first_engine_ready_jvm_begin_job_ms": 25119,
+    "later16_completed_median_ms": 8612,
+    "not_measured": [
+      "Whole-app initial download/cold start",
+      "Actual browser/mobile performance",
+      "Deployment and continuous-review UI integration"
+    ]
+  },
+  "tests": {
+    "existing_tests": 319,
+    "exit_code": 0,
+    "pure_decoder": {
+      "issued_four": {
+        "total": 4,
+        "accepted": 4
+      },
+      "final_seventeen": {
+        "total": 17,
+        "accepted": 17
+      },
+      "old_eighteen": {
+        "total": 18,
+        "accepted": 18
+      },
+      "endpoint_link_checks": {
+        "total": 8,
+        "passed": 8,
+        "meaning": "The actual renderer still creates en/ko SAN buttons for position witnesses and their click callbacks select the exact original occurrence."
+      },
+      "capture_coverage": {
+        "fresh_occurrence_accounts": 443,
+        "old_occurrence_accounts": 265,
+        "uncovered": 0,
+        "counting_note": "Counts are per unit account and snapshot, not distinct chess moves or new independent cases."
+      },
+      "negative_mutations": {
+        "kinds": [
+          "duplicate_action",
+          "foreign_action",
+          "action_not_owned_by_proof",
+          "missing_capture_price",
+          "forged_required_ownership",
+          "forged_focus_position",
+          "unknown_question_enum",
+          "actions_require_typed_proof",
+          "missing_actual_recapture",
+          "missing_actual_check_reply"
+        ],
+        "total": 20,
+        "selection_rejected": 20,
+        "note": "One available real serialized account per mutation kind per dataset; not every possible mutation on all snapshots."
+      },
+      "actual_capture_target_examples": [
+        "wch2016-11",
+        "candidates2018-11",
+        "wch2024-08"
+      ],
+      "investigated_mechanism": "Only the explicitly labeled tag-only syntax probe was possible; no actual serializer example in these inputs.",
+      "legacy_no_action": {
+        "fresh_final_accepted": 13,
+        "fresh_final_rejected": [
+          "COR06-02",
+          "COR06-05",
+          "TAT25-04",
+          "TAT25-10"
+        ],
+        "fresh_issued_rejected": [
+          "COR06-02",
+          "COR06-05",
+          "TAT25-04",
+          "TAT25-10"
+        ],
+        "old_accepted": 16,
+        "old_rejected": [
+          "candidates2018-08",
+          "candidates2018-10"
+        ],
+        "note": "Deleting action_moves deliberately invokes existing proof/inline closure. The known four endpoint failures recur; ordinary compatible accounts remain accepted. This is a compatibility mutation, not a forged successful serializer response."
+      }
+    },
+    "summary_schema_valid": {
+      "opened18": 18,
+      "stored17": 17,
+      "issued4": 4
+    },
+    "exact_contract_replay_observations_text_progress_unchanged": true,
+    "git_diff_check": true,
+    "post_test_formatting_only": [
+      {
+        "path": "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\CommentaryAnswerTest.scala",
+        "tested_sha256": "3199129939a609f35e40e358fe959f5c9b2bfcd3554b59fda5b6e558a760bb9c",
+        "current_sha256": "2cc02b2750612e360619952fe5356aa96c37c998b27d157fe3a8e5dec78214a7",
+        "change": "Removed two spaces on one empty line after successful tests; exact tested bytes reconstructed and hash matched."
+      }
+    ]
+  },
+  "adopt": [
+    "Common actual-action/proof separation and delivery contract repair",
+    "Supported countercapture price completion",
+    "Guarded same-original-target fallback as a bounded improvement, with no broader importance or coverage claim"
+  ],
+  "reject_or_keep_disabled": [
+    "Equal target outcome/price priority",
+    "Global narrow recovery restriction that lost four existing meaningful prices",
+    "Closed-use automatically means important",
+    "New root-evasion/root-use priority without evidence",
+    "Automatic threat investigation remains off"
+  ],
+  "remaining_required": [
+    "The current selected_comparison basic admission still admits independent attack/support/presence histories; choose the intended common subject/question before admitting those histories.",
+    "Selected gains and actual support use need price ownership beyond current initial-continuous relations: same episode other-square response loss, queen-pursuit pawn loss, and used provider later removal.",
+    "A closed candidate is not evidence of importance. The newly focused capture route was selected in3 opened cases and0 of17 new available cases; do not generalize from the opened gain.",
+    "English syntactic agreement is generally intact in this reading, while anaphora, arm/actor grouping, repeated captures and scattered price scope remain poor. Select the core content before changing prose templates.",
+    "The research request producer needs authoritative canonical FEN before any future live cohort; preserve the original rejected request rather than retrying this cohort.",
+    "Live timing allocation and continuous-review/app assets remain separate from the successful saved-response decoder fix."
+  ],
+  "actual_changes_from_task_start": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": {
+      "before_sha256": "5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d",
+      "after_sha256": "2cea006d2b32ff5335914486187068ace0009d3d3e590c65bc984a192c82d6d3"
+    },
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": {
+      "before_sha256": "4f63ebfa8143867149784268d71c0860ca4e446ecd789dadc7404672e257bcf0",
+      "after_sha256": "f1f3011bdff546aec3259d15c626b92c9f35b9abb7a6c64b7793ab79a105d15f"
+    },
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala": {
+      "before_sha256": "cd49ef29dc8ecbf3d25f4246ac5d33898a78def0816960faffdda9c7199c6a28",
+      "after_sha256": "c8ae91803a25b8eb756e55e2d47bacf6dee220cb1f738da2fa04fe070e9e2e73"
+    },
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala": {
+      "before_sha256": "cd9118520247d7ed94ec45ffaeca6fe13221b3c476f2f8714e215511d9b2d09a",
+      "after_sha256": "1e23ebd1cb81c63147b1284b34cfcc1caaa42f4c6e1853572673776e3048e376"
+    },
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": {
+      "before_sha256": "8510efe762bfa0c967872620b9c00361e640b1efbf4b5cec3f0a914ac7363271",
+      "after_sha256": "be2b29978bce7cf0fc2882b66b04b0159b06da8a924208cf309bcc8c10c36e5a"
+    },
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryAnswerTest.scala": {
+      "before_sha256": "f0d450e4fbd0c640f84ec157dda3dff5c072ad2b249d144757a05ea416c44883",
+      "after_sha256": "2cc02b2750612e360619952fe5356aa96c37c998b27d157fe3a8e5dec78214a7"
+    },
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala": {
+      "before_sha256": "c558566ea90c87feb1a535d108e3b56b415e9c3bd52e44b0cc8c5971716bca21",
+      "after_sha256": "abb90b2af4fe1c832d4ec5aecec2768619e30a59cb43fcfc2dbe298d7d799d90"
+    }
+  },
+  "previous_other_recorded_sources_unchanged": true,
+  "constraints": {
+    "product_llm": false,
+    "docker": false,
+    "fullstack_ui": false,
+    "protected_corpus": false
+  },
+  "artifacts": {
+    "assessment-selectionv9.json": "1f9bfab6af0050f3d5f6af4af31bc219718b2eaa6eb79f822a08861ab6a981f4",
+    "same-input-selectionv9-18.json": "f9e33e70e7d08c43dde493d441812e9c603b35bb6b6b573309ad75524a3ea9c6",
+    "same-input-selectionv10-18.json": "2536abdcfbbef8ae601a0f793cdd3e3e3662c9dcbbe1d84a160d19f2ab34e905",
+    "freeze-selectionv9.json": "541499a035cdaefe48463385010269b193e4b75e5751987ecd8654ab677f7580",
+    "fresh-obligations-corus.json": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+    "fresh-obligations-tata.json": "1ba9e80cda0daed5522349a2d8aed85c2219b2fb266f55061121b3beebaa6a73",
+    "fresh-assessment-corus.json": "c8620ec560f7967156cedc1a076ad535e8c0b65d46ca77c5dfdfd09126ddc033",
+    "fresh-assessment-tata.json": "922cddfe5e4ff6b5f408b1d201a8738ceef895bdfc3c7da0bfd24844a4dd5b30",
+    "fresh-product-readings.json": "f690e4d775deaf60d2ea325b16280372f2b0a3b799a13e8dbe775b8105471096",
+    "frontend-failure-diagnosis.json": "d85ccce0ddcc86cf770c581c99e136c9b74a29e95cc3442c1a9207f1e4267a55",
+    "frontend-contract-selectionv10.json": "d6b84d3254ad27cd0c2096472a310117a3346d4bf572b2d9f0c4623df0410936",
+    "post-freeze-contract-repair.json": "ee594cec92014fc5a319a235725462ea2ae043f69464f6077f8a17c0e2565dd3",
+    "fresh-execution-audit.json": "8f91523930213c5c984bde849132a6f634124f70bdcb9bfa06a84cba53eaef74",
+    "fresh-begin-fen-diagnosis.json": "98f10c4bdc61cb70abf9786ac6a83a29e6438bad739b087a5afd353bcdb41bfe"
+  }
+}

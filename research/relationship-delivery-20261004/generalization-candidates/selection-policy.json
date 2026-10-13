@@ -1,0 +1,40 @@
+{
+  "id": "relationship-delivery-new-games-v2",
+  "frozen_on": "2026-10-04",
+  "frozen_before": ["candidate engine evaluations", "Chesstories candidate outputs"],
+  "status": "candidate policy; final balance and historic development overlap pending",
+  "purpose": "Test preservation of an already selected question's subjects, responses, prices, promotion identity, and confirmed outcome. Do not optimize the universal question-selection policy.",
+  "source_plan": [
+    {"id": "wch2016", "event": "World Chess Championship 2016", "rounds": [1, 2, 3, 4, 5, 6], "source_page": "https://theweekinchess.com/chessnews/events/world-chess-championship-2016"},
+    {"id": "candidates2018", "event": "FIDE Candidates Tournament 2018", "selection": "First six classical games in ascending (numeric round, White header, Black header) order; all round-1 games followed by the alphabetically first two round-2 games", "source_page": "https://theweekinchess.com/chessnews/events/fide-candidates-tournament-2018"},
+    {"id": "wch2024", "event": "FIDE World Chess Championship 2024", "rounds": [1, 2, 3, 4, 5, 6], "source_page": "https://theweekinchess.com/chessnews/events/fide-world-chess-championship-2024"}
+  ],
+  "game_inclusion": "Classical games only; no rapid tiebreaks. Fixed event order above, then ascending numeric round, White header, Black header. One final position per distinct game. All 18 games remain on the registry even if unavailable or outside the balance threshold.",
+  "policy_revision_history": [
+    {"version": 1, "change": "Initially planned the first six games of the 2016, 2018, and 2024 championship matches."},
+    {"version": 2, "change": "Before downloading candidate PGNs, running an engine, or seeing product output, replace the 2018 match with the first six ordered Candidates games to broaden participants. Root explicitly requested this diversity improvement. All position rules remain fixed."}
+  ],
+  "position_rule": {
+    "side": "White for odd within-event selected-game ordinals; Black for even ordinals",
+    "fullmove_priority": [24, 20, 16, 12],
+    "priority_meaning": "Take the first available position in this order whose unrestricted pre-choice engine report admits a non-mate score and |White centipawns| <= 100. Evaluate the board before the recorded move. Do not inspect the post-move score to include or exclude a position.",
+    "reasons_for_fallback": ["recorded game ended before the scheduled move", "scheduled pre-choice position is not balanced under the fixed final analysis", "analysis unavailable or uncertified"],
+    "missing_balance": "Retain as unavailable or out-of-balance, rather than replacing the game or changing the move priority after product output is seen.",
+    "engine_protocol": "Root agent will freeze and record the final engine/depth/bounds protocol before running these candidates. This preparation does not run an engine or claim balance.",
+    "no_feature_filter": "No SAN, square, tactic, capture count, narrative quality, product-question availability, or desired explanation pattern enters position selection. A recorded mistake is not an exclusion criterion."
+  },
+  "independent_reading": {
+    "allowed": ["raw main-line PGN", "legal board reconstruction", "own language-model research reasoning", "reference principles with provenance"],
+    "not_seen": ["candidate Chesstories outputs", "candidate engine reports"],
+    "memo_status": "Pre-engine question and response/cost investigation prompts, not verified engine conclusions or a gold answer for an as-yet unknown engine alternative.",
+    "comparison_limit": "The actual game continuation is historical context, not proof that every supplied engine continuation or every legal response has the same result. Once a same-position alternative is chosen, mandatory answer obligations must be written before reading the product prose."
+  },
+  "known_limits": [
+    "18 selected games are concentrated in two elite two-player matches and one elite Candidates tournament; this is broader than Capablanca Games 1-10 but not representative of the full master-game population.",
+    "Modern era variation is 2016, 2018, and 2024; it does not provide broad historic era coverage.",
+    "All public game records are collected by one PGN publisher. Author commentary is not used as engine evidence.",
+    "Historic overlap with earlier development positions is not established by this preparer; root must check its non-protected manifests or memory.",
+    "LLM reasoning is used only for research memos; the product uses no language model.",
+    "No independent human reader assessment is included."
+  ]
+}

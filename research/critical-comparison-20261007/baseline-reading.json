@@ -1,0 +1,779 @@
+[
+  {
+    "id": "H05R1",
+    "result": {
+      "game_id": "H05R1",
+      "elapsed_ms": 25050,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 3078.648
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 3.037
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 207.822
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.348
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1845.304
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 35.0
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1582.274
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.963
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 3267.423
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 119.107
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 4221.995
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.12
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1629.618
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 223.273
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1014.666
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.159
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1298.774
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 241.073
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1198.287
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.536
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 260.974
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 221.506
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 3111.08
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.564
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1148.583
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 313.664
+        }
+      ]
+    },
+    "text": "g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance.",
+    "question": "investigated_mechanism",
+    "unit_roles": [
+      "reply"
+    ]
+  },
+  {
+    "id": "T20R1",
+    "result": {
+      "game_id": "T20R1",
+      "elapsed_ms": 19004,
+      "works": 8,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 50.268
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 5.12
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 42.171
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.037
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 344.523
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 22.432
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 209.529
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.814
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 938.656
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 99.497
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1059.25
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.55
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 94.105
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 100.647
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 3181.053
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.362
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1088.21
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 228.742
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1321.724
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.957
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1278.055
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 287.762
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 642.053
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.06
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 2298.5
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 360.752
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 665.629
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.028
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1596.944
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 382.223
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 777.484
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.766
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1465.499
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 409.582
+        }
+      ]
+    },
+    "text": "After g5, the recorded g4 hxg4 h5 continuation gives White a passed pawn on h5. Advancing the pawn to g5 has removed its control of h5. Ke6 keeps that pawn on g6: after the same g4, it still guards h5. After Ke6, the tested g4 evaluates below Ke4. In the g5 line: hxg4 clears h5; h5 later occupies that square in this line. After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5. In the g5 line, White loses one pawn. In the Ke6 line: After Kf5, White's king on f5 now targets Black's pawn on g5. gxh4 moves the pawn out of the attack from White's king on f5. In the Ke6 line, both sides exchange three pawns. After Kxh4, the game is drawn because neither side can give checkmate.",
+    "question": "observed_terminal_comparison",
+    "unit_roles": [
+      "reply",
+      "cost",
+      "cost"
+    ]
+  },
+  {
+    "id": "H05R2",
+    "result": {
+      "game_id": "H05R2",
+      "elapsed_ms": 13033,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 27.718
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.27
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 54.202
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.108
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 225.734
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 37.709
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 785.132
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.726
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 582.248
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 120.581
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 4273.54
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.491
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1045.936
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 280.833
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1206.712
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.854
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1254.135
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 296.898
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1031.379
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.573
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1422.916
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 351.305
+        }
+      ]
+    },
+    "text": "g4 spends a pawn move that Ke3 keeps in reserve. In the analysed continuation, g4 b3 g5 keeps the king on e4. After Kd7 gives up control of d5, Kd5 enters that square. Against f5+, which keeps that square guarded, exf6 leaves a passed pawn on f6, supported by the pawn kept in reserve. In the Ke3 line: f5+ advances the black pawn originally on f7 two squares. exf6 replies en passant: the white pawn originally on e4 captures that pawn on f5 and lands on f6. Ke6 clears f6; exf6 later occupies that square in this line. In the provided f5+ line: f5+ gives check to the White king on e4 with Black's pawn on f5; exf6 captures the checking pawn on f5. In the Ke3 line: f5 advances the black pawn originally on f7 two squares. gxf6 replies en passant: the white pawn originally on g3 captures that pawn on f5 and lands on f6. Ke6 clears f6; gxf6 later occupies that square in this line. gxf6 captures the black pawn on f5. Kxf6 recaptures the white pawn on f6. In the Ke3 line: exf6 captures the black pawn on f5.",
+    "question": "investigated_mechanism",
+    "unit_roles": [
+      "cost",
+      "cost",
+      "cost"
+    ]
+  },
+  {
+    "id": "T20R2",
+    "result": {
+      "game_id": "T20R2",
+      "elapsed_ms": 7262,
+      "works": 4,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 25.067
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 3.922
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 36.487
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.193
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 155.194
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 31.358
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 183.035
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.983
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 325.832
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 85.562
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1044.704
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.799
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 58.58
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 72.696
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 5107.437
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.208
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 45.42
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 66.345
+        }
+      ]
+    },
+    "text": "After g5, Black's pawn on g5 now targets White's pawn on h4. g4 moves the pawn from g5 to g4, ending its attack on White's pawn on h4. After Kd5, the white pawn originally on h4 is still present on h4. After g5, Black's pawn on f6 adds support to Black's pawn on g5, which is under attack from White's pawn on h4. In the provided Kd6 line, the same king next moves with Kc5 to c5. After Kc5, Black's king on c5 now targets White's pawn on c4. Kd6 moves the king from c5 to d6, ending its attack on White's pawn on c4. After Ke4, the white pawn originally on c4 is still present on c4.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "reply"
+    ]
+  },
+  {
+    "id": "H05R3",
+    "result": {
+      "game_id": "H05R3",
+      "elapsed_ms": 14749,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 23.373
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.109
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 41.369
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.038
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 182.13
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 33.437
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 975.071
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.697
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 495.529
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 142.578
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 6976.648
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.738
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 856.292
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 214.85
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 956.348
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.464
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 812.612
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 271.981
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1246.877
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.296
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1172.628
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 318.158
+        }
+      ]
+    },
+    "text": "g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance. g4 spends a pawn move that Ke3 keeps in reserve. In the analysed continuation, g4 keeps the king on f3. After Kd5 gives up control of f4, Kf4 enters that square. b3 keeps that square guarded. Later in that tested line, g5 holds the king's position. The opponent has no legal pawn move left. Every legal king reply, including Kh7, gives up f5; the king can enter that square. In the Ke3 line: Kxg5 captures the white pawn on g5. With Kxc4, the white king originally on f3 captures the black pawn originally on c4. The recorded continuation is Ke3.",
+    "question": "investigated_mechanism",
+    "unit_roles": [
+      "reply",
+      "reply",
+      "cost"
+    ]
+  },
+  {
+    "id": "T20R3",
+    "result": {
+      "game_id": "T20R3",
+      "elapsed_ms": 18326,
+      "works": 10,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 33.25
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 4.742
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 47.039
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.173
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 253.514
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 44.464
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 81.455
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.262
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 288.999
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 60.854
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 240.525
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.024
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 488.982
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 100.805
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 985.55
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.971
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 88.236
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 116.999
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1581.039
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.153
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 560.924
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 236.163
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 874.821
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.795
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 850.317
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 257.972
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 568.832
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.237
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1135.76
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 331.264
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 633.508
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 3.623
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1355.707
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 410.885
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1595.057
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.437
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 399.103
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 436.895
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2427.245
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 2.137
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1319.061
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 444.04
+        }
+      ]
+    },
+    "text": "After g5, the recorded g4 hxg4 h5 continuation gives White a passed pawn on h5. Advancing the pawn to g5 has removed its control of h5. Kd6 keeps that pawn on g6: after the same g4, it still guards h5. After Kd6, the tested g4 evaluates below Kd4. In the g5 line: hxg4 clears h5; h5 later occupies that square in this line. After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5. In the g5 line: hxg4 captures the white pawn on g4.",
+    "question": "investigated_mechanism",
+    "unit_roles": [
+      "reply",
+      "cost"
+    ]
+  }
+]

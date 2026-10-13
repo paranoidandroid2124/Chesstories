@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "task": "공개 초심자 교재에서 평범한 수의 설명 목적과 종료 범위를 조사하고 다음 개발 목표를 재검토",
+  "worktree": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "scope": {
+    "product_changed": false,
+    "new_engine_analysis": false,
+    "new_product_test_run": false,
+    "new_human_learning_evaluation": false,
+    "sealed_material_accessed": false,
+    "method": "저자 및 교육기관 공개 원문 검색, 관련 PDF 전체 페이지의 텍스트와 도판 확인, 현재 코드와 이전 진단 대조",
+    "not_a_benchmark": "아래 교재 사례는 설명 방식의 근거다. 새 제품 품질 점수나 엔진 동등성 판정이 아니다."
+  },
+  "main_finding": "기본 목적을 짧게 설명하는 것 자체가 초심자에게 완결된 답이 될 수 있다. 모든 수에서 실제 양쪽 응수와 가격 차이를 발견하도록 요구하면 평범한 설명을 불필요하게 확장할 위험이 있다. 다만 안전성·우월성·이득을 주장하거나 중요한 반례가 알려진 경우에는 그 주장을 뒷받침하는 응수와 대가가 필요하다.",
+  "sources": [
+    {
+      "id": "james_beginner",
+      "title": "Richard James, Chess for Heroes",
+      "landing_url": "https://chessforheroes.uk/downloads/",
+      "url": "https://chessforheroes.uk/wp-content/uploads/2023/10/chess-for-heroes-1222-amazon.pdf",
+      "access": "저자 사이트에서 전문 무료 공개. older beginners 대상.",
+      "local_pdf": "target/beginner-explanation-20261005/sources/chess-for-heroes.pdf",
+      "sha256": "46253e956465cf98f4f926e2e8bd1b9781090585a0ddd4de11c2078c478948d3",
+      "pages": 144,
+      "visually_reviewed_printed_pages": [119, 120],
+      "finding": "p119는 같은 국면의 Nc3와 d4에 각각 교육용 5점을 준다. p120은 Nxd4의 되잡기와 퀸의 방어를 연결한다."
+    },
+    {
+      "id": "james_openings",
+      "title": "Richard James, Chess Heroes: Openings",
+      "landing_url": "https://chessforheroes.uk/downloads/",
+      "url": "https://chessforheroes.uk/wp-content/uploads/2023/10/chess-heroes-openings-0323-amazon.pdf",
+      "access": "저자 사이트에서 전문 무료 공개. 기초를 익힌 약 500–1000 단계의 후속 교재.",
+      "local_pdf": "target/beginner-explanation-20261005/sources/chess-heroes-openings.pdf",
+      "sha256": "e6d47525640f9fad1dfeaca72a2d649b231b8f034a8d046d53ced2dba6a9d53d",
+      "pages": 239,
+      "visually_reviewed_printed_pages": [113, 114, 192, 210],
+      "finding": "p192는 Pirc의 Nf3를 단순 전개로 설명하며 다른 좋은 선택도 인정한다. p210은 여러 전개 수를 묶는다. pp113–114는 자연스러운 Nxd5 되잡기에 대한 전술적 반례를 다룬다."
+    },
+    {
+      "id": "csc_start",
+      "title": "Chess in Schools and Communities, Chess at Home Lesson 10: Starting the Game",
+      "landing_url": "https://www.chessinschools.co.uk/chess-at-home",
+      "url": "https://www.chessinschools.co.uk/s/Lesson_10_-_final_new.pdf",
+      "access": "교육기관 공개 2쪽 학습지. 강좌는 사전 지식이 없는 초심자부터 시작.",
+      "local_pdf": "target/beginner-explanation-20261005/sources/csc-starting-game.pdf",
+      "sha256": "7b3f6b1595b44f897add01835d8813292358c6c6c511a14378e85494afa2f8a4",
+      "visually_reviewed_pdf_pages": [1, 2],
+      "finding": "기물 참여·중앙·킹 안전을 기본 목표로 제시한다. 첫 도판은 상대가 방해하지 않는 이상적 배치이고 실제 대국에서는 상대 때문에 조정해야 함을 명시한다."
+    },
+    {
+      "id": "csc_attack",
+      "title": "Chess in Schools and Communities, Chess at Home Lesson 13: Attack and Defence",
+      "url": "https://www.chessinschools.co.uk/s/Lesson_13_-_final.pdf",
+      "access": "교육기관 공개 2쪽 학습지.",
+      "local_pdf": "target/beginner-explanation-20261005/sources/csc-attack-defence.pdf",
+      "sha256": "9844ebabb7eefc05e3e0cfbe1d1f084f06ae20a6f9a34f4b931d880645bdb282",
+      "visually_reviewed_pdf_pages": [1],
+      "text_reviewed_pdf_pages": [1, 2],
+      "finding": "Qh5의 e5·f7·h7 공격을 구별한다. 이 국면에서 f7·h7 포획은 퀸을 잃으므로 e5 포획과 같은 실질적 위협으로 취급하지 않는다."
+    },
+    {
+      "id": "csc_openings",
+      "title": "Chess in Schools and Communities, Chess at Home Lesson 25: Chess Openings I",
+      "url": "https://www.chessinschools.co.uk/s/Lesson_25_-_final_new.pdf",
+      "access": "교육기관 공개 2쪽 학습지.",
+      "local_pdf": "target/beginner-explanation-20261005/sources/csc-openings.pdf",
+      "sha256": "d125945a90d3dc4abb4dc2cc67be893d5196b225d8a9c29c2e74d69bc3c77fd2",
+      "visually_reviewed_pdf_pages": [2],
+      "text_reviewed_pdf_pages": [1, 2],
+      "finding": "일반적인 전개 수순을 묶어 설명하며 여러 오프닝 선택을 인정한다. 갬빗의 가치는 이후 양쪽 진행에 달린다는 조건도 남긴다."
+    },
+    {
+      "id": "chesskid_strategy",
+      "title": "ChessKid, What to Do??",
+      "url": "https://www.chesskid.com/learn/articles/what-to-do2",
+      "access": "공개된 글을 확인. 연결된 모든 영상의 무료 접근 여부나 영상 내용을 확인한 것은 아님.",
+      "finding": "당장 전술이 없을 때 기물 개선, 선 열기, 약점 공격·생성, 힘 모으기라는 전략 목표를 가르친다."
+    },
+    {
+      "id": "steps",
+      "title": "Steps Method: downloads and FAQ",
+      "url": "https://www.stappenmethode.nl/en/material/download",
+      "faq_url": "https://www.stappenmethode.nl/en/faq",
+      "sample_url": "https://www.stappenmethode.nl/lesmateriaal/samples/en_lp_h1.pdf",
+      "access": "전문 무료 도서가 아니라 공식 미리보기와 reminders. FAQ를 읽었고 Step 1 샘플 텍스트도 웹으로 읽음. 샘플 로컬 다운로드는 403으로 실패해 재시도하지 않음.",
+      "finding": "교사에게 단순한 기초를 지나치게 빨리 넘기지 말라고 조언한다. 문제 풀이와 실제 대국에서의 기초 적용을 구별한다. 평범하다는 이유로 초심자 설명을 없애는 근거가 되지 않는다."
+    },
+    {
+      "id": "exeter_planning",
+      "title": "David Regis / Exeter Chess Club, Planning",
+      "url": "https://exeterchessclub.org.uk/content/planning-0",
+      "additional_handout": "https://www.exeterchessclub.org.uk/chessx/pdf/strategy6.pdf",
+      "access": "코치가 공개한 강의 글. 한 쪽 전략 학습지는 웹 텍스트만 확인. 전체 대국의 추천 수를 새 엔진으로 검증하지 않음.",
+      "finding": "나쁜 기물의 개선부터 생각하고, 목적의 수를 제한하며, 확실한 선호가 없을 때는 하나를 택할 수 있다고 설명한다. 상대 응수를 확인하는 단계도 별도로 둔다."
+    }
+  ],
+  "teaching_examples": [
+    {
+      "id": "ordinary_development",
+      "source": "james_openings",
+      "page": 192,
+      "context_san": "1. e4 d6 2. d4 Nf6 3. Nc3 g6",
+      "move": "4. Nf3",
+      "observation": "기본 전개 목적 자체로 설명을 마친다.",
+      "design_inference": "전개가 중앙 참여를 늘리는 현재의 사실을 설명할 때, 미래의 포획이나 양쪽 수순 결과 차이가 반드시 필요한 것은 아니다.",
+      "not_established": "이 책의 설명은 최신 엔진 평가, 유일 최선수 또는 모든 전술 부재의 증명이 아니다."
+    },
+    {
+      "id": "several_sensible_choices",
+      "source": "james_beginner",
+      "page": 119,
+      "context_san": "1. e4 e5 2. Nf3 Nc6",
+      "moves": ["3. Nc3", "3. d4"],
+      "observation": "서로 다른 기본 목적에 같은 교육용 점수를 준다.",
+      "design_inference": "좋은 대안을 반드시 열등하게 만들 필요가 없다. 서로의 목적을 설명하고 충분히 좋은 선택이 여럿임을 허용한다.",
+      "not_established": "교육용 점수의 동점은 엔진 평가의 동점이 아니다."
+    },
+    {
+      "id": "recapture_with_local_reason",
+      "source": "james_beginner",
+      "page": 120,
+      "context_san": "1. e4 e5 2. Nf3 Nc6 3. d4 exd4",
+      "move": "4. Nxd4",
+      "observation": "되잡기의 목적과 그 나이트를 지키는 퀸을 연결한다.",
+      "design_inference": "기본 설명에도 필요한 근거는 포함한다. 설명의 끝은 그 목적을 이해하는 데 필요한 범위로 정하고, 기물의 모든 미래 이력을 요구하지 않는다."
+    },
+    {
+      "id": "contact_not_threat",
+      "source": "csc_attack",
+      "page": 1,
+      "context_san": "1. e4 e5 2. Qh5",
+      "observation": "공격선이 향하는 세 폰의 실제 포획 결과가 서로 다르다.",
+      "design_inference": "공격·지원 관계가 존재한다는 사실만으로 중심 설명이나 위협이라는 표현을 부여하지 않는다. 초심자가 지금 알아야 할 구분과 연결해야 한다."
+    },
+    {
+      "id": "grouped_development",
+      "source": "james_openings",
+      "page": 210,
+      "context_san": "1. d4 Nf6 2. c4 e6 3. Nc3 Bb4",
+      "sequence_san": "4. e3 O-O 5. Bd3 d5 6. Nf3 c5 7. O-O",
+      "observation": "여러 전개 수를 함께 제시한 뒤 선택과 구조를 설명한다.",
+      "design_inference": "대국 맥락에서 이미 설명한 계획을 이어가는 수는 묶거나 짧게 이어갈 수 있다.",
+      "not_established": "개별 주석이 없다는 사실을 자동 해설 생략의 정답으로 사용할 수는 없다."
+    },
+    {
+      "id": "obvious_move_needs_concrete_answer",
+      "source": "james_openings",
+      "pages": [113, 114],
+      "context_san": "1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5",
+      "move": "5...Nxd5",
+      "observation": "겉으로 자연스러운 되잡기 다음의 전술 문제를 설명한다.",
+      "design_inference": "전개·되잡기·조용한 수라는 표면 분류만으로 간단한 좋은 수로 확정하면 안 된다. 알려진 중대한 응수는 기본 설명의 충분성을 깨뜨린다."
+    }
+  ],
+  "code_crosscheck": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "line": 36,
+      "finding": "Development, Castle, Capture와 RookFile 등의 짧은 표현이 이미 존재한다. 짧은 문장 템플릿 추가만으로 충분성 판정이 해결되지는 않는다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "line": 2242,
+      "finding": "이력, 실제 사용, basicAction은 기본 본문 자격을 각각 열어 준다. 설명 가능한 관계가 많아질수록 본문 후보도 늘 수 있다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+      "line": 46,
+      "finding": "새 비교 경로는 양쪽 실제 응수와 초기 포획·회피·공격 접점 등으로 한정된다. 그것은 해당 비교의 정직한 자격 조건이며, 모든 기본 목적 설명에 적용할 보편 조건은 아니다."
+    },
+    {
+      "path": "research/importance-expression-audit-20261005/result.json",
+      "line": 27,
+      "finding": "이전 진단은 관계·가격 보존의 진전과 중요도·조직 미완료를 구별했다. 이번 연구는 기본 목적만으로 충분한 답도 정상적인 성공으로 정의해야 한다는 요구를 더한다."
+    }
+  ],
+  "proposed_revised_goal": {
+    "title": "초심자가 수의 역할을 이해하는 데 필요한 설명의 범위를 정하고, 충분하면 멈추는 선택 기준",
+    "status": "이번에는 연구와 목표 수정 제안까지. 제품 구현은 시작하지 않음.",
+    "answer_needs": [
+      {"kind": "basic_purpose", "question": "지금 무엇이 나아졌거나 유지됐는가?", "complete_when": "이 국면에 맞는 기본 목적과 꼭 필요한 근거를 이해할 수 있고, 그 설명을 오도하게 만드는 알려진 응수·대가가 빠지지 않음"},
+      {"kind": "meaningful_choice", "question": "대안과 무엇이 실질적으로 다른가?", "complete_when": "실제로 중요한 차이가 있을 때 양쪽의 공통점·차이·결과를 제시함. 동등하게 타당한 선택에 허구의 우열을 만들지 않음"},
+      {"kind": "tactical_or_cost_obligation", "question": "왜 가능한가, 어떤 응수와 대가를 감수하는가?", "complete_when": "선택한 주장의 타당성을 결정하는 응수와 대가를 보존함"},
+      {"kind": "already_understood", "question": "이미 설명한 목적의 반복인가?", "complete_when": "읽는 사람과 앞선 설명의 맥락상 새로 필요한 정보가 없다는 별도 판단이 있음. 단순한 무주석 자료만으로 판정하지 않음"},
+      {"kind": "unresolved", "question": "근거 또는 중요도 판단이 아직 부족한가?", "complete_when": "해결되지 않은 상태를 기본 설명 성공이나 생략 성공으로 세지 않음"}
+    ],
+    "first_experiment": [
+      "전개·되잡기·캐슬링·기물 개선·같은 계획의 연속에서 기본 설명이 충분한 예와, 비슷해 보이지만 전술·대가가 중요한 반례를 함께 고른다.",
+      "제품 출력을 보기 전에 초심자가 회수해야 하는 한 가지 요점, 반드시 필요한 근거, 추가하면 오도되는 내용을 적는다.",
+      "같은 수를 단독으로 읽는 경우와 앞선 설명을 읽은 경우를 구별한다. 반복 교육과 대국 서술의 중복 제거를 섞지 않는다.",
+      "현재 기본 출력과 대조하여 누락, 과잉 관계, 허구의 우열, 필요한 예외를 가린 짧은 설명을 각각 기록한다.",
+      "이 관찰 뒤에 기존 구조화된 사실과 선택 경로로 설명 범위를 조절한다. 사례 번호·SAN별 분기나 전역 단어 수 제한부터 추가하지 않는다."
+    ],
+    "acceptance_principles": [
+      "기본 목적만으로 충분한 경우를 정당한 성공으로 인정한다.",
+      "실질적인 비교 질문을 짧은 일반론으로 대체해 기존 실패를 숨기지 않는다.",
+      "필수 응수·가격 보존은 해당 주장이 필요로 하는 범위에서 계속 검증한다.",
+      "관계 개수, 출력 길이, 모든 수에 답이 있음 등을 단독 품질 지표로 삼지 않는다.",
+      "기존 복잡 사례의 회귀와 새 초심자 사례의 전달 품질을 따로 판독한다."
+    ]
+  },
+  "limits": [
+    "초심자용 교재의 교육 방식이 제품의 학습 효과를 실증한 것은 아니다.",
+    "엔진의 좋은 평가만으로 특정 전략 목적, 유일 우위, 전술 부재가 증명되지 않는다.",
+    "짧은 기본 설명은 내부 확인 절차를 생략해도 된다는 뜻이 아니다.",
+    "교재의 일반 원칙은 후보 목적을 제안한다. 국면별 사실과 충돌하는 원칙 문장을 자동으로 붙이면 안 된다.",
+    "전문가에게 당연한 것도 초심자에게는 학습 내용이다. 조용함과 설명 불필요를 같은 것으로 취급하지 않는다.",
+    "현재 사례의 품질 변화, 병목 해소율 또는 일반화 성능은 이번 연구에서 측정하지 않았다."
+  ]
+}

@@ -1,0 +1,676 @@
+{
+  "reviewer": "Supplementary LLM researcher reading; not an independent human reader, and not a product language model.",
+  "method": "Read all 18 exact English basic bodies and the same fixed physical facts after root froze its pre-prose obligations. A primary question is not compulsory: another useful bounded answer can pass. Required price is judged by the actual selected claim/episode and original identities, not by SAN count, literal SAN presence, all PV captures, word count, or event size.",
+  "useful_complete_definition": "The basic text must communicate a useful choice difference or coherent working mechanism with enough answer in both relevant arms; the actual reply and price that change that selected answer must survive. A named continuation alone is not the missing arm answer. Long but semantically complete answers can pass this content test and are separately logged as diffuse; isolated true fragments in an otherwise unanswered comparison do not pass.",
+  "review_read_after_obligations": true,
+  "independent_obligations_sha256": "4e9f40551a76802b5519933a0123cf2b119cc33d7b847d2bb7766b8994e48c62",
+  "backend_freeze_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+  "frontend_post_contract_source_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+  "engine_final_snapshots_sha256": "9774cfab35c8b7c2253eba62d5021f9a50c7bb7b6cbf8c5552271e1945cb85dc",
+  "scope": "Original v6 engine run and original frontend outcome are preserved. The separately fixed frontend shows the identical stored C12 body; its rejected follow-up was not rerun. No product tuning, new engine, position replacement, or first-cohort relabeling in this reading.",
+  "positions": [
+    {
+      "game_id": "wch2016-07",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Both routes move the original c1 rook to c8, exchange it for the original f8 rook, and use the a6 bishop to recapture; Rc4 supplies the check whereas Rc2 does not.",
+      "delivery": "Both arms and both recaptures remain in the basic text. The check response is expressed, not inferred from the plus sign alone.",
+      "repetition": [
+        "The c8 rook attack and a6 bishop attack after Rxc8 are recounted separately in both arms; subsequent still-present claims do not add a different answer."
+      ],
+      "low_value": [
+        "The b4 pawn still being on b4 at g5 and the a6 bishop still being on c8 at g5 obscure the shared rook exchange."
+      ],
+      "request_id": "fresh-wch2016-07-47",
+      "ply": 47,
+      "initial_white_cp": 30,
+      "candidate_id": "comparison:move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:evidence:candidate-comparison:3b7ad6499c1812f68b7a7505695c672b498e8a51ed36b20e98a9ae2dc9264553",
+      "question": "selected_comparison",
+      "facts_sha256": "ff1230c13f12afae8ad6367766538d0e4dda4efe73dd7cadfca0ccbc674be3d7",
+      "basic_unit_count": 1,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2016-08",
+      "kind": "trace_only",
+      "useful_complete": false,
+      "answer": "The original g4 knight can escape the d4 rook immediately with Nf6; N6e5 moves the other original g6 knight and leaves the g4 knight in place until later.",
+      "delivery": "The basic text supplies two recorded six-move sequences and identity traces, but never explains the rook attack, which knight is threatened, or why moving the other knight differs. This is answer delivery/selection failure, not an SAN error.",
+      "repetition": [
+        "The same g4/g6 knight and e1 queen are reintroduced as movement-history records rather than roles in an answer."
+      ],
+      "low_value": [
+        "Rd6 clearing d4 for Qd4 is valid but not an adequate substitute for explaining the attacked original g4 knight."
+      ],
+      "request_id": "fresh-wch2016-08-48",
+      "ply": 48,
+      "initial_white_cp": -11,
+      "candidate_id": "comparison:move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:evidence:candidate-comparison:fcbec2bc9adb8ac2177016f33e12a9c469d76aa1cdc547531f6eaac1309c8a90",
+      "question": "observed_move_order",
+      "facts_sha256": "7969eb85df0caf0bbe5090aae5a606ecad521764a8690d72ff1ca2bae2401ae8",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2016-09",
+      "kind": "incomplete_required_price",
+      "useful_complete": false,
+      "answer": "The Rg1 line includes a queen-for-rook-and-bishop episode, followed by Qxd5 and Nf4+; Bxf4 removes the fork attacker but Rxd5 then takes the same White queen.",
+      "delivery": "The initial Qxd5/Bxd5/Rxd5 trade is present. The later White Qxd5 rook gain and Bxf4 knight gain are narrated, but the same episode ends by losing that White queen. Its loss is absent from the basic answer.",
+      "repetition": [
+        "Ending the g7/h7/d4 attacks and terminal presence are prolonged across unrelated quiet moves."
+      ],
+      "low_value": [
+        "The g7 pawn surviving on g6 and the h7 pawn surviving after Ra7 do not answer the knight/queen exchange price."
+      ],
+      "request_id": "fresh-wch2016-09-47",
+      "ply": 47,
+      "initial_white_cp": 16,
+      "candidate_id": "comparison:move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:candidate-comparison:326c93d7a5ffe56dd2d6a02cf9b8d3eb08b7739efa60acb8ab7ee4e0c93025ee",
+      "question": "selected_comparison",
+      "facts_sha256": "ed636bf8895951154572cc77be10ab0062b46a1aff44af8767e136f332e3e20e",
+      "basic_unit_count": 4,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [
+        {
+          "arm": "reference_line_id",
+          "physical_ply": 18,
+          "san": "Rxd5",
+          "captured_original_path_start_identity": "True:queen:d1",
+          "capturer_original_path_start_identity": "False:rook:b8",
+          "ref": {
+            "line_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114",
+            "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9"
+          },
+          "reason": "The original d1 queen takes the original d8 rook with Qxd5, is forked from h5 by Nf4+, and is captured by Rxd5 after Bxf4. Omitting the queen loss changes the value of the narrated later gains.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2016-10",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Rxf3 takes the original f3 queen directly; in d4 the same queen first takes the f8 rook with check and is then captured by Nxf8.",
+      "delivery": "The price-changing Qxf8+/Nxf8 check response is in the basic text. Both later pawn and knight recaptures also remain. The important queen/rook contrast is complete despite being buried after many target records.",
+      "repetition": [
+        "The f2/g3 targets, changing rook alignment, knight withdrawal and terminal presence produce several independent explanations before the decisive capture."
+      ],
+      "low_value": [
+        "The queen/rook-price question does not need every h5/Nh2, Nf3 blockade, or endpoint pawn-survival fact."
+      ],
+      "request_id": "fresh-wch2016-10-48",
+      "ply": 48,
+      "initial_white_cp": 68,
+      "candidate_id": "comparison:move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:evidence:candidate-comparison:34f1346ab01a3f675832e8e484342d40816dc921c81fc9fc3b2e7249a6751355",
+      "question": "selected_comparison",
+      "facts_sha256": "725ab452a3606200b073dd99d41a4b4c783885d1dd038d7a60d51d49f617035c",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2016-11",
+      "kind": "incomplete_required_price",
+      "useful_complete": false,
+      "answer": "cxd4 removes the original d4 pawn; Re1 allows that pawn to take c3 before White Rxe4 takes the other black central pawn and the rooks trade.",
+      "delivery": "White Rxe4 taking e4, the rook recapture, and Qxa3 taking a3 are spoken. The preceding loss of the original c3 pawn is missing, so the central-pawn gain is narrated without its paired price.",
+      "repetition": [
+        "Queen attacks, escapes and late queen presence take over the pawn/rook comparison."
+      ],
+      "low_value": [
+        "The queen on d4 at the final Kh2 is not needed to close the central exchange."
+      ],
+      "request_id": "fresh-wch2016-11-47",
+      "ply": 47,
+      "initial_white_cp": 0,
+      "candidate_id": "comparison:move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:candidate-comparison:2b014a7aec6b1a5a2faeba7fd985d647551e9f817ebc501b1115d1136dac7732",
+      "question": "selected_comparison",
+      "facts_sha256": "79407f5a3e575adda27536e322563a40f7cdbfb66e86ae2cb7c69574712f30d9",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [
+        {
+          "arm": "candidate_line_id",
+          "physical_ply": 2,
+          "san": "dxc3",
+          "captured_original_path_start_identity": "True:pawn:c3",
+          "capturer_original_path_start_identity": "False:pawn:d4",
+          "ref": {
+            "line_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff",
+            "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8"
+          },
+          "reason": "dxc3 occurs before Rxe4 in the same central episode. It removes a different White pawn from the later Qxa3 loss; the original identities prevent treating those two prices as the same event.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2016-12",
+      "kind": "partial_bounded_fragment",
+      "useful_complete": false,
+      "answer": "Be7 allows Rxe7 to remove the original f8 bishop; Kf7 keeps it and later exchanges rooks equally.",
+      "delivery": "The Be7 bishop loss is a useful bounded fact, but Kf7 is only an anchor. Its contrasting bishop preservation and Rxe1+/Kxe1 exchange are not answered. The later one-sided pawn-gain list further clouds the scope.",
+      "repetition": [
+        "Rook targets on b7/h7 and their endpoint survival take space without completing the Kf7 arm."
+      ],
+      "low_value": [
+        "The f8 clearance is a separate route fact; it should not stand in for the bishop-loss contrast."
+      ],
+      "request_id": "fresh-wch2016-12-48",
+      "ply": 48,
+      "initial_white_cp": -17,
+      "candidate_id": "comparison:move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:evidence:candidate-comparison:fca531c77c75b5d14c0244b5c75657c75df0dd1a84139883fdce0555cd2ec90b",
+      "question": "selected_comparison",
+      "facts_sha256": "7ea611c5cc026d997218b6e9bbabeb6f6fa7956cc4e52fa7cdcab711e8fd5310",
+      "basic_unit_count": 3,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [
+        {
+          "arm": "candidate_line_id",
+          "physical_ply": 9,
+          "san": "dxc4",
+          "captured_original_path_start_identity": "True:pawn:c3",
+          "capturer_original_path_start_identity": "False:pawn:d5",
+          "ref": {
+            "line_id": "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:c9b5aba878188e30591c124092400c76d87509925fe1ecf5e1e9e3f85b507dbc",
+            "occurrence_id": "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:evidence:transition:a1080a1704a61631298ab8a587f9122e567af11efb84979b73153ad1f77198d5"
+          },
+          "reason": "dxc4 is necessary if the later Rxc6/gxf5 list is read as the Be7 whole-line price. It is not compulsory for the narrower immediate Be7/Rxe7 bishop-loss claim.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-07",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Both knight moves support c4, yet both lines lose that pawn; the supporting knight recaptures the attacking knight and is then itself captured.",
+      "delivery": "The support-use sentences explicitly retain the c4 loss, and the typed price reports mutual knight loss. Bxc4 need not be inline when that knight price is actually expressed and its exact source remains in proof.",
+      "scope_confusion": [
+        "The Ne3 one-knight/one-pawn price is a local support episode, but is introduced as being in the line after later pawn trades have already been narrated. The Nd2 two-pawn/knight account uses a wider subset including pawn recovery. These are not unambiguously comparable endpoint prices."
+      ],
+      "repetition": [
+        "Both roots add the same support and both repeat the same capture/recapture behavior; isolated friendly supports of e3 intervene."
+      ],
+      "low_value": [
+        "Two later a/b and e/f pawn trades do not clarify whether the original c4 pawn was saved."
+      ],
+      "request_id": "fresh-candidates2018-07-47",
+      "ply": 47,
+      "initial_white_cp": 69,
+      "candidate_id": "comparison:move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:evidence:candidate-comparison:bb8b76cc3e0bf1c8c3553893d3ecf9c1af54a917e9b47342e33863d8734a458b",
+      "question": "selected_comparison",
+      "facts_sha256": "f58cfb7875e0039d06fc1b38495ed0c683c03d2114de1b3700a6790d812e63df",
+      "basic_unit_count": 1,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-08",
+      "kind": "partial_bounded_fragment",
+      "useful_complete": false,
+      "answer": "Rab8 attacks the b7 queen immediately, with no supplied reply; Nf8 moves the attacked d7 knight and later the Nd7 fork trades a rook for the White knight while the queen captures d4.",
+      "delivery": "There are valid narrow facts for both roots and an honestly bounded Rab8 line, but the basic text does not turn them into a readable paired answer. The actual simultaneous queen/rook fork is replaced by scattered attack withdrawals and a rook/knight trade.",
+      "repetition": [
+        "The Rab8 no-following-reply notice occurs twice, and the Rc8+ no-following-reply notice occurs twice."
+      ],
+      "low_value": [
+        "Terminal survival of the c4 bishop and f7 pawn, and next Ng6 history, dilute the immediate pressure/escape difference."
+      ],
+      "request_id": "fresh-candidates2018-08-48",
+      "ply": 48,
+      "initial_white_cp": 0,
+      "candidate_id": "comparison:move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:evidence:candidate-comparison:d417711f7e148477e033d28572e8377d7af1f061c5afa8884a9dfcd107c4d0c0",
+      "question": "selected_comparison",
+      "facts_sha256": "f5365e1f094716ed150f08a57bfe560382de0d3fea8b84bfac17d36968cf9f77",
+      "basic_unit_count": 5,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [
+        {
+          "arm": "candidate_line_id",
+          "physical_ply": 7,
+          "san": "Qxd4",
+          "captured_original_path_start_identity": "True:pawn:d4",
+          "capturer_original_path_start_identity": "False:queen:f6",
+          "ref": {
+            "line_id": "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:739cb8ae71825e298a72e8fdfcc849bfc01ecd8e4e74b31565e5773b1e150c86",
+            "occurrence_id": "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:evidence:transition:400d6a6b8338d76405ebc79e830aa1c0e5382f13d26e654332d8c076c7160001"
+          },
+          "reason": "Qxd4 is required when explaining the whole Nd7 fork payoff, since the escaping queen takes this pawn. It is not an automatic missing price of an explicitly isolated Nxb8/Rxb8 rook-for-knight transaction.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-09",
+      "kind": "incomplete_required_price",
+      "useful_complete": false,
+      "answer": "Both queen moves escape the c5 pawn; Qc4 meets Be6/Qd3 then Rd8/Qc2. The longer Qd3 line supports b2 with Qa3 but gives up that pawn after Qxa7.",
+      "delivery": "The queen-pressure responses are real and remain. The text also selects Qa3 support of b2 and Qxa7 winning a7, yet never gives the answering Qxb2 loss of the same supported b2 pawn.",
+      "repetition": [
+        "Qd3 support of g3 is stated in both arms, mixed with several unrelated c5 attack-ending and survival records."
+      ],
+      "low_value": [
+        "The later c5 pawn remaining and Qa4+/Bd3 escape histories are not needed to explain the initial queen-pressure contrast."
+      ],
+      "request_id": "fresh-candidates2018-09-31",
+      "ply": 31,
+      "initial_white_cp": -62,
+      "candidate_id": "comparison:move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:candidate-comparison:7e5c9d763a632c4780a75fe3231a06b6071bcaf9d51c66ebc9bf973e06050ca9",
+      "question": "selected_comparison",
+      "facts_sha256": "458e18624ac9efdcae3a3fe9fb5ab1043a6105c83588a8393f8e64581757aa11",
+      "basic_unit_count": 2,
+      "assessment_state": "needs_refresh",
+      "verification_state": "stopped",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [
+        {
+          "arm": "reference_line_id",
+          "physical_ply": 20,
+          "san": "Qxb2",
+          "captured_original_path_start_identity": "True:pawn:b2",
+          "capturer_original_path_start_identity": "False:queen:e7",
+          "ref": {
+            "line_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+            "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e"
+          },
+          "reason": "The text itself introduces the original b2 pawn as a supported threatened target. Qxb2 immediately follows the narrated Qxa7 gain; omitting it changes that selected support/gain episode, without requiring every other PV capture.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-10",
+      "kind": "incomplete_required_price",
+      "useful_complete": false,
+      "answer": "Both choices take the same f4 bishop with different original capturers; the later Qxc5 knight gain in Bxf4 follows Raxb8 taking the White c6 knight.",
+      "delivery": "The initial capture-method comparison is well grounded. The basic text extends to Qxc5 taking a black knight but leaves out the immediately preceding loss of the original White c6 knight. The exf4 bishop-for-knight exchange is not claimed, so its omission is not counted as another price failure.",
+      "repetition": [
+        "The original a6/b5 pawn histories and multiple withdrawals of the White queen repeat beyond the initial capture question."
+      ],
+      "low_value": [
+        "The blocked h6-d2 bishop ray and subsequent Rd2 arrival do not resolve the omitted knight price."
+      ],
+      "request_id": "fresh-candidates2018-10-48",
+      "ply": 48,
+      "initial_white_cp": 88,
+      "candidate_id": "comparison:move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:candidate-comparison:5af58618b5a5be4841f3ebfef4174a519db38a6a004e9024abddd24e6d2cdfc0",
+      "question": "selected_comparison",
+      "facts_sha256": "33e125e38d11e716fed60d9052ced53becd92d5eaa7581c21c78bbc0d7f1115c",
+      "basic_unit_count": 5,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [
+        {
+          "arm": "reference_line_id",
+          "physical_ply": 15,
+          "san": "Raxb8",
+          "captured_original_path_start_identity": "True:knight:c6",
+          "capturer_original_path_start_identity": "False:rook:a8",
+          "ref": {
+            "line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100",
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c"
+          },
+          "reason": "Raxb8 takes the original c6 knight after Nb8, immediately before Qxc5 takes the original d7 knight. Those original identities distinguish the two sides of this selected minor-piece trade; mentioning only Qxc5 presents a one-sided gain.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-11",
+      "kind": "partial_bounded_fragment",
+      "useful_complete": false,
+      "answer": "Qxa4 captures the original a4 rook; after Qb1 the same rook actually escapes with Ra8.",
+      "delivery": "Qxa4 taking the rook is present, but the Qb1 reply preserving that same rook is never delivered. The basic text mainly traces queen attacks on pawns/knights, so a direct capture-versus-escape comparison is left as an isolated gain fact.",
+      "repetition": [
+        "The Nf5 blockade of the Qb1-g6 knight line is repeated verbatim for two occurrences with no new answer."
+      ],
+      "low_value": [
+        "Queen-to-queen screening through c6 and terminal c6/d5/g6 presence are independent of the a4-rook choice."
+      ],
+      "request_id": "fresh-candidates2018-11-47",
+      "ply": 47,
+      "initial_white_cp": -21,
+      "candidate_id": "comparison:move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:evidence:candidate-comparison:df6a41d09fe5cf5166ae7dd46446fb9f490f0e084ef870cf53c9a81a29099177",
+      "question": "selected_comparison",
+      "facts_sha256": "3a19e709c96aad4629669bc683328b193f23bb51ec88fc6eabc744e65a4cbd70",
+      "basic_unit_count": 1,
+      "assessment_state": "needs_refresh",
+      "verification_state": "stopped",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "candidates2018-12",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Black b4 blocks the original White b2 pawn double advance but opens the a5 rook route to Rxd5; Rb8 keeps the b5 blocker and permits that same b2 pawn to play b4.",
+      "delivery": "After the separate public-contract fix, both actual choices and the legal two-square reply are spoken. Rxd5, Be6/Rb5, and the later knight/bishop/recapturing-pawn prices remain. The original run still failed its issued decoder, and its original final selection was hidden.",
+      "runtime": "Original v6: basic selection hidden and work:2 decoder failure. Post-contract-fix: the identical stored body and proof decode/render; the failed follow-up was not re-executed and is still failed.",
+      "scope_confusion": [
+        "Two different b4 occurrences are Black b5-b4 and White b2-b4. Their exact source links are correct, but unlabelled After b4 phrasing can blur the arm/actor distinction."
+      ],
+      "repetition": [
+        "b4 clearing b5 for the actual capture and for the later rook arrival is expanded into several independent histories."
+      ],
+      "low_value": [
+        "The late Rbc8 knight target and bishop endpoint presence are not needed for the initial blocked advance/opened rook-route answer."
+      ],
+      "request_id": "fresh-candidates2018-12-48",
+      "ply": 48,
+      "initial_white_cp": 13,
+      "candidate_id": "comparison:move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:evidence:candidate-comparison:132400e283aa1ec081a28104f656d293d7778f9814392bada338eb5f0a470897",
+      "question": "selected_comparison",
+      "facts_sha256": "41c32c8bb503d7175c0c91f71b0d7631cc5cec08cb44f08311fcc19fde46d2e9",
+      "basic_unit_count": 1,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-07",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Rxe8 trades a rook immediately and later trades the other pair; Be3 instead attacks the original b6 queen and Qb8 is its actual escape.",
+      "delivery": "The bounded initial comparison has actual replies and full rook/queen recaptures. The later Ne4/Bxe4/Rxe4 bishop/knight trade is absent, but the basic text does not claim that knight gain, so it is not counted as a mandatory omitted price.",
+      "repetition": [
+        "Several friendly supports of Be3 are separately reintroduced, while long Nxe8/Nd6/Nf5 attacks repeatedly trace the same original knight."
+      ],
+      "low_value": [
+        "g3/a7 endpoint presence and later queen attacks on the knight do not sharpen the immediate exchange versus queen displacement."
+      ],
+      "request_id": "fresh-wch2024-07-39",
+      "ply": 39,
+      "initial_white_cp": 55,
+      "candidate_id": "comparison:move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:evidence:candidate-comparison:e0ef6153ccbb659bd346de24b3112c9a178753dc6ea244b6bf18a36c097c618d",
+      "question": "selected_comparison",
+      "facts_sha256": "97b07b5605415acf1a3ba56b92aa9afea136010af008993342c0fd4839055cbf",
+      "basic_unit_count": 1,
+      "assessment_state": "needs_refresh",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-08",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "cxb5 captures the same b5 pawn with the c6 pawn; Qxb5 uses the queen, loses it to Rxb5, and recaptures that rook with the c6 pawn.",
+      "delivery": "The initial method comparison and queen-for-rook/pawn price are complete. The later two-knight/rook fork episode is not claimed by this basic answer, so its absent transactions are not mandatory for this bounded initial comparison.",
+      "repetition": [
+        "Support of the queen by c6 is introduced both in the comparison lead and again before the transaction; rook/pawn histories recur between them."
+      ],
+      "low_value": [
+        "The later Ne5/Qxa4 queen escape and d3/a5 survival records distract from the initial price."
+      ],
+      "request_id": "fresh-wch2024-08-48",
+      "ply": 48,
+      "initial_white_cp": -78,
+      "candidate_id": "comparison:move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:evidence:candidate-comparison:93d4a739c2145763f63050c51c2b9e62d06298b082382b01753fb0f7113ec433",
+      "question": "selected_comparison",
+      "facts_sha256": "405b1cb39e28fb52fa5dcd2a0d37487a203b24133e6683a80d322f86288a1407",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-09",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Qb5 supports c5 and b6, but Bxc5/Qxc5 still costs the c5 pawn, and Qxb6 removes the original b6 knight; Kg2 uses a rook to recapture but has the same material price.",
+      "delivery": "Both exact prices say White gives up one pawn and one knight for one bishop. That conveys the b6 loss even though Qxb6 is not inline; its exact source remains in proof. The body does not falsely claim support guarantees knight survival.",
+      "repetition": [
+        "The same three rook/queen attacks on b6, post-recapture knight presence, and f2 survival are repeated for each arm."
+      ],
+      "low_value": [
+        "The rook a6 still being present after Ne8 is not needed to answer whether the supported b6 knight survives."
+      ],
+      "request_id": "fresh-wch2024-09-47",
+      "ply": 47,
+      "initial_white_cp": 13,
+      "candidate_id": "comparison:move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:candidate-comparison:4c545a24392ec2072e34909b24316383c88006a64796348643c9c07b3053eac6",
+      "question": "selected_comparison",
+      "facts_sha256": "1699ea7873591e18c3d7b29e34565b497d941b2aba1eaf074ad5f3389d1b6070",
+      "basic_unit_count": 2,
+      "assessment_state": "needs_refresh",
+      "verification_state": "stopped",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-10",
+      "kind": "complete_but_diffuse",
+      "useful_complete": true,
+      "answer": "Nxc8 removes the original White c8 rook directly; Bc6 first allows that rook to take the original e8 bishop, then Nxc6 recaptures it.",
+      "delivery": "The typed price that White gives a rook for a bishop and the Nxc8 capture preserve the important contrast. Role counts are sufficient here because they express the selected exchange and proof retains the exact original pieces.",
+      "repetition": [
+        "Several knight/pawn support, withdrawal and terminal-presence facts are interleaved before the rook/bishop account."
+      ],
+      "low_value": [
+        "The f5/e6 pawn attack histories, quiet Ke7 access, and later king/pawn moves are independent of the c8-rook price."
+      ],
+      "request_id": "fresh-wch2024-10-48",
+      "ply": 48,
+      "initial_white_cp": 18,
+      "candidate_id": "comparison:move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:evidence:candidate-comparison:a024147aef2fd2422537464f1456010b110a157f007b70c4e5109d95605dcdb3",
+      "question": "selected_comparison",
+      "facts_sha256": "475e57789235c3fed2e7b7f78f3b6e6125c6aeb1c0540e633ebba715a30afa98",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": true,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-11",
+      "kind": "partial_bounded_fragment",
+      "useful_complete": false,
+      "answer": "Both lines eventually use Rb5/Rdb1, exchange bishop for knight on c6, open b7, and exchange all four rooks on b8.",
+      "delivery": "The Rb5 file-opening mechanism and all its recaptures are complete. The h4 arm is only a recorded anchor, so the basic comparison never explains that the same mechanism occurs there too. This is missing contrast delivery, not an omitted rook price.",
+      "repetition": [
+        "The a5/h5/b7 targets, corresponding withdrawals and endpoint pawn presence repeat around the already closed b-file exchange."
+      ],
+      "low_value": [
+        "The queen e2/h5 attack after a rook capture does not complete the h4 answer."
+      ],
+      "request_id": "fresh-wch2024-11-47",
+      "ply": 47,
+      "initial_white_cp": 41,
+      "candidate_id": "comparison:move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:evidence:candidate-comparison:3e1944141977402082cf7913f10a9b6d1657f49fe6353b7d26a1ca327e35dc44",
+      "question": "selected_comparison",
+      "facts_sha256": "3a4015e76aada992c525ad17e7048635e72f2b2e5ef840c52784bc7c915567af",
+      "basic_unit_count": 2,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    },
+    {
+      "game_id": "wch2024-12",
+      "kind": "incomplete_required_price",
+      "useful_complete": false,
+      "answer": "In Bf6, the d5 knight takes e3 and g2 but vacates the queen file: Rxd7 loses the Black queen, Kxg2 removes that knight, and Bxd7 recovers the White rook.",
+      "delivery": "The gains of the d-pawn and both White bishops, followed by Kxg2 taking the knight, are narrated. The exposed Black queen loss and Black bishop recovery of the White rook are both absent. This reverses the economics of the selected capture episode.",
+      "repetition": [
+        "The same d5 and e3 knight escapes are enumerated separately for rook, pawn, and knight attackers."
+      ],
+      "low_value": [
+        "The e7 clearance and independent e4 friendly supports should not obscure the exposed queen-file consequence."
+      ],
+      "request_id": "fresh-wch2024-12-40",
+      "ply": 40,
+      "initial_white_cp": 84,
+      "candidate_id": "comparison:move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:candidate-comparison:7903e970648af7730b44ce6e79d00553ea12d3e3acb8b33912bcde03dbb7f403",
+      "question": "selected_comparison",
+      "facts_sha256": "69144c8089671d45719fe9434ce75fb0f549d06aa68317b183e92a11fb92ac1a",
+      "basic_unit_count": 1,
+      "assessment_state": "current",
+      "verification_state": "complete",
+      "unsupported_chess_claims": [],
+      "high_confidence_important_omissions": [
+        {
+          "arm": "candidate_line_id",
+          "physical_ply": 14,
+          "san": "Rxd7",
+          "captured_original_path_start_identity": "False:queen:d8",
+          "capturer_original_path_start_identity": "True:rook:d1",
+          "ref": {
+            "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93"
+          },
+          "reason": "Nxe3 vacates d5 and the d-file; the very next actual reply Rxd7 removes the original d8 queen. It is a price of the selected knight use, not an unrelated later capture.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        },
+        {
+          "arm": "candidate_line_id",
+          "physical_ply": 17,
+          "san": "Bxd7",
+          "captured_original_path_start_identity": "True:rook:d1",
+          "capturer_original_path_start_identity": "False:bishop:g6",
+          "ref": {
+            "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+            "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d"
+          },
+          "reason": "Bxd7 captures the original White d1 rook that just took the queen. The same episode price must retain this recovery as well as the queen loss and Kxg2; it cannot report only knight/bishop gains.",
+          "inline_in_basic": false,
+          "in_basic_proof": false,
+          "in_basic_covered": false,
+          "in_detail_proof": true
+        }
+      ],
+      "scope_sensitive_omissions": [],
+      "useful_complete_in_original_public_decoder": false,
+      "primary_question_required": false
+    }
+  ],
+  "totals": {
+    "positions_read": 18,
+    "content_classes": {
+      "complete_but_diffuse": 8,
+      "trace_only": 1,
+      "incomplete_required_price": 5,
+      "partial_bounded_fragment": 4
+    },
+    "useful_complete_post_contract_fix": 8,
+    "useful_complete_original_public_decoder": 7,
+    "high_confidence_omission_positions": 5,
+    "high_confidence_missing_physical_items": 6,
+    "scope_sensitive_omission_positions": 2,
+    "price_or_arm_scope_confusion_positions": 2,
+    "unsupported_chess_claim_positions": 0,
+    "original_public_delivery_failure_positions": 1,
+    "minimum_useful_complete_required": 14,
+    "maximum_high_confidence_important_omissions_required": 0,
+    "quality_gate_satisfied": false,
+    "independent_human_readers": 0
+  },
+  "findings": [
+    "Role-count prices can convey a lost supporting knight or attacked knight without displaying every capture SAN: C07 and W24-09 are valid examples, because the actual price is expressed and exact proof refs remain.",
+    "Own gain/use can be delivered while an economically reversing same-episode event is still absent: Rg1 loses the White queen, Re1 loses c3, Qxa7 is answered by Qxb2, Qxc5 follows Raxb8, and Nxe3/Nxg2 expose the Black queen and recover a White rook.",
+    "C12 public delivery failed on a preexisting single-square reconstruction of an actual certified two-square pawn advance. Only decoder delivery was fixed; the original run failure is retained.",
+    "Several partial answers are useful as fragments but do not answer the other arm beyond a recorded move name; actual contrast/identity/continuation matters more than a SAN token being present.",
+    "Many complete answers remain diffuse because support, history, withdrawals, endpoint presence, and unrelated later targets are all promoted into the same basic unit. This content selection problem is independent of proof/receipt separation.",
+    "No forced-win/draw or unsupported attack-removal claim was found in the read core; root assessment needs_refresh/stopped verification remains a separate execution limitation."
+  ],
+  "limits": [
+    "These are researcher reading judgments, not independent human-reader results. Readability and utility remain partly subjective.",
+    "Scope-sensitive prices are not added to the high-confidence omission count. A strictly bounded initial transaction can legitimately omit a later independent capture.",
+    "The complete-but-diffuse category is not a demonstration of short natural default prose, and the content gate remains 14/18 with zero important omissions.",
+    "The 18 selected facts were pre-choice balanced by admitted unrestricted D16; partial or bounded whole search outcomes were rejected, and all original follow-up failures remain in execution diagnostics."
+  ]
+}

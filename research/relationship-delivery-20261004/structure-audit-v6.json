@@ -1,0 +1,768 @@
+{
+  "schema_version": 1,
+  "audit_id": "relationship-delivery-v6-structure",
+  "audited_utc": "2026-10-04T04:34:23.802921+00:00",
+  "source_root": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "source_commit": "5b6bc8c4d6069360e93c7efd91309ed35d670f08",
+  "previous_frozen_audit": {
+    "path": "research/relationship-delivery-20261004/structure-audit-v5.json",
+    "sha256": "a1d2c68e3f3b8c3bb2791f571c188adbdebca8d47fa3985bf8fbdee65cd18008",
+    "includes_first18_c3_scope_diagnosis": true
+  },
+  "verdict": {
+    "summary": "이번 목표는 기존에 선택한 typed Answer의 관계 가격·승격 문맥·표현 소유와 proof 전달을 보완했다. v6 provider 입구의 고정 후속 거리 제한은 실제 original identity·현재 역할·연속 공격/지원·CaptureLink로 바뀌었다. 전체 중요도 판단, 모든 가격 episode의 소유와 영어의 독자 이해까지 완성됐다는 판정은 아니다.",
+    "new_SAN_or_specific_square_exceptions": false,
+    "v6_provider_entry_uses_elapsed_distance_limit": false,
+    "derived_prices_start_new_seeds": false,
+    "new_generic_graph_or_importance_framework": false,
+    "all_inherited_adjacency_rules_removed": false,
+    "all_semantic_choice_removed_from_renderer": false,
+    "fresh_final18_quality_judged_by_this_audit": false
+  },
+  "change_scope": {
+    "baseline_manifest": "research/relationship-delivery-20261004/manifest.json",
+    "baseline_working_diff": "target/relationship-delivery-20261004/baseline-working.diff",
+    "method": "source_commit의 세 tracked runtime 파일에 초기 baseline-working.diff를 메모리에서 적용해 시작 working copy를 복원했다. 세 복원본의 LF SHA가 초기 baseline_main_sources와 모두 일치했다. 현재 71 main 및 69 test source의 SHA를 초기 manifest와 비교했다. 따라서 현재 git diff 전체를 이번 목표 성과로 계산하지 않는다.",
+    "initial_tracked_working_copy_reconstruction_sha_verified": true,
+    "runtime_main_total": 71,
+    "runtime_main_changed_since_goal_start": [
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+        "initial_sha256": "672ae21d82468ac09e7d9416e7d709bf09f9bbff6a7b671579dda69209c46dc7",
+        "v6_sha256": "4f63ebfa8143867149784268d71c0860ca4e446ecd789dadc7404672e257bcf0"
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+        "initial_sha256": "34ad5f8194cc2b25345a5632a08d679c354ed25b9c2d6880879d7afffd99b75a",
+        "v6_sha256": "d84ad623cd0a16229e04a5d283b5d492333bc9c8b205534e58f08434d0c0547b"
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+        "initial_sha256": "89b761b9f6000316ccdae9d85c86dff9c7b50a513120149a35c16059a8ea2efb",
+        "v6_sha256": "aa8a2a46f6e008d7a8177976e5fffc0dc089219ff6bbf53ce4bbd783b6b8b268"
+      }
+    ],
+    "runtime_test_total": 69,
+    "runtime_tests_changed_since_goal_start": [
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryAnswerTest.scala",
+        "initial_sha256": "9df2d7b8d90c15def01e80b2df764e041cdadee9b584248834676a34b59b9eb4",
+        "v6_sha256": "f0d450e4fbd0c640f84ec157dda3dff5c072ad2b249d144757a05ea416c44883"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+        "initial_sha256": "0426f88de1af2ea25c6fcc9679c746181151a1c5b3a348de8d0d7281cafb4654",
+        "v6_sha256": "096d423a7f512a50bc9d4bcb3aa0d934e9a9381ddee6ff7aaf7306f51cf1ddc4"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/PracticalDecisionTest.scala",
+        "initial_sha256": "6cb70e4f8db6f1cdc8e9c35fa41db6c43bd4cb1d062d0d48b3f15c077f049ed1",
+        "v6_sha256": "bea7ca55b1a26291deb97de9d219b18b1093d4db2e8629af13f6afab286a011c"
+      },
+      {
+        "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/ReferenceMeaningDeliveryTest.scala",
+        "initial_sha256": "023ed2e258169e3ee8af6c973ac49ad5fb52780f8e8a985a5b7eafb1a458fff3",
+        "v6_sha256": "0c9c37228e4f8e259cf6b9eb1339e65a2a610bd6649c5e6bd3da51b73551f755"
+      }
+    ],
+    "inherited_WIP_main_unchanged_since_goal_start": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala"
+    ],
+    "goal_runtime_changes": [
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+        "sources": [
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "start": 3049,
+            "end": 3067
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "start": 3091,
+            "end": 3096
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+            "start": 3103,
+            "end": 3297
+          }
+        ],
+        "meaning": "같은 original victim의 선택된 승격 문맥, 보완 뒤 공통 pair completion 재진입, 기존 선택 내용에 종속된 공격/지원 가격·실제 회복·source interval 보존. v6의 provider 관계 gate와 exact recorded ending 방어도 이 helper 안에 한정한다."
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+        "sources": [
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start": 19,
+            "end": 31
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start": 60,
+            "end": 107
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start": 209,
+            "end": 234
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start": 346,
+            "end": 365
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+            "start": 410,
+            "end": 449
+          }
+        ],
+        "meaning": "typed 표현 소유와 proof_moves 전달, 가격/source 재검증, role-change 중복 의무 구별, 전체 core required 확인과 컨테이너 분할의 참조 보존."
+      },
+      {
+        "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+        "sources": [
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+            "start": 16,
+            "end": 16
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+            "start": 130,
+            "end": 134
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+            "start": 181,
+            "end": 193
+          },
+          {
+            "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+            "start": 405,
+            "end": 494
+          }
+        ],
+        "meaning": "문장과 실제 표현한 typed Statement 기록을 함께 반환. original/current 역할 표현을 구별하고 Material 문장에는 역할별 가격만 표시하며 전체 증명 참조는 typed 소유에 둔다. 기존 actor 결합을 새로운 질문 중요도 정책으로 세지 않는다."
+      }
+    ],
+    "supporting_wire_changes": [
+      {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+        "sources": [
+          {
+            "file": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+            "start": 50,
+            "end": 50
+          },
+          {
+            "file": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+            "start": 1371,
+            "end": 1463
+          }
+        ],
+        "meaning": "이번 목표의 proof_moves optional field와 같은 실제 수순의 가격·응수 전달 검사. 새 UI 디자인이나 중요도 재선정 변경은 아니다. 초기 diff에 이 tracked 파일 변경이 없음을 확인했고 source_commit 대비 해당 hunk만 구분했다."
+      },
+      {
+        "file": "judgment-evaluation/schemas/public-v6/move-observations.schema.json",
+        "sources": [
+          {
+            "file": "judgment-evaluation/schemas/public-v6/move-observations.schema.json",
+            "start": 2247,
+            "end": 2280
+          },
+          {
+            "file": "judgment-evaluation/schemas/public-v6/move-observations.schema.json",
+            "start": 2350,
+            "end": 2384
+          }
+        ],
+        "meaning": "공개 답변 producer/참조 필드 계약을 보완. 초기 tracked diff에 이 schema 변경이 없음을 확인했다."
+      }
+    ],
+    "not_new_in_this_goal": [
+      "MP answerChoice/commonReading → completeSelectedConditions → RootQuestionSummary.realize의 공통 전달 경로. 초기 working copy의 2983–2994에 이미 존재하며 첫 실제 변경 hunk는 3049부터다.",
+      "질문/조사 우선순위와 questionFocus",
+      "physicalAnswerBundles 및 selected_comparison fallback",
+      "typed Answer/Section/Statement와 selected-use condition 구성",
+      "Arm.account와 기물 추적·실제 CaptureLink",
+      "ordinary material account의 승격 거부",
+      "renderer의 기존 actor/route/support-use 결합"
+    ],
+    "compiled_source_metadata": {
+      "main": {
+        "manifest": "target/relationship-delivery-20261004/main-manifest-v6.json",
+        "manifest_sha256": "ea0f6e07193e65b7095e42c9c5b95107bbecc04a0d76f4c2aca63ed7fe26f4a7",
+        "recorded_exit_code": 0,
+        "source_count": 71,
+        "current_source_sha_mismatches": []
+      },
+      "test": {
+        "manifest": "target/relationship-delivery-20261004/test-manifest-v6.json",
+        "manifest_sha256": "fb7f77275705f874a05255855b6a319d908189b26102740a297d721af6f23c1e",
+        "recorded_exit_code": 0,
+        "source_count": 10,
+        "current_source_sha_mismatches": []
+      }
+    },
+    "existing_common_delivery_path": {
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2983,
+          "end": 2994
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3037,
+          "end": 3048
+        }
+      ],
+      "origin": "시작 WIP에 이미 존재. source_commit만 보고 신규로 오인하지 않고 baseline-working.diff로 복원한 시작 소스와 대조했다.",
+      "existing_behavior": "answerChoice의 confirmedFacts/Answer를 기존 공통 completeSelectedConditions와 realize에 전달하는 경로와 realization failure가 다른 질문을 선택하지 않는 경계는 기존 처리다.",
+      "goal_reinforcement": "기존 completion 내부에 same-victim promotion context와 선택된 관계의 completeSelectedPrices를 삽입했다. 원 answer.core와 비교해 pair completion을 보존하고, 기존 realize의 typed 표현 receipt/source 재검증 및 proof_moves wire 전달을 강화했다. 공통 경로 전체를 이번에 새로 통합했다고 보고하지 않는다."
+    }
+  },
+  "responsibility_boundaries": [
+    {
+      "responsibility": "질문 선정·조사 질문과 기본 질문의 선택",
+      "owner": "기존 질문 context/question_refs 검증, investigated/legacy/threat/contact/physical answerChoice, RootQuestionSummary.choose",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 1556,
+          "end": 1581
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2884,
+          "end": 2978
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2983,
+          "end": 2994
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 725,
+          "end": 765
+        }
+      ],
+      "boundary": "질문과 typed confirmedFacts를 먼저 고르며 문장 실현 실패로 다른 질문을 새로 선정하지 않는다. 이번 변경은 이 정책을 신규로 만들거나 중요도 점수를 추가하지 않았다.",
+      "remaining_coupling": "선택 순서는 기존 orElse 우선순위와 unique-candidate 경계에 남고, investigated 후보가 만들어지지 않으면 기존 physical lead를 담는 fallback이 존재한다. 일반 중요도 최적화가 완성됐다고 말할 수 없다."
+    },
+    {
+      "responsibility": "체스 근거 성립·original/current 정체성과 실제 응수",
+      "owner": "기존 certified PreparedPaths, LineContinuationInvestigation.Reading, Arm.control/covers/recovery",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+          "start": 131,
+          "end": 150
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start": 728,
+          "end": 774
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+          "start": 934,
+          "end": 962
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 478,
+          "end": 518
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 542,
+          "end": 543
+        }
+      ],
+      "boundary": "원 기물과 현재 역할/위치를 source-owned path에서 추적한다. SupportUse는 실제 대상 포획과 그 capturer 제거를 소유한 실제 되잡기이다. control false와 unknown, pin-free covers와 기하학적 지원은 구분한다.",
+      "remaining_coupling": "같은 수순 등장·같은 역할·기하학적 공격만으로 인과나 forced 응수를 만들 수 없다. covers는 공격 검증이고 실제 선택의 필요성이나 평가 차이 원인을 단독으로 증명하지 않는다. 이 근거 계산은 이번에 별도로 재구축하지 않았다."
+    },
+    {
+      "responsibility": "선택 설명에 필요한 가격 구간",
+      "owner": "기존 Arm.account + completeSelectedPrices + CommentaryMaterialAccount.calculate",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 569,
+          "end": 710
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3109,
+          "end": 3226
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3227,
+          "end": 3260
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+          "start": 21,
+          "end": 43
+        }
+      ],
+      "boundary": "원래 선택된 관계만 seed를 만든다. 선택된 손실과 실제 회복을 source 사건으로 닫고 그 material min..max 사이의 모든 물질 변화를 보존한다. 같은 실제 사건이 겹치는 계정만 합류하며 quiet 끝 위치는 가격 interval anchor가 아니다. ordinary Cost는 승격이나 비포획 사건을 계속 거부한다.",
+      "remaining_coupling": "계정의 subject/episode 의미는 Arm.account의 기존 capturer span·check 응수·인접 보상 판정과 helper의 selected identity에서 함께 결정된다. Material Cost 자체는 역할별 개수/events/offsets이며 선택 질문의 명시적 episode 명칭을 담지 않는다. 같은 ledger 계산의 재사용과 모든 episode 의미의 단일 정책화는 다른 문제다."
+    },
+    {
+      "responsibility": "기본 본문 내용과 상세 범위",
+      "owner": "기존 Answer.core/details, selectedConditionSections, completePairAnswer",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "start": 189,
+          "end": 195
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2767,
+          "end": 2813
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2878,
+          "end": 2884
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2973,
+          "end": 2994
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3037,
+          "end": 3096
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3321,
+          "end": 3352
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 152,
+          "end": 242
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 741,
+          "end": 755
+        }
+      ],
+      "boundary": "정확히 선택한 root 조건/actual use/가격을 core에 보완하며 required/focus 메타데이터를 유지한다. 실제 가격이 변경되면 원래 answer.core와 비교해 공통 pair completion에 다시 들어간다. 펼쳐 읽는 기록도 같은 Answer와 source 계정에서 만든다.",
+      "remaining_coupling": "completePairAnswer의 상세에는 pair의 전체 기록 계정이 포함될 수 있고, 좁은 core episode와 상세의 전체 line price는 의미 범위가 다르다. fallback은 이미 고른 여러 physical section을 한 lead로 만드는 기존 경로이다. 독립 설명 중 무엇만 기본에 남길지 일반 판단은 해결되지 않았다."
+    },
+    {
+      "responsibility": "영어 문장 표현과 표현 기록",
+      "owner": "CommentaryEnglish.statement/material/renderedSection",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 16,
+          "end": 16
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 130,
+          "end": 134
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 181,
+          "end": 193
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 219,
+          "end": 239
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 405,
+          "end": 494
+        }
+      ],
+      "boundary": "체스 내용을 새로 조사하거나 새 질문을 고르지 않고 typed Statement를 문장화한다. 생성 문자열의 SAN 등장 여부에서 설명 coverage를 추측하는 새 처리는 없다. 실제 소비한 typed statement를 receipt로 반환한다.",
+      "remaining_coupling": "renderer 안에는 same actor 관계 결합, support-use 소개 결합, checking capture 결합, 참조가 포함된 route 생략, presence 통합이 남는다. receipt는 구조적 표현 소유를 검사하지만 자연어 의미나 문법성을 독립적으로 증명하지 않는다. Material의 anonymous 역할 가격은 source 범위를 독자가 명확히 읽는지 별도 판독이 필요하다."
+    },
+    {
+      "responsibility": "가격 성립·필수 응수·SAN 참조의 최종 전달 검사",
+      "owner": "RootQuestionSummary.realize/fromUnits 및 기존 frontend parser",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 19,
+          "end": 31
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 60,
+          "end": 107
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 346,
+          "end": 365
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 410,
+          "end": 449
+        },
+        {
+          "file": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+          "start": 1371,
+          "end": 1463
+        }
+      ],
+      "boundary": "Material을 원 source로 재계산하고 PieceExchange/MaterialEvents의 source membership을 확인한다. 전체 core required를 container 분할 전에 검사하며 proof reference와 inline subset을 구분한다. covered 가격, 체크 응수, 즉시 실제 되잡기와 exact RecordedEnd를 source path에서 검증한다.",
+      "remaining_coupling": "소비자가 동일 wire 의무를 재검증하는 것은 신뢰 경계의 방어다. producer와 parser에서 체크/되잡기 조건을 각각 계산하는 잔존 중복이 있고 expression receipt가 자연어의 의미 적합성을 자동 검증하지는 않는다. unit/part 상한에 맞춘 분할은 전달 책임이며 중요도 판정의 대용이 아니다."
+    }
+  ],
+  "v6_common_relation_guards": [
+    {
+      "id": "root_provider_price",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3151,
+          "end": 3165
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3166,
+          "end": 3186
+        }
+      ],
+      "predicate": "원래 선택된 root Support의 exact path에서 provider/target를 original로 복원한다. root 직후 count 1부터 loss 직전 count까지 같은 현재 역할·provider→same original target 지원·actual capturer→provider covers가 모두 계속 참이어야 한다. loss의 originalVictim과 capturer도 실제 source 사건에서 확인한다.",
+      "false_unknown_rejected": true,
+      "elapsed_limit": null,
+      "role_change_rejected_within_owned_episode": true
+    },
+    {
+      "id": "post_use_provider_price",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3145,
+          "end": 3150
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3173,
+          "end": 3186
+        }
+      ],
+      "predicate": "이미 선택된 actual SupportUse의 original target/provider와 source capture events를 확인하고 실제 support 구간을 검증한다. 그 use.recapture의 실제 CaptureLink가 provider loss를 가리키며, use 뒤 상태부터 loss까지 같은 capturer의 현재 역할·covers가 계속 유지될 때만 그 가격을 포함한다.",
+      "plus_one_meaning": "recapture + 1은 실제 사용 뒤 board 상태의 anchor다. loss <= recapture + 1 같은 후속 거리 gate는 제거됐다.",
+      "new_seed_from_price": false
+    },
+    {
+      "id": "cross_arm_original_supported_target",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3109,
+          "end": 3120
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3188,
+          "end": 3197
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3297,
+          "end": 3297
+        }
+      ],
+      "predicate": "owner arm에서 선택한 same original provider/target/initial opposition을 두 arm에 재사용한다. 같은 initial attacker의 실제 target 포획과 초기 공격 연속성을 요구하며, 각 arm의 root 직후 지원 참/거짓 상태도 capture 전까지 유지한다. None은 확인된 부재로 취급하지 않는다.",
+      "scope": "v5 관계 경계 유지; provider 전체 생애를 양쪽에서 새로 추적하는 정책이 아님."
+    },
+    {
+      "id": "actual_recovery_and_interval",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3197,
+          "end": 3214
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3233,
+          "end": 3260
+        }
+      ],
+      "predicate": "원래 selected seed에 대한 account/verified use에서만 actual captor 제거와 recovering actor의 연속 covers를 보완한다. derived recovery를 새 seed로 재귀 조사하지 않는다. 실제 사건이 겹쳐 합류한 계정만 닫고 unrelated sparse MaterialEvents 자체로 interval을 넓히지 않는다.",
+      "caveat": "이 새 helper의 seed/회복 경계와 기존 Arm.account가 내부에서 확장하는 범위는 구분한다."
+    },
+    {
+      "id": "bounded_recorded_account",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3215,
+          "end": 3226
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 705,
+          "end": 710
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 71,
+          "end": 88
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+          "start": 21,
+          "end": 43
+        }
+      ],
+      "predicate": "Account.complete는 그대로 false일 수 있다. reading.complete·same exact path·sourceMoves/declaration 일치를 확인하고, account의 미응답 체크가 모두 actual source final 하나이며 원래 선택한 core RecordedEnd가 그 exact ref를 소유할 때만 bounded observed account로 전달한다. Cost 및 실제 source 검증은 이후에도 그대로 실행한다.",
+      "rejects": [
+        "임의 missing reply",
+        "수순 내부 종료",
+        "다른 path 종료",
+        "detail-only 종료",
+        "실제 응수를 지어냄",
+        "complete=true 변조"
+      ],
+      "scope_claim": "기록된 유한 수순의 가격이며 체크 해결·forced 결과·실제 terminal 판정이 아님."
+    }
+  ],
+  "remaining_constraints": [
+    {
+      "id": "question_importance_and_fallback",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2799,
+          "end": 2813
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2878,
+          "end": 2884
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2973,
+          "end": 2994
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 761,
+          "end": 765
+        }
+      ],
+      "limitation": "독립적으로 완결된 설명 둘 중 어느 것을 기본 핵심으로 고를지 일반 정책은 기존 상태다. source/price coverage가 통과해도 기본이 파편화되거나 주변 내용을 앞세울 수 있다."
+    },
+    {
+      "id": "inherited_account_scope",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 580,
+          "end": 599
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 602,
+          "end": 635
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 647,
+          "end": 708
+        }
+      ],
+      "limitation": "기존 capturer span, check-response 확장, fixed adjacency 보상, 역할별 물질 방향의 group closure는 남는다. 새 provider 거리 gate 제거를 코드 전체의 고정 간격 제거 또는 모든 생애 확장 해소로 확대하지 않는다. cxd5의 [0,1,2,4,7]은 현재 실제 체크 응수 계정에 연결되어 있어 사건7을 임의 독립 사건으로 삭제하지 않았다."
+    },
+    {
+      "id": "later_selected_response_episode_and_price_scope",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3132,
+          "end": 3143
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 580,
+          "end": 585
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 615,
+          "end": 635
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3235,
+          "end": 3252
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 181,
+          "end": 193
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 232,
+          "end": 238
+        }
+      ],
+      "limitation": "v5 첫18의 Rfe1/Qxc3→Rac1→Qxb4에서는 두 pawn capture가 실제 core proof/coverage에 있었지만 c3-loss의 anonymous one-pawn Material과 b4 MaterialEvents 문장이 서로 다른 범위로 읽혔다. 후속 selected 공격/회피를 같은 original capturer의 bounded response episode로 귀속하는 책임이 아직 부족하다. 동일 capturer 또는 동일 부호라는 이유만으로 이후 모든 포획을 합쳐서는 안 된다. 이번 v6 provider 변경으로 해결됐다고 주장하지 않는다.",
+      "evidence": "structure-audit-v5.json.followup_investigations[0]에 이미 고정한 진단만 재사용; final18 출력은 읽지 않음."
+    },
+    {
+      "id": "promotion_selection_scope",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3049,
+          "end": 3067
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3256,
+          "end": 3258
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 244,
+          "end": 249
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 767,
+          "end": 785
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+          "start": 21,
+          "end": 35
+        }
+      ],
+      "limitation": "선택된 MaterialEvents victim의 same original pawn 승격 문맥은 전달하지만, 이미 존재하는 promotion-free selectedAnswer gate와 격리된 승격 reader의 질문 범위는 남는다. 모든 승격 경주나 다른 pawn의 미래 승격을 기본 의무로 만들지 않는다."
+    },
+    {
+      "id": "recorded_end_contract_not_factored_into_every_reader",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2789,
+          "end": 2789
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 2944,
+          "end": 2944
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3215,
+          "end": 3226
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "start": 3516,
+          "end": 3516
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 705,
+          "end": 710
+        }
+      ],
+      "limitation": "v6 bounded ending 인정은 원래 선택된 core를 받은 가격 전달 helper에 한정한다. 다른 기존 조사/선택 입구는 여전히 strict account.complete와 dutyCosts 조건을 사용한다. 모든 reader의 finite-line completeness 판단이 하나로 합쳐진 것은 아니다."
+    },
+    {
+      "id": "natural_language_receipt_and_scope",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 181,
+          "end": 193
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "start": 405,
+          "end": 494
+        },
+        {
+          "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "start": 410,
+          "end": 449
+        }
+      ],
+      "limitation": "typed receipt는 무엇을 표현했다고 처리했는지와 source 참조를 보존한다. 해당 문장들이 질문의 답·가격 대상·범위를 독자에게 자연스럽게 이해시키는지까지 자동 증명하지 않는다. 문장 결합 조건을 더 늘리거나 길이로 quality를 대신 판단하는 처리는 이번 감사의 결론이 아니다."
+    }
+  ],
+  "check_provenance": {
+    "added_v6_relation_tests": {
+      "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+      "sources": [
+        {
+          "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+          "start": 412,
+          "end": 474
+        },
+        {
+          "file": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+          "start": 475,
+          "end": 525
+        }
+      ],
+      "synthetic_safety": "지연 root provider/use 가격 양성과 support/attack 단절 및 unknown 음성. 일반화 품질 국면 수로 계산하지 않는다.",
+      "opened_master_regressions": "G7은 실제 Bd6 지원이 Rdb8로 끊긴 뒤 provider의 미래 loss를 확장하지 않는 검사. G5는 실제 Nc4 전체 수순의 Rh7+ exact recorded ending을 사용하며 sibling은 합법적인 Rd7 prefix로 계정 경계를 분리했다. 둘 다 새 국면 일반화 평가가 아니다.",
+      "corrected_test_assumption": "첫 v6 실행에서 신규 G7 테스트만 Nd5 지원을 잘못 가정해 note.find.get이 실패했다. d6 bishop이 rook ray를 막고 실제 저장 core는 Bd6 지원임을 확인하여 테스트만 수정했다. 가격 helper에 도달하지 않은 검사 가정 오류를 제품 실패로 세지 않는다."
+    },
+    "compile_and_execution_note": "main71/선택 test10 컴파일 기록의 현재 source SHA 일치를 읽기 전용으로 확인했고, 루트가 최종 272/272 검사 통과 및 freeze-v6를 통지했다. 실행 판정은 루트 검증의 결과이며 감사 에이전트가 컴파일/Scala 실행을 새로 수행하지 않았다. 감사 중 잠시 분리해 수행한 G7 테스트 가정 수정의 원인은 위 provenance에 명시했다."
+  },
+  "audit_extent": {
+    "method": "고정 source와 초기 diff/SHA, 기존 v5 감사 및 이미 공개한 첫18 단일 실패 진단을 읽기 전용으로 대조. structure-audit-v6.json만 새로 작성.",
+    "product_or_test_edits_during_final_audit": false,
+    "new_compile_or_test_execution": false,
+    "new_engine_or_Docker_or_browser_or_HTTP_execution": false,
+    "protected_data_read": false,
+    "new_final18_outputs_read": false,
+    "new_importance_policy_or_UI_change": false,
+    "independent_human_reader_evaluation": false,
+    "claim_scope": "이번 실제 소스 변경과 남은 구조 경계를 감사했다. 제1단계 출시 품질, final18 수치, 실제 화면/기기 성능을 이 파일에서 판정하지 않는다."
+  },
+  "source_freeze": {
+    "manifest": "research/relationship-delivery-20261004/freeze-v6.json",
+    "manifest_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+    "dictionary_counts": {
+      "main_sources": 71,
+      "classes": 1699,
+      "test_sources": 10,
+      "other_frozen_files": 47
+    },
+    "root_reported_scala_checks": {
+      "passed": 272,
+      "total": 272,
+      "auditor_executed": false
+    },
+    "product_source_editing_stopped": true,
+    "existing_common_path_not_counted_as_new": true
+  }
+}

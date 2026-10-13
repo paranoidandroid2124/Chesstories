@@ -1,0 +1,3148 @@
+[
+  {
+    "id": "N01",
+    "result": {
+      "game_id": "N01",
+      "elapsed_ms": 12539,
+      "works": 4,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 3104.995,
+      "begin_journal": 2.229,
+      "engine_rpc": 2295.84,
+      "engine_journal": 6.285,
+      "report_rpc": 6736.2880000000005,
+      "report_journal": 389.629
+    },
+    "text": "In the f5 line, both sides exchange one pawn. After Kxf5, the game is drawn because neither side can give checkmate. In the Kd5 line through Kg3, neither side loses material or promotes.",
+    "question": "observed_terminal_comparison",
+    "unit_roles": [
+      "cost",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4",
+              "d5d4",
+              "b4a3"
+            ],
+            "reference_move": "d4c3",
+            "alternative_move": "f7f5",
+            "work_id": "work:3",
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-timing",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_available",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_common_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_timing",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4"
+            ],
+            "reference_move": "f7f5",
+            "alternative_move": "d5d4",
+            "work_id": "work:2",
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d6",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "c6d6",
+              "a5b4",
+              "d6d5",
+              "b4c3",
+              "d5c5",
+              "b3b4",
+              "c5b5",
+              "c3b3"
+            ],
+            "reference_move": "b5a6",
+            "alternative_move": "f7f5",
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-timing",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d6",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_available",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_common_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "timing_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_timing",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "c6d6",
+              "a5b4"
+            ],
+            "reference_move": "f7f5",
+            "alternative_move": "d6d5",
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d6",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4"
+            ],
+            "reference_move": "d5d4",
+            "alternative_move": "f7f5",
+            "work_id": "work:2",
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4",
+              "d5d4",
+              "b4a3",
+              "d4c3",
+              "b3b4",
+              "c3c4",
+              "a3a4"
+            ],
+            "reference_move": "c4c3",
+            "alternative_move": "f7f5",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4",
+              "d5d4",
+              "b4a3",
+              "d4d3",
+              "b3b4",
+              "d3c4",
+              "a3a4"
+            ],
+            "reference_move": "c4c3",
+            "alternative_move": "f7f5",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "f7f5",
+            "alternative_move": "c6d5",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [
+              "c6d5",
+              "a5b4",
+              "d5d4",
+              "b4a3"
+            ],
+            "reference_move": "d4d3",
+            "alternative_move": "f7f5",
+            "work_id": "work:3",
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 178,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 17,
+          "nodes": 38757,
+          "engineTimeMs": 42,
+          "executorElapsedMs": 172,
+          "bestmoveUci": "c6d5"
+        },
+        "roots_returned": [
+          {
+            "move": "c6d5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -67
+            }
+          },
+          {
+            "move": "c6d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -11
+            }
+          },
+          {
+            "move": "f7f5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -9
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 211,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 28,
+          "nodes": 429885,
+          "engineTimeMs": 169,
+          "executorElapsedMs": 207,
+          "bestmoveUci": "c6d5"
+        },
+        "roots_returned": [
+          {
+            "move": "c6d5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -487
+            }
+          },
+          {
+            "move": "c6d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -2
+            }
+          },
+          {
+            "move": "f7f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "c6d5",
+          "root_occurrence_id": "move-review:4614080ef3f2382a8be5a47c3418420cfac48c8cd0a30d8eec3881261ece7bea:77:f7f5:evidence:transition:9a0ef8785634cb2b16c3e0f7f5a86451ea109b19a2f8ea4f15ae732e54eff216",
+          "position_id": "6a6a2ba8d795696d99f3a4331a057eef56fed5d2437f7bb1bff18010e8d3916d",
+          "prefix_moves_uci": [
+            "c6d5",
+            "a5b4"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f7f5",
+            "d5d4"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 657,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 37,
+          "nodes": 1222680,
+          "engineTimeMs": 560,
+          "executorElapsedMs": 656,
+          "bestmoveUci": "d5d4"
+        },
+        "roots_returned": [
+          {
+            "move": "d5d4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -572
+            }
+          },
+          {
+            "move": "f7f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -4
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:3",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "c6d5",
+          "root_occurrence_id": "move-review:4614080ef3f2382a8be5a47c3418420cfac48c8cd0a30d8eec3881261ece7bea:77:f7f5:evidence:transition:9a0ef8785634cb2b16c3e0f7f5a86451ea109b19a2f8ea4f15ae732e54eff216",
+          "position_id": "3f53630b66c9c5deb62589955052b6076590812ee10ea77a262383aec038e598",
+          "prefix_moves_uci": [
+            "c6d5",
+            "a5b4",
+            "d5d4",
+            "b4a3"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f7f5",
+            "d4c3",
+            "d4c5",
+            "d4d3",
+            "d4d5",
+            "d4e3",
+            "d4e4",
+            "d4e5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 1038,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 53,
+          "nodes": 2126366,
+          "engineTimeMs": 916,
+          "executorElapsedMs": 1037,
+          "bestmoveUci": "f7f5"
+        },
+        "roots_returned": [
+          {
+            "move": "f7f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -660
+            }
+          },
+          {
+            "move": "d4d3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -48
+            }
+          },
+          {
+            "move": "d4c3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "N02",
+    "result": {
+      "game_id": "N02",
+      "elapsed_ms": 5308,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 38.395,
+      "begin_journal": 2.858,
+      "engine_rpc": 3361.4260000000004,
+      "engine_journal": 3.8040000000000003,
+      "report_rpc": 1615.364,
+      "report_journal": 279.288
+    },
+    "text": "In the provided Kd6 line, the same king next moves with Ke7 to e7. After Ke7, White's king on e7 now targets Black's pawn on f6. Kf8 moves the king from e7 to f8, ending its attack on Black's pawn on f6. Kh6 moves the king from g7 to h6, ending its attack on Black's pawn on f6. After Kf7, the black pawn originally on f6 is still present on f6. After Kf7, White's king on f7 attacks Black's pawn on f6. After Kd6, White's king on d6 keeps targeting Black's pawn on e5. Ke7 moves the king from d6 to e7, ending its attack on Black's pawn on e5. After Kf7, the black pawn originally on e5 is still present on e4. The recorded continuation is c4.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "reply",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 33,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 20,
+          "nodes": 17047,
+          "engineTimeMs": 9,
+          "executorElapsedMs": 32,
+          "bestmoveUci": "d5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "d5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "c3c4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "d5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -87
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 2103,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 43,
+          "nodes": 4233545,
+          "engineTimeMs": 2062,
+          "executorElapsedMs": 2102,
+          "bestmoveUci": "c3c4"
+        },
+        "roots_returned": [
+          {
+            "move": "c3c4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "d5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -410
+            }
+          },
+          {
+            "move": "d5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -494
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "d5d6",
+          "root_occurrence_id": "move-review:58d78473337693dc952f7a4ac3d16da1dcaa1dd07bc3319a0b155ac9980cc30d:104:d5d6:evidence:transition:9ce223eca2e62f6b4fbe0f37a7978a7df927cf1d5a7b8aa43aa68066172e5385",
+          "position_id": "7e1c04f58d1396ff650b5822d9cabec14d712dbb5d5bed20599feb4f5cc6ece5",
+          "prefix_moves_uci": [
+            "d5d6",
+            "b6b5",
+            "d6e7",
+            "a5a4",
+            "c3c4",
+            "b5c4"
+          ]
+        },
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 1077,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 1077,
+          "observedNodes": 2001001,
+          "engineTimeMs": 990,
+          "diagnostic": "{\"lastDepth\":11,\"pvDepths\":[11,11,11],\"bounds\":[null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      }
+    ]
+  },
+  {
+    "id": "N03",
+    "result": {
+      "game_id": "N03",
+      "elapsed_ms": 8712,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 35.114,
+      "begin_journal": 3.368,
+      "engine_rpc": 6884.08,
+      "engine_journal": 7.32,
+      "report_rpc": 1378.9370000000001,
+      "report_journal": 395.821
+    },
+    "text": "In the h6 line through Kc7, neither side loses material or promotes. After Kc7, the game is drawn by stalemate. In the Kc6 line, both sides exchange one pawn.",
+    "question": "observed_terminal_comparison",
+    "unit_roles": [
+      "reply",
+      "cost"
+    ],
+    "verification": {
+      "state": "stopped",
+      "target_depth": 31,
+      "reason": "child_challenge",
+      "trigger_work_ids": [
+        "work:3"
+      ],
+      "completed_depth": 16,
+      "stop_reason": "search_budget_exhausted"
+    },
+    "reserves": [
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [],
+            "reference_move": "h7h6",
+            "alternative_move": "g5g4",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "g5g4",
+              "h3g4"
+            ],
+            "reference_move": "c5c4",
+            "alternative_move": "h7h6",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [],
+            "reference_move": "h7h6",
+            "alternative_move": "c5c6",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "c5c6"
+            ],
+            "reference_move": "a5b4",
+            "alternative_move": "a5a6",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [],
+            "reference_move": "h7h6",
+            "alternative_move": "c5c6",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": "work:3",
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [],
+            "reference_move": "h7h6",
+            "alternative_move": "g5g4",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "g5g4"
+            ],
+            "reference_move": "h3g4",
+            "alternative_move": "a5a6",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [],
+            "reference_move": "h7h6",
+            "alternative_move": "g5g4",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 46,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 20,
+          "nodes": 48750,
+          "engineTimeMs": 21,
+          "executorElapsedMs": 45,
+          "bestmoveUci": "h7h6"
+        },
+        "roots_returned": [
+          {
+            "move": "h7h6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 6
+            }
+          },
+          {
+            "move": "c5c6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 158
+            }
+          },
+          {
+            "move": "c5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 277
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 1523,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 38,
+          "nodes": 3573857,
+          "engineTimeMs": 1477,
+          "executorElapsedMs": 1520,
+          "bestmoveUci": "h7h6"
+        },
+        "roots_returned": [
+          {
+            "move": "h7h6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "c5c6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 500
+            }
+          },
+          {
+            "move": "g5g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 550
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "c5c6",
+          "root_occurrence_id": "move-review:99b70b841d1ab55883d742b8f3af49bec279fbd08c6060c24cb80a5aa3e8b7f6:91:h7h6:evidence:transition:f966c021ed2514e65423bb893fe8d29346297a2f9435f158562c133906a4aa8f",
+          "position_id": "e06df980dd1c0f20372c3ddd0b14d2a0faba403ac5e5d01f7f03aaaef03480ed",
+          "prefix_moves_uci": [
+            "c5c6",
+            "a5b4",
+            "c6b6",
+            "b4c4",
+            "b6a5",
+            "c4d5",
+            "a5a4",
+            "d5e5",
+            "a4b3",
+            "e5f5",
+            "g5g4",
+            "f5g4",
+            "b3c2",
+            "g4f5",
+            "c2b1"
+          ]
+        },
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 691,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 691,
+          "observedNodes": 2001495,
+          "engineTimeMs": 615,
+          "diagnostic": "{\"lastDepth\":13,\"pvDepths\":[13,13,13],\"bounds\":[null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      },
+      {
+        "id": "work:3",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "c5c6",
+          "root_occurrence_id": "move-review:99b70b841d1ab55883d742b8f3af49bec279fbd08c6060c24cb80a5aa3e8b7f6:91:h7h6:evidence:transition:f966c021ed2514e65423bb893fe8d29346297a2f9435f158562c133906a4aa8f",
+          "position_id": "e06df980dd1c0f20372c3ddd0b14d2a0faba403ac5e5d01f7f03aaaef03480ed",
+          "prefix_moves_uci": [
+            "c5c6",
+            "a5b4",
+            "c6b6",
+            "b4c4",
+            "b6a5",
+            "c4d5",
+            "a5a4",
+            "d5e5",
+            "a4b3",
+            "e5f5",
+            "g5g4",
+            "f5g4",
+            "b3c2",
+            "g4f5",
+            "c2b1"
+          ]
+        },
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 2435,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 46,
+          "nodes": 7735553,
+          "engineTimeMs": 2367,
+          "executorElapsedMs": 2434,
+          "bestmoveUci": "f5g4"
+        },
+        "roots_returned": [
+          {
+            "move": "f5g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 950
+            }
+          },
+          {
+            "move": "f5e5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 950
+            }
+          },
+          {
+            "move": "f5f4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 950
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:4",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 31,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 1885,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 1885,
+          "observedNodes": 5000009,
+          "engineTimeMs": 1786,
+          "diagnostic": "{\"lastDepth\":17,\"pvDepths\":[17,17,17],\"bounds\":[null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      }
+    ]
+  },
+  {
+    "id": "N04",
+    "result": {
+      "game_id": "N04",
+      "elapsed_ms": 11804,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 34.151,
+      "begin_journal": 2.791,
+      "engine_rpc": 7335.997,
+      "engine_journal": 6.112,
+      "report_rpc": 3678.9660000000003,
+      "report_journal": 736.0
+    },
+    "text": "After a4, Black's pawn on b3 is under attack from White's king on c3; it is supported by Black's pawn on a4. After g4, Black's pawn on b3 is under attack from White's king on c3 and has no defender. In the g4 line: With Kxb3, the white king originally on c3 captures the black pawn originally on b3.",
+    "question": "current_defense",
+    "unit_roles": [
+      "reply",
+      "reply",
+      "cost"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "b3b2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "b3b2",
+              "c3b2",
+              "g5g4",
+              "b2c2"
+            ],
+            "reference_move": "c5b4",
+            "alternative_move": "a5a4",
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "b3b2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "b3b2"
+            ],
+            "reference_move": "c3b2",
+            "alternative_move": "g3g4",
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "b3b2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "g5g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "g5g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "g5g4",
+              "b5b6",
+              "c5b6",
+              "c3d4",
+              "b3b2",
+              "c4c5",
+              "b6c6",
+              "d4e4",
+              "c6c5",
+              "e4e5",
+              "b2b1q",
+              "e5f4",
+              "b1e1",
+              "f2f3",
+              "e1d2",
+              "f4f5"
+            ],
+            "reference_move": "c5b4",
+            "alternative_move": "a5a4",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "a5a4",
+            "alternative_move": "g5g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "investigation_limit",
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "g5g4",
+              "b5b6",
+              "c5b6",
+              "c3d4",
+              "b3b2",
+              "c4c5",
+              "b6c6",
+              "d4e4",
+              "c6c5",
+              "e4e5",
+              "b2b1q",
+              "e5f4",
+              "b1e1",
+              "f2f3",
+              "e1d2",
+              "f4f5",
+              "d2d7",
+              "f5e4"
+            ],
+            "reference_move": "c5b4",
+            "alternative_move": "a5a4",
+            "work_id": null,
+            "stop_reason": "prerequisite_unresolved",
+            "evaluation_relation": null
+          }
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 54,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 23,
+          "nodes": 81289,
+          "engineTimeMs": 34,
+          "executorElapsedMs": 54,
+          "bestmoveUci": "a5a4"
+        },
+        "roots_returned": [
+          {
+            "move": "a5a4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "e4e3",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 110
+            }
+          },
+          {
+            "move": "b3b2",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 128
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 770,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 31,
+          "nodes": 1880080,
+          "engineTimeMs": 725,
+          "executorElapsedMs": 769,
+          "bestmoveUci": "g5g4"
+        },
+        "roots_returned": [
+          {
+            "move": "g5g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -412
+            }
+          },
+          {
+            "move": "b3b2",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -269
+            }
+          },
+          {
+            "move": "a5a4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "g5g4",
+          "root_occurrence_id": "move-review:925bc09371ce0101e83160ebe1eb7d1b33609e2f13873cdeaa576a2eb559a65e:1:a5a4:evidence:transition:82063adb28dbe94c3d5a3fe3bf279e10ec4e9c06dc762786a75bf057054a83c0",
+          "position_id": "0c7009391811ce262e60bb7d73a82493323c1e39f7091818a8b2d9761e4bc079",
+          "prefix_moves_uci": [
+            "g5g4"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "c3b3",
+            "b5b6"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 1006,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 1006,
+          "observedNodes": 2000057,
+          "engineTimeMs": 908,
+          "diagnostic": "{\"lastDepth\":13,\"pvDepths\":[13,13],\"bounds\":[null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      },
+      {
+        "id": "work:3",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "g5g4",
+          "root_occurrence_id": "move-review:925bc09371ce0101e83160ebe1eb7d1b33609e2f13873cdeaa576a2eb559a65e:1:a5a4:evidence:transition:82063adb28dbe94c3d5a3fe3bf279e10ec4e9c06dc762786a75bf057054a83c0",
+          "position_id": "0c7009391811ce262e60bb7d73a82493323c1e39f7091818a8b2d9761e4bc079",
+          "prefix_moves_uci": [
+            "g5g4"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "c3b3",
+            "b5b6"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 4693,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 42,
+          "nodes": 10021610,
+          "engineTimeMs": 4628,
+          "executorElapsedMs": 4692,
+          "bestmoveUci": "c3b3"
+        },
+        "roots_returned": [
+          {
+            "move": "c3b3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -574
+            }
+          },
+          {
+            "move": "b5b6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -874
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:4",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "g5g4",
+          "root_occurrence_id": "move-review:925bc09371ce0101e83160ebe1eb7d1b33609e2f13873cdeaa576a2eb559a65e:1:a5a4:evidence:transition:82063adb28dbe94c3d5a3fe3bf279e10ec4e9c06dc762786a75bf057054a83c0",
+          "position_id": "effa14924b965c3e844778d5a24e83b4ece3198291b659389344257faff8b6e8",
+          "prefix_moves_uci": [
+            "g5g4",
+            "b5b6",
+            "c5b6",
+            "c3d4",
+            "b3b2",
+            "c4c5",
+            "b6c6",
+            "d4e4",
+            "c6c5",
+            "e4e5",
+            "b2b1q",
+            "e5f4",
+            "b1e1",
+            "f2f3",
+            "e1d2",
+            "f4f5"
+          ]
+        },
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 372,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 34,
+          "nodes": 431458,
+          "engineTimeMs": 226,
+          "executorElapsedMs": 370,
+          "bestmoveUci": "a5a4"
+        },
+        "roots_returned": [
+          {
+            "move": "a5a4",
+            "depth": 16,
+            "score": {
+              "kind": "mate",
+              "value": -10
+            }
+          },
+          {
+            "move": "d2d7",
+            "depth": 16,
+            "score": {
+              "kind": "mate",
+              "value": -10
+            }
+          },
+          {
+            "move": "d2g2",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -1211
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

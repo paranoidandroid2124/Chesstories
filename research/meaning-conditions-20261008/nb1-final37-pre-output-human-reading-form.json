@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T06:31:49.640762+00:00",
+  "purpose": "Pre-output independent reading form for final37 NB1 basic after the exact owned discovery-only path reader repair. No final37 output has been read; this does not change the original full-functional criterion.",
+  "case_id": "FC-SG45-NB1",
+  "status": "sealed_awaiting_parent_final_basic_path",
+  "fixed_criteria": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-functional-followup-product-inputs.json",
+    "sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "registered_utc": "2026-10-08T00:33:42.222348+00:00",
+    "original_human_question": "두 좋은 나이트 경로를 택할 때 같은 Rd6 실현에서 무엇이 보호되며 어떤 가격을 피해야 하는가?",
+    "original_four_levels": {
+      "legal": "Nc4/Nb1은 이미 합법이고 둘 다 정상적인 좋은 경로다.",
+      "price": "Nc4는 d6 룩을 지켜 Qxd6에 Nxd6로 응답할 수 있다. Nb1 뒤 같은 즉시 Rd6에는 그 재포획자가 없다.",
+      "utility": "Nb1도 Nc3 등 다른 실현으로 유효하다. 구성한 Rd6 반례만으로 Nb1 전체를 나쁜 수로 단정하지 않는다.",
+      "root_judgment": "Rfd1의 유연한 개선은 설명할 수 있으나 작은 최고 평가의 원인이나 유일한 좋은 수를 입증한 것은 아니다."
+    },
+    "original_acceptance_policy": "짧은 정상 목적을 인정한다. 구체적 비교/우열/후속 실행을 주장할 때 그 가격과 강한 반론을 함께 요구한다. 책의 정확한 PV나 모든 관계를 기본 본문에 강제하지 않는다.",
+    "source": {
+      "book": "Think Like a Super-GM",
+      "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "reading_edition_pages_read": [
+        440,
+        441,
+        442,
+        443,
+        444,
+        445,
+        446
+      ],
+      "reading_edition_diagram_pages_visually_checked": [
+        440
+      ],
+      "source_pdf_footer_pages": "526–534",
+      "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+    },
+    "independence": "Exposed development/source control with prior outputs and comparisons known, not a new blind generalization case."
+  },
+  "immutable_previous_reading": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\functional-followup-v35-controlled-human-reading.json",
+    "sha256": "c1357f66e5e7b6c38ff7c95cecd6fb98ee1075065fb9c83a9f9531c69f390d17",
+    "automatic_cases": 4,
+    "partial_valid_fragments": 4,
+    "full_functional_questions_complete": 0,
+    "old_basic_NB1_words": 664,
+    "old_basic_NB1_chars": 3536,
+    "criterion_will_not_be_lowered_to_partial_fact_or_shorter_text": true
+  },
+  "known_development_context_separate_from_human_verdict": {
+    "parent_diagnostic": "Caller36 matched all6 original actual reports. Supported discovery-only conditional histories were absent from investigation-selected continuationReadings, so sameRecapture was false. Shared/receipt/action/continued-control gates passed; two quiet Rd6 proofs supplied0 central candidates.",
+    "diagnostic_reported_by_parent_not_newly_executed_here": true,
+    "planned_repair_scope": "Read the exact owned certified path directly, keeping investigation seed filters intact.",
+    "not_an_automatic_success": "A repaired path reader and a generated/selected factual proof do not alone establish utility or correct numerical-cause prose."
+  },
+  "first_pass_protocol": [
+    "Receive the final basic JSON path from parent. Record its SHA and exact default English text. Do not read final raw traces, candidates, protected detail, score receipts or changed source before this pass.",
+    "Read the default explanation once as a chess reader. Record what actual Nb1 does, what alternative Nc4 does in the same hypothetical Rd6 realization, and what a beginner can recover without inspecting detail.",
+    "Judge the exact immediate Qxd6/Nxd6 resource difference, alternative-plan scope, needed material/forcing price omissions and excessive unrelated content under the fixed original criteria.",
+    "Seal this basic-only result before inspecting any optional owned raw evidence. Record unknowns as unknown; do not borrow missing meaning from prior code or book knowledge into the output.",
+    "Only then, if parent provides raw evidence, separately verify canonical actors, certification, comparison owners, price completeness and strongest-reply scope. Preserve the first basic-only verdict if hidden evidence only explains why text failed."
+  ],
+  "basic_only_questions": [
+    {
+      "id": "actual_nb1_role",
+      "question": "Can the reader identify the actual Nb1 rerouting role or a compact valid normal purpose?",
+      "valid_fragment": "A normal Nb1-Nc3 route may be sufficient for a purpose comment. It must not be called failed simply because every future capture is absent."
+    },
+    {
+      "id": "same_realization",
+      "question": "Does the basic distinguish the same original Rd1 rook reaching d6 after the two knight choices, rather than a different enemy queen/knight quiet arrival on an empty d6 square?",
+      "required_for_specific_comparison": "If a matched recapture contrast is claimed, the arriving rook and Black queen capture must be the same physical event in both branches."
+    },
+    {
+      "id": "quiet_recapture_difference",
+      "question": "Is it immediately recoverable that Nc4 lets the same knight answer ...Qxd6 with Nxd6, whereas Nb1 does not supply that knight recapture in the same tested realization?",
+      "scope": "Recapture availability and price, not safety against every reply or a promise Black must capture."
+    },
+    {
+      "id": "other_nb1_plans",
+      "question": "Does the explanation preserve the validity of another Nb1 realization such as Nc3, or at least avoid condemning the whole move solely from the constructed immediate Rd6 counterexample?",
+      "overstatement_examples": [
+        "Nb1 is bad because the queen can take d6 in one hypothetical line.",
+        "Nc4 is the only useful knight route.",
+        "The future Rd6/Qxd6 sequence is forced."
+      ]
+    },
+    {
+      "id": "necessary_prices",
+      "question": "Are the material and forcing costs necessary for the selected claim visible in basic?",
+      "limits": "The tested conditional Qxd6/Nxd6 captures must not become an isolated win-the-queen story if another selected account depends on a connected rook loss. Independently selected actual Nb1 knight/rook trades must not be silently removed to obtain a shorter answer. No invented capture is required for a genuinely quiet line."
+    },
+    {
+      "id": "strongest_reply_scope",
+      "question": "If the output claims the whole move is preferable, useful or mistaken, does it handle the owned strongest response and sufficient consequential price, rather than only a named cooperative queen capture?",
+      "limits": "A purely factual conditional recapture statement need not narrate every pool result. Its scope must remain conditional and must not borrow a child rank as the cause of the original root assessment."
+    },
+    {
+      "id": "small_central_answer",
+      "question": "Can the actual task, tested condition and relevant price be recovered before unrelated target/final-presence histories?",
+      "limits": "Shorter word count, a new question tag, more relations, or one accepted proof are not full-functional success criteria."
+    },
+    {
+      "id": "root_grade_boundary",
+      "question": "Does the text distinguish its conditional mechanism from the numerical inaccuracy/best-choice cause?",
+      "limits": "The source says both knight routes can be valid. Do not force one exact book PV or one fixed numeric category, and do not assert the existing numerical verdict false without independent evidence."
+    }
+  ],
+  "outcome_fields_to_fill_after_first_pass": {
+    "source_path": null,
+    "source_sha256": null,
+    "default_question": null,
+    "exact_basic_text": null,
+    "actual_move_role_recoverable": null,
+    "same_physical_rook_realization_recoverable": null,
+    "immediate_Qxd6_Nxd6_difference_recoverable": null,
+    "ordinary_purpose_fragment_valid": null,
+    "other_good_Nb1_realization_unfairly_condemned": null,
+    "needed_price_omissions": null,
+    "needed_strong_reply_omissions_relative_to_claim": null,
+    "clear_unnecessary_excess": null,
+    "partial_fact_or_price_success": null,
+    "full_original_functional_question_complete": null,
+    "root_grade_cause_explained": null,
+    "first_observable_failure": null,
+    "unknowns": null
+  },
+  "verdict_categories": [
+    "No basic delivered: record the delivery failure without inventing a chess verdict.",
+    "Valid ordinary purpose fragment: retain as partial; do not count it as the full matched functional comparison.",
+    "Matched legal recapture/price difference delivered: factual success; utility remains separately assessed.",
+    "Full original functional question complete: requires coherent matched condition, necessary prices, appropriate strong-response scope and alternative-plan limits under the unchanged criteria.",
+    "Overstatement or price omission: record independently from missing comparison and excessive content."
+  ],
+  "counting_policy": {
+    "old_four_case_baseline_full_utility": "0/4 remains immutable. A newly read case may have a new dated assessment, but it does not retroactively alter old outputs.",
+    "one_NB1_success_not_general_solver": "Any narrow new NB1 gain must be reported with its exact scope. The other three cases do not become solved by association.",
+    "client_delivery": "Java basic extraction and public UI decoder acceptance are separate checks; record parent proof independently."
+  },
+  "main_or_ui_edits": false,
+  "criterion_or_test_edits": false,
+  "engine_or_runner_executed": false,
+  "new_engine_queries": 0,
+  "final37_basic_read": false
+}

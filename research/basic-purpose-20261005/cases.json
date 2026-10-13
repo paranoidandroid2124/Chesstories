@@ -1,0 +1,399 @@
+{
+  "recorded_utc": "2026-10-05T12:39:32.146925+00:00",
+  "frozen_before_product_outputs": true,
+  "purpose": "독립적인 설명 범위 기준. 교육용 개발 사례이며 봉인 평가나 엔진 품질 기준이 아님.",
+  "cases": [
+    {
+      "id": "B01",
+      "kind": "basic",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3",
+          "f8g7"
+        ],
+        [
+          "f1e2",
+          "f8g7"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 Bg7",
+        "Be2 Bg7"
+      ],
+      "needed": "각 나이트/비숍을 전개한다는 현재 목적. 중앙 참여가 확인되면 함께 설명.",
+      "avoid": "미래 전술을 찾아야만 완결된 답으로 인정하거나 모든 새 지원 대상을 열거하지 않는다."
+    },
+    {
+      "id": "B02",
+      "kind": "plan_continuation",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3",
+          "f8g7",
+          "f1e2",
+          "e8g8",
+          "e1g1",
+          "a7a6",
+          "c1e3",
+          "b7b5"
+        ],
+        [
+          "f1e2",
+          "f8g7",
+          "c1e3",
+          "e8g8",
+          "g1f3",
+          "a7a6",
+          "e1g1",
+          "b7b6"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 Bg7 Be2 O-O O-O a6 Be3 b5",
+        "Be2 Bg7 Be3 O-O Nf3 a6 O-O b6"
+      ],
+      "needed": "초기 전개 목적과 필요한 주요 응수. 이어지는 다른 기물 전개를 모두 초기 수의 효용으로 귀속하지 않는다.",
+      "avoid": "계속 같은 기물을 지원하거나 다른 기물이 움직이는 모든 이력을 본문으로 늘리지 않는다."
+    },
+    {
+      "id": "B03",
+      "kind": "several_choices",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "lines": [
+        [
+          "b1c3",
+          "g8f6"
+        ],
+        [
+          "d2d4",
+          "e5d4",
+          "f3d4",
+          "g8f6"
+        ]
+      ],
+      "readable_lines": [
+        "Nc3 Nf6",
+        "d4 exd4 Nxd4 Nf6"
+      ],
+      "needed": "Nc3의 전개와 d4의 중앙 폰 교환. 양쪽의 목적을 회수한다.",
+      "avoid": "서로 다른 목적을 근거 없이 한쪽의 결정적 우월성으로 표현하지 않는다."
+    },
+    {
+      "id": "B04",
+      "kind": "basic",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "d2d3",
+        "g8f6"
+      ],
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 1 5",
+      "lines": [
+        [
+          "e1g1",
+          "d7d6",
+          "b1c3"
+        ],
+        [
+          "b1c3",
+          "d7d6",
+          "e1g1"
+        ]
+      ],
+      "readable_lines": [
+        "O-O d6 Nc3",
+        "Nc3 d6 O-O"
+      ],
+      "needed": "캐슬링과 미전개 나이트 전개 및 실제 같은 배치에 이른다는 사실.",
+      "avoid": "캐슬링만으로 일반적인 안전 보장을 단정하지 않는다."
+    },
+    {
+      "id": "B05",
+      "kind": "basic",
+      "initial_fen": "r4rk1/pp3ppp/2p5/8/8/2P2N2/PP3PPP/R4RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "r4rk1/pp3ppp/2p5/8/8/2P2N2/PP3PPP/R4RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "h7h6"
+        ],
+        [
+          "f1d1",
+          "h7h6"
+        ]
+      ],
+      "readable_lines": [
+        "Rfe1 h6",
+        "Rfd1 h6"
+      ],
+      "needed": "실제로 열린 파일에 룩을 배치하는 현재 목적.",
+      "avoid": "열린 파일 진입 자체를 안전한 침입/승리/상대 위협의 부재로 승격하지 않는다."
+    },
+    {
+      "id": "B06",
+      "kind": "local_dependency",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "lines": [
+        [
+          "b8c6",
+          "b1c3"
+        ],
+        [
+          "d7d6",
+          "b1c3"
+        ]
+      ],
+      "readable_lines": [
+        "Nc6 Nc3",
+        "d6 Nc3"
+      ],
+      "needed": "e5 폰의 방어와 Nc6의 전개. 실제 공격받는 대상의 방어는 주변 지원과 구별한다.",
+      "avoid": "초기 e5 방어를 지우면서 근거 없이 단순 전개로만 설명하지 않는다."
+    },
+    {
+      "id": "B07",
+      "kind": "price_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "e5d4"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4",
+      "lines": [
+        [
+          "f3d4",
+          "c6d4",
+          "d1d4"
+        ],
+        [
+          "d1d4",
+          "c6d4"
+        ]
+      ],
+      "readable_lines": [
+        "Nxd4 Nxd4 Qxd4",
+        "Qxd4 Nxd4"
+      ],
+      "needed": "관찰된 되잡기와 필요한 후속 교환, 대안의 퀸 손실.",
+      "avoid": "되잡기라는 이름 때문에 알려진 후속 손실을 감추지 않는다."
+    },
+    {
+      "id": "B08",
+      "kind": "tactical_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "g8f6",
+        "f3g5",
+        "d7d5",
+        "e4d5"
+      ],
+      "fen": "r1bqkb1r/ppp2ppp/2n2n2/3Pp1N1/2B5/8/PPPP1PPP/RNBQK2R b KQkq - 0 5",
+      "lines": [
+        [
+          "f6d5",
+          "g5f7",
+          "e8f7",
+          "d1f3",
+          "f7e6",
+          "b1c3"
+        ],
+        [
+          "c6a5",
+          "c4b5",
+          "c7c6",
+          "d5c6",
+          "b7c6"
+        ]
+      ],
+      "readable_lines": [
+        "Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3",
+        "Na5 Bb5+ c6 dxc6 bxc6"
+      ],
+      "needed": "자연스러운 되잡기 뒤 실제 희생·킹 포획·체크를 유지한다.",
+      "avoid": "단순 Nxd5 행동 설명으로 응수와 대가를 대체하지 않는다."
+    },
+    {
+      "id": "B09",
+      "kind": "development_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "lines": [
+        [
+          "f8c5",
+          "f3e5"
+        ],
+        [
+          "b8c6",
+          "b1c3"
+        ]
+      ],
+      "readable_lines": [
+        "Bc5 Nxe5",
+        "Nc6 Nc3"
+      ],
+      "needed": "Bc5의 전개와 동시에 남겨진 실제 e5 폰 포획을 보인다.",
+      "avoid": "미전개 기물이 나왔다는 사실만으로 온전한 좋은 수 설명을 만들지 않는다."
+    },
+    {
+      "id": "B10",
+      "kind": "used_support",
+      "initial_fen": "7k/8/5n2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "7k/8/5n2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "h8h7",
+          "c3b5",
+          "f6e4",
+          "e1e4"
+        ],
+        [
+          "g1h1",
+          "h8h7"
+        ]
+      ],
+      "readable_lines": [
+        "Re1 Kh7 Nb5 Nxe4 Rxe4",
+        "Kh1 Kh7"
+      ],
+      "needed": "선택된 룩의 지원이 실제 Nxe4/Rxe4로 쓰이는 관계.",
+      "avoid": "열린 파일이라는 짧은 설명으로 실제 사용과 가격을 지우지 않는다."
+    },
+    {
+      "id": "B11",
+      "kind": "file_counterexample",
+      "initial_fen": "4r1k1/pp3ppp/2p5/8/8/2P5/PP3PPP/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "4r1k1/pp3ppp/2p5/8/8/2P5/PP3PPP/5RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "e8e1"
+        ],
+        [
+          "f1a1",
+          "h7h6"
+        ]
+      ],
+      "readable_lines": [
+        "Re1 Rxe1#",
+        "Ra1 h6"
+      ],
+      "needed": "열린 파일 진입 뒤 룩 포획과 메이트.",
+      "avoid": "열린 파일 배치라는 긍정적 목적만 남기지 않는다."
+    },
+    {
+      "id": "B12",
+      "kind": "limited_evidence",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3"
+        ],
+        [
+          "f1e2"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3",
+        "Be2"
+      ],
+      "needed": "현재 전개 사실은 설명 가능. 뒤의 대응 비교는 관찰되지 않았다.",
+      "avoid": "초기 한 수를 실제 응수 완료나 전술 부재의 증거로 간주하지 않는다."
+    },
+    {
+      "id": "B13",
+      "kind": "plan_continuation",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "lines": [
+        [
+          "g1f3",
+          "d7d5",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "g7g6"
+        ],
+        [
+          "b1c3",
+          "d7d5",
+          "d2d4",
+          "g8f6",
+          "g1f3",
+          "g7g6"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 d5 g3 Nf6 Bg2 g6",
+        "Nc3 d5 d4 Nf6 Nf3 g6"
+      ],
+      "needed": "초기 나이트 전개 목적. 이후 여러 기본 행동은 초기 나이트의 모든 효과로 늘리지 않는다.",
+      "avoid": "모든 단순 접촉과 이력을 출력해야 성공이라고 판단하지 않는다."
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "research_date": "2026-10-04",
+  "scope": "Whole-map synthesis: additional local theory and primary-source boundaries. Selected reading, not full-book review or independent engine verification.",
+  "product_changes": false,
+  "new_engine_runs": 0,
+  "human_reader_evaluation": false,
+  "local_sources": [
+    {
+      "id": "silicon-road-2021",
+      "title": "The Silicon Road to Chess Improvement",
+      "authors": [
+        "Matthew Sadler"
+      ],
+      "year": 2021,
+      "publisher": "New In Chess",
+      "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/AI/The Silicon Road to Chess Improvement _ Chess Engine -- Matthew Sadler -- National Book Network, Alkmaar, The Netherlands, 2021 -- New In Chess,Csi -- 9789056919832 -- 8be8de870ac4353b463a68e2acd849d9 -- Anna’s Archiv.pdf",
+      "sha256": "666724beaab9e7a58c59898f684bff091f9f978558deb4385ffdfb5e7bbe3da6",
+      "pdf_pages": 987,
+      "locator_notice": "One-based PDF pages in this reflowed electronic file; no equivalence to the original printed edition assumed. Early and final contents differ in pagination.",
+      "method": "Title/copyright and contents read; chapter-heading scan; ten selected body pages read. PDF769 rendered and visually inspected. Internal extracted text retained only in ignored target directory.",
+      "visually_checked_pdf_pages": [
+        769
+      ],
+      "readings": [
+        {
+          "pdf_page": 41,
+          "topic": "Training with engines",
+          "paraphrase": "Playing against the engine and reviewing a position test different forms of understanding. This practical framing is not an algorithm for selecting explanatory content."
+        },
+        {
+          "pdf_page": 210,
+          "topic": "Attacking rhythm",
+          "paraphrase": "An attacking sequence can include retreat or consolidation, and a pawn accepted by the opponent can enable one's own activity. Forward motion or immediate check does not alone define the useful action."
+        },
+        {
+          "pdf_page": 237,
+          "topic": "Entrenched pieces",
+          "paraphrase": "A protected location and the ability to retain its occupation are different from merely arriving on a square. The introduction relates the theme to both human games and engine studies."
+        },
+        {
+          "pdf_page": 245,
+          "topic": "Active blockers",
+          "paraphrase": "Fixing one wing, denying entry and creating a king haven interact with pawn timing and counterplay elsewhere. Initial blockage alone does not explain the resulting plan."
+        },
+        {
+          "pdf_page": 297,
+          "topic": "Exchange active pieces, leave passive ones",
+          "paraphrase": "Exchange can change which opponent resources remain available. An attack may switch purpose from opening a file to leaving a rook constrained and entering elsewhere."
+        },
+        {
+          "pdf_page": 603,
+          "topic": "Whole-board play",
+          "paraphrase": "Action on one wing can induce concessions, diversion or access on the other. A local target account is insufficient to establish those dependencies without the opponent response."
+        },
+        {
+          "pdf_page": 731,
+          "topic": "Opposite-coloured bishop conversion",
+          "paraphrase": "The implications of bishop colours change when rooks and accessible targets remain. Material composition is not a universal draw or winning predicate."
+        },
+        {
+          "pdf_page": 769,
+          "topic": "Develop major pieces by sacrificing front pawns",
+          "paraphrase": "Giving up a pawn can free rook routes or participation, including cases in which the rook itself initially stays put. The price and actual use must be read together."
+        },
+        {
+          "pdf_page": 791,
+          "topic": "Invade through a channel the opponent opened",
+          "paraphrase": "The opponent's own attack can create an entry route. Attribution must follow the actual transition rather than assume that the reviewing move opened it."
+        },
+        {
+          "pdf_page": 918,
+          "topic": "Engine evaluations",
+          "paraphrase": "The author's dated discussion distinguishes practical interpretation from a numerical score. It is not used here as current Stockfish18 evaluation documentation."
+        }
+      ],
+      "limits": "Selected chapter introductions and examples only. Engine games supply theoretical coverage examples, not balanced master-game generalization results. No independent re-analysis. Long-term advantage remains the author's judgment."
+    },
+    {
+      "id": "grooten-role-succession",
+      "book_id_in_local_ledger": "grooten-2019",
+      "title": "Understanding before Moving 3: Sicilian Structures Part 1",
+      "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/Najdorf/Understanding Before Moving 3 - Sicilian Structures - Part 1 -- Herman Grooten -- Understanding before Moving 3.pdf",
+      "sha256": "03c77bd9c6c6ae987e07067822fd63bdb0af39970220f5dd08ee3b95e111b821",
+      "read_pdf_pages": [
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "visually_checked_pdf_pages": [
+        168
+      ],
+      "cases": [
+        {
+          "pdf_pages": [
+            165,
+            166,
+            167
+          ],
+          "game": "Karpov–Nunn, Amsterdam 1985",
+          "paraphrase": "The control of d5 and restraint of the central break motivate rearrangement. An alternative rook placement changes the tactical price of an otherwise similar bishop-pair challenge.",
+          "research_interpretation": "Positions that share a move name or motif can differ in the paths and targets relevant to the follow-up."
+        },
+        {
+          "pdf_pages": [
+            168
+          ],
+          "game": "Karpov–Nunn, Amsterdam 1985",
+          "moves": "22.Ncd5 Nxd5 23.Nxd5 Bxd5 24.Rxd5",
+          "paraphrase": "The d5 occupation survives while its carrier changes from one knight to another and then a rook.",
+          "research_interpretation": "Physical piece identity and continuity of a tactical or strategic job are separate. Current identity tracking does not itself prove a general purpose-inheritance policy."
+        },
+        {
+          "pdf_pages": [
+            169
+          ],
+          "game": "Karpov–Nunn, Amsterdam 1985",
+          "moves": "27.Ba7 Ra8 28.Bb6 Bd8 29.Be3",
+          "paraphrase": "The bishop returns to e3 with the opposing rook now on a8 rather than c8, changing the meaning of the earlier offer.",
+          "research_interpretation": "Returning a piece to the same square is not returning the whole position or its action opportunities."
+        },
+        {
+          "pdf_pages": [
+            170
+          ],
+          "game": "Karpov–Nunn, Amsterdam 1985",
+          "paraphrase": "The sequence changes the pawn majority, exchanges a valuable bishop for offered material, and reroutes the remaining bishop to restrain a passer while coordinating with the queen.",
+          "research_interpretation": "The effect of an exchange is partly the work assigned to the pieces that remain; this is not captured by a price total alone."
+        },
+        {
+          "pdf_pages": [
+            171
+          ],
+          "game": "Carlsen–Nakamura, Wijk aan Zee 2011",
+          "paraphrase": "The timing of castling changes the practical weakness created by a defensive pawn move.",
+          "research_interpretation": "An ineffective or strategically costly answer must not be described as an illegal or unavailable answer."
+        }
+      ],
+      "limits": "Author's annotated continuations and strategic interpretation, not independent engine findings. PDF pages only. The alternative recapture and king-safety evaluations are not converted into universal rules."
+    },
+    {
+      "id": "endgame-extended",
+      "book_id_in_local_ledger": "de-la-villa-2021",
+      "title": "100 Endgame Patterns You Must Know",
+      "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/100 Endgame Patterns.pdf",
+      "edition_notice": "User's personal reading edition; footer Source PDF numbers refer to the source PDF, not original publisher printed page numbers.",
+      "readings": [
+        {
+          "reading_edition_pdf_pages": [
+            289,
+            290
+          ],
+          "footer_source_pdf_pages": [
+            493,
+            494,
+            495,
+            496,
+            497
+          ],
+          "topic": "Seventh-rank use and active versus passive rook",
+          "paraphrase": "A rook on the seventh can be expelled. A rook defending a pawn can lose participation elsewhere; sacrificing that pawn may release it. The author's activity heuristics are not imported as win/draw predicates.",
+          "research_interpretation": "The job that restricts a defender and the useful action it gains after abandoning that job are the relation to investigate."
+        },
+        {
+          "reading_edition_pdf_pages": [
+            318,
+            319
+          ],
+          "footer_source_pdf_pages": [
+            543,
+            544,
+            545,
+            546,
+            547
+          ],
+          "topic": "Vancura in practical games",
+          "paraphrase": "One case gives a pawn for checking lines and a later defensive arrangement. Another nominally similar attempt fails because the opponent king prevents adopting that arrangement.",
+          "research_interpretation": "Pattern availability, the ability to reach it against responses, and the resulting draw are distinct claims."
+        },
+        {
+          "reading_edition_pdf_pages": [
+            365
+          ],
+          "footer_source_pdf_pages": [
+            625,
+            626
+          ],
+          "topic": "Shield against perpetual check",
+          "paraphrase": "Adding one shielding pawn changes the checking routes without necessarily changing the draw. Avoiding one perpetual route is not equivalent to obtaining a win.",
+          "research_interpretation": "The answer must preserve other residual defences or losses that change the apparent benefit."
+        },
+        {
+          "reading_edition_pdf_pages": [
+            391
+          ],
+          "footer_source_pdf_pages": [
+            672,
+            673,
+            674
+          ],
+          "topic": "Fortress maintenance and restoration",
+          "paraphrase": "The defensive king and rook must preserve answers to a pawn break and queen checks. The game alternates errors, missed breaks and opportunities to restore the defence.",
+          "research_interpretation": "Responsibility belongs to the actual decision at the same position and turn. A later error must not be attributed to an earlier defensive move."
+        }
+      ],
+      "visually_checked_pdf_pages": [
+        318
+      ],
+      "limits": "Six selected body pages read, including continuation pages. The fortress and draw judgments are source annotations, not a newly checked tablebase or exhaustive proof. Later pages and all branches were not read.",
+      "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3"
+    }
+  ],
+  "primary_web_sources": [
+    {
+      "id": "grooten-strategy-sample",
+      "title": "Chess Strategy for Club Players — publisher sample",
+      "authors": [
+        "Herman Grooten"
+      ],
+      "year": 2017,
+      "url": "https://www.newinchess.com/media/wysiwyg/product_pdf/9042.pdf",
+      "edition": "Third improved and extended edition, New In Chess",
+      "sample_pdf_pages": 8,
+      "read_scope": "Title, complete contents on sample PDF2/printed5, foreword and visible preface. Later-page fetch timed out; later chapter text is not counted as read.",
+      "paraphrase": "The contents spans material, king position, passed and weak pawns, squares, pawn centre, diagonals, files, bishop pair, rank control, inactive pieces, coordination, development, centralization, space and total control.",
+      "use": "A broader classical subject index, not a validated tactical detector or a general importance policy."
+    },
+    {
+      "id": "alphazero-concept-boundary",
+      "title": "Acquisition of chess knowledge in AlphaZero",
+      "authors": [
+        "Thomas McGrath",
+        "Andrei Kapishnikov",
+        "Nenad Tomašev",
+        "Adam Pearce",
+        "Martin Wattenberg",
+        "Demis Hassabis",
+        "Been Kim",
+        "Ulrich Paquet",
+        "Vladimir Kramnik"
+      ],
+      "year": 2022,
+      "url": "https://www.pnas.org/doi/10.1073/pnas.2206625119",
+      "read_scope": "Abstract, introduction and human-concept analysis visible in the initial primary page fetch; correlation/causation boundary explicitly read. Later access redirected or timed out.",
+      "paraphrase": "Decodable human chess concepts in a model and explanations of why it chooses a move are different. The paper expressly distinguishes correlational probes from causal analysis.",
+      "use": "An evidential boundary only. No proposal to use AlphaZero or a language model in Chesstories."
+    }
+  ],
+  "unavailable_sources_not_used": [
+    {
+      "url": "https://iiif.library.cmu.edu/file/Simon_box00089_fld07213_bdl0003_doc0001/Simon_box00089_fld07213_bdl0003_doc0001.pdf",
+      "reason": "Primary archive fetch timed out. Search abstract alone is not treated as a read paper or implementation evidence."
+    }
+  ],
+  "synthesis_boundary": "Relational decompositions and phase assignments are our research interpretation. Book motif names do not imply implemented detectors. Current-source findings are provided separately by code-inventory.json."
+}

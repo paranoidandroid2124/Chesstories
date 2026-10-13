@@ -1,0 +1,179 @@
+{
+  "schema_version": "chesstory.research.medium-goal-outcome.v1",
+  "sealed_utc": "2026-10-08T10:36:28.086919+00:00",
+  "started_utc": "2026-10-07T20:11:05.988993+00:00",
+  "deadline_utc": "2026-10-08T11:10:00+00:00",
+  "elapsed_seconds": 51922.098,
+  "bounded_task_status": "Completed research, common-path strengthening, actual comparisons, verification and independent basic-output readings. The four general bottlenecks and the original four full-utility questions are not declared solved.",
+  "unchanged_initial_hypotheses": [
+    "Stable functional conditions must be separated from one observed implementation",
+    "A useful available move needs an owned value test beyond legality",
+    "Strong counter evidence must be sought rather than assumed from one representative",
+    "Complete required comparisons in an extended experiment before setting response-time policy",
+    "Small answer scope must preserve independently important obligations and prices"
+  ],
+  "actual_completed_inventories": [
+    {
+      "question": "original_Ke3_first_black_replies",
+      "completed_depth": 24,
+      "returned_roots": 8
+    },
+    {
+      "question": "original_early_g4_first_black_replies",
+      "completed_depth": 24,
+      "returned_roots": 8
+    },
+    {
+      "question": "refreshed_quiet_g4_reached_position_replies",
+      "completed_depth": 24,
+      "returned_roots": 5
+    }
+  ],
+  "h05_original_two_position_all8_coverage": {
+    "completed": 2,
+    "total": 2,
+    "scope": "Separate exact Ke3 and early-g4 histories and executions at depth24. Earlier failed20min Ke3 attempt stays failed; no whole-tree, forced-route or unique-counter proof."
+  },
+  "changed_behavior": [
+    "An owned discovery-only conditional material path can support the Nb1/Nc4 Rd6 capture-recapture contrast without becoming an independent seed or a full original-grade explanation.",
+    "The first unrestricted reply survey, representative refresh and incomplete retry retain exact current work/history ownership.",
+    "Current sacrifice proof members and bounded reserve-entry source identities remain scoped to the actual selected work; irrelevant later PV endpoints cannot substitute for required realization.",
+    "Compact comparison completion retains explicitly selected first-enemy-reply route use and its actual user/victim price, including COR06-03 axb3/Rxa2.",
+    "Exact first-own reply evasion is selected with its actual incoming attack. Three real default bodies gain bounded threat/evasion meaning without a later or other-line substitution.",
+    "UI decoding and public peer bounds preserve the actual certified body/core/detail scope."
+  ],
+  "original_full_utility_criteria": {
+    "cases": [
+      "NC4",
+      "NB1",
+      "A5",
+      "EXF5"
+    ],
+    "passed": 0,
+    "total": 4,
+    "rescored_or_relaxed": false,
+    "distinct_from_four_bottleneck_categories": true
+  },
+  "code_verification": {
+    "main_compile_exit": 0,
+    "current_compiled_sources_verified": 74,
+    "frozen_class_hashes_verified": 1824,
+    "broad_existing": {
+      "tests": 382,
+      "passed": 379,
+      "old_wording_failures": 3
+    },
+    "new_first_reply_meaning": {
+      "tests": 3,
+      "passed": 3
+    },
+    "actual_old_source_semantic_red": true,
+    "same_assertions_and_timeout_green": true,
+    "ui_new_scope_tests": {
+      "passed": 10,
+      "total": 10
+    },
+    "ui_broad": {
+      "passed": 139,
+      "total": 205,
+      "old_failures": 66
+    }
+  },
+  "actual_product_output": {
+    "original_inputs_completed": 35,
+    "per_input_budget_ms": 180000,
+    "default30second_performance_established": false,
+    "exact_completed_prefix_replays": 180,
+    "new_engine_queries": 9,
+    "separately_controlled_actual_report_replays": 48,
+    "controlled_cases": 7,
+    "decoder_cases": 42,
+    "decoder_exact_body_core_detail": 42,
+    "public_schema_passed": 42,
+    "whole_original35_equal_previous39": 34,
+    "whole_controlled7_equal_previous39": 7,
+    "controlled7_basic_prose_unchanged": true,
+    "changed_numeric_original35_case": "TAT25-09, after new owned engine work; judgment code/confidence/mover unchanged."
+  },
+  "original_fixed34_price_criteria": {
+    "different_forecast_no_retention_success": 22,
+    "same_history_represented_but_price_omitted": 9,
+    "same_history_price_in_core": 3
+  },
+  "price_boundary": "Original changed-forecast and same-history omissions stay unresolved, never omission successes. The separately demonstrated current selected first-reply route dependency loss was repaired and tested. No universal original35 price preservation claim.",
+  "human_reading_scope": "Independent agents read literal exported default prose under fixed criteria; this is not a novice-participant user study. Book pages are selected scenes, not whole-book completion.",
+  "selected_h05_execution_cost": {
+    "attempts": 28,
+    "completed": 18,
+    "failed": 10,
+    "completed_execution_elapsed_ms": 2524226,
+    "failed_execution_elapsed_ms": 5932815,
+    "total_execution_elapsed_ms": 8457041,
+    "completed_clock": "42m4.226s",
+    "failed_clock": "98m52.815s",
+    "total_clock": "140m57.041s",
+    "all_executor_elapsed_ms": 8456768,
+    "all_engine_time_ms": 8455092,
+    "all_runner_wall_ms": 8457396
+  },
+  "time_cost_boundary": "Selected28 distinct H05 attempts only. Not all engine calls, whole goal elapsed time, API billing or causal proof that a longer timeout caused faster completion.",
+  "remaining_work": [
+    "Connect already-legal local defensive or recapture value to the original mover judgment against the strongest current resistance.",
+    "Validate functional survival across alternative realizations without requiring the same SAN/event path or silently erasing actual prices.",
+    "Generalize ranking and minimal answer selection without adding another narrow motif or declaring all context optional.",
+    "Resolve fixed-price omissions and the original four full-utility questions under their unchanged criteria."
+  ],
+  "reproducible_report": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\report.html",
+    "url": "http://127.0.0.1:8794/report.html",
+    "actual_legal_pv_scenarios": 32
+  },
+  "browser_report_checks": {
+    "method": "Actual in-app-browser reload, selection, next/end actions and read-only DOM inspection; screenshot layout inspected.",
+    "choices_observed": 32,
+    "original_Ke3_f6_default_score": "White +8.81",
+    "quiet_Ke7_two_plies": {
+      "caption": "42. Kf5",
+      "counter": "2 / 34",
+      "squares": 64,
+      "fen": "8/4k3/5p2/2p2K2/p1p1P1P1/PpP5/1P6/8 b - - 2 42"
+    },
+    "quiet_f5_end": {
+      "caption": "56. Qgb8#",
+      "counter": "30 / 30",
+      "squares": 64,
+      "next_disabled": true,
+      "fen": "QQ6/8/1k2K3/2p5/p1p5/PpP5/1P6/8 b - - 4 56"
+    },
+    "original_utility_shown": "0 / 4",
+    "schema_shown": "42 / 42",
+    "selected_cost_attempts": 28,
+    "conditional_notes_observed": true
+  },
+  "source_sha256": {
+    "research\\meaning-conditions-20261008\\plan.json": "ef92a873b7118a670a120051527ef23fde24e96a54ee7cea255799932dd0672e",
+    "target\\relationship-delivery-20261004\\main-manifest-meaningv40a.json": "c452183136b6a9b4c0d5baf889c0b5be70e464d491239e470f3eacb1e0a5af40",
+    "research\\meaning-conditions-20261008\\first-reply-meaning40a-final-verification.json": "73737c3ef1237e280ecc5f02b4c8e6bd8f0d87b5ddc6b67da03c7bc17c7a31b4",
+    "research\\meaning-conditions-20261008\\final39-to40a-whole-result-body-delivery-audit.json": "bc1e5035d443464cc42c09bc9c917877b49c75ca55829d9df3d30ce2796f423a",
+    "research\\meaning-conditions-20261008\\mcPrior35Final40a-completion-and-price-audit.json": "c200aedf0a5653041ab7ebfb1b853167f2f3e7db4e60adfb8a6d12af5a484837",
+    "research\\meaning-conditions-20261008\\mcFinal40a-public-schema-validation.json": "1becd5e6dbf539efde34fa56e683a0a48d53c607238e11cfb865c6e1dd9ad698",
+    "research\\meaning-conditions-20261008\\h05-selected-28-attempt-final-cost-ledger.json": "2590914c286c6f890a1e21802b9ba8a9459bd91be7648ab38245c7410788008a",
+    "research\\meaning-conditions-20261008\\final-theory-functional-synthesis.json": "0965ddb81ca0132614c9451b72d149b32dd5809a6d933285d840ca8c0248c1b3",
+    "research\\meaning-conditions-20261008\\final35-current40a-exact-prefix-cost-addendum.json": "322da1572de7c59ef438b26f960717fa58f44038f2a11041fc743f3721cb0d0b",
+    "research\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min-final-independent-addendum.json": "6bc1240319113b06f9b7539ecc1e6bd2249c201c37bdda1efa8bca805d7cd10a",
+    "research\\meaning-conditions-20261008\\h05-original-Ke3-all8-completed-human-reading-addendum.json": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f",
+    "research\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5-final-independent-addendum.json": "79408e749aab23eddf595e824f2818cdfd68cb7e96a0c2ab6930309131ac6311",
+    "research\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5-human-reading-addendum.json": "9433e3f1198a214e6c021b771ce783a571baf398d2541cd42b5538e9f2164d5b",
+    "research\\meaning-conditions-20261008\\h05-same-defense-retained-check-final-addendum.json": "805f054d7c4f2dc2143ec8cec55f64c0f690470cc6a6cb5b72746c077aeca23b",
+    "research\\meaning-conditions-20261008\\h05-retained-pawn-all5-human-reading-addendum.json": "15f0ff25fa48994b306c53fbd9ab56971e42d6cb4e99341e2b2f59aed7cd2455",
+    "research\\meaning-conditions-20261008\\nb1-final37-basic-only-human-reading.json": "2bf72ee0916fcc97dff55c3e0d0442cd090e92501466b1c104f1ddce3572ac8b",
+    "research\\meaning-conditions-20261008\\final40a-fourcase-basic-human-comparison-addendum.json": "0d9d79c6279d9a8c435581dff6bdc999a9aa38221f5189d2d07f7e95b9eea599",
+    "research\\meaning-conditions-20261008\\first-reply-price39-final-verification.json": "7bfa0d3bc8867705411766c0f471f90d7371f52d5782ce5c007aded95cab435e",
+    "research\\meaning-conditions-20261008\\independent-theory-controls.json": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+    "research\\meaning-conditions-20261008\\prior35-fresh37-selected-condition-price-audit.json": "89710dc9f2ef6a7a4faebc1525a2e6d80ef0884c6cc179841899621cbf90a165",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\results.json": "559d8073afe452b3ea1e1e276febe6ef5bfab965ea3e471cd262e238cabde1ac",
+    "target\\meaning-conditions-20261008\\h05-original-first-defenses\\results.json": "9f75c140deaef68e0e9a19d8f8782f67c109040c2eac250932d760252f79c0d4",
+    "target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\results.json": "d0592c6a9adf01528e02ecbc84139d2a6fdef2966032b6ad5cde79a93310c319",
+    "research\\meaning-conditions-20261008\\report-source-manifest.json": "942b9e5a72c94f990acce0689819af4e625981651fb6842c0f1e5a11d5162f2e"
+  }
+}

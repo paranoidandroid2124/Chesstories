@@ -1,0 +1,519 @@
+{
+  "method": {
+    "research_question": "What recurring choices in question discovery, content selection and answer delivery prevent a useful concise basic explanation?",
+    "coverage": "All 900 actual move events in ten master games; no move chosen because product output failed.",
+    "corpus_selection": "Chess Fundamentals Part II Games 1–10, in book order. Selection fixed before outputs. All standard starting positions.",
+    "information_difference": "Independent reasoning sees the entire actual score and sometimes source annotations. Product receives only history through the focus and its own engine lines. Later actual moves are hypotheses, not mandatory product facts.",
+    "judgement": "LLM research reading, not independent human-reader evaluation. Automated structure/legality observations are separated from content judgement.",
+    "balance_stratification": {
+      "basis": "First admitted unrestricted depth>=16 root evaluation before the played move, White perspective",
+      "balanced_abs_cp_max": 100,
+      "mate_scores": "not balanced",
+      "missing_evaluation": "unknown, retained"
+    },
+    "quality_labels": [
+      "useful bounded answer",
+      "useful but diluted",
+      "unfocused answer",
+      "incomplete/unavailable",
+      "no answer"
+    ],
+    "failure_boundaries": [
+      "question/discovery",
+      "answer selection",
+      "composition/delivery",
+      "runtime/time/verification",
+      "outside phase1 or incompatible line"
+    ],
+    "important_cost": "A witnessed reply, recapture, loss, defence or ending that changes a displayed claim. Not every capture anywhere in a PV.",
+    "not_completion_test": "This open, author-biased research corpus does not replace the frozen 14/18 release threshold or any protected heldout.",
+    "product_llm": false,
+    "product_edits": false,
+    "docker": false,
+    "browser_or_http": false,
+    "automatic_threat_probe": false,
+    "diagnostic_budget_ms_per_move": 30000,
+    "whole_game_ui_deadline_applied": false,
+    "phase2": "Long-term plan, lasting weakness, human preference, unique/best/forced win require more than source annotation or one supplied PV."
+  },
+  "independent_file_sha256": {
+    "independent-notes.json": "636a42c2ed048db77e6282cead928e91e2012602716c30a0d95c28b8ca61c2b9",
+    "independent-notes-02-05.json": "e441368f3cf33d72c0703c5a0ffd296554273b87381dab168939d1bd4a7a3cd5",
+    "independent-notes-06-08.json": "0429a581dc545d55981d2833e1569278e22da73377ea50fe235723c940ec82b4",
+    "independent-notes-09-10.json": "4f2134dbc654a8417ae62e34a657c1c9a834363f4aafbf04a85795c94235a983",
+    "review-01-03.json": "c6ce3ede7a88dc75eea06ea25dc09fb6fa3141007d08fb7ceb60cb31f47cf094",
+    "review-04-07.json": "535b8a1174b26f6d062adf5aee5e027a368c7b995197befd78a840a3a622c8e3",
+    "review-08-10.json": "0c14127b71fc3659d47e6aaadeeaf3fdec695d96d85dde93929ab72fb6bb5395",
+    "review-10.json": "f604a0d4ba9b2d9e55cf47a656240664a9c4036ec7e293759825c36418b0c6dc"
+  },
+  "coverage": {
+    "expected": 900,
+    "independent": 900,
+    "product": 900,
+    "reviewed": 900,
+    "unique_before_positions_ignoring_clocks": 866
+  },
+  "games": [
+    {
+      "game_id": "fundamentals-game-01",
+      "headers": {
+        "Event": "Match",
+        "Site": "?",
+        "Date": "1909.??.??",
+        "Round": "?",
+        "White": "F. J. Marshall",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "expected_moves": 49,
+      "independent_moves": 49,
+      "product_moves": 49,
+      "reviewed_moves": 49,
+      "balanced_moves": 34,
+      "unknown_balance": 0,
+      "question_counts": {
+        "selected_comparison": 42,
+        "observed_move_order": 2,
+        "contested_pair_response": 3,
+        "selected_target_response": 1,
+        "opening_counterplay": 1
+      },
+      "quality_counts": {
+        "useful but diluted": 37,
+        "useful bounded answer": 10,
+        "unfocused answer": 2
+      },
+      "assessment_states": {
+        "current": 44,
+        "needs_refresh": 5
+      },
+      "verification_states": {
+        "complete": 44,
+        "stopped": 5
+      },
+      "median_ms": 8611,
+      "total_ms": 461970
+    },
+    {
+      "game_id": "fundamentals-game-02",
+      "headers": {
+        "Event": "San Sebastian",
+        "Site": "San Sebastian",
+        "Date": "1911.??.??",
+        "Round": "?",
+        "White": "A. K. Rubinstein",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "expected_moves": 83,
+      "independent_moves": 83,
+      "product_moves": 83,
+      "reviewed_moves": 83,
+      "balanced_moves": 33,
+      "unknown_balance": 0,
+      "question_counts": {
+        "selected_comparison": 75,
+        "observed_move_order": 1,
+        "provider_transfer": 1,
+        "selected_target_response": 2,
+        "null": 1,
+        "contested_pair_response": 2,
+        "observed_route_use": 1
+      },
+      "quality_counts": {
+        "unfocused answer": 9,
+        "useful but diluted": 62,
+        "useful bounded answer": 11,
+        "incomplete/unavailable": 1
+      },
+      "assessment_states": {
+        "current": 66,
+        "needs_refresh": 17
+      },
+      "verification_states": {
+        "complete": 66,
+        "stopped": 17
+      },
+      "median_ms": 7550,
+      "total_ms": 674526
+    },
+    {
+      "game_id": "fundamentals-game-03",
+      "headers": {
+        "Event": "Havana",
+        "Site": "Havana",
+        "Date": "1913.??.??",
+        "Round": "?",
+        "White": "D. Janowski",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "expected_moves": 99,
+      "independent_moves": 99,
+      "product_moves": 99,
+      "reviewed_moves": 99,
+      "balanced_moves": 24,
+      "unknown_balance": 8,
+      "question_counts": {
+        "selected_comparison": 92,
+        "observed_move_order": 2,
+        "selected_target_response": 1,
+        "contested_pair_response": 2,
+        "null": 1,
+        "controlled_destination": 1
+      },
+      "quality_counts": {
+        "useful but diluted": 80,
+        "unfocused answer": 7,
+        "useful bounded answer": 11,
+        "no answer": 1
+      },
+      "assessment_states": {
+        "current": 88,
+        "needs_refresh": 11
+      },
+      "verification_states": {
+        "complete": 80,
+        "stopped": 18,
+        "not_required": 1
+      },
+      "median_ms": 6924,
+      "total_ms": 728975
+    },
+    {
+      "game_id": "fundamentals-game-04",
+      "headers": {
+        "Event": "St. Petersburg",
+        "Site": "St. Petersburg",
+        "Date": "1913.??.??",
+        "Round": "?",
+        "White": "J. R. Capablanca",
+        "Black": "E. A. Snosko-Borovski",
+        "Result": "0-1"
+      },
+      "expected_moves": 80,
+      "independent_moves": 80,
+      "product_moves": 80,
+      "reviewed_moves": 80,
+      "balanced_moves": 44,
+      "unknown_balance": 1,
+      "question_counts": {
+        "observed_route_use": 2,
+        "selected_comparison": 64,
+        "selected_target_response": 1,
+        "contested_pair_response": 3,
+        "observed_move_order": 2,
+        "null": 7,
+        "observed_terminal_comparison": 1
+      },
+      "quality_counts": {
+        "unfocused answer": 10,
+        "useful but diluted": 58,
+        "useful bounded answer": 5,
+        "incomplete/unavailable": 6,
+        "no answer": 1
+      },
+      "assessment_states": {
+        "current": 76,
+        "needs_refresh": 4
+      },
+      "verification_states": {
+        "complete": 75,
+        "stopped": 4,
+        "not_required": 1
+      },
+      "median_ms": 7364,
+      "total_ms": 607251
+    },
+    {
+      "game_id": "fundamentals-game-05",
+      "headers": {
+        "Event": "St. Petersburg",
+        "Site": "St. Petersburg",
+        "Date": "1914.??.??",
+        "Round": "?",
+        "White": "Dr. E. Lasker",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "expected_moves": 83,
+      "independent_moves": 83,
+      "product_moves": 83,
+      "reviewed_moves": 83,
+      "balanced_moves": 35,
+      "unknown_balance": 1,
+      "question_counts": {
+        "selected_comparison": 76,
+        "selected_target_response": 2,
+        "observed_route_use": 1,
+        "provider_transfer": 1,
+        "attack_or_immediate_exchange": 1,
+        "observed_move_order": 1,
+        "investigated_mechanism": 1
+      },
+      "quality_counts": {
+        "useful but diluted": 61,
+        "useful bounded answer": 11,
+        "unfocused answer": 11
+      },
+      "assessment_states": {
+        "needs_refresh": 17,
+        "current": 66
+      },
+      "verification_states": {
+        "stopped": 18,
+        "complete": 65
+      },
+      "median_ms": 7024,
+      "total_ms": 601303
+    },
+    {
+      "game_id": "fundamentals-game-06",
+      "headers": {
+        "Event": "Rice Memorial Tournament",
+        "Site": "Rice Memorial Tournament",
+        "Date": "1916.??.??",
+        "Round": "?",
+        "White": "O. Chajes",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "expected_moves": 131,
+      "independent_moves": 131,
+      "product_moves": 131,
+      "reviewed_moves": 131,
+      "balanced_moves": 61,
+      "unknown_balance": 2,
+      "question_counts": {
+        "selected_comparison": 115,
+        "null": 6,
+        "contested_pair_response": 5,
+        "selected_target_response": 2,
+        "observed_terminal_comparison": 2,
+        "controlled_destination": 1
+      },
+      "quality_counts": {
+        "useful but diluted": 105,
+        "incomplete/unavailable": 5,
+        "useful bounded answer": 15,
+        "unfocused answer": 5,
+        "no answer": 1
+      },
+      "assessment_states": {
+        "current": 119,
+        "needs_refresh": 12
+      },
+      "verification_states": {
+        "complete": 119,
+        "stopped": 11,
+        "not_required": 1
+      },
+      "median_ms": 6886,
+      "total_ms": 961691
+    },
+    {
+      "game_id": "fundamentals-game-07",
+      "headers": {
+        "Event": "San Sebastian",
+        "Site": "San Sebastian",
+        "Date": "1911.??.??",
+        "Round": "?",
+        "White": "J. R. Capablanca",
+        "Black": "A. Burn",
+        "Result": "1-0"
+      },
+      "expected_moves": 91,
+      "independent_moves": 91,
+      "product_moves": 91,
+      "reviewed_moves": 91,
+      "balanced_moves": 30,
+      "unknown_balance": 1,
+      "question_counts": {
+        "selected_comparison": 82,
+        "null": 3,
+        "selected_target_response": 3,
+        "contested_pair_response": 1,
+        "observed_move_order": 1,
+        "observed_arrangement_convergence": 1
+      },
+      "quality_counts": {
+        "useful bounded answer": 12,
+        "useful but diluted": 71,
+        "unfocused answer": 5,
+        "incomplete/unavailable": 2,
+        "no answer": 1
+      },
+      "assessment_states": {
+        "needs_refresh": 9,
+        "current": 82
+      },
+      "verification_states": {
+        "stopped": 8,
+        "complete": 82,
+        "not_required": 1
+      },
+      "median_ms": 11672,
+      "total_ms": 1085956
+    },
+    {
+      "game_id": "fundamentals-game-08",
+      "headers": {
+        "Event": "Berlin",
+        "Site": "Berlin",
+        "Date": "1913.??.??",
+        "Round": "?",
+        "White": "J. Mieses",
+        "Black": "J. R. Capablanca",
+        "Result": "0-1"
+      },
+      "expected_moves": 88,
+      "independent_moves": 88,
+      "product_moves": 88,
+      "reviewed_moves": 88,
+      "balanced_moves": 47,
+      "unknown_balance": 5,
+      "question_counts": {
+        "selected_comparison": 75,
+        "contested_pair_response": 2,
+        "selected_target_response": 4,
+        "investigated_mechanism": 1,
+        "observed_move_order": 1,
+        "observed_route_use": 2,
+        "null": 3
+      },
+      "quality_counts": {
+        "unfocused answer": 13,
+        "useful but diluted": 66,
+        "useful bounded answer": 6,
+        "incomplete/unavailable": 3
+      },
+      "assessment_states": {
+        "needs_refresh": 8,
+        "current": 80
+      },
+      "verification_states": {
+        "stopped": 12,
+        "complete": 76
+      },
+      "median_ms": 6802,
+      "total_ms": 663905
+    },
+    {
+      "game_id": "fundamentals-game-09",
+      "headers": {
+        "Event": "Berlin",
+        "Site": "Berlin",
+        "Date": "1913.??.??",
+        "Round": "?",
+        "White": "J. R. Capablanca",
+        "Black": "R. Teichmann",
+        "Result": "1-0"
+      },
+      "expected_moves": 75,
+      "independent_moves": 75,
+      "product_moves": 75,
+      "reviewed_moves": 75,
+      "balanced_moves": 41,
+      "unknown_balance": 0,
+      "question_counts": {
+        "selected_comparison": 68,
+        "observed_move_order": 2,
+        "selected_target_response": 1,
+        "observed_route_use": 1,
+        "contested_pair_response": 3
+      },
+      "quality_counts": {
+        "unfocused answer": 19,
+        "useful but diluted": 47,
+        "useful bounded answer": 9
+      },
+      "assessment_states": {
+        "current": 71,
+        "needs_refresh": 4
+      },
+      "verification_states": {
+        "complete": 71,
+        "stopped": 4
+      },
+      "median_ms": 8039,
+      "total_ms": 642018
+    },
+    {
+      "game_id": "fundamentals-game-10",
+      "headers": {
+        "Event": "St. Petersburg",
+        "Site": "St. Petersburg",
+        "Date": "1914.??.??",
+        "Round": "?",
+        "White": "J. R. Capablanca",
+        "Black": "F. J. Marshall",
+        "Result": "1-0"
+      },
+      "expected_moves": 121,
+      "independent_moves": 121,
+      "product_moves": 121,
+      "reviewed_moves": 121,
+      "balanced_moves": 30,
+      "unknown_balance": 1,
+      "question_counts": {
+        "selected_comparison": 113,
+        "contested_pair_response": 2,
+        "selected_target_response": 2,
+        "null": 1,
+        "observed_move_order": 1,
+        "observed_terminal_comparison": 2
+      },
+      "quality_counts": {
+        "useful but diluted": 90,
+        "useful bounded answer": 17,
+        "unfocused answer": 13,
+        "incomplete/unavailable": 1
+      },
+      "assessment_states": {
+        "current": 106,
+        "needs_refresh": 15
+      },
+      "verification_states": {
+        "complete": 105,
+        "stopped": 16
+      },
+      "median_ms": 7512,
+      "total_ms": 1008892
+    }
+  ],
+  "reader_quality_counts": {
+    "useful but diluted": 677,
+    "useful bounded answer": 107,
+    "unfocused answer": 94,
+    "incomplete/unavailable": 18,
+    "no answer": 4
+  },
+  "balanced_reader_quality_counts": {
+    "useful but diluted": 286,
+    "useful bounded answer": 45,
+    "unfocused answer": 38,
+    "incomplete/unavailable": 10
+  },
+  "reader_failure_boundaries": {
+    "answer selection": 450,
+    "null": 107,
+    "question/discovery": 16,
+    "composition/delivery": 327
+  },
+  "executor_not_flagged_reader_quality_counts": {
+    "useful but diluted": 601,
+    "useful bounded answer": 96,
+    "unfocused answer": 86,
+    "incomplete/unavailable": 15,
+    "no answer": 4
+  },
+  "executor_partial_packet_reader_quality_counts": {
+    "useful bounded answer": 11,
+    "useful but diluted": 76,
+    "unfocused answer": 8,
+    "incomplete/unavailable": 3
+  },
+  "reader_claim_changing_reply_cost_missing": 214,
+  "executor_not_flagged_reply_cost_missing": 188,
+  "balanced_reply_cost_missing": 73
+}

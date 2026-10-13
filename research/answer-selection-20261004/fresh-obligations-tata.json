@@ -1,0 +1,2741 @@
+{
+  "schema_version": 1,
+  "artifact_role": "Commentary obligations fixed after factual extraction and before any product-prose reading for the nine Tata jobs",
+  "author": "Research assistant reasoning over supplied legally replayed facts; not an independent human reader",
+  "method": {
+    "product_prose_read": false,
+    "final_snapshots_or_journal_read": false,
+    "new_engine_execution_by_author": false,
+    "source_or_test_changes_by_author": false,
+    "scope": "Only the nine explicitly assigned obligation-facts files and their matching balance-final18 requests",
+    "reference_convention": "r:N and c:N are one-based steps of the exact exported reference and candidate comparison paths, not game ply numbers",
+    "identity_convention": "True/False identify White/Black, followed by role and square at the shared comparison-path start",
+    "grading": "Grade primary selection separately from a different useful bounded answer. A locally correct elementary fact does not by itself answer the primary question. Composition preserves the stated topic's actual replies, opposing captures and recovery. Delivery is assessed only after this artifact is frozen.",
+    "scope_policy": "Not every later capture is compulsory for a bounded episode. Once an answer claims a capturer's outcome, whole transaction or endpoint balance, its opposing costs and recovery are compulsory. A proof occurrence need not be spoken as SAN if its content is stated unambiguously.",
+    "limits": [
+      "Supplied continuations are observations, not proof that every reply is forced or every legal alternative was checked.",
+      "No whole-game result, evaluation cause, global best-move or verified threat claim is inferred from these lines.",
+      "Different PV lengths and later choices prevent endpoint material differences from establishing why the root evaluation differs.",
+      "No material-estimate label is substituted for the actual original identities and captures.",
+      "Unavailable jobs remain in the denominator; missing facts cannot produce an omission-free quality success."
+    ]
+  },
+  "denominator": 9,
+  "cases": [
+    {
+      "game_id": "TAT25-01",
+      "fact_state": "comparison_available",
+      "primary_question": "Bxc3로 지금 c3 나이트를 없애는 것과 Rc8 뒤 그 나이트가 Nd5/Nf6+를 두도록 남기는 것은, 같은 비숍-나이트 교환과 백의 되잡는 기물에서 어떻게 다른가?",
+      "bounded_answer": "Bxc3 bxc3는 원래 g7 비숍과 c3 나이트를 바로 교환하며 b2 폰이 c3으로 간다. Rc8에서는 그 나이트가 Nd5/Nf6+로 먼저 움직인 뒤 Bxf6 Qxf6로 같은 두 기물이 교환되고 이번에는 d6 퀸이 되잡는다. 이후 제공된 두 수순 모두 퀸 교환과 같은 a8/d2 룩 교환을 포함한다. Rc8이 전체 후속 결과를 필연적으로 만든다는 뜻은 아니다.",
+      "primary_required": [
+        {
+          "content": "두 교환의 원래 흑 g7 비숍과 백 c3 나이트가 동일하다. 즉시 제거와 체크 후 제거를 구분한다.",
+          "proof_keys": [
+            "r:1",
+            "r:2",
+            "c:1",
+            "c:2",
+            "c:4",
+            "c:5",
+            "c:6"
+          ]
+        },
+        {
+          "content": "Bxc3에는 bxc3, Nf6+에는 Bxf6와 Qxf6를 함께 둔다. 나이트나 비숍의 무상 획득으로 말하지 않는다.",
+          "proof_keys": [
+            "r:1",
+            "r:2",
+            "c:4",
+            "c:5",
+            "c:6"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "공통 단순화 또는 퀸·룩 획득",
+          "content": "양쪽 Qxe6/Bxe6와 Rxd2/Rxd2를 보존한다. 같은 a8 룩이 d2 룩을 잡고 h1 룩에게 잡힌다.",
+          "proof_keys": [
+            "r:6",
+            "r:7",
+            "r:9",
+            "r:10",
+            "c:8",
+            "c:9",
+            "c:11",
+            "c:12"
+          ]
+        },
+        {
+          "claim": "끝의 폰 손익 또는 전체 물질 결과",
+          "content": "reference의 Bxa7/Bxa2, candidate의 Bxa7/Rxa2/Rxf6+ 및 실제 Ke7 응수를 포함한다. 길이 18과 24의 차이도 밝힌다.",
+          "proof_keys": [
+            "r:12",
+            "r:13",
+            "c:14",
+            "c:19",
+            "c:22",
+            "c:23"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "두 수순에서 같은 퀸과 룩들이 어떤 되잡기로 교환되는가?",
+          "required": "양쪽 같은 원래 기물과 두 포획짜리 교환을 닫아 설명해야 하며, 단순히 Qxe6 또는 Rxd2만 열거한 답은 부족하다.",
+          "proof_keys": [
+            "r:6",
+            "r:7",
+            "r:9",
+            "r:10",
+            "c:8",
+            "c:9",
+            "c:11",
+            "c:12"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "Rc8의 룩 전개 또는 c파일 점유만 설명",
+        "나이트가 이동했다는 경로만 나열"
+      ],
+      "unconfirmed": [
+        "Nf6+가 퀸을 강제로 얻는다는 주장",
+        "Rc8의 평가 차이가 마지막 f6 폰 손실 때문이라는 인과 주장"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-01-obligation-facts.json",
+      "fact_sha256": "f6c176934651608033815d2520ae3a3035fe2936804c67dd65f369ca3694144c",
+      "source_snapshot_sha256": "6c5303f4f941a789c3fa13e2efa275dc96a535b1e9d3e4c2b04abb35ece28b18",
+      "execution_status": {
+        "game_id": "TAT25-01",
+        "request_id": "answer-selection-TAT25-01-32",
+        "elapsed_ms": 10920,
+        "work_count": 6,
+        "issued_work_count": 6,
+        "bridge_execution_response_count": 6,
+        "report_submission_attempt_count": 6,
+        "reducer_report_response_count": 6,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-01-32",
+      "current_fen": "r3qrk1/pp3pbp/3Q2p1/8/4p1b1/2N1B3/PPPR1PPP/2K4R b - - 3 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:candidate-comparison:6f3492206f9a9192c4826ea74e2e8eb7f8c1da2601b88b1cd8906773fc5e1f0b",
+          "reference_line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "candidate_line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 18,
+        "candidate_steps": 24,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 17,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:de51c1bb601968d66548b4d8ddbf52487299ebda2a7233debbe1ab6c52629dd8"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 23,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:58534369f1a582c075ab92b6c0fd46af679766dbffc31416ab2cc13f2a687813"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:c9d24996474c18f00fa5f069530c70d851442e882a00cdea1bfe796a69010cec",
+          "uci": "a8c8",
+          "san": "Rc8",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": null
+        },
+        "c:11": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:92c34ae1c125dcafc7559c970cd16da3db071a1940673d6a674ea81715e44883",
+          "uci": "d8d2",
+          "san": "Rxd2",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": "True:rook:d2"
+        },
+        "c:12": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:c20678c9912a71a716ca102a18dbbe166a02190e755e76fef14c3017d5628641",
+          "uci": "d1d2",
+          "san": "Rxd2",
+          "mover_path_start_identity": "True:rook:h1",
+          "captured_path_start_identity": "False:rook:a8"
+        },
+        "c:14": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:f9305a969d3b6884e26f29045bfa0370e25b98d8db887172a4f76b193fcc046a",
+          "uci": "e3a7",
+          "san": "Bxa7",
+          "mover_path_start_identity": "True:bishop:e3",
+          "captured_path_start_identity": "False:pawn:a7"
+        },
+        "c:19": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 19,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:1a57e9cf2700c04b22cdfd90ee99a541693641360a28f53f711e11859f4302d0",
+          "uci": "a8a2",
+          "san": "Rxa2",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": "True:pawn:a2"
+        },
+        "c:2": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:8b64246e73feba92352364995bab3cd49950a12e3f0dd65c43a18a09035d769a",
+          "uci": "c3d5",
+          "san": "Nd5",
+          "mover_path_start_identity": "True:knight:c3",
+          "captured_path_start_identity": null
+        },
+        "c:22": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 22,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:179c5b59319ad1a876d79b54b50ff403815ac5368399b20c316e5f8a5dc0679d",
+          "uci": "b6f6",
+          "san": "Rxf6+",
+          "mover_path_start_identity": "True:rook:h1",
+          "captured_path_start_identity": "False:pawn:f7"
+        },
+        "c:23": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 23,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:c78b54852a2f6299190e48787a2a29b1b499682522dfda91b81d195e87b3c430",
+          "uci": "f7e7",
+          "san": "Ke7",
+          "mover_path_start_identity": "False:king:g8",
+          "captured_path_start_identity": null
+        },
+        "c:4": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 4,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:f17c4b5f97e638021b665c29d4b65b4a5f1e003b207418f1795bd37945a8d687",
+          "uci": "d5f6",
+          "san": "Nf6+",
+          "mover_path_start_identity": "True:knight:c3",
+          "captured_path_start_identity": null
+        },
+        "c:5": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:f9fa066550459c58d8b05b140e1760f8d1814b808b072953c6c72ed1a834b84d",
+          "uci": "g7f6",
+          "san": "Bxf6",
+          "mover_path_start_identity": "False:bishop:g7",
+          "captured_path_start_identity": "True:knight:c3"
+        },
+        "c:6": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:8acb8f8b6fbd4ef8ce6b983a8568562736f16db4302b848ad9900120f8f9b1a8",
+          "uci": "d6f6",
+          "san": "Qxf6",
+          "mover_path_start_identity": "True:queen:d6",
+          "captured_path_start_identity": "False:bishop:g7"
+        },
+        "c:8": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:15e2c61e39f69757c7acbedf5e75e37e0083f2177447db0d233a2be58b52791e",
+          "uci": "f6e6",
+          "san": "Qxe6",
+          "mover_path_start_identity": "True:queen:d6",
+          "captured_path_start_identity": "False:queen:e8"
+        },
+        "c:9": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:6ca2d3bbbde4e97379b9668b48d53272a566d94bea47846ff58675a1ca0e841f",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:7f487436c3f97c17b79861db74bf8bf48f1070fe5f07560510a6d6b3353d239f",
+          "uci": "g4e6",
+          "san": "Bxe6",
+          "mover_path_start_identity": "False:bishop:g4",
+          "captured_path_start_identity": "True:queen:d6"
+        },
+        "r:1": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:94b34e3bdc9dee38e22605c6240e5c2eb6b456dfb1ade5cce4213509c08b4efb",
+          "uci": "g7c3",
+          "san": "Bxc3",
+          "mover_path_start_identity": "False:bishop:g7",
+          "captured_path_start_identity": "True:knight:c3"
+        },
+        "r:10": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 10,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:554e1397694fa921b571c9e23e155026cd1cd8506755de5267267e641c3049df",
+          "uci": "d1d2",
+          "san": "Rxd2",
+          "mover_path_start_identity": "True:rook:h1",
+          "captured_path_start_identity": "False:rook:a8"
+        },
+        "r:12": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:1852cb6117019a8c3b1ad0ea71c77735131c0c726899ac96cc18deca5bf38a8b",
+          "uci": "e3a7",
+          "san": "Bxa7",
+          "mover_path_start_identity": "True:bishop:e3",
+          "captured_path_start_identity": "False:pawn:a7"
+        },
+        "r:13": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 13,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:536a95d083f6a945c47921c90f7db7f9b9f78b4b7cff239e88c54f412c07d46e",
+          "uci": "e6a2",
+          "san": "Bxa2",
+          "mover_path_start_identity": "False:bishop:g4",
+          "captured_path_start_identity": "True:pawn:a2"
+        },
+        "r:2": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:66d4f47867e6460bd13619e677e33bd8c928863a4d1a5bafb3f61897d6411391",
+          "uci": "b2c3",
+          "san": "bxc3",
+          "mover_path_start_identity": "True:pawn:b2",
+          "captured_path_start_identity": "False:bishop:g7"
+        },
+        "r:6": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:c2459da665b205c9f9ea90f3dfffdb21fce195999d4c5959d651e23a1d2c7978",
+          "uci": "f6e6",
+          "san": "Qxe6",
+          "mover_path_start_identity": "True:queen:d6",
+          "captured_path_start_identity": "False:queen:e8"
+        },
+        "r:7": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:5b565fb3302a5858bbbbb9dadf0ff3774229920280f7747accf0c5b8369f0034",
+          "uci": "g4e6",
+          "san": "Bxe6",
+          "mover_path_start_identity": "False:bishop:g4",
+          "captured_path_start_identity": "True:queen:d6"
+        },
+        "r:9": {
+          "line_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:line:3e3017d148c549d48ef0b07132c97976b416d915c2c889f1c7dbb415c4a109f5",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:391104078676c2884199d4999e6dbeec3191b75163dc0c1c9a243a1fad2ada35:31:a8c8:evidence:transition:69ab71516205cbb90b748db01dd2666a5388dae8c5640ef34ad2df631ab8fda3",
+          "uci": "d8d2",
+          "san": "Rxd2",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": "True:rook:d2"
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-03",
+      "fact_state": "comparison_available",
+      "primary_question": "Re8과 Qc7 뒤 양쪽에서 b4 폰을 잡는 같은 d6 비숍은 이후 무엇을 얻고 무엇과 교환되며, 퀸과 c2 폰의 처리에는 어떤 차이가 있는가?",
+      "bounded_answer": "양쪽 모두 원래 d6 비숍의 Bxb4로 백 b4 폰을 잡는다. Re8 수순은 Qxb6/Rxb6로 퀸을 교환한 뒤 Nxc5/Rxc5로 그 비숍과 백 e5 나이트를 교환한다. Qc7 수순에서는 d6 비숍이 Bd2까지 남고, 별개의 원래 c6 비숍이 Ba4/Bxc2로 c2 폰을 잡고 다시 a4로 돌아간다. 그 수순의 퀸은 기록 끝까지 남는다.",
+      "primary_required": [
+        {
+          "content": "b4 획득은 두 선택의 공통 내용이며 두 흑 비숍의 원래 정체를 혼동하지 않는다.",
+          "proof_keys": [
+            "r:1",
+            "r:5",
+            "c:1",
+            "c:3",
+            "c:7",
+            "c:9",
+            "c:11",
+            "c:17"
+          ]
+        },
+        {
+          "content": "Re8의 퀸 교환과 d6 비숍-나이트 교환은 각각 반대 포획까지 포함한다. reference의 d6 비숍이 c2도 잡았다고 연결하지 않는다.",
+          "proof_keys": [
+            "r:10",
+            "r:11",
+            "r:14",
+            "r:15",
+            "r:16",
+            "r:17"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "c2 침입 또는 두 폰 획득",
+          "content": "Qc7의 Ba4/Bxc2/Ba4와 서로 다른 비숍의 Bxb4를 구분한다. 이후 Rac8의 원래 a8 룩이 Rc2에 들어가는 기록도 같은 룩으로 추적한다.",
+          "proof_keys": [
+            "c:3",
+            "c:5",
+            "c:7",
+            "c:9",
+            "c:11",
+            "c:15"
+          ]
+        },
+        {
+          "claim": "킹 위치 또는 캐슬링 차이",
+          "content": "Qc7 뒤 O-O와 Re8 뒤 Kd1을 관측 사실로만 비교한다. 캐슬링 가능 여부나 강제성의 일반 결론을 만들지 않는다.",
+          "proof_keys": [
+            "c:4",
+            "r:12"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "b4 폰을 얻은 같은 비숍이 reference에서 어떻게 나이트와 교환되는가?",
+          "required": "Bxb4/Bc5/Nd3/Nxc5/Rxc5를 통해 같은 d6 비숍과 e5 나이트의 교환 및 룩의 되잡기를 보존한다. candidate가 같은 교환을 한다고 확장하지 않는다.",
+          "proof_keys": [
+            "r:5",
+            "r:7",
+            "r:14",
+            "r:16",
+            "r:17"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "Re8이 e파일에 들어간다거나 Qc7이 퀸을 움직인다는 설명만 제공",
+        "양쪽 Bxb4만 남기고 이미 관측된 서로 다른 기물 처리를 동일하다고 선언"
+      ],
+      "unconfirmed": [
+        "Qc7이 두 번째 폰을 강제로 얻는다는 주장",
+        "폰 수 차이만으로 두 root의 평가 우열을 설명"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-03-obligation-facts.json",
+      "fact_sha256": "9e6e551223b44a4411ea1f33777e24c2725df87f79054c6fd476fb155b88a97e",
+      "source_snapshot_sha256": "d53164067ca6ee60908fd787976088709e3e15ada7e4f085c82808176f051572",
+      "execution_status": {
+        "game_id": "TAT25-03",
+        "request_id": "answer-selection-TAT25-03-32",
+        "elapsed_ms": 7805,
+        "work_count": 4,
+        "issued_work_count": 4,
+        "bridge_execution_response_count": 4,
+        "report_submission_attempt_count": 4,
+        "reducer_report_response_count": 4,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-03-32",
+      "current_fen": "r2q1rk1/p5pp/2bb4/3pNp2/1P6/8/PBPP1PPP/R2QK2R b KQ - 0 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:candidate-comparison:5e3f1940ac0ebcbefa7d1680aeebf834642f5edaecce7830c703fae9d5dc507c",
+          "reference_line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "candidate_line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 17,
+        "candidate_steps": 17,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 16,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:635f21955b19abeb4cbf117770498d3f75d432c36c7f5b8211ef1a7add4cb452"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 16,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:be0b6eb692f33c331627686de3143a6bb5c6df70a5b0d44c33da2d2a4eeb1ffe"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:2680b39e7f75e17cc9288c0537871c2ddf12422991d66f9ce3bb58bafdcb0c12",
+          "uci": "d8c7",
+          "san": "Qc7",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": null
+        },
+        "c:11": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:fb35dfecb27e79dc0c5b8fbd89284552778e919e9dfd89a53006c9e3bf81b776",
+          "uci": "c2a4",
+          "san": "Ba4",
+          "mover_path_start_identity": "False:bishop:c6",
+          "captured_path_start_identity": null
+        },
+        "c:15": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:8ad533faa01af7d44c37bafa1a6280746c95c7669f4c02eca5313a3a2a9a0fe8",
+          "uci": "c8c2",
+          "san": "Rc2",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": null
+        },
+        "c:17": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:be0b6eb692f33c331627686de3143a6bb5c6df70a5b0d44c33da2d2a4eeb1ffe",
+          "uci": "b4d2",
+          "san": "Bd2",
+          "mover_path_start_identity": "False:bishop:d6",
+          "captured_path_start_identity": null
+        },
+        "c:3": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:66a3595adb9a132f26e1bfe484edf50b19b556f58f1ef9bacd9af44bb3304382",
+          "uci": "d6b4",
+          "san": "Bxb4",
+          "mover_path_start_identity": "False:bishop:d6",
+          "captured_path_start_identity": "True:pawn:b4"
+        },
+        "c:4": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 4,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:2aebd26e0d5129069b6e7d6aa091040b05ada1861e90c6c809e23b15875359be",
+          "uci": "e1g1",
+          "san": "O-O",
+          "mover_path_start_identity": "True:king:e1",
+          "captured_path_start_identity": null
+        },
+        "c:5": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:b7f8c0cb390ca02b6d36ab2bccf8332f863a9e33a91eb22f209eb1957ae8833e",
+          "uci": "a8c8",
+          "san": "Rac8",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": null
+        },
+        "c:7": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:442ce587c99d968e3c5b042b4fab8a34eebfc0be9be1890d6ac3374ac463fbe8",
+          "uci": "c6a4",
+          "san": "Ba4",
+          "mover_path_start_identity": "False:bishop:c6",
+          "captured_path_start_identity": null
+        },
+        "c:9": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:a43d8118ff244e81d0c8141aebca6539bd5ecaa12cfeb48608efa2a9507d4cba",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:74bb4b3bfc4fdb1792bdc7b49a4ef51caf2853388e96705a2660aeb7c3f4d74a",
+          "uci": "a4c2",
+          "san": "Bxc2",
+          "mover_path_start_identity": "False:bishop:c6",
+          "captured_path_start_identity": "True:pawn:c2"
+        },
+        "r:1": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:41fd6fc63a9fd133ef9655356eb7a8c67b691446869c347b48afcc5c36db5c4a",
+          "uci": "f8e8",
+          "san": "Re8",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": null
+        },
+        "r:10": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 10,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:3eb639c13f0f8ffad67df67e3e104c87e5da7c1ceeb83af95f64083a85fb699d",
+          "uci": "b3b6",
+          "san": "Qxb6",
+          "mover_path_start_identity": "True:queen:d1",
+          "captured_path_start_identity": "False:queen:d8"
+        },
+        "r:11": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:80f61047d9166f1b5ac16d2d43ab5208bdf84ae99790c37c1e82cbcb716fd094",
+          "uci": "b8b6",
+          "san": "Rxb6",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": "True:queen:d1"
+        },
+        "r:12": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:23ef13ded59bb89d9f31bf137dfd8523ca1948c80257092e933ec6e194cdf11b",
+          "uci": "e1d1",
+          "san": "Kd1",
+          "mover_path_start_identity": "True:king:e1",
+          "captured_path_start_identity": null
+        },
+        "r:14": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:f52f6113ca1d70cc09cfd5bfefdd13c4a6563c755d91a89bf23c65cbd7a156ac",
+          "uci": "e5d3",
+          "san": "Nd3",
+          "mover_path_start_identity": "True:knight:e5",
+          "captured_path_start_identity": null
+        },
+        "r:15": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:c97a1c1a0383d96b8b918e0e0c0a6e19b3cc92237c48053cea17cced218453b0",
+          "uci": "e8c8",
+          "san": "Rc8",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": null
+        },
+        "r:16": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:e6c16d98c4423b35f5e2cfad6d386f8e0e4a3472339437b2f9a0534b443d44c7",
+          "uci": "d3c5",
+          "san": "Nxc5",
+          "mover_path_start_identity": "True:knight:e5",
+          "captured_path_start_identity": "False:bishop:d6"
+        },
+        "r:17": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:635f21955b19abeb4cbf117770498d3f75d432c36c7f5b8211ef1a7add4cb452",
+          "uci": "c8c5",
+          "san": "Rxc5",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": "True:knight:e5"
+        },
+        "r:5": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:0a79858e3d5f35d1128b4544c5055179bca3992cb0a70f717fb81f092667cb30",
+          "uci": "d6b4",
+          "san": "Bxb4",
+          "mover_path_start_identity": "False:bishop:d6",
+          "captured_path_start_identity": "True:pawn:b4"
+        },
+        "r:7": {
+          "line_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:line:7e9c8f22ca8007332bb93175901c151978a17f423e949a95daeda537e1f48089",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:4b20ef0e6bbf8097aa7b4362a1706af0bc7bc3d2c03f21f155d8c7651522c312:31:f8e8:evidence:transition:c99f2f18972a5ac07d8762317a26b76f17c94e6e06feb548057bb5a02bc1a70a",
+          "uci": "b4c5",
+          "san": "Bc5",
+          "mover_path_start_identity": "False:bishop:d6",
+          "captured_path_start_identity": null
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-04",
+      "fact_state": "comparison_available",
+      "primary_question": "공격받는 h4 비숍으로 Bxg5를 두는 것과 e5로 맞서는 것은, 같은 비숍의 생존·교환과 그 대가에서 어떻게 다른가?",
+      "bounded_answer": "Bxg5는 공격하던 g5 폰을 잡고 그 h4 비숍이 Bh6/Bxf8로 f8 룩을 얻지만 Qxf8에 비숍을 내준다. e5에서는 gxh4가 그 비숍을 먼저 잡는 대신 e4 폰이 exf6로 원래 f6 나이트를 잡고 Qxf6에 사라진다. 이어 g3 폰의 gxh4가 원래 g5 폰을 회수한다. 따라서 e5의 나이트 획득만 떼어 무상 획득으로 말하면 안 된다.",
+      "primary_required": [
+        {
+          "content": "같은 원래 h4 비숍: reference에서 g5 폰을 잡은 뒤 룩과 교환, candidate에서 g5 폰에게 제거. 각각 실제 반대 포획을 포함한다.",
+          "proof_keys": [
+            "r:1",
+            "r:5",
+            "r:7",
+            "r:8",
+            "c:1",
+            "c:4"
+          ]
+        },
+        {
+          "content": "candidate의 비숍 손실, 나이트 획득, e4 폰 손실, g5 폰 회수는 서로 다른 칸에서 진행되는 하나의 초기 물질 비교로 보존한다.",
+          "proof_keys": [
+            "c:4",
+            "c:5",
+            "c:6",
+            "c:9"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "e5에 대한 나이트 공격과 퀸 대응",
+          "content": "움직이는 흑 나이트는 c6 나이트의 Nd4이고, exf6으로 잡히는 나이트는 원래 f6 나이트다. Qd1은 Nd4 뒤의 실제 퀸 이동이다.",
+          "proof_keys": [
+            "c:1",
+            "c:2",
+            "c:3",
+            "c:5"
+          ]
+        },
+        {
+          "claim": "전체 또는 후속 기물 가격",
+          "content": "reference의 Nxd4/Bxd4, Rxc8/Bxc8, Qxg5/fxg5를 모두 교환으로 닫는다. candidate의 fxe4와 Rxc5는 서로 다른 대상의 포획이며 함께 두어 나이트 손실의 보상을 숨기지 않는다.",
+          "proof_keys": [
+            "r:15",
+            "r:16",
+            "r:17",
+            "r:18",
+            "r:22",
+            "r:23",
+            "c:14",
+            "c:15"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "Bxg5의 비숍이 얻는 룩에는 어떤 가격이 붙는가?",
+          "required": "Bh6/Bxf8/Qxf8과 초기 Bxg5 폰 획득을 구분해 비숍을 주고 룩을 얻는 실제 교환을 말한다. 이를 candidate까지 설명한 전체 비교로 세지 않는다.",
+          "proof_keys": [
+            "r:1",
+            "r:5",
+            "r:7",
+            "r:8"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "Bxg5가 폰을 잡는다는 한 사실만 설명",
+        "e5가 나이트를 공격한다는 주장만 남기고 h4 비숍의 실제 손실을 숨김"
+      ],
+      "unconfirmed": [
+        "Bh6 이후 모든 수가 강제라는 주장",
+        "reference 끝 물질 차이가 root 평가의 유일한 원인이라는 주장"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-04-obligation-facts.json",
+      "fact_sha256": "613ded3fba2de197954186d6372d77c62fabd6c3b6513f8a93a07a27b82ea556",
+      "source_snapshot_sha256": "80adbfddc40a5481df573d6d12c374846a0236fe9a4d4411f8e44a7ce6025e69",
+      "execution_status": {
+        "game_id": "TAT25-04",
+        "request_id": "answer-selection-TAT25-04-31",
+        "elapsed_ms": 4438,
+        "work_count": 3,
+        "issued_work_count": 3,
+        "bridge_execution_response_count": 3,
+        "report_submission_attempt_count": 3,
+        "reducer_report_response_count": 3,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 1,
+        "adapter_generated_failure_report_count": 1
+      },
+      "request_id": "answer-selection-TAT25-04-31",
+      "current_fen": "2rq1rk1/pp1b1p2/2n1pn2/2b3p1/4P2B/2N3P1/PP2QPBP/R4RK1 w - - 0 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:candidate-comparison:fd8267ee3ebf414db2fb4c5f1460dfea49159c38116a4a69706d880e4d901529",
+          "reference_line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "candidate_line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 23,
+        "candidate_steps": 15,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 22,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:07274907f42e717c162004d7561dbaf9e273dc67036ec88e8f6906258ba25833"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 14,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:1b491443ad1dd7fd0b4ad53dd146e5890290274d0eff5c48820a10348b80e54d"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:e47581bf73caf42e65a316b34e93fe900ae18d7cff065e254531616112148a61",
+          "uci": "e4e5",
+          "san": "e5",
+          "mover_path_start_identity": "True:pawn:e4",
+          "captured_path_start_identity": null
+        },
+        "c:14": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:933860db083c0d9f5102ca7a42484c35aee1a7001a10f194a4b64bab6db90b8c",
+          "uci": "f5e4",
+          "san": "fxe4",
+          "mover_path_start_identity": "False:pawn:f7",
+          "captured_path_start_identity": "True:knight:c3"
+        },
+        "c:15": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:1b491443ad1dd7fd0b4ad53dd146e5890290274d0eff5c48820a10348b80e54d",
+          "uci": "c1c5",
+          "san": "Rxc5",
+          "mover_path_start_identity": "True:rook:a1",
+          "captured_path_start_identity": "False:bishop:c5"
+        },
+        "c:2": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:dd93b53068808245fa49cbaba082b897ed563ef04cf27fa07ea655469a68f4b9",
+          "uci": "c6d4",
+          "san": "Nd4",
+          "mover_path_start_identity": "False:knight:c6",
+          "captured_path_start_identity": null
+        },
+        "c:3": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:b2d734038583c826af9b8ef2289381a963729fc9523bcdfec4a62c2fa8f70928",
+          "uci": "e2d1",
+          "san": "Qd1",
+          "mover_path_start_identity": "True:queen:e2",
+          "captured_path_start_identity": null
+        },
+        "c:4": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 4,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:5e9d53acaf06fbf5f58baf726abc714c458dc539cd15172cb5f15091736ddfb0",
+          "uci": "g5h4",
+          "san": "gxh4",
+          "mover_path_start_identity": "False:pawn:g5",
+          "captured_path_start_identity": "True:bishop:h4"
+        },
+        "c:5": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:0fda1a4f6ba766a8878d12adb87db277773119bfd5c4c5cc178380e92fd5646c",
+          "uci": "e5f6",
+          "san": "exf6",
+          "mover_path_start_identity": "True:pawn:e4",
+          "captured_path_start_identity": "False:knight:f6"
+        },
+        "c:6": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:fba5854aef6489cd1e4285dcbb85ba0270806ca3ca4c35ba659c43710c08570c",
+          "uci": "d8f6",
+          "san": "Qxf6",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:pawn:e4"
+        },
+        "c:9": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:6f359c2781d56caee8854bc6f1043a24b1e69a49b779950a10c45439c6d463bb",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:2cf3fe006d5b4316fb946841c05c49d015d1896170adf5805286c8f07d164d35",
+          "uci": "g3h4",
+          "san": "gxh4",
+          "mover_path_start_identity": "True:pawn:g3",
+          "captured_path_start_identity": "False:pawn:g5"
+        },
+        "r:1": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:d797b04c22d00d500aa3bffdf2a8dc21df918e47419f08bac21fea556d2bc9e7",
+          "uci": "h4g5",
+          "san": "Bxg5",
+          "mover_path_start_identity": "True:bishop:h4",
+          "captured_path_start_identity": "False:pawn:g5"
+        },
+        "r:15": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:00c59c3f53c96975cf8f7366810139aaad5a28ee584efec95fd0eb091df16a87",
+          "uci": "e2d4",
+          "san": "Nxd4",
+          "mover_path_start_identity": "True:knight:c3",
+          "captured_path_start_identity": "False:knight:c6"
+        },
+        "r:16": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:8e80f21c0fdc0ef64e866e245960e17de62f78e7e244efa6b5ed00c73fa8c750",
+          "uci": "c5d4",
+          "san": "Bxd4",
+          "mover_path_start_identity": "False:bishop:c5",
+          "captured_path_start_identity": "True:knight:c3"
+        },
+        "r:17": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:e6c52177fe7e4cdeb05b8f297b68cdcee4e1075637df2593a6a52338a9a02610",
+          "uci": "c1c8",
+          "san": "Rxc8",
+          "mover_path_start_identity": "True:rook:a1",
+          "captured_path_start_identity": "False:rook:c8"
+        },
+        "r:18": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 18,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:b34c57a95f52a2c4c312a06634bc8422bffd387513d49a41a70bfb00bfdab4c3",
+          "uci": "d7c8",
+          "san": "Bxc8",
+          "mover_path_start_identity": "False:bishop:d7",
+          "captured_path_start_identity": "True:rook:a1"
+        },
+        "r:22": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 22,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:86852a1bcdac71f5163782ae8e237038e7a41cfcb35287f62cac08626c0295d2",
+          "uci": "g7g5",
+          "san": "Qxg5",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:queen:e2"
+        },
+        "r:23": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 23,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:07274907f42e717c162004d7561dbaf9e273dc67036ec88e8f6906258ba25833",
+          "uci": "f4g5",
+          "san": "fxg5",
+          "mover_path_start_identity": "True:pawn:f2",
+          "captured_path_start_identity": "False:queen:d8"
+        },
+        "r:5": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:bece57d5b6d2c1b3021c45019cc417c0040fe14aa043b53092448eb1ecb5e00d",
+          "uci": "g5h6",
+          "san": "Bh6",
+          "mover_path_start_identity": "True:bishop:h4",
+          "captured_path_start_identity": null
+        },
+        "r:7": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:c8b94c509d34c9a9d655c024f81fdffe88f676fcf18b684364b831ce8ec92e23",
+          "uci": "h6f8",
+          "san": "Bxf8",
+          "mover_path_start_identity": "True:bishop:h4",
+          "captured_path_start_identity": "False:rook:f8"
+        },
+        "r:8": {
+          "line_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:line:ecaf90849fc20bc21d2615299f53ee6ba610ca671027d9600290187603b3be8a",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:957de1fa664c00e6038fc93503dfb1b80c7db9561426d7c13ff3b23b88649195:30:h4g5:evidence:transition:dbc29e3e49532eca8bfb94828b110c99377cc8af46da459a9b53ee410fd15aa6",
+          "uci": "d8f8",
+          "san": "Qxf8",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:bishop:h4"
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-05",
+      "fact_state": "comparison_available",
+      "primary_question": "Ng7과 Be6의 기록에서 같은 c8 비숍이 d3에서 교환하는 대상은 무엇이며, 누가 되잡는가?",
+      "bounded_answer": "Ng7 수순에서는 c8 비숍이 Bf5/Bxd3로 백 f1 비숍을 잡고 Qxd3로 교환된다. Be6 수순에서는 백 d2 나이트가 Nb3/Nc5, b6에 Nd3로 옮긴 뒤 같은 c8 비숍의 Bxd3에 잡히고 f1 비숍이 Bxd3로 되잡는다. 양쪽의 Bxd3가 같은 백 기물을 잡는 것은 아니다. 뒤에는 Ng7의 다른 비숍 교환과 Be6의 룩 교환이 별도로 기록된다.",
+      "primary_required": [
+        {
+          "content": "같은 c8 비숍과 서로 다른 백 희생 기물(f1 비숍/d2 나이트), 서로 다른 되잡는 기물(e3 퀸/f1 비숍)을 구분한다.",
+          "proof_keys": [
+            "r:3",
+            "r:8",
+            "r:9",
+            "r:10",
+            "c:1",
+            "c:2",
+            "c:4",
+            "c:6",
+            "c:7",
+            "c:9",
+            "c:11",
+            "c:12"
+          ]
+        },
+        {
+          "content": "candidate 나이트가 왜 다시 d3에 있는지 설명한다면 b6와 Nd3를 함께 둔다. 단순히 d3에 원래 있던 나이트로 부르지 않는다.",
+          "proof_keys": [
+            "c:4",
+            "c:5",
+            "c:6",
+            "c:11"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "Ng7의 나이트 지원·되잡기 또는 두 비숍 교환",
+          "content": "원래 e8 나이트는 Ng7/Ne6 후 Nxg7로, 원래 f4 비숍이 잡은 원래 f6 비숍을 회수한다. Bxg7/Nxg7 양쪽 제거를 보존한다.",
+          "proof_keys": [
+            "r:1",
+            "r:7",
+            "r:11",
+            "r:14",
+            "r:15"
+          ]
+        },
+        {
+          "claim": "Be6 수순의 룩 획득·되잡기",
+          "content": "Re8의 원래 a8 룩이 Rxe8+에 제거되고 원래 e8 나이트가 Nxe8로 원래 e1 룩을 제거하며 체크에 응한다.",
+          "proof_keys": [
+            "c:3",
+            "c:15",
+            "c:16",
+            "c:17"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "같은 원래 e8 나이트는 두 기록에서 서로 어떤 교환을 마무리하는가?",
+          "required": "reference의 Bxg7/Nxg7은 비숍 교환, candidate의 Rxe8+/Nxe8은 룩 교환임을 앞 포획과 함께 전달한다. 그 나이트 이동이 교환 전체를 필연적으로 만들었다고 하지 않는다.",
+          "proof_keys": [
+            "r:14",
+            "r:15",
+            "c:16",
+            "c:17"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "양쪽 Ng7이 나온다는 이동 순서만 정리",
+        "Bxd3 SAN이 같다는 이유로 같은 대상의 교환이라 설명"
+      ],
+      "unconfirmed": [
+        "비숍-나이트 교환만으로 어느 선택이 더 좋다고 판정",
+        "장기 비숍 쌍·칸 약점의 우월성을 이 기록만으로 확정"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-05-obligation-facts.json",
+      "fact_sha256": "52e8e9196f9871cf6779400d3883fe43146346de9416a18190dfd954ce84ec06",
+      "source_snapshot_sha256": "ac8fdf1d7949ea2ba9d88d5c0594f4ca2b9f87b450d68a1c99e764556812de21",
+      "execution_status": {
+        "game_id": "TAT25-05",
+        "request_id": "answer-selection-TAT25-05-32",
+        "elapsed_ms": 7186,
+        "work_count": 4,
+        "issued_work_count": 4,
+        "bridge_execution_response_count": 4,
+        "report_submission_attempt_count": 4,
+        "reducer_report_response_count": 4,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 1,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-05-32",
+      "current_fen": "r1bqn1k1/pp3p1p/2p2bp1/3p4/3P1B2/2P1Q3/PP1N1PPP/4RBK1 b - - 1 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:candidate-comparison:c535ce213912897c34fe1eef37294e350c105ff4cb9f677f96946327128e091c",
+          "reference_line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "candidate_line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 16,
+        "candidate_steps": 18,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 15,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:d9496447d4b428371c96b33df91cc90de4488315a90826f64c143c55c6eeffad"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 17,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:ff8e6c31619b2937fccd3c686f7867b0fd27345f7ff1d85bb03ad39ef8fc6cdd"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:ff20959e85bb440485eb0a478612981ac8e2dc54be1279b90429467473fa441b",
+          "uci": "c8e6",
+          "san": "Be6",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": null
+        },
+        "c:11": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:fc216b82eec398e4e212e5004f7c6182f5e06342a91acccaf54e69ffc5735d68",
+          "uci": "e4d3",
+          "san": "Bxd3",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": "True:knight:d2"
+        },
+        "c:12": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:527df3f471b6d0bada851fdbb9dffee835021b03db258f82dc978d42417fa777",
+          "uci": "f1d3",
+          "san": "Bxd3",
+          "mover_path_start_identity": "True:bishop:f1",
+          "captured_path_start_identity": "False:bishop:c8"
+        },
+        "c:15": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:e2c8ead587f39bdd1b60e53a51ba45d84a5129d3d0ee5c915e61792208dac3e2",
+          "uci": "a8e8",
+          "san": "Re8",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": null
+        },
+        "c:16": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:79647b6742dd29e375881dede997b7dd273627cd397f54cb889e45c9b5c020d8",
+          "uci": "e1e8",
+          "san": "Rxe8+",
+          "mover_path_start_identity": "True:rook:e1",
+          "captured_path_start_identity": "False:rook:a8"
+        },
+        "c:17": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:3cf382139c159b45d019ca0f0f4ca2e86d4d0110dc7458efadb341edf4529c3d",
+          "uci": "g7e8",
+          "san": "Nxe8",
+          "mover_path_start_identity": "False:knight:e8",
+          "captured_path_start_identity": "True:rook:e1"
+        },
+        "c:2": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:3b196a1f4105356496e253b09a273429abe4a856d6276531bc839a11de94b9f0",
+          "uci": "d2b3",
+          "san": "Nb3",
+          "mover_path_start_identity": "True:knight:d2",
+          "captured_path_start_identity": null
+        },
+        "c:3": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:f48070d710840f581935ff47ddf6bba320dc28559a5a94aad7bb83226d5596de",
+          "uci": "e8g7",
+          "san": "Ng7",
+          "mover_path_start_identity": "False:knight:e8",
+          "captured_path_start_identity": null
+        },
+        "c:4": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 4,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:fd4b6c25cc516aaef4c0758b4835cde0e8c0208f8852d7811c9aff33956504a8",
+          "uci": "b3c5",
+          "san": "Nc5",
+          "mover_path_start_identity": "True:knight:d2",
+          "captured_path_start_identity": null
+        },
+        "c:5": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:145240a31a6814b4b138930ea443c8c94e1e612d3342b00dc076f3db987ee7b3",
+          "uci": "b7b6",
+          "san": "b6",
+          "mover_path_start_identity": "False:pawn:b7",
+          "captured_path_start_identity": null
+        },
+        "c:6": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:17f4f77e639dbbb0fc02dd8ae2bb1527f930f25a8d986d340ead15f802c1afe0",
+          "uci": "c5d3",
+          "san": "Nd3",
+          "mover_path_start_identity": "True:knight:d2",
+          "captured_path_start_identity": null
+        },
+        "c:7": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:e134b23279965969b45f1df9ed65ec4c5cddec35f58d6f04c870ad76739f2787",
+          "uci": "e6f5",
+          "san": "Bf5",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": null
+        },
+        "c:9": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:cff2e7333abcf66024a20087cac8a0c82ac3eacd5c084d5238c28530c03d5ec7",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:339ddb15f64d6d0a72257da7f0c37c4ec64eefafb28605749731ab0c1676091c",
+          "uci": "f5e4",
+          "san": "Be4",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": null
+        },
+        "r:1": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:56ab9c8aaae7a6bf65be36801f8068d65d0e8cdf3bff295411933a5d51d9cd4b",
+          "uci": "e8g7",
+          "san": "Ng7",
+          "mover_path_start_identity": "False:knight:e8",
+          "captured_path_start_identity": null
+        },
+        "r:10": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 10,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:3998ed0ebb19e08ecc2738c21197e01d13c898f74bd86e5acf9cc1ab2e0c6ac1",
+          "uci": "e3d3",
+          "san": "Qxd3",
+          "mover_path_start_identity": "True:queen:e3",
+          "captured_path_start_identity": "False:bishop:c8"
+        },
+        "r:11": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:e28a682e98c13e1368989c2382e395e4ac68619ae116b2d9068daa509e51cf06",
+          "uci": "f6g7",
+          "san": "Bg7",
+          "mover_path_start_identity": "False:bishop:f6",
+          "captured_path_start_identity": null
+        },
+        "r:14": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:604da1419bff150ff9005cc646ed1705522af656517cb5301ba88a66da1b944e",
+          "uci": "e5g7",
+          "san": "Bxg7",
+          "mover_path_start_identity": "True:bishop:f4",
+          "captured_path_start_identity": "False:bishop:f6"
+        },
+        "r:15": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:2cbead16fdd7fd23fe4d1ad10b701d967de66fe73859ebadf862ec8b9a19f075",
+          "uci": "e6g7",
+          "san": "Nxg7",
+          "mover_path_start_identity": "False:knight:e8",
+          "captured_path_start_identity": "True:bishop:f4"
+        },
+        "r:3": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:90967633c95af94f9915925dd37f32b6dc82173aa1e14069636dc4a4a550bf04",
+          "uci": "c8f5",
+          "san": "Bf5",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": null
+        },
+        "r:7": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:8f2433fa093dc8289fc3a19e0add72041bd9a4319a4ec1b0dbd428ba85c4cbc5",
+          "uci": "g7e6",
+          "san": "Ne6",
+          "mover_path_start_identity": "False:knight:e8",
+          "captured_path_start_identity": null
+        },
+        "r:8": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:383969d95fc4a54feaaf7faf7376124cc0e734e596d9b2b1b61741a22b9cd2b8",
+          "uci": "f1d3",
+          "san": "Bd3",
+          "mover_path_start_identity": "True:bishop:f1",
+          "captured_path_start_identity": null
+        },
+        "r:9": {
+          "line_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:line:efedb2f1809bfddca849ffde524f40c05778f0ca98fb31731bd49b0468667c1e",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:9770edfe7ecb25a7c4ae5cdb7bbe9042df436eef05759e6b2bc987f21d8e3f05:31:e8g7:evidence:transition:48428e8f26881ae3eff241a43a1904df3c76a84d53b86bd59119e1169254c567",
+          "uci": "f5d3",
+          "san": "Bxd3",
+          "mover_path_start_identity": "False:bishop:c8",
+          "captured_path_start_identity": "True:bishop:f1"
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-06",
+      "fact_state": "execution_error_no_comparison",
+      "primary_question": null,
+      "bounded_answer": null,
+      "primary_required": [],
+      "required_if_claimed": [],
+      "useful_local_questions": [],
+      "not_sufficient_for_primary": [
+        "비교가 없어 허위 설명도 없다는 이유로 품질 성공 처리"
+      ],
+      "unconfirmed": [
+        "b4의 제공 분석 응수·가격·결과: begin 거절로 실제 comparison paths가 없음"
+      ],
+      "denominator_policy": "전체 9개 실행·전달 분모에 유지한다. 사실 기반 선택·구성 평가는 unavailable이고, 설명 성공으로 세지 않는다. 원래 입력만 보고 가상의 엔진 수순이나 핵심 의무를 만들지 않는다.",
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-06-obligation-facts.json",
+      "fact_sha256": "51539bf0de52058e4880fbb607d9296a8ff5339e0129933c66b8bcf24b425fe8",
+      "source_snapshot_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "execution_status": {
+        "game_id": "TAT25-06",
+        "request_id": "answer-selection-TAT25-06-31",
+        "elapsed_ms": 150,
+        "work_count": 0,
+        "issued_work_count": 0,
+        "bridge_execution_response_count": 0,
+        "report_submission_attempt_count": 0,
+        "reducer_report_response_count": 0,
+        "state": "unavailable",
+        "stop_condition": null,
+        "adapter_error": "RuntimeError: Public reducer rejected begin; exact response stored",
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-06-31",
+      "current_fen": "r4rk1/ppp2pbp/2nq2p1/2n2bB1/2Bp4/P2P1N2/1PQN1PPP/R3R1K1 w - - 4 16",
+      "comparison_pairs": [],
+      "proof_occurrences": {}
+    },
+    {
+      "game_id": "TAT25-07",
+      "fact_state": "comparison_available",
+      "primary_question": "g6로 f5 나이트를 물러나게 하는 것과 a5 뒤 그 나이트가 Nxg7을 두는 기록은 실제 나이트 처리와 킹 응수에서 어떻게 다른가?",
+      "bounded_answer": "g6에는 원래 f5 나이트가 Ne3/Nc4로 물러난 뒤 Bxc4에 잡힌다. 그 주변에서는 Bxb4/Qxb4/bxc4로 나이트와 비숍을 맞교환하고 Qxc4/Rxb7로 서로 폰도 잡는다. a5 수순은 같은 f5 나이트가 Nxg7로 폰을 잡은 뒤 Kxg7에 사라지고, 백이 Qh5와 Qh6로 공격을 이어가며 흑 킹은 Kh8로 이동한다. 끝은 f4까지의 관측일 뿐 공격의 성공이나 실패가 확정되지 않는다.",
+      "primary_required": [
+        {
+          "content": "같은 원래 f5 나이트의 퇴각과 희생을 구분하고 Nxg7에는 Kxg7 및 g7 폰의 손실을 함께 둔다.",
+          "proof_keys": [
+            "r:1",
+            "r:2",
+            "r:6",
+            "r:7",
+            "c:1",
+            "c:6",
+            "c:7"
+          ]
+        },
+        {
+          "content": "g6의 나이트 제거를 가격 있는 결과로 설명할 때 Bxc4/Bxb4/Qxb4/bxc4의 맞교환을 보존한다. Qxc4까지 넓히면 이어지는 Rxb7 폰 회수를 함께 둔다.",
+          "proof_keys": [
+            "r:7",
+            "r:8",
+            "r:9",
+            "r:10",
+            "r:11",
+            "r:12"
+          ]
+        },
+        {
+          "content": "a5의 기록을 단순한 무상 나이트 획득으로 끝내지 않고 Qh5/Kh8/Qh6로 이어지는 실제 공격과 미결 기록 범위를 전달한다.",
+          "proof_keys": [
+            "c:8",
+            "c:9",
+            "c:11",
+            "c:12",
+            "c:13",
+            "c:14",
+            "c:15",
+            "c:16"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "g6의 전체 물질 결과",
+          "content": "Rxb8/Rxb8 룩 교환과 Nxd4/cxd4의 두 번째 나이트-비숍 교환도 포함한다. c4에서 이미 잡힌 나이트와 h4에서 온 다른 나이트를 혼동하지 않는다.",
+          "proof_keys": [
+            "r:16",
+            "r:17",
+            "r:18",
+            "r:20",
+            "r:21"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "Nxg7 직후 무슨 실제 응수가 있고 공격은 어디까지 기록되었는가?",
+          "required": "g7 폰 획득, Kxg7의 나이트 제거, Qh5와 후속 Kh8/Qh6를 보존하고 메이트·안전·보상 충분 여부는 미확인으로 둔다.",
+          "proof_keys": [
+            "c:6",
+            "c:7",
+            "c:8",
+            "c:13",
+            "c:14",
+            "c:16"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "g6가 나이트를 공격한다는 첫 사실만 설명",
+        "a5에서 흑이 나이트를 잡았다는 사실만으로 백 공격이 실패했다고 선언"
+      ],
+      "unconfirmed": [
+        "Nxg7 이후 강제 메이트 또는 강제 수비 성공",
+        "기물 점수만으로 희생의 충분한 보상 여부 확정"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-07-obligation-facts.json",
+      "fact_sha256": "05ec9a287e7968486e3a7947cb84bd49f1385536cb9cb3aed857cdb1301b990c",
+      "source_snapshot_sha256": "9eecfae58766c18926f30693d9409cba3bcae62e68b9a90ae0646b4f4ea7e2e3",
+      "execution_status": {
+        "game_id": "TAT25-07",
+        "request_id": "answer-selection-TAT25-07-32",
+        "elapsed_ms": 20267,
+        "work_count": 4,
+        "issued_work_count": 4,
+        "bridge_execution_response_count": 4,
+        "report_submission_attempt_count": 4,
+        "reducer_report_response_count": 4,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-07-32",
+      "current_fen": "r2q1rk1/pp3ppp/1bp1bn2/5N2/1n5N/1P4P1/1B1PPPBP/1R1Q1RK1 b - - 4 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:candidate-comparison:9ccee91bc62c5b1a6479858abadba6355f5339a72c57aad6eb6198697abfc22f",
+          "reference_line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "candidate_line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 21,
+        "candidate_steps": 16,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 20,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:267222d9567478ac6c02b3a0ef274f912be980a6f124eee5add6dce5a7a962ee"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 15,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:570c129ae65aad11e661d64dcd012a7a4a002414ac9dee41d5d0558e47105ed8"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:124f96a2665e8c3c556fca7e955f7d68e6c6f4346311f0dacfa7ede3e116daba",
+          "uci": "a7a5",
+          "san": "a5",
+          "mover_path_start_identity": "False:pawn:a7",
+          "captured_path_start_identity": null
+        },
+        "c:11": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:b30d2e0b342afcbafc038aa78062ce335dd21d72c1ee38ca58ce3d540471d8d2",
+          "uci": "e8g8",
+          "san": "Rg8",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": null
+        },
+        "c:12": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:3562995136e3d46d94ce111ac7b221847c22331dd14cf1edaa1503bec50e596a",
+          "uci": "g4g5",
+          "san": "g5",
+          "mover_path_start_identity": "True:pawn:g3",
+          "captured_path_start_identity": null
+        },
+        "c:13": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 13,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:2a3c671ea1eb936caae5e15eb20475b55c89a2f66657ed7a1d2e7c29e5d06b92",
+          "uci": "g7h8",
+          "san": "Kh8",
+          "mover_path_start_identity": "False:king:g8",
+          "captured_path_start_identity": null
+        },
+        "c:14": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:0004020ec60695f20245feaa030873bbcb2455145ba0a4a5830fd7808166d7cf",
+          "uci": "h5h6",
+          "san": "Qh6",
+          "mover_path_start_identity": "True:queen:d1",
+          "captured_path_start_identity": null
+        },
+        "c:15": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:e18cfd9c9a3427e693e4a72e5289082e9007bfbe9f47bedf16e252889739e3eb",
+          "uci": "b4d5",
+          "san": "Nd5",
+          "mover_path_start_identity": "False:knight:b4",
+          "captured_path_start_identity": null
+        },
+        "c:16": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:570c129ae65aad11e661d64dcd012a7a4a002414ac9dee41d5d0558e47105ed8",
+          "uci": "f2f4",
+          "san": "f4",
+          "mover_path_start_identity": "True:pawn:f2",
+          "captured_path_start_identity": null
+        },
+        "c:6": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:285c54688d7ca074162f20e4d813cc14ffab4a0db5fe72c09966f9fe3d004d22",
+          "uci": "f5g7",
+          "san": "Nxg7",
+          "mover_path_start_identity": "True:knight:f5",
+          "captured_path_start_identity": "False:pawn:g7"
+        },
+        "c:7": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:df564a47c52c4d5a0d7703e732314eacbaf52e1741712017903850aa174743d7",
+          "uci": "g8g7",
+          "san": "Kxg7",
+          "mover_path_start_identity": "False:king:g8",
+          "captured_path_start_identity": "True:knight:f5"
+        },
+        "c:8": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:fbda365081511e5200f50267941c7d923bec3d2b620f4080933d1ed30369418a",
+          "uci": "d1h5",
+          "san": "Qh5",
+          "mover_path_start_identity": "True:queen:d1",
+          "captured_path_start_identity": null
+        },
+        "c:9": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a6143fe25972aaa01a511ee4ddd47fc1f6baf8cff6561273864e689df5aba965",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:c26a9eb93c9ff91530928f28f6ae9fd72674084ce414acc21c9b40fd895ebdad",
+          "uci": "c5e7",
+          "san": "Be7",
+          "mover_path_start_identity": "False:bishop:b6",
+          "captured_path_start_identity": null
+        },
+        "r:1": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:4795992d658a018ab56b5d24487173d60503cacba673ae7431afec86bdf5f177",
+          "uci": "g7g6",
+          "san": "g6",
+          "mover_path_start_identity": "False:pawn:g7",
+          "captured_path_start_identity": null
+        },
+        "r:10": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 10,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:92c601756410fda8e69ca9d6b22f95eb08f57ade36933808180590fd065575f2",
+          "uci": "b3c4",
+          "san": "bxc4",
+          "mover_path_start_identity": "True:pawn:b3",
+          "captured_path_start_identity": "False:bishop:e6"
+        },
+        "r:11": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:371bd2d7ede28ea1111271b3ac50a656a2b73af5d05c6a1faf9ac2088972be25",
+          "uci": "b4c4",
+          "san": "Qxc4",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:pawn:b3"
+        },
+        "r:12": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:af6792e8d0a1ed97f1e51c48adb7ad706cd7739ab8f32408d03dfc3940135fe1",
+          "uci": "b1b7",
+          "san": "Rxb7",
+          "mover_path_start_identity": "True:rook:b1",
+          "captured_path_start_identity": "False:pawn:b7"
+        },
+        "r:16": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:90774b0de5e6f7bdf5e464b3532e18a62fa5992e7a6c60147317cb3a8be3e37a",
+          "uci": "b7b8",
+          "san": "Rxb8",
+          "mover_path_start_identity": "True:rook:b1",
+          "captured_path_start_identity": "False:rook:a8"
+        },
+        "r:17": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:3b7aa5119c1157ba74338190d9cf2c69f6c0a271ed006789aa519c87e261e24e",
+          "uci": "f8b8",
+          "san": "Rxb8",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": "True:rook:b1"
+        },
+        "r:18": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 18,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:145ef5edcbe1b1ac1e60fc849aa4524937604700a9cd0ba0b4405139de4c8ccf",
+          "uci": "h4f3",
+          "san": "Nf3",
+          "mover_path_start_identity": "True:knight:h4",
+          "captured_path_start_identity": null
+        },
+        "r:2": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:a1ed2efe4cfb0a082b53cd63e2ec3e5d1f8c2885bbb49a9fc097f16da48626f1",
+          "uci": "f5e3",
+          "san": "Ne3",
+          "mover_path_start_identity": "True:knight:f5",
+          "captured_path_start_identity": null
+        },
+        "r:20": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 20,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:f98d424d8a0bd26cd7ae68844dad32e94d1a04898099638a5db390ab6469a9a1",
+          "uci": "f3d4",
+          "san": "Nxd4",
+          "mover_path_start_identity": "True:knight:h4",
+          "captured_path_start_identity": "False:bishop:b6"
+        },
+        "r:21": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 21,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:267222d9567478ac6c02b3a0ef274f912be980a6f124eee5add6dce5a7a962ee",
+          "uci": "c5d4",
+          "san": "cxd4",
+          "mover_path_start_identity": "False:pawn:c6",
+          "captured_path_start_identity": "True:knight:h4"
+        },
+        "r:6": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:60c9b2dc42ea339d174aa7c260c6bf697a1bfb3edf6260871644fb04b9778bfc",
+          "uci": "e3c4",
+          "san": "Nc4",
+          "mover_path_start_identity": "True:knight:f5",
+          "captured_path_start_identity": null
+        },
+        "r:7": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:406b89263d229793098e0ec13dfc4a729cdd5b96c8bcebb791227241161a62bd",
+          "uci": "e6c4",
+          "san": "Bxc4",
+          "mover_path_start_identity": "False:bishop:e6",
+          "captured_path_start_identity": "True:knight:f5"
+        },
+        "r:8": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:879bb3f3cc08b4ef09a677fbdb2831791a17b83672a6d2f0fe3ea39cca1ed692",
+          "uci": "a3b4",
+          "san": "Bxb4",
+          "mover_path_start_identity": "True:bishop:b2",
+          "captured_path_start_identity": "False:knight:b4"
+        },
+        "r:9": {
+          "line_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:line:a26e7adee6527b171066c231fe459d76a57f20024d13cc54af8a54b2ab23a9e9",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:9e17d42c361d769f28fdb7f2af321e2115dac9b0fd5e6930a60318e74cd08a21:31:g7g6:evidence:transition:56aca642300be80d2a14a83e0779a31abf6b978704a27560b3612e3971dd1fa4",
+          "uci": "a5b4",
+          "san": "Qxb4",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:bishop:b2"
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-09",
+      "fact_state": "comparison_available",
+      "primary_question": "지금 d4를 둘 때와 h6 뒤 늦게 d4를 둘 때, 같은 원래 c4 폰과 d5 폰은 실제로 어떻게 처리되는가?",
+      "bounded_answer": "즉시 d4에는 Nxc4가 원래 c4 폰을 잡고, d5 폰은 dxc3로 백 c3 폰을 잡지만 Qxc3에 제거된다. h6 수순에서는 그 c4 폰이 남아 c3/c2로 전진하는 반면 d5 폰은 나이트 교환 Nxd4/Nxd4/cxd4 안에서 사라진다. 두 수순 모두 Bxf5/exf5로 같은 f5 나이트와 c2 비숍을 교환한다. 이는 실제 후속 선택이 다른 기록의 대비이며 h6만으로 c4 폰 보존이 강제된다는 증명은 아니다.",
+      "primary_required": [
+        {
+          "content": "같은 원래 c4 폰을 즉시 포획하는 candidate Nxc4와 reference의 c3/c2 생존을 직접 대비한다.",
+          "proof_keys": [
+            "c:1",
+            "c:2",
+            "r:1",
+            "r:7",
+            "r:13",
+            "r:17"
+          ]
+        },
+        {
+          "content": "d5 폰의 candidate dxc3/Qxc3는 백 c3 폰의 손실도 포함한다. reference Nxd4에는 Nxd4/cxd4를 붙여 폰 획득과 나이트 맞교환을 구분한다.",
+          "proof_keys": [
+            "c:5",
+            "c:12",
+            "r:10",
+            "r:11",
+            "r:12"
+          ]
+        },
+        {
+          "content": "candidate c4 포획 나이트의 결과까지 말하면 Bxc4와 지연된 bxc4를 포함한다. 그 사이 Qxb4/Rxb4는 별도의 퀸 교환이다.",
+          "proof_keys": [
+            "c:2",
+            "c:11",
+            "c:14",
+            "c:15",
+            "c:16"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "나이트 f5 교환",
+          "content": "양쪽 Bxf5/exf5를 모두 포함해 비숍이 지불됨을 남긴다.",
+          "proof_keys": [
+            "r:8",
+            "r:9",
+            "c:8",
+            "c:9"
+          ]
+        },
+        {
+          "claim": "reference c2 진입의 전체 이득·가격 또는 끝 물질",
+          "content": "Rxb2, Nxf5, Bxe1, Bxf2+/Kxf2까지 포함한다. c4 폰이 실제 승격했다고 말하지 않는다.",
+          "proof_keys": [
+            "r:15",
+            "r:17",
+            "r:20",
+            "r:21",
+            "r:23",
+            "r:24"
+          ]
+        },
+        {
+          "claim": "candidate 전체 가격",
+          "content": "Rxb1/Rxb1 룩 교환과 마지막 fxe5 폰 손실을 포함한다. 길이 24와 21의 끝 총계만으로 root 우열을 만들지 않는다.",
+          "proof_keys": [
+            "c:17",
+            "c:18",
+            "c:21"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "d4 뒤 c4를 잡은 백 나이트와 c3에 들어간 흑 폰은 어떻게 회수되는가?",
+          "required": "Nxc4/dxc3에 이어 Bxc4/Qxc3 및 bxc4의 회복을 함께 남기고, 중간의 Qxb4/Rxb4를 같은 칸 되잡기와 혼동하지 않는다.",
+          "proof_keys": [
+            "c:2",
+            "c:5",
+            "c:11",
+            "c:12",
+            "c:14",
+            "c:15",
+            "c:16"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "d4가 c3를 공격한다는 기하 사실만 설명",
+        "c2로 간 폰을 승격 성공으로 표현"
+      ],
+      "unconfirmed": [
+        "h6 때문에 c4 폰이 반드시 살아남는다는 인과",
+        "c2 폰의 승격 및 승패"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-09-obligation-facts.json",
+      "fact_sha256": "ae17cf7b2f8317857add0007a8fcf5c8d2272319180a51ae97fb4015e23fe43d",
+      "source_snapshot_sha256": "65de76fccda5f99191ce72888a38b295981fb94b4fe697c7f72bdb692a4617fa",
+      "execution_status": {
+        "game_id": "TAT25-09",
+        "request_id": "answer-selection-TAT25-09-32",
+        "elapsed_ms": 15551,
+        "work_count": 6,
+        "issued_work_count": 6,
+        "bridge_execution_response_count": 6,
+        "report_submission_attempt_count": 6,
+        "reducer_report_response_count": 6,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-09-32",
+      "current_fen": "1r1q1rk1/p1b2ppp/b1n1p3/3pPn2/2p2B2/2P2N2/PPBNQPPP/1R3RK1 b - - 3 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:candidate-comparison:3f23c9a56f9e788649b0c5f680132278c22df59814f9511fc8fca091909274c1",
+          "reference_line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "candidate_line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 24,
+        "candidate_steps": 21,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 23,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:fb01ec42289519878ee882ab5b5f9558383698c0bd8bdb76694ec7f81f8b5609"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 20,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:9fca66030aa542c4b3579021eb9ee2d84b7b152bc744f12a97696b4d5f81d11f"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:9ca93e7da579108db12240083f51a47ef92d7a1aa6217115209153ab7de307ef",
+          "uci": "d5d4",
+          "san": "d4",
+          "mover_path_start_identity": "False:pawn:d5",
+          "captured_path_start_identity": null
+        },
+        "c:11": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:c7abc54ee58ce0d349ac6fba9164304b1fc89f35da756fb6fb654f8905027075",
+          "uci": "a6c4",
+          "san": "Bxc4",
+          "mover_path_start_identity": "False:bishop:a6",
+          "captured_path_start_identity": "True:knight:d2"
+        },
+        "c:12": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:bfba3dbcf7c64e4e5dedc6516cbacecfe861550e152bbcbeceaa01eb96382532",
+          "uci": "c2c3",
+          "san": "Qxc3",
+          "mover_path_start_identity": "True:queen:e2",
+          "captured_path_start_identity": "False:pawn:d5"
+        },
+        "c:14": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:b507eecaf0681678946880b019d382ecc2eac755913060916a86098a0ba12d53",
+          "uci": "c3b4",
+          "san": "Qxb4",
+          "mover_path_start_identity": "True:queen:e2",
+          "captured_path_start_identity": "False:queen:d8"
+        },
+        "c:15": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:747fa2d4d097ec46bad74cc75ec248c7d89ee00c6fe67050380c50f65c5c24c2",
+          "uci": "b8b4",
+          "san": "Rxb4",
+          "mover_path_start_identity": "False:rook:b8",
+          "captured_path_start_identity": "True:queen:e2"
+        },
+        "c:16": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:be6eb2ca2bea04422d181029a629cbea6d5234e3a6075d34adcac808c2a2afb6",
+          "uci": "b3c4",
+          "san": "bxc4",
+          "mover_path_start_identity": "True:pawn:b2",
+          "captured_path_start_identity": "False:bishop:a6"
+        },
+        "c:17": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:e2c7d4c6fe683112706b793564cb4c1b76a6360930e78316642079935064d805",
+          "uci": "b4b1",
+          "san": "Rxb1",
+          "mover_path_start_identity": "False:rook:b8",
+          "captured_path_start_identity": "True:rook:b1"
+        },
+        "c:18": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 18,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:a9e64022d07627569ee53849ed51bfb089df8df045adf61f1c0c9a75c16052c6",
+          "uci": "d1b1",
+          "san": "Rxb1",
+          "mover_path_start_identity": "True:rook:f1",
+          "captured_path_start_identity": "False:rook:b8"
+        },
+        "c:2": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 2,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:95003ec1bf000d3d265f16d248319d918917ebdf387e8e8805261578feb43e80",
+          "uci": "d2c4",
+          "san": "Nxc4",
+          "mover_path_start_identity": "True:knight:d2",
+          "captured_path_start_identity": "False:pawn:c4"
+        },
+        "c:21": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 21,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:9fca66030aa542c4b3579021eb9ee2d84b7b152bc744f12a97696b4d5f81d11f",
+          "uci": "f6e5",
+          "san": "fxe5",
+          "mover_path_start_identity": "False:pawn:f7",
+          "captured_path_start_identity": "True:pawn:e5"
+        },
+        "c:5": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:2a2c986f79ab87ed3660848bec3c92d4ecf8960390a530dfc2ee26ec562d05d9",
+          "uci": "d4c3",
+          "san": "dxc3",
+          "mover_path_start_identity": "False:pawn:d5",
+          "captured_path_start_identity": "True:pawn:c3"
+        },
+        "c:8": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:c1c282873162d2c25fcba3e8a2aef1d2e9776f3bf6e5f5c30d4768ebb38510f6",
+          "uci": "c2f5",
+          "san": "Bxf5",
+          "mover_path_start_identity": "True:bishop:c2",
+          "captured_path_start_identity": "False:knight:f5"
+        },
+        "c:9": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:b63f0d0aec899c0d1eccf234bd314047c176119caa2064728be6bb88b9367dbb",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:d318198d1a5a0e9abfcb1ddc71954131cca4a47bda115278646f23029117ebe4",
+          "uci": "e6f5",
+          "san": "exf5",
+          "mover_path_start_identity": "False:pawn:e6",
+          "captured_path_start_identity": "True:bishop:c2"
+        },
+        "r:1": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:dab996f6d39f217c3255e4a8451756d5714eb72733eea558ed87f81b0835b792",
+          "uci": "h7h6",
+          "san": "h6",
+          "mover_path_start_identity": "False:pawn:h7",
+          "captured_path_start_identity": null
+        },
+        "r:10": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 10,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:e834557c6cae9945dfcf51bccd2f2e21c612c768b4bc5164e395091d005f387a",
+          "uci": "f3d4",
+          "san": "Nxd4",
+          "mover_path_start_identity": "True:knight:f3",
+          "captured_path_start_identity": "False:pawn:d5"
+        },
+        "r:11": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 11,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:6d7e420fda0dd772e6d4ce92c2ad387fac60f1167c4d1b8e11a5e68b84ec3a8d",
+          "uci": "c6d4",
+          "san": "Nxd4",
+          "mover_path_start_identity": "False:knight:c6",
+          "captured_path_start_identity": "True:knight:f3"
+        },
+        "r:12": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:336dee7a052a851e6cdcfe938e55b31307fa8a7beb24284416347ad0198c0178",
+          "uci": "c3d4",
+          "san": "cxd4",
+          "mover_path_start_identity": "True:pawn:c3",
+          "captured_path_start_identity": "False:knight:c6"
+        },
+        "r:13": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 13,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:42530d06bad5bf899b221007dba867a3f1a6feeacb686a2298ede6a94eaabb0b",
+          "uci": "c4c3",
+          "san": "c3",
+          "mover_path_start_identity": "False:pawn:c4",
+          "captured_path_start_identity": null
+        },
+        "r:15": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:e6a79288d4df7ae121098541079d50f7525557370fca8bb50ffadbe9b0dec43b",
+          "uci": "b6b2",
+          "san": "Rxb2",
+          "mover_path_start_identity": "False:rook:b8",
+          "captured_path_start_identity": "True:pawn:b2"
+        },
+        "r:17": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:ccaaf7b9f772c6cff4f859dbd89c5996908593f744ef5ac6dbda44c65a37dcb9",
+          "uci": "c3c2",
+          "san": "c2",
+          "mover_path_start_identity": "False:pawn:c4",
+          "captured_path_start_identity": null
+        },
+        "r:20": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 20,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:1a21163c9f3b2f340a16be24c1cb20b1690d78b1d301d3acb3746653318fbaff",
+          "uci": "g3f5",
+          "san": "Nxf5",
+          "mover_path_start_identity": "True:knight:d2",
+          "captured_path_start_identity": "False:pawn:e6"
+        },
+        "r:21": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 21,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:894843b3a77b89db5271c2c283ef46a28ff8b874b40fee23a2293e90ee8a2bc2",
+          "uci": "a5e1",
+          "san": "Bxe1",
+          "mover_path_start_identity": "False:bishop:c7",
+          "captured_path_start_identity": "True:rook:f1"
+        },
+        "r:23": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 23,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:95ee3156a4ce3b49e66118c0ff59e09315fa1689a40460719b38a5bc5240b67c",
+          "uci": "e1f2",
+          "san": "Bxf2+",
+          "mover_path_start_identity": "False:bishop:c7",
+          "captured_path_start_identity": "True:pawn:f2"
+        },
+        "r:24": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 24,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:fb01ec42289519878ee882ab5b5f9558383698c0bd8bdb76694ec7f81f8b5609",
+          "uci": "g1f2",
+          "san": "Kxf2",
+          "mover_path_start_identity": "True:king:g1",
+          "captured_path_start_identity": "False:bishop:c7"
+        },
+        "r:7": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:1adc13d28161ac6d2accf9cab2aa9d27ede484eed832b611361c07f1c39f5b99",
+          "uci": "d5d4",
+          "san": "d4",
+          "mover_path_start_identity": "False:pawn:d5",
+          "captured_path_start_identity": null
+        },
+        "r:8": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:665279ade4e2e02ffa2e64ed57745a0c6c5e9d3d2520fe5e8af1402d5bfdb640",
+          "uci": "c2f5",
+          "san": "Bxf5",
+          "mover_path_start_identity": "True:bishop:c2",
+          "captured_path_start_identity": "False:knight:f5"
+        },
+        "r:9": {
+          "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:c1aedcdbcbdaf0d4859b66f24addc712713733775bca0a1d9873c2cffdc3ed36",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:2eeeb4228746d1c2cbcb9d579f564c5a30902c221b7d7d55bfecd8934efabf7c",
+          "uci": "e6f5",
+          "san": "exf5",
+          "mover_path_start_identity": "False:pawn:e6",
+          "captured_path_start_identity": "True:bishop:c2"
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-10",
+      "fact_state": "comparison_available",
+      "primary_question": "e4와 Rad1에서 원래 e5 나이트의 처리와 f1 룩의 역할이 어떻게 다르며, e4 수순에서 얻는 퀸에는 어떤 룩·나이트·폰 가격이 붙는가?",
+      "bounded_answer": "e4 수순에서 원래 e5 나이트는 Ng4/Ne3 뒤 Qxe3에 잡히고, Qxf2+/Kxf2로 백 f1 룩을 내주면서 흑 퀸을 얻는다. 이 과정에는 f5/gxf5/exf5 뒤 Nxf5로 원래 e3 폰도 사라진다. Rad1에서는 Nxe5/Nxe5 및 Nxf3+/Rxf3으로 양쪽 나이트 두 쌍을 교환하고 퀸과 백 룩은 기록 끝까지 남는다. 두 끝의 단순 점수가 같더라도 교환 내용은 같지 않다.",
+      "primary_required": [
+        {
+          "content": "reference의 퀸 획득을 Qxe3의 원래 e5 나이트 손실 및 Qxf2+의 f1 룩 손실과 묶고 Kxf2가 실제 체크 응수임을 남긴다.",
+          "proof_keys": [
+            "r:3",
+            "r:9",
+            "r:12",
+            "r:14",
+            "r:15"
+          ]
+        },
+        {
+          "content": "reference의 초기 복합 가격을 말할 때 f4 폰과 g6 폰의 교환, e3 폰의 exf5/Nxf5까지 보존한다. Nxf5는 퀸의 되잡기가 아니다.",
+          "proof_keys": [
+            "r:5",
+            "r:6",
+            "r:7",
+            "r:16"
+          ]
+        },
+        {
+          "content": "candidate에서 같은 SAN Nxe5의 actor가 서로 다름을 보존하고 Nxe5/Nxe5 및 Nxf3+/Rxf3를 모두 닫는다.",
+          "proof_keys": [
+            "c:8",
+            "c:9",
+            "c:15",
+            "c:16",
+            "c:17"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "reference 후속 f5 획득 또는 전체 가격",
+          "content": "다른 원래 f3 나이트의 Nxf5에는 Nxf5/gxf5/Rxf5까지 붙인다. 처음 e3에서 사라진 e5 나이트와 동일시하지 않는다.",
+          "proof_keys": [
+            "r:25",
+            "r:26",
+            "r:27",
+            "r:30",
+            "r:31",
+            "r:32"
+          ]
+        },
+        {
+          "claim": "두 선택의 같은 결과 또는 국면 합류",
+          "content": "reference는 34수, candidate는 17수의 다른 기록이며 같은 기물 구성이나 동일 국면이 아니다. 물질 점수만으로 합류·동등성·평가 원인을 주장하지 않는다.",
+          "proof_keys": [
+            "r:34",
+            "c:17"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "Qxf2+ 이후 무엇이 실제로 남는가?",
+          "required": "앞선 Qxe3와 Kxf2, 이어 Nxf5를 보존한 퀸 대 룩·나이트와 폰의 구체 교환으로 답한다. 퀸 획득 SAN 하나만으로 유용한 답으로 세지 않는다.",
+          "proof_keys": [
+            "r:12",
+            "r:14",
+            "r:15",
+            "r:16"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "e4로 비어 있는 e3를 나이트가 사용한다는 사실만 승격",
+        "퀸을 얻었다는 단편만 제공"
+      ],
+      "unconfirmed": [
+        "흑이 퀸을 내주는 모든 수순이 강제라는 주장",
+        "끝의 net_cp가 root 평가의 원인 또는 승패라는 주장"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-10-obligation-facts.json",
+      "fact_sha256": "d68e798678d0d2ac0ecb64cf29ecae73e5187a05dfe609c150b8650652e2bbb7",
+      "source_snapshot_sha256": "8eb043876916df26bebc24e9ff2fd524eb88d5faf8d37d4a55cd42ec77244da8",
+      "execution_status": {
+        "game_id": "TAT25-10",
+        "request_id": "answer-selection-TAT25-10-31",
+        "elapsed_ms": 8571,
+        "work_count": 3,
+        "issued_work_count": 3,
+        "bridge_execution_response_count": 3,
+        "report_submission_attempt_count": 3,
+        "reducer_report_response_count": 3,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 1,
+        "adapter_generated_failure_report_count": 1
+      },
+      "request_id": "answer-selection-TAT25-10-31",
+      "current_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P2P2/3PPN2/PBQ1B1PP/R4RK1 w - - 7 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:candidate-comparison:d35f6c9c958d5d0cfcf39e1710e48a4580771e634b8cdf1842fa1ba8885fd101",
+          "reference_line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "candidate_line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 34,
+        "candidate_steps": 17,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 33,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:f5a5358515e21b2a02954e8fa128221e777a7a3e3059ddf4c3c820312ea9958e"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 16,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:28ba58dc64e477819a92cca7d9a2b4aeed5c5a8c3599b8edc76880b28cb21a84"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:15": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:276f08558e394ca8be8f5e6212dbf126a7f8739cda34ebad00ecc9c3968b17ed",
+          "uci": "e5f3",
+          "san": "Nf3",
+          "mover_path_start_identity": "True:knight:f3",
+          "captured_path_start_identity": null
+        },
+        "c:16": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:0ba2e31bda61a2bf53cc31610c3972e471b35117c265f4ecfb2ac4e14841999a",
+          "uci": "h4f3",
+          "san": "Nxf3+",
+          "mover_path_start_identity": "False:knight:d6",
+          "captured_path_start_identity": "True:knight:f3"
+        },
+        "c:17": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:28ba58dc64e477819a92cca7d9a2b4aeed5c5a8c3599b8edc76880b28cb21a84",
+          "uci": "f1f3",
+          "san": "Rxf3",
+          "mover_path_start_identity": "True:rook:f1",
+          "captured_path_start_identity": "False:knight:d6"
+        },
+        "c:8": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:d732fbca1d36e15727222fb67fe6ec593637a4e8e51403500f838b07972840a6",
+          "uci": "c6e5",
+          "san": "Nxe5",
+          "mover_path_start_identity": "False:knight:a5",
+          "captured_path_start_identity": "True:knight:e5"
+        },
+        "c:9": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:00a9310c8ef5f5c8389f53afa5f6b1fe34b6f45c8d7ea696aa816f237414d67a",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:b4a7c3293f1b580937a3b174f4df5bfbb6895415440a2f2238146c5b44c33fdf",
+          "uci": "f3e5",
+          "san": "Nxe5",
+          "mover_path_start_identity": "True:knight:f3",
+          "captured_path_start_identity": "False:knight:a5"
+        },
+        "r:12": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:d292e1ab1f81f31191982bc5e3d5641a9d4eb66df01aec017e39790b7eeecc46",
+          "uci": "f4e3",
+          "san": "Qxe3",
+          "mover_path_start_identity": "False:queen:c7",
+          "captured_path_start_identity": "True:knight:e5"
+        },
+        "r:14": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:09a04924e24388ee3bc695d0d60b3f5575997e0c97e27532b71183af71ed4ee4",
+          "uci": "e3f2",
+          "san": "Qxf2+",
+          "mover_path_start_identity": "False:queen:c7",
+          "captured_path_start_identity": "True:rook:f1"
+        },
+        "r:15": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:d949976f3f8a154823e7905630b194f8bb611b09241ecb9bf4d24f10cb31daa9",
+          "uci": "g1f2",
+          "san": "Kxf2",
+          "mover_path_start_identity": "True:king:g1",
+          "captured_path_start_identity": "False:queen:c7"
+        },
+        "r:16": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:695695658ddd514a82464ced243861f1c61254029c4c31b77d59ebb0fbffb086",
+          "uci": "h6f5",
+          "san": "Nxf5",
+          "mover_path_start_identity": "False:knight:d6",
+          "captured_path_start_identity": "True:pawn:e3"
+        },
+        "r:25": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 25,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:509b37e2a0c6818ea5b92f5aed31b5f5b5c0f1334eee572b4a322e421a345ba5",
+          "uci": "f3h4",
+          "san": "Nh4",
+          "mover_path_start_identity": "True:knight:f3",
+          "captured_path_start_identity": null
+        },
+        "r:26": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 26,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:449725c28069a90ecbac1302bcdf45ea1831e79c553be0bdc0b75841df622741",
+          "uci": "f6f5",
+          "san": "f5",
+          "mover_path_start_identity": "False:pawn:f7",
+          "captured_path_start_identity": null
+        },
+        "r:27": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 27,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:14bdb1ccc5693d525f492454f41c4df089aa1dac7a200f3af360c864584a1b1c",
+          "uci": "h4f5",
+          "san": "Nxf5",
+          "mover_path_start_identity": "True:knight:f3",
+          "captured_path_start_identity": "False:pawn:f7"
+        },
+        "r:3": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:998292aeab78e9e405e1544a8f5499139bd399d6a1e355864fdacfa522fd94aa",
+          "uci": "e5g4",
+          "san": "Ng4",
+          "mover_path_start_identity": "True:knight:e5",
+          "captured_path_start_identity": null
+        },
+        "r:30": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 30,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:d372d41770cb80ab35941fa6a023fabc68fa2c6b14264298a16fc506f1a130b5",
+          "uci": "d6f5",
+          "san": "Nxf5",
+          "mover_path_start_identity": "False:knight:d6",
+          "captured_path_start_identity": "True:knight:f3"
+        },
+        "r:31": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 31,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:53883601e771d35a48a64b6700232d2ca2201c9c7226ffd0ed1efbd8b86751d0",
+          "uci": "g4f5",
+          "san": "gxf5",
+          "mover_path_start_identity": "True:pawn:g2",
+          "captured_path_start_identity": "False:knight:d6"
+        },
+        "r:32": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 32,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:0a0ae74a208c0a27eadc365fca8bf174b1a52ad95f855addc2002a92e4f34002",
+          "uci": "f8f5",
+          "san": "Rxf5",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": "True:pawn:g2"
+        },
+        "r:34": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 34,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:f5a5358515e21b2a02954e8fa128221e777a7a3e3059ddf4c3c820312ea9958e",
+          "uci": "f5g5",
+          "san": "Rg5",
+          "mover_path_start_identity": "False:rook:f8",
+          "captured_path_start_identity": null
+        },
+        "r:5": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:245347ee186627f5aaa3ccd3db03473b660624e23940e80c7d561f0be3249c95",
+          "uci": "f4f5",
+          "san": "f5",
+          "mover_path_start_identity": "True:pawn:f4",
+          "captured_path_start_identity": null
+        },
+        "r:6": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:890c648f3bc43d54e9c802b5d38c58d6c3377fab72566d60cd5446579c04f66f",
+          "uci": "g6f5",
+          "san": "gxf5",
+          "mover_path_start_identity": "False:pawn:g6",
+          "captured_path_start_identity": "True:pawn:f4"
+        },
+        "r:7": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:f7a86d912b62d3306e14f3341fa0dba7c8fbbaf7e24d8709b6a10e4d32469de1",
+          "uci": "e4f5",
+          "san": "exf5",
+          "mover_path_start_identity": "True:pawn:e3",
+          "captured_path_start_identity": "False:pawn:g6"
+        },
+        "r:9": {
+          "line_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:line:0a32237a4576ba4a88631db2c432cdfbbf1121ba7ec0d903d8918d6bacadfc41",
+          "step_one_based": 9,
+          "occurrence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:transition:35b6440704eca23286d184ef97c081eed89461881d6e9cb0f83a837041e435c4",
+          "uci": "g4e3",
+          "san": "Ne3",
+          "mover_path_start_identity": "True:knight:e5",
+          "captured_path_start_identity": null
+        }
+      }
+    },
+    {
+      "game_id": "TAT25-11",
+      "fact_state": "comparison_available",
+      "primary_question": "지금 O-O를 둔 기록의 c5 교환과 h7 체크 희생은 어떤 실제 회복으로 이어지며, Rb8 뒤 캐슬링하는 짧은 기록과 어디까지 비교할 수 있는가?",
+      "bounded_answer": "Rb8 수순도 O-O를 포함하지만 Qa4까지 8수 동안 포획이 없다. 즉시 O-O 수순은 c5/Nxc5/Bxc5/dxc5와 Bxf3/Rxf3로 백 나이트 둘과 흑 비숍 둘을 교환한다. 이어 Bxh7+/Kxh7로 백 비숍을 내주지만 Qd3+/Kg8, Rh3/g6 뒤 Qxd7로 흑 나이트를 잡고 Qxd7/Rxd7로 퀸을 교환한다. 기록은 Rxc5까지이고, 두 길이가 달라 캐슬링 순서가 모든 가격 차이를 만들었다고 말할 수 없다.",
+      "primary_required": [
+        {
+          "content": "양쪽 모두 캐슬링을 한다는 사실과 reference가 포획 없는 짧은 기록임을 보존한다. reference가 같은 후속 교환을 피한다고 단정하지 않는다.",
+          "proof_keys": [
+            "r:1",
+            "r:3",
+            "r:8",
+            "c:1"
+          ]
+        },
+        {
+          "content": "c5 교환에서 원래 c6 폰의 손실 및 Bxc5/dxc5, Bxf3/Rxf3로 서로 다른 두 나이트·비숍 쌍의 교환을 포함한다.",
+          "proof_keys": [
+            "c:3",
+            "c:4",
+            "c:5",
+            "c:6",
+            "c:7",
+            "c:8"
+          ]
+        },
+        {
+          "content": "h7 비숍 손실에는 h7 폰 획득과 Kxh7을 포함하고, 후속 Qd3+/Kg8 및 Qxd7/Qxd7/Rxd7의 원래 b6 나이트 회수·퀸 교환을 함께 둔다.",
+          "proof_keys": [
+            "c:12",
+            "c:13",
+            "c:14",
+            "c:15",
+            "c:16",
+            "c:17",
+            "c:18",
+            "c:19",
+            "c:20"
+          ]
+        }
+      ],
+      "required_if_claimed": [
+        {
+          "claim": "candidate 전체 끝 가격 또는 c5 폰 생존",
+          "content": "마지막 Rxc5로 원래 d4 백 폰이 제거됨을 포함한다. Nxc5로 처음 없어진 원래 c6 흑 폰과 혼동하지 않는다.",
+          "proof_keys": [
+            "c:4",
+            "c:6",
+            "c:21",
+            "c:23"
+          ]
+        },
+        {
+          "claim": "메이트·킹 안전·캐슬링 순서의 우월성",
+          "content": "기록의 체크들은 Kxh7/Kg8로 응답되고 끝은 비종결 PV이다. 이런 전역 결론은 이 사실 묶음만으로 확정할 수 없다.",
+          "proof_keys": [
+            "c:12",
+            "c:13",
+            "c:14",
+            "c:15",
+            "c:23"
+          ]
+        }
+      ],
+      "useful_local_questions": [
+        {
+          "question": "Bxh7+의 희생 뒤 무엇을 실제로 회수하는가?",
+          "required": "Kxh7와 Qd3+/Kg8, Qxd7/Qxd7/Rxd7까지 연결해 비숍과 h7 폰·b6 나이트 및 퀸 교환을 설명한다. mate 또는 무상 나이트 획득으로 말하지 않는다.",
+          "proof_keys": [
+            "c:12",
+            "c:13",
+            "c:14",
+            "c:15",
+            "c:18",
+            "c:19",
+            "c:20"
+          ]
+        }
+      ],
+      "not_sufficient_for_primary": [
+        "캐슬링의 킹·룩 이동만 설명",
+        "Bxh7+ 또는 Qxd7 하나를 성공적인 전술로 선언"
+      ],
+      "unconfirmed": [
+        "Rb8의 짧은 무포획 기록을 근거로 이후 교환도 없다고 확정",
+        "캐슬링 순서가 다른 모든 후속 차이의 단독 원인이라는 주장"
+      ],
+      "fact_path": "target/answer-selection-20261004/fresh-run/TAT25-11-obligation-facts.json",
+      "fact_sha256": "451f660b8141c3a82aa94b7ac171611569db73473359df49d3aa3080f1dd02b8",
+      "source_snapshot_sha256": "a873fa4fce36b31835e67770557af32a5712b48fc99c8956e646917a699b0ba0",
+      "execution_status": {
+        "game_id": "TAT25-11",
+        "request_id": "answer-selection-TAT25-11-32",
+        "elapsed_ms": 9378,
+        "work_count": 4,
+        "issued_work_count": 4,
+        "bridge_execution_response_count": 4,
+        "report_submission_attempt_count": 4,
+        "reducer_report_response_count": 4,
+        "state": "completed",
+        "stop_condition": null,
+        "adapter_error": null,
+        "pending_work_preserved": false,
+        "execution_group": "later_fixed_job",
+        "executor_failure_report_count": 0,
+        "adapter_generated_failure_report_count": 0
+      },
+      "request_id": "answer-selection-TAT25-11-32",
+      "current_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "comparison_pairs": [
+        {
+          "candidate_id": "comparison:move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:candidate-comparison:f51a9af7c6b599ede410b3c2c722926f820fe065edd239f6a58c93eff4927703",
+          "reference_line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:9eff39c2a56c8691a5f8fe66b302dcce4d36883f5f868799e7790a9d8b61985a",
+          "candidate_line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7"
+        }
+      ],
+      "pair_scope": {
+        "reference_steps": 8,
+        "candidate_steps": 23,
+        "reference_ending": {
+          "kind": "line_end",
+          "ply_offset": 7,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:d4d55a3edc2a10c272d871f69be777f87fd409e3a42ec9b2ab96347336f93746"
+        },
+        "candidate_ending": {
+          "kind": "line_end",
+          "ply_offset": 22,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:4b5661ad9ee41e1b8a84060efd911db4085b599759757bdec49a56f918a1777a"
+        },
+        "reference_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        },
+        "candidate_terminal": {
+          "checkmate": false,
+          "stalemate": false,
+          "insufficient_material": false
+        }
+      },
+      "proof_occurrences": {
+        "c:1": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:ca4ae7eb64ecc92e45f0b56fa6d9cd64dbcf5158ab3fcc1f0e09804f36e1e2ca",
+          "uci": "e8g8",
+          "san": "O-O",
+          "mover_path_start_identity": "False:king:e8",
+          "captured_path_start_identity": null
+        },
+        "c:12": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 12,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:1e21fd94b086c2b8650dd91ca1444d851d573635405524541bcb7f2cfda02f1c",
+          "uci": "d3h7",
+          "san": "Bxh7+",
+          "mover_path_start_identity": "True:bishop:d3",
+          "captured_path_start_identity": "False:pawn:h7"
+        },
+        "c:13": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 13,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:f21457d76bc747fb786244ffb1a2ffad00c58ac13567c23cbd575ea4197db038",
+          "uci": "g8h7",
+          "san": "Kxh7",
+          "mover_path_start_identity": "False:king:e8",
+          "captured_path_start_identity": "True:bishop:d3"
+        },
+        "c:14": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 14,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:f10c2400ec4c6cbf629276983854cb38f5b3cc80d333db52f6b9260fcd9aedbd",
+          "uci": "b3d3",
+          "san": "Qd3+",
+          "mover_path_start_identity": "True:queen:b3",
+          "captured_path_start_identity": null
+        },
+        "c:15": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 15,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:347d6cd45f328d379bf9085581927451e6f5ba62c305b5c005a03865cf67fc3b",
+          "uci": "h7g8",
+          "san": "Kg8",
+          "mover_path_start_identity": "False:king:e8",
+          "captured_path_start_identity": null
+        },
+        "c:16": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 16,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:09ad2df13c52a66c088dbbe8a33ffe515999193ba59b68d449480af2d0d66a59",
+          "uci": "f3h3",
+          "san": "Rh3",
+          "mover_path_start_identity": "True:rook:f1",
+          "captured_path_start_identity": null
+        },
+        "c:17": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 17,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:14a25b1f2f93d25907ac6726c5cb6fe72fc932629e7df99ad807ef479fc6f186",
+          "uci": "g7g6",
+          "san": "g6",
+          "mover_path_start_identity": "False:pawn:g7",
+          "captured_path_start_identity": null
+        },
+        "c:18": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 18,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:3c59b0dab2cf990dd3e20b07fb0898245b1497d1e9962f0c6df9f2e8a9eacfe7",
+          "uci": "d3d7",
+          "san": "Qxd7",
+          "mover_path_start_identity": "True:queen:b3",
+          "captured_path_start_identity": "False:knight:b6"
+        },
+        "c:19": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 19,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:08d993cb020f35f0d0fb0a00b2531b5977dc9172c35640620349dd0d484a4e95",
+          "uci": "c7d7",
+          "san": "Qxd7",
+          "mover_path_start_identity": "False:queen:d8",
+          "captured_path_start_identity": "True:queen:b3"
+        },
+        "c:20": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 20,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:f0dec74eb842baab8650350da98880541fefa6643501c5c04ca284fe3a71dc92",
+          "uci": "d1d7",
+          "san": "Rxd7",
+          "mover_path_start_identity": "True:rook:a1",
+          "captured_path_start_identity": "False:queen:d8"
+        },
+        "c:21": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 21,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:8de1e7af93076b915c662951c4c4dbf7cf68ca60992456fc8ea43ae1d34d0042",
+          "uci": "f8c8",
+          "san": "Rfc8",
+          "mover_path_start_identity": "False:rook:h8",
+          "captured_path_start_identity": null
+        },
+        "c:23": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 23,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:4b5661ad9ee41e1b8a84060efd911db4085b599759757bdec49a56f918a1777a",
+          "uci": "c8c5",
+          "san": "Rxc5",
+          "mover_path_start_identity": "False:rook:h8",
+          "captured_path_start_identity": "True:pawn:d4"
+        },
+        "c:3": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:bd99dd59381110675a39ec90c23d10b15ca1ce7638c94e7c451d1cbbc8a3d45e",
+          "uci": "c6c5",
+          "san": "c5",
+          "mover_path_start_identity": "False:pawn:c6",
+          "captured_path_start_identity": null
+        },
+        "c:4": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 4,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:b1b41e69f1ef1f803382f3e83ee5af6e90cc15e976d163ec99b4f00c3fa5579d",
+          "uci": "e4c5",
+          "san": "Nxc5",
+          "mover_path_start_identity": "True:knight:c3",
+          "captured_path_start_identity": "False:pawn:c6"
+        },
+        "c:5": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 5,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:307ce7ed4ae3a2757939bb498197e55892a0a7616f374de706fad0785b5fffbb",
+          "uci": "e7c5",
+          "san": "Bxc5",
+          "mover_path_start_identity": "False:bishop:e7",
+          "captured_path_start_identity": "True:knight:c3"
+        },
+        "c:6": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 6,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:4f5a5c76e5cc294c96d96c0b24e05a7d6ecb931c9f95dfbca36d602be6d16cf0",
+          "uci": "d4c5",
+          "san": "dxc5",
+          "mover_path_start_identity": "True:pawn:d4",
+          "captured_path_start_identity": "False:bishop:e7"
+        },
+        "c:7": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 7,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:450252991fa79d185b1c4e7f1c3f2ed2b22ee4a0d98ab5ec72d9a74563f18027",
+          "uci": "b7f3",
+          "san": "Bxf3",
+          "mover_path_start_identity": "False:bishop:b7",
+          "captured_path_start_identity": "True:knight:f3"
+        },
+        "c:8": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:1cbbadc573efb583e8ecdb333ff31d551d952061b1d7bd45ebf5cf1c764d81d7",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:81dbb8799ca12502b5f09a8450b819fa1ecccc11fbdc0aaa71343200d9d7a0e5",
+          "uci": "f1f3",
+          "san": "Rxf3",
+          "mover_path_start_identity": "True:rook:f1",
+          "captured_path_start_identity": "False:bishop:b7"
+        },
+        "r:1": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:9eff39c2a56c8691a5f8fe66b302dcce4d36883f5f868799e7790a9d8b61985a",
+          "step_one_based": 1,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:e6bd01cabfb04f49d72d33ad203aed40429027e8364c23e1ab66cd7d1fee2195",
+          "uci": "a8b8",
+          "san": "Rb8",
+          "mover_path_start_identity": "False:rook:a8",
+          "captured_path_start_identity": null
+        },
+        "r:3": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:9eff39c2a56c8691a5f8fe66b302dcce4d36883f5f868799e7790a9d8b61985a",
+          "step_one_based": 3,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:d86349569319355953160b714a1096d276c7e743688230e60473c062beb08711",
+          "uci": "e8g8",
+          "san": "O-O",
+          "mover_path_start_identity": "False:king:e8",
+          "captured_path_start_identity": null
+        },
+        "r:8": {
+          "line_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:line:9eff39c2a56c8691a5f8fe66b302dcce4d36883f5f868799e7790a9d8b61985a",
+          "step_one_based": 8,
+          "occurrence_id": "move-review:7a558c878009eef50aa3617ade3fc320ca8b9b2a5be28fc928ddf705cd42fed6:31:e8g8:evidence:transition:d4d55a3edc2a10c272d871f69be777f87fd409e3a42ec9b2ab96347336f93746",
+          "uci": "c2a4",
+          "san": "Qa4",
+          "mover_path_start_identity": "True:queen:b3",
+          "captured_path_start_identity": null
+        }
+      }
+    }
+  ],
+  "frozen_at_utc": "2026-10-04T15:02:01.7671176Z",
+  "request_manifest_sha256": "d2054a176b06ed598ef86a4c5a6907ac8b6eed3641a5e14070fe3be97624bafd",
+  "audit": {
+    "case_count": 9,
+    "available_comparison_count": 8,
+    "unavailable_count": 1,
+    "exact_proof_occurrences_bound": 175,
+    "request_and_pair_start_fen_match": true,
+    "product_prose_read": false,
+    "source_fact_files_modified": false
+  }
+}

@@ -1,0 +1,1238 @@
+{
+  "scope": "Actual selectionv10 serializer snapshots; pure actual Node/JSDOM decoder and VNode click callbacks only. No engine, app, browser, product edits or prose quality judgments.",
+  "generated_at": "2026-10-04T15:47:59.988Z",
+  "run_dir": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\selectionv10-fresh-stored17",
+  "manifest_sha256": "67db761e643a7351bedd46dbe0dae88d3828b3d67def8975e8da5779ca729ccd",
+  "request_sha256": "d2054a176b06ed598ef86a4c5a6907ac8b6eed3641a5e14070fe3be97624bafd",
+  "source_hashes": [
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+      "sha256": "d7495197cac918f13d0425ab117beca10bd4a491738df95db04015e1725f3ae6"
+    },
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "sha256": "75bfe33fb34653bb7bb6b22455d393734f8099b984a609ffaea483d6e87d4655"
+    },
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+      "sha256": "532a10bb52ca1aed8f390617287cac87e6e92e8a768c8719d62b4a8660daa39d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "be2b29978bce7cf0fc2882b66b04b0159b06da8a924208cf309bcc8c10c36e5a"
+    }
+  ],
+  "input_hashes": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\selectionv10-fresh-stored17\\issued-snapshots.jsonl.gz",
+      "sha256": "729153398d953500b55062bc46287e99871f3a89d7c48c37144a34a93827868b"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\selectionv10-fresh-stored17\\final-snapshots.jsonl.gz",
+      "sha256": "2aa540eb6790d5d8e3ea4469db4360cc683d7a320948f2ba3e96b174f4131391"
+    }
+  ],
+  "positives": [
+    {
+      "game_id": "COR06-02",
+      "kind": "issued",
+      "work_id": "work:2",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": true
+      },
+      "reject_lines": [
+        6973,
+        6967,
+        7050
+      ]
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "issued",
+      "work_id": "work:2",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": true
+      },
+      "reject_lines": [
+        6676,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "issued",
+      "work_id": "work:2",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": true
+      },
+      "reject_lines": [
+        6967,
+        6453,
+        6461
+      ]
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "issued",
+      "work_id": "work:2",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": true
+      },
+      "reject_lines": [
+        6453,
+        6461
+      ]
+    },
+    {
+      "game_id": "COR06-01",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-02",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        6973,
+        6967,
+        7050
+      ]
+    },
+    {
+      "game_id": "COR06-03",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-04",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        6676,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-08",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-09",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-10",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        6967,
+        6973,
+        7933
+      ]
+    },
+    {
+      "game_id": "COR06-11",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        6967,
+        6973,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-01",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-03",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6967,
+        6453,
+        6461,
+        6973,
+        7050,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        6967,
+        6453,
+        6461
+      ]
+    },
+    {
+      "game_id": "TAT25-05",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6973,
+        6967,
+        6453,
+        6461,
+        7050,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-07",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-09",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        6676,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ]
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        6453,
+        6461
+      ]
+    },
+    {
+      "game_id": "TAT25-11",
+      "kind": "final",
+      "replay_status": "fully_replayed",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6453,
+        6461,
+        7933
+      ]
+    }
+  ],
+  "endpoint_links": [
+    {
+      "game_id": "COR06-02",
+      "locale": "en-US",
+      "offset": 13,
+      "uci": "a5b4",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Bxb4",
+      "expected_san": "Bxb4",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "COR06-02",
+      "locale": "ko-KR",
+      "offset": 13,
+      "uci": "a5b4",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Bxb4",
+      "expected_san": "Bxb4",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "COR06-05",
+      "locale": "en-US",
+      "offset": 15,
+      "uci": "f6d4",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Bxd4",
+      "expected_san": "Bxd4",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "COR06-05",
+      "locale": "ko-KR",
+      "offset": 15,
+      "uci": "f6d4",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Bxd4",
+      "expected_san": "Bxd4",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "TAT25-04",
+      "locale": "en-US",
+      "offset": 22,
+      "uci": "f4g5",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "fxg5",
+      "expected_san": "fxg5",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "TAT25-04",
+      "locale": "ko-KR",
+      "offset": 22,
+      "uci": "f4g5",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "fxg5",
+      "expected_san": "fxg5",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "TAT25-10",
+      "locale": "en-US",
+      "offset": 16,
+      "uci": "f1f3",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Rxf3",
+      "expected_san": "Rxf3",
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "TAT25-10",
+      "locale": "ko-KR",
+      "offset": 16,
+      "uci": "f1f3",
+      "found": true,
+      "proof": true,
+      "inline": true,
+      "required": true,
+      "action_excluded": true,
+      "covered": false,
+      "button_exists": true,
+      "button_san": "Rxf3",
+      "expected_san": "Rxf3",
+      "exact_click_frame": true
+    }
+  ],
+  "action_accounts": [
+    {
+      "game_id": "COR06-02",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "action_count": 31,
+      "actual_capture_count": 14,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "action_count": 29,
+      "actual_capture_count": 22,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "action_count": 35,
+      "actual_capture_count": 25,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "action_count": 34,
+      "actual_capture_count": 21,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "COR06-01",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 31,
+      "actual_capture_count": 15,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 1
+    },
+    {
+      "game_id": "COR06-02",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 31,
+      "actual_capture_count": 14,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "COR06-03",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 46,
+      "actual_capture_count": 38,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 1
+    },
+    {
+      "game_id": "COR06-04",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 39,
+      "actual_capture_count": 22,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 29,
+      "actual_capture_count": 22,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "COR06-08",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 20,
+      "actual_capture_count": 15,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    },
+    {
+      "game_id": "COR06-09",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 41,
+      "actual_capture_count": 28,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 4
+    },
+    {
+      "game_id": "COR06-10",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 43,
+      "actual_capture_count": 22,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "COR06-11",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 23,
+      "actual_capture_count": 15,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 1
+    },
+    {
+      "game_id": "TAT25-01",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 41,
+      "actual_capture_count": 31,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "TAT25-03",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 15,
+      "actual_capture_count": 9,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 35,
+      "actual_capture_count": 25,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 3
+    },
+    {
+      "game_id": "TAT25-05",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 20,
+      "actual_capture_count": 14,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "TAT25-07",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 21,
+      "actual_capture_count": 16,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    },
+    {
+      "game_id": "TAT25-09",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 43,
+      "actual_capture_count": 36,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 34,
+      "actual_capture_count": 21,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 2
+    },
+    {
+      "game_id": "TAT25-11",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 27,
+      "actual_capture_count": 18,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    }
+  ],
+  "negative_mutations": [
+    {
+      "name": "duplicate_action",
+      "game_id": "COR06-02",
+      "meaning": "Duplicate a real owned action reference without changing its proof or prose.",
+      "length_guard_also_applies": false,
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1396,
+        6267
+      ]
+    },
+    {
+      "name": "foreign_action",
+      "game_id": "COR06-02",
+      "meaning": "Replace one action with an unadmitted line ID.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1396,
+        6267
+      ]
+    },
+    {
+      "name": "action_not_owned_by_proof",
+      "game_id": "COR06-02",
+      "meaning": "Use an admitted comparison occurrence that this unit does not own in proof_moves.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1396,
+        6267
+      ]
+    },
+    {
+      "name": "missing_capture_price",
+      "game_id": "COR06-02",
+      "meaning": "Keep the actual capture action, proof and prose; remove its coverage and change role to bypass only the cost-role shape guard.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ]
+    },
+    {
+      "name": "forged_required_ownership",
+      "game_id": "COR06-02",
+      "meaning": "Assign an admitted occurrence as required although the unit does not own its proof.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1403,
+        6267
+      ]
+    },
+    {
+      "name": "forged_focus_position",
+      "game_id": "COR06-02",
+      "meaning": "Keep an owned focus occurrence but replace its certified position ID.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1308,
+        1421,
+        6267
+      ]
+    },
+    {
+      "name": "unknown_question_enum",
+      "game_id": "COR06-02",
+      "meaning": "Replace a known question with an unknown tag.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1346,
+        6267
+      ]
+    },
+    {
+      "name": "actions_require_typed_proof",
+      "game_id": "COR06-02",
+      "meaning": "Retain action_moves but remove the typed proof list.",
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1396,
+        6267
+      ]
+    },
+    {
+      "name": "missing_actual_recapture",
+      "game_id": "COR06-02",
+      "meaning": "Keep an actual capture selected but omit its proven immediate recapture from action and coverage, preserving all proof and inline links.",
+      "capture_offset": 6,
+      "recapture_offset": 7,
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1457,
+        1469,
+        6267
+      ]
+    },
+    {
+      "name": "missing_actual_check_reply",
+      "game_id": "TAT25-10",
+      "meaning": "Remove a selected checking action’s next reply from the action account, preserving proof and inline notation; remove only the omitted action’s own coverage to reach closure validation.",
+      "check_offset": 13,
+      "reply_offset": 14,
+      "selection_rejected": true,
+      "snapshot_rejected": true,
+      "reject_lines": [
+        1453,
+        1469,
+        6267
+      ]
+    }
+  ],
+  "legacy_no_action": [
+    {
+      "game_id": "COR06-02",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "issued",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-01",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-02",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-03",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-04",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-05",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-08",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-09",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-10",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        6967,
+        6973,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "COR06-11",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        6967,
+        6973,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-01",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6967,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-03",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6967,
+        6453,
+        6461,
+        6973,
+        7050,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-04",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-05",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6973,
+        6967,
+        6453,
+        6461,
+        7050,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-07",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-09",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        6676,
+        6967,
+        6973,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-10",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": false,
+      "reject_lines": [
+        1451,
+        1469,
+        6267
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "TAT25-11",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [
+        2059,
+        594,
+        6028,
+        6453,
+        6461,
+        7933
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    }
+  ],
+  "enum_syntax_only": [
+    {
+      "game_id": "COR06-02",
+      "from": "selected_comparison",
+      "to": "investigated_mechanism",
+      "selection": true,
+      "limitation": "Tag-only syntax probe on unchanged real typed content. Not an actual investigated_mechanism serializer example and not proof of its semantic classification."
+    }
+  ],
+  "observed_question_tags": [
+    "selected_comparison"
+  ],
+  "limits": [
+    "Stored reports preserve the original failures; this replay does not establish successful new engine work.",
+    "The frozen v9 fresh quality assessment is unchanged. Contract replay is a regression check.",
+    "Action classification comes from typed producer statements; the decoder validates ownership and closure, not prose meaning."
+  ],
+  "verification_summary": {
+    "issued_four": {
+      "total": 4,
+      "accepted": 4
+    },
+    "final_seventeen": {
+      "total": 17,
+      "accepted": 17
+    },
+    "old_eighteen": {
+      "total": 18,
+      "accepted": 18
+    },
+    "endpoint_link_checks": {
+      "total": 8,
+      "passed": 8,
+      "meaning": "The actual renderer still creates en/ko SAN buttons for position witnesses and their click callbacks select the exact original occurrence."
+    },
+    "capture_coverage": {
+      "fresh_occurrence_accounts": 443,
+      "old_occurrence_accounts": 265,
+      "uncovered": 0,
+      "counting_note": "Counts are per unit account and snapshot, not distinct chess moves or new independent cases."
+    },
+    "negative_mutations": {
+      "kinds": [
+        "duplicate_action",
+        "foreign_action",
+        "action_not_owned_by_proof",
+        "missing_capture_price",
+        "forged_required_ownership",
+        "forged_focus_position",
+        "unknown_question_enum",
+        "actions_require_typed_proof",
+        "missing_actual_recapture",
+        "missing_actual_check_reply"
+      ],
+      "total": 20,
+      "selection_rejected": 20,
+      "note": "One available real serialized account per mutation kind per dataset; not every possible mutation on all snapshots."
+    },
+    "actual_capture_target_examples": [
+      "wch2016-11",
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "investigated_mechanism": "Only the explicitly labeled tag-only syntax probe was possible; no actual serializer example in these inputs.",
+    "legacy_no_action": {
+      "fresh_final_accepted": 13,
+      "fresh_final_rejected": [
+        "COR06-02",
+        "COR06-05",
+        "TAT25-04",
+        "TAT25-10"
+      ],
+      "fresh_issued_rejected": [
+        "COR06-02",
+        "COR06-05",
+        "TAT25-04",
+        "TAT25-10"
+      ],
+      "old_accepted": 16,
+      "old_rejected": [
+        "candidates2018-08",
+        "candidates2018-10"
+      ],
+      "note": "Deleting action_moves deliberately invokes existing proof/inline closure. The known four endpoint failures recur; ordinary compatible accounts remain accepted. This is a compatibility mutation, not a forged successful serializer response."
+    }
+  },
+  "old18_artifact": {
+    "path": "research/answer-selection-20261004/frontend-contract-selectionv10-old18.json",
+    "sha256": "cf1e4f841e58303677bffbf90f408dcf900770a76787d66c913971b491130e01"
+  },
+  "instrumentation_note": "Private pure functions are exported and return sites are logged in memory only. A logged return inside a predicate can be normal filtering; rejection is determined by returned selection/snapshot, not the presence of a trace line."
+}

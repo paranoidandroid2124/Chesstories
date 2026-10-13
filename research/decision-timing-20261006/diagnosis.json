@@ -1,0 +1,52 @@
+{
+  "created_utc": "2026-10-05T23:21:23.646214+00:00",
+  "status": "before_product_change",
+  "first_failures": [
+    {
+      "case": "C03",
+      "premise": "Root depth26: Na6 -27, Nbd7 -72 cp from Black perspective. Child depth22: after Na6 e5, Nd7 -21 vs Ne8 -61. After Nbd7 e5, Ne8 is best returned reply at -83.",
+      "manual": "All 9 predeclared Fact/FactComparison/CompareMoves requirements resolved through actual public proposal input; exact original pieces and same e5 reply kept.",
+      "automatic": "Existing first future own move is Ne8, generating contrast_immediate Nbd7 vs Ne8. No question about the useful d7 retreat occupied by Nbd7.",
+      "presentation": "Even with successful manual facts, default body leads with vacating b8 for a much later Rc8 and loss of queen support to d5. It does not organize the lost retreat around e5.",
+      "conclusion": "The concrete verification language is sufficient for this narrow non-tactical condition. Discovery treats an evasion as a planned goal; the answer has no current owned reply-constraint reading."
+    },
+    {
+      "case": "S4",
+      "premise": "Depth24: d5/Nc4 about +1.8 for Black; Rd8 0.00. Same Rg1 is important; immediately g5 can be met Bxg5, but after Rd8 Rg1 d5 g5 Bxg5, Rxg5 is available.",
+      "automatic": "Baseline spent one extra work 21 plies into the Rd8 line and then requested root depth37 after contradictory child analysis, exhausting the 5-second root search. The causal first-reply question was not investigated.",
+      "manual": "One 30-second normal-profile attempt failed verification before most declared branches could be promoted. Independent deeper searches support a real timing issue, but its entire mechanism is not yet product-verified.",
+      "limit": "d5 is not proved sole best: Nc4 is comparable. The author Rc4 sample is not the new engine PV; never claim that line is forced."
+    },
+    {
+      "case": "B03",
+      "premise": "Comparable d20/d22/d26 searches keep Bb5 slightly above Nc3, gaps 18/5/15cp single thread; d22 two threads 28cp.",
+      "conclusion": "Small preference, no serious defect established. Do not use a detailed PV transaction as its causal explanation."
+    },
+    {
+      "case": "D05",
+      "premise": "Stored tablebase root and child queries retain Black win with matching DTM/DTZ for Re8/Ra1+.",
+      "conclusion": "Finite scalar ranking is not proof of a lost win or material-based defect."
+    },
+    {
+      "case": "D06",
+      "manual": "All first-check and lost f2-control facts resolve; default terminal/material body omits Qf2+.",
+      "conclusion": "Clear tactical delivery problem, not sufficient for medium-term goal completion."
+    },
+    {
+      "case": "S2",
+      "premise": "Depth24: Qa3 +62, Rhf1 +47, Rhd1 +25 White cp; book permits multiple useful plans.",
+      "manual": "Support facts resolve; explicit Rhd1/Rhf1 comparison can hit investigation limit.",
+      "conclusion": "Explain distinct useful plans and observed comparison scope; do not infer a defect merely from the f-pawn plan appearing in one PV."
+    }
+  ],
+  "next_implementation": "Reuse existing canonical facts and owned comparisons to discover a root move occupying a useful retreat square after an actual new quiet attack. Verify the alternative retreat against the observed retreat at the same alternative position. Distinguish this reactive move from a preparation goal. Compose the proven constraint first only for its exact current root pair, while preserving actual selected prices and stronger independent mechanisms.",
+  "bounded_claim": "This identifies one contributing constraint, not the sole cause of an engine evaluation and not a proof of all future play.",
+  "evidence": [
+    "baseline-reading.json",
+    "baseline-questions.json",
+    "manual-reading.json",
+    "target/decision-timing-20261006/roots1/results.jsonl",
+    "target/decision-timing-20261006/roots2/results.jsonl",
+    "target/decision-timing-20261006/children1/results.jsonl"
+  ]
+}

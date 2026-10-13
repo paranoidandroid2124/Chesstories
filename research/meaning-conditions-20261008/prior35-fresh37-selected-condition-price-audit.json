@@ -1,0 +1,2784 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T07:47:20.082775+00:00",
+  "scope": "Separate condition-dependency audit of the nine same-history missing coverage rows and one detail-only row in the immutable original34 fresh37 audit. Includes chronological COR03 compact-answer loss and a bounded repair recommendation. Does not change any original criterion or human first-pass reading.",
+  "source_sha256": {
+    "research/meaning-conditions-20261008/prior35-fresh37-ten-price-evidence.json": "b7f34f96481634da2b2050c927c0e482c259239eda6091f54628ff96d9c798dc",
+    "target/decision-timing-20261006/mcPrior35Fresh37/journal.jsonl.gz": "d6a1e503f5371f70c57efc872c7f9f44644187c79accec31a9851f9eeaf18182",
+    "research/meaning-conditions-20261008/mcPrior35Fresh37-completion-and-price-audit.json": "7189974d9babe9a4890cb11b848ad666718f12cae196a23edee5303c6393056f",
+    "research/meaning-conditions-20261008/controlled35-to-final37-whole-verdict-price-audit.json": "d0ab8914bad952e955b4f68a9a1c6a73c1069be35d8fbb9ec63a8f501a899163"
+  },
+  "code_sources_observed_sha256": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "4a2cc5b71f0336d0f981abfc34c0be2c6fad1c749e5ee8a682775122fe76c246",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala": "59c6b75a0584e5409931e0b192aff2d15023350bb2a4f1adaecfc313dbba6b90",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala": "33a015c600c81d8a5ba273ecfb95ddbd6909f91a12d0e46863b81e8a7ab61557",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/TargetResponseInvestigation.scala": "b1960cd2849ec3b73bcf69c9b737a8b5598acf741d525572fe46f6cf81e1b3d3",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": "4d2ea5377bf500b2c7886363e7a651459396607567142e8f914812c7d973453e",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "4af8264497ebe0a7f55745a75599b3eb3e4cd3d9d280504a74088d64529b1be7"
+  },
+  "original34_criteria_changed": false,
+  "original34_statuses_changed": false,
+  "price_rows": [
+    {
+      "id": "candidates2018-10",
+      "root": "h6f4",
+      "original_offset": 14,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "h6f4",
+        "b4a5",
+        "f4e3",
+        "g1e1",
+        "e2f2",
+        "a5c7",
+        "d7c5",
+        "e1g1",
+        "e3h6",
+        "d1f1",
+        "f2e2",
+        "c6b8",
+        "f6f8",
+        "c7d6",
+        "a8b8"
+      ],
+      "san": "Raxb8",
+      "original_actor": {
+        "side": "black",
+        "role": "rook",
+        "original_square": "a8"
+      },
+      "original_victim": {
+        "side": "white",
+        "role": "knight",
+        "original_square": "c6"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:f1df8403d22715f51c6a6d14c647df980461d6c4d1164dc650ddbc8677f7cdb4",
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "h6f4",
+            "b4a5",
+            "f4e3",
+            "g1e1",
+            "e2f2",
+            "a5c7",
+            "d7c5",
+            "e1g1",
+            "e3h6",
+            "d1f1",
+            "f2e2",
+            "c6b8",
+            "f6f8",
+            "c7d6",
+            "a8b8",
+            "d6c5",
+            "e2e3",
+            "c5e3",
+            "h6e3",
+            "g1h1",
+            "h7h6",
+            "f1d1",
+            "b8b6",
+            "d5d6",
+            "b5a4",
+            "d1d3",
+            "e3c5",
+            "d6d7",
+            "f8d8",
+            "b1a2",
+            "h8g8",
+            "d3d5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:2",
+              "execution_key_sha256": "cc404eac4dadf090bdf7b93629d7e61642649cec6a5be785278f5af372581b30",
+              "required_depth": 16,
+              "owned_line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:f1df8403d22715f51c6a6d14c647df980461d6c4d1164dc650ddbc8677f7cdb4",
+              "root_move": "e2f2",
+              "prefix_moves_uci": [
+                "h6f4",
+                "b4a5",
+                "f4e3",
+                "g1e1"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c",
+              "side": "black",
+              "role": "rook",
+              "from": "a8",
+              "to": "b8",
+              "premise_ids": [
+                "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "b8",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        1
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_continuation_now_context_no_proven_selected_core_dependency",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "No current basic action, support provider, tracked material result, or required unit is read from the historical Qa5/Qc7/Nb8 branch through offset14/15. The current Bxf4 reference continuation diverges at offset5 (axb5 instead of Qc7).",
+      "prose_cost_without_price_ref": "Current basic does not state the original Raxb8/Qxc5 price. It states a different continuation and its owned prices; those do not preserve the original exact-history criterion.",
+      "first_failure": "The original history survives in an owned completed work2 continuation and context candidates, but is no longer selected as a basic unit. This audit does not establish that the current selected core owes those old continuation prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "candidates2018-10",
+      "root": "h6f4",
+      "original_offset": 15,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "h6f4",
+        "b4a5",
+        "f4e3",
+        "g1e1",
+        "e2f2",
+        "a5c7",
+        "d7c5",
+        "e1g1",
+        "e3h6",
+        "d1f1",
+        "f2e2",
+        "c6b8",
+        "f6f8",
+        "c7d6",
+        "a8b8",
+        "d6c5"
+      ],
+      "san": "Qxc5",
+      "original_actor": {
+        "side": "white",
+        "role": "queen",
+        "original_square": "b4"
+      },
+      "original_victim": {
+        "side": "black",
+        "role": "knight",
+        "original_square": "d7"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:f1df8403d22715f51c6a6d14c647df980461d6c4d1164dc650ddbc8677f7cdb4",
+            "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "h6f4",
+            "b4a5",
+            "f4e3",
+            "g1e1",
+            "e2f2",
+            "a5c7",
+            "d7c5",
+            "e1g1",
+            "e3h6",
+            "d1f1",
+            "f2e2",
+            "c6b8",
+            "f6f8",
+            "c7d6",
+            "a8b8",
+            "d6c5",
+            "e2e3",
+            "c5e3",
+            "h6e3",
+            "g1h1",
+            "h7h6",
+            "f1d1",
+            "b8b6",
+            "d5d6",
+            "b5a4",
+            "d1d3",
+            "e3c5",
+            "d6d7",
+            "f8d8",
+            "b1a2",
+            "h8g8",
+            "d3d5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:2",
+              "execution_key_sha256": "cc404eac4dadf090bdf7b93629d7e61642649cec6a5be785278f5af372581b30",
+              "required_depth": 16,
+              "owned_line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:f1df8403d22715f51c6a6d14c647df980461d6c4d1164dc650ddbc8677f7cdb4",
+              "root_move": "e2f2",
+              "prefix_moves_uci": [
+                "h6f4",
+                "b4a5",
+                "f4e3",
+                "g1e1"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd",
+              "side": "white",
+              "role": "queen",
+              "from": "d6",
+              "to": "c5",
+              "premise_ids": [
+                "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:a7aaa09c4ce4d125f8380d3bcc11162aa09f05abc30a2ff0151f17ea0163ddbd"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "c5",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        1
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_continuation_now_context_no_proven_selected_core_dependency",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "No current basic action, support provider, tracked material result, or required unit is read from the historical Qa5/Qc7/Nb8 branch through offset14/15. The current Bxf4 reference continuation diverges at offset5 (axb5 instead of Qc7).",
+      "prose_cost_without_price_ref": "Current basic does not state the original Raxb8/Qxc5 price. It states a different continuation and its owned prices; those do not preserve the original exact-history criterion.",
+      "first_failure": "The original history survives in an owned completed work2 continuation and context candidates, but is no longer selected as a basic unit. This audit does not establish that the current selected core owes those old continuation prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-03",
+      "root": "f5e6",
+      "original_offset": 5,
+      "status": "same_history_price_only_in_detail",
+      "moves_uci": [
+        "f5e6",
+        "a4b3",
+        "c2b3",
+        "f7e6",
+        "f1h3",
+        "a8a2"
+      ],
+      "san": "Rxa2",
+      "original_actor": {
+        "side": "black",
+        "role": "rook",
+        "original_square": "a8"
+      },
+      "original_victim": {
+        "side": "white",
+        "role": "pawn",
+        "original_square": "a2"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+            "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f5e6",
+            "a4b3",
+            "c2b3",
+            "f7e6",
+            "f1h3",
+            "a8a2",
+            "c1b1",
+            "d8a5",
+            "h3e6",
+            "g8h8",
+            "h2h4",
+            "d7c5",
+            "e3c5",
+            "a2a1",
+            "b1c2",
+            "a5c5",
+            "e6c4",
+            "a1d1",
+            "d2d1",
+            "c5e3"
+          ],
+          "search_owners": [
+            {
+              "kind": "root_searches",
+              "work_id": "work:2",
+              "execution_key_sha256": "6fca0dad4a726801101c751b9669f049ce3a6e9ff0b2e4f2543cef581fadba49",
+              "required_depth": 16,
+              "owned_line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "root_move": "f5e6",
+              "prefix_moves_uci": []
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4",
+              "side": "black",
+              "role": "rook",
+              "from": "a8",
+              "to": "a2",
+              "premise_ids": [
+                "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+              ],
+              "kind": "capture",
+              "captured_role": "pawn",
+              "captured_square": "a2",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        2
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [
+        0,
+        1,
+        2,
+        6,
+        7
+      ],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [
+        {
+          "unit_index": 2,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+              },
+              "ply_offset": 1,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3"
+              ]
+            }
+          ]
+        },
+        {
+          "unit_index": 3,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+              },
+              "ply_offset": 1,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+              },
+              "ply_offset": 2,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3"
+              ]
+            }
+          ]
+        },
+        {
+          "unit_index": 4,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+              },
+              "ply_offset": 0,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6"
+              ]
+            }
+          ]
+        },
+        {
+          "unit_index": 5,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+              },
+              "ply_offset": 0,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:6d2e9bfdfa1102b3f9d99f668d43e0016b6d314f6c4a68fdb6d2b57bc73ed90a"
+              },
+              "ply_offset": 8,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6",
+                "f1h3",
+                "a8a2",
+                "c1b1",
+                "d8a5",
+                "h3e6"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:8a1ba69c647a8600f6b159027f26cf3f1567423340bd5d7346500388a341ebce"
+              },
+              "ply_offset": 3,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:41e99a7b5b906c60251685d8134cb75180023ae26a8ff3642bc69eb2ba9d8583"
+              },
+              "ply_offset": 4,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6",
+                "f1h3"
+              ]
+            }
+          ]
+        },
+        {
+          "unit_index": 6,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+              },
+              "ply_offset": 0,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6"
+              ]
+            }
+          ]
+        },
+        {
+          "unit_index": 7,
+          "line_ids": [
+            "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e"
+          ],
+          "actions": [
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:8a1ba69c647a8600f6b159027f26cf3f1567423340bd5d7346500388a341ebce"
+              },
+              "ply_offset": 3,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:6d2e9bfdfa1102b3f9d99f668d43e0016b6d314f6c4a68fdb6d2b57bc73ed90a"
+              },
+              "ply_offset": 8,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6",
+                "f1h3",
+                "a8a2",
+                "c1b1",
+                "d8a5",
+                "h3e6"
+              ]
+            },
+            {
+              "move_ref": {
+                "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+                "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:95bff7e5b7772c073c25e13f4245a5659053a8dfd0bbf755218c3a50a9921919"
+              },
+              "ply_offset": 9,
+              "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+              "moves_uci": [
+                "f5e6",
+                "a4b3",
+                "c2b3",
+                "f7e6",
+                "f1h3",
+                "a8a2",
+                "c1b1",
+                "d8a5",
+                "h3e6",
+                "g8h8"
+              ]
+            }
+          ]
+        }
+      ],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "genuine_current_core_price_regression",
+      "same_owned_price_path_currently_used_in_core": true,
+      "current_core_dependency": "The selected peer first enemy reply axb3 is explicitly narrated and owned at offset1; its certified cleared a-file route is used by original Black Ra8 to take original White Pa2 with Rxa2@5. The current selected fxe6 path crosses exactly this price.",
+      "prose_cost_without_price_ref": "The price is stated in detail but absent from basic/core coverage; detail does not satisfy the original basic obligation.",
+      "first_failure": "After actual work5, TargetResponseInvestigation.withAnswer replaces selected_comparison by first_target_response. The root0-only protected-use filter drops the prior first-reply ClearedRoute(1→5), despite retaining its departure as an explicit first-reply source.",
+      "actual_prior_core_price_coverage": true,
+      "requires_common_main_fix": true
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 2,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4"
+      ],
+      "san": "Nxd4",
+      "original_actor": {
+        "side": "black",
+        "role": "knight",
+        "original_square": "c6"
+      },
+      "original_victim": {
+        "side": "white",
+        "role": "knight",
+        "original_square": "d4"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4d2",
+            "c5c7",
+            "e4e5",
+            "d6d5",
+            "d2d4",
+            "f8c5",
+            "d4d3",
+            "b7b6"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d",
+              "side": "black",
+              "role": "knight",
+              "from": "c6",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:fb008f45940302dff34eda642771532a18489b13ece9d1c2ee979d0cce5fbeb5",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4c5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d",
+              "side": "black",
+              "role": "knight",
+              "from": "c6",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:e486bcf8d02ae3ed130740541ba960ed6fe34005d8da29d54048c86b299684ef",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4d2",
+            "c5c7",
+            "e4e5",
+            "d6d5",
+            "d2d4",
+            "f8c5",
+            "d4c5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d",
+              "side": "black",
+              "role": "knight",
+              "from": "c6",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        2
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_reply_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old exact branch starts Nd7 Bg3 Nxd4 Qxd4. The current root Nd7 branch instead begins Be2 and later repeats the same physical Nxd4/Qxd4 at different owned offsets4/5; those current captures are covered.",
+      "prose_cost_without_price_ref": "Current basic states and prices its updated Nxd4/Qxd4. Identical SAN/physical actors do not preserve the omitted Bg3-history refs.",
+      "first_failure": "An old full-pool work4 Bg3 line remains context while the current selected root forecast is a later work5 Be2 line; no current unit depends on the omitted old full branch. No cross-work rank or strategic explanation is inferred.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 3,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4"
+      ],
+      "san": "Qxd4",
+      "original_actor": {
+        "side": "white",
+        "role": "queen",
+        "original_square": "d2"
+      },
+      "original_victim": {
+        "side": "black",
+        "role": "knight",
+        "original_square": "c6"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4d2",
+            "c5c7",
+            "e4e5",
+            "d6d5",
+            "d2d4",
+            "f8c5",
+            "d4d3",
+            "b7b6"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+              "side": "white",
+              "role": "queen",
+              "from": "d2",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "proven"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:fb008f45940302dff34eda642771532a18489b13ece9d1c2ee979d0cce5fbeb5",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4c5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+              "side": "white",
+              "role": "queen",
+              "from": "d2",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "proven"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:e486bcf8d02ae3ed130740541ba960ed6fe34005d8da29d54048c86b299684ef",
+            "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "f6d7",
+            "f2g3",
+            "c6d4",
+            "d2d4",
+            "c7c5",
+            "d4d2",
+            "c5c7",
+            "e4e5",
+            "d6d5",
+            "d2d4",
+            "f8c5",
+            "d4c5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "944b14d8b38d0781009fdc1e32fc7ac7deff121f050916ee7b9864d8fdfd37ca",
+              "required_depth": 16,
+              "owned_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:5e6111afa7ace97fb26896e0a01600e1abf583f61833a3ce148c2be750be12eb",
+              "root_move": "f2g3",
+              "prefix_moves_uci": [
+                "f6d7"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+              "side": "white",
+              "role": "queen",
+              "from": "d2",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:0d0d392665f5519cccb49fafc8f8bb9c8c30776a5037579b9a68d39f51a664ea",
+                "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:transition:18dd13f01de1bb95d038770d7bf165c11f5447c82e06b072531adf408981205d"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "proven"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        2
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_reply_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old exact branch starts Nd7 Bg3 Nxd4 Qxd4. The current root Nd7 branch instead begins Be2 and later repeats the same physical Nxd4/Qxd4 at different owned offsets4/5; those current captures are covered.",
+      "prose_cost_without_price_ref": "Current basic states and prices its updated Nxd4/Qxd4. Identical SAN/physical actors do not preserve the omitted Bg3-history refs.",
+      "first_failure": "An old full-pool work4 Bg3 line remains context while the current selected root forecast is a later work5 Be2 line; no current unit depends on the omitted old full branch. No cross-work rank or strategic explanation is inferred.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 5,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4"
+      ],
+      "san": "cxd4",
+      "original_actor": {
+        "side": "black",
+        "role": "pawn",
+        "original_square": "c5"
+      },
+      "original_victim": {
+        "side": "white",
+        "role": "pawn",
+        "original_square": "d3"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "d1d2"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7",
+              "side": "black",
+              "role": "pawn",
+              "from": "c5",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7"
+              ],
+              "kind": "capture",
+              "captured_role": "pawn",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "f3d2",
+            "a6a5",
+            "d2f1",
+            "f7f5",
+            "e4f5",
+            "d7f5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7",
+              "side": "black",
+              "role": "pawn",
+              "from": "c5",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:fdc928a755cd5bbfe49c4adef6fbf0362077a5206639f90ae0919b92e19ee6d7"
+              ],
+              "kind": "capture",
+              "captured_role": "pawn",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        3
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_c3_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old c3 Nxd5 Nxd5 Be6 d4 branch diverges from current c3 at offset4 (Kf1). Current basic keeps the original White knight user, but owns/prices a different later Nxe7+ and Qxe7 response, with current pawn exchanges. It does not use the old Nc6 recapture or old cxd4 actors as its material conclusion.",
+      "prose_cost_without_price_ref": "Current basic has its own complete expressed captures/check response; it neither states nor covers the old exact four price refs. Repeated SAN is not treated as preservation.",
+      "first_failure": "The old work4/work5 c3 branch is retained as completed conditional context after the selected forecast changes. No selected unit is read from the full original branch through these prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 6,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7"
+      ],
+      "san": "Nxe7+",
+      "original_actor": {
+        "side": "white",
+        "role": "knight",
+        "original_square": "e3"
+      },
+      "original_victim": {
+        "side": "black",
+        "role": "bishop",
+        "original_square": "e7"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "d1d2"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378",
+              "side": "white",
+              "role": "knight",
+              "from": "d5",
+              "to": "e7",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+              ],
+              "kind": "capture",
+              "captured_role": "bishop",
+              "captured_square": "e7",
+              "recapture": "excluded"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "f3d2",
+            "a6a5",
+            "d2f1",
+            "f7f5",
+            "e4f5",
+            "d7f5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378",
+              "side": "white",
+              "role": "knight",
+              "from": "d5",
+              "to": "e7",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+              ],
+              "kind": "capture",
+              "captured_role": "bishop",
+              "captured_square": "e7",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        1
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_c3_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old c3 Nxd5 Nxd5 Be6 d4 branch diverges from current c3 at offset4 (Kf1). Current basic keeps the original White knight user, but owns/prices a different later Nxe7+ and Qxe7 response, with current pawn exchanges. It does not use the old Nc6 recapture or old cxd4 actors as its material conclusion.",
+      "prose_cost_without_price_ref": "Current basic has its own complete expressed captures/check response; it neither states nor covers the old exact four price refs. Repeated SAN is not treated as preservation.",
+      "first_failure": "The old work4/work5 c3 branch is retained as completed conditional context after the selected forecast changes. No selected unit is read from the full original branch through these prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 7,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7",
+        "c6e7"
+      ],
+      "san": "Nxe7",
+      "original_actor": {
+        "side": "black",
+        "role": "knight",
+        "original_square": "c6"
+      },
+      "original_victim": {
+        "side": "white",
+        "role": "knight",
+        "original_square": "e3"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "d1d2"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375",
+              "side": "black",
+              "role": "knight",
+              "from": "c6",
+              "to": "e7",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375",
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "e7",
+              "recapture": "proven"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "f3d2",
+            "a6a5",
+            "d2f1",
+            "f7f5",
+            "e4f5",
+            "d7f5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375",
+              "side": "black",
+              "role": "knight",
+              "from": "c6",
+              "to": "e7",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:2c553145c936562003263c398f67eb1d721c33fc19b9cc03ad83240104bdc375",
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:c1b1b0e2c5c00c56e876870fbacc611b834697f62b8470929c65ce5d4da9d378"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "e7",
+              "recapture": "proven"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        1
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_c3_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old c3 Nxd5 Nxd5 Be6 d4 branch diverges from current c3 at offset4 (Kf1). Current basic keeps the original White knight user, but owns/prices a different later Nxe7+ and Qxe7 response, with current pawn exchanges. It does not use the old Nc6 recapture or old cxd4 actors as its material conclusion.",
+      "prose_cost_without_price_ref": "Current basic has its own complete expressed captures/check response; it neither states nor covers the old exact four price refs. Repeated SAN is not treated as preservation.",
+      "first_failure": "The old work4/work5 c3 branch is retained as completed conditional context after the selected forecast changes. No selected unit is read from the full original branch through these prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 8,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7",
+        "c6e7",
+        "c3d4"
+      ],
+      "san": "cxd4",
+      "original_actor": {
+        "side": "white",
+        "role": "pawn",
+        "original_square": "c2"
+      },
+      "original_victim": {
+        "side": "black",
+        "role": "pawn",
+        "original_square": "c5"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "d1d2"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b",
+              "side": "white",
+              "role": "pawn",
+              "from": "c3",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b"
+              ],
+              "kind": "capture",
+              "captured_role": "pawn",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        },
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "c2c3",
+            "f6d5",
+            "e3d5",
+            "d7e6",
+            "d3d4",
+            "c5d4",
+            "d5e7",
+            "c6e7",
+            "c3d4",
+            "e7g6",
+            "c1e3",
+            "h7h6",
+            "a1c1",
+            "f8e8",
+            "d4d5",
+            "e6d7",
+            "f3d2",
+            "a6a5",
+            "d2f1",
+            "f7f5",
+            "e4f5",
+            "d7f5"
+          ],
+          "search_owners": [
+            {
+              "kind": "response_searches",
+              "work_id": "work:4",
+              "execution_key_sha256": "44e7f2d00454f356d342084e9b290a448077baeb7a8758cf3c5cce4ce85cb83c",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:1f300d9c28e2f17808df651e2cac690e38977a672a876626703dbea1b270d359",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            },
+            {
+              "kind": "response_searches",
+              "work_id": "work:5",
+              "execution_key_sha256": "00f0e5163b4112017b0f97c3e37c2480741a0f8f1f735659789b9770564e10d9",
+              "required_depth": 16,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:a31f30f19e11849294fe2601a4c2f076174b364e3bf2b3df8ea7291b9d954ec9",
+              "root_move": "f6d5",
+              "prefix_moves_uci": [
+                "c2c3"
+              ]
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b",
+              "side": "white",
+              "role": "pawn",
+              "from": "c3",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:6616b51549c3acaddfa31d09224a1f6010fe4b0e1af5b1cbe67964bcfbf85a2b"
+              ],
+              "kind": "capture",
+              "captured_role": "pawn",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        3
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_c3_branch_not_current_selected_branch",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old c3 Nxd5 Nxd5 Be6 d4 branch diverges from current c3 at offset4 (Kf1). Current basic keeps the original White knight user, but owns/prices a different later Nxe7+ and Qxe7 response, with current pawn exchanges. It does not use the old Nc6 recapture or old cxd4 actors as its material conclusion.",
+      "prose_cost_without_price_ref": "Current basic has its own complete expressed captures/check response; it neither states nor covers the old exact four price refs. Repeated SAN is not treated as preservation.",
+      "first_failure": "The old work4/work5 c3 branch is retained as completed conditional context after the selected forecast changes. No selected unit is read from the full original branch through these prices.",
+      "requires_common_main_fix": false
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 2,
+      "status": "same_history_represented_but_price_omitted",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4"
+      ],
+      "san": "Nxd4",
+      "original_actor": {
+        "side": "white",
+        "role": "knight",
+        "original_square": "f3"
+      },
+      "original_victim": {
+        "side": "black",
+        "role": "knight",
+        "original_square": "c6"
+      },
+      "matching_current_price_refs": [
+        {
+          "move_ref": {
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:b44efdacaabc75542d271f492f6513ebc67f5a7ffa7ef5ee698cd8898c62b6a7",
+            "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:917c9cda4cc920483c57e8af5972b82aa68414b4a3dea5b1103160fdd0cca267"
+          },
+          "path_kind": "analysis",
+          "path_moves_uci": [
+            "d5b3",
+            "c6d4",
+            "f3d4",
+            "c5d4",
+            "e3f5",
+            "d7e6",
+            "a3a4",
+            "d8d7"
+          ],
+          "search_owners": [
+            {
+              "kind": "root_searches",
+              "work_id": "work:1",
+              "execution_key_sha256": "43e16d714c53880aba3d9e4c16e1d22b1cc8129a79f15c9a4717bfa823e6d99f",
+              "required_depth": 8,
+              "owned_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:b44efdacaabc75542d271f492f6513ebc67f5a7ffa7ef5ee698cd8898c62b6a7",
+              "root_move": "d5b3",
+              "prefix_moves_uci": []
+            }
+          ],
+          "capture_facts": [
+            {
+              "occurrence_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:917c9cda4cc920483c57e8af5972b82aa68414b4a3dea5b1103160fdd0cca267",
+              "side": "white",
+              "role": "knight",
+              "from": "f3",
+              "to": "d4",
+              "premise_ids": [
+                "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:transition:917c9cda4cc920483c57e8af5972b82aa68414b4a3dea5b1103160fdd0cca267"
+              ],
+              "kind": "capture",
+              "captured_role": "knight",
+              "captured_square": "d4",
+              "recapture": "excluded"
+            }
+          ]
+        }
+      ],
+      "original_core_covering_units": [
+        2
+      ],
+      "current_core_covering_units": [],
+      "current_detail_covering_units": [],
+      "current_core_action_units": [],
+      "current_core_required_units": [],
+      "current_core_proof_units": [],
+      "current_core_units_using_a_full_path_through_that_price": [],
+      "original_status_reclassified": false,
+      "bounded_condition_audit": "owned_historical_Bb3_branch_not_current_selected_action",
+      "same_owned_price_path_currently_used_in_core": false,
+      "current_core_dependency": "The old Bb3 Nd4 Nxd4 own action is replaced by current Bb3 Nd4 Ba2. Current basic does not claim the original Nf3 capture at first own action; later bishop/rook costs belong to the updated branch.",
+      "prose_cost_without_price_ref": "The omitted original first own Nxd4 cost is not narrated by current basic. Updated later costs do not satisfy the old history requirement.",
+      "first_failure": "The old work1 branch remains context but is not the current selected Bb3 arm.",
+      "requires_common_main_fix": false
+    }
+  ],
+  "cor03_chronological_actual_snapshots": [
+    {
+      "journal_line": 237,
+      "response_kind": "begin_response",
+      "accepted_work": null,
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "root_search",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 0,
+        "selected_commentaries_completed": 0,
+        "physical_works_issued": 1,
+        "physical_reports_accepted": 0
+      },
+      "next_issued_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "execution_key_sha256": "3af10e3657c117dce406bf6a1b3dae694587d4c5125bb5ab8c8479b7fffff649",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 239,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "execution_key_sha256": "3af10e3657c117dce406bf6a1b3dae694587d4c5125bb5ab8c8479b7fffff649",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "focus_comparison",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 0,
+        "physical_works_issued": 2,
+        "physical_reports_accepted": 1
+      },
+      "next_issued_work": {
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "execution_key_sha256": "0e4eef27ffd969675f80a44bac4150a89bf1334d057bb6c84f4f51fca73b3f25",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f5e6",
+            "b3d4"
+          ]
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 241,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "execution_key_sha256": "0e4eef27ffd969675f80a44bac4150a89bf1334d057bb6c84f4f51fca73b3f25",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f5e6",
+            "b3d4"
+          ]
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "root_search",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 3,
+        "physical_reports_accepted": 2
+      },
+      "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:5d3da63d22044ba93b3517e810d47addf938dc2f4e9222984a5da06bfd7316d1",
+      "candidate_selection": "selected",
+      "question": "selected_comparison",
+      "price_core_unit_indices": [],
+      "price_detail_unit_indices": [],
+      "core_units": [],
+      "detail_summary": "Compare what happens to the white knight originally on b3 and the black bishop originally on e6 and the white pawn originally on f5 in the recorded fxe6 and Nbd4 lines. In the fxe6 line: With fxe6, the white pawn originally on f5 captures the attacking black bishop originally on e6. With axb3, the black pawn originally on a4 captures the white knight originally on b3. After axb3, Black's pawn on b3 now targets White's pawn on c2. With cxb3, the white pawn originally on c2 recaptures the black pawn originally on a4. With fxe6, the black pawn originally on f7 captures the white pawn originally on f5. After Nbd4, White's knight on d4 adds support to White's pawn on f5, which is under attack from Black's bishop on e6, and now targets Black's bishop on e6. Nbd4 moves the knight out of the attacks from Black's pawn on a4 and Black's bishop on e6. Bxa2 moves the bishop out of the attacks from White's pawn on f5 and White's knight on d4. Nbd4 clears b3; later Bxa2 passes through that square in this line. With exd4, the black pawn originally on e5 captures the white knight originally on b3; with Nxd4, the white knight originally on e2 recaptures that pawn. After Nxd4, White's knight on d4 now targets Black's bishop on e6. With Bxa2, the black bishop originally on e6 captures the white pawn originally on a2. After Nxd8, the black pawn originally on a4 is still present on a3. After Nxd8, the black bishop originally on e6 is still present on a2. After Nxd8, the white pawn originally on f5 is still present on f5.",
+      "first_target_response": null,
+      "next_issued_work": {
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "execution_key_sha256": "6fca0dad4a726801101c751b9669f049ce3a6e9ff0b2e4f2543cef581fadba49",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 243,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:2",
+        "purpose": "root_search",
+        "execution_key_sha256": "6fca0dad4a726801101c751b9669f049ce3a6e9ff0b2e4f2543cef581fadba49",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": null,
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "response_comparison",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 4,
+        "physical_reports_accepted": 3
+      },
+      "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:eacbfe8b1f16e2317fd5b5af8405555126cbe71364b7adae7cfc060e48450d52",
+      "candidate_selection": "selected",
+      "question": "selected_comparison",
+      "price_core_unit_indices": [
+        2
+      ],
+      "price_detail_unit_indices": [
+        1,
+        2
+      ],
+      "core_units": [
+        {
+          "index": 2,
+          "role": "cost",
+          "en": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "ko": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "covered_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            }
+          ],
+          "proof_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "action_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            }
+          ],
+          "required_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "english_only": true,
+          "focus": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973",
+              "phase": "after",
+              "position_id": "31a6ab0f8d65d7f78e08efbe405847ebc3b670388f45b5f46bac3bc760fa2a41",
+              "squares": [
+                "e6",
+                "d7"
+              ],
+              "source_ids": [
+                "122b5d9c3ee74d0c74526127248e98584e6dc6ea1256dc9d0d154dfd973d3e82"
+              ]
+            }
+          ]
+        }
+      ],
+      "detail_summary": "Compare what happens to the white knight originally on b3 and the black bishop originally on e6 and the white pawn originally on f5 in the recorded Nbd4 and fxe6 lines. After Nbd4, White's knight on d4 adds support to White's pawn on f5, which is under attack from Black's bishop on e6, and now targets Black's bishop on e6. Nbd4 moves the knight out of the attacks from Black's pawn on a4 and Black's bishop on e6. After b3, White's pawn on a2 now targets Black's pawn on b3. bxc2+ moves the pawn out of the attack from White's pawn on a2. In the provided bxc2+ line: bxc2+ gives check to the White king on b1 with Black's pawn on c2; Nxc2 captures the checking pawn on c2. With exd4, the black pawn originally on e5 captures the white knight originally on b3; with Nxd4, the white knight originally on e2 recaptures that pawn. With bxc2+, the black pawn originally on b4 captures the white pawn originally on c2; with Nxc2, the white knight originally on e2 recaptures that pawn. With axb3, the white pawn originally on a2 captures the black bishop originally on e6. After axb3, White's pawn on b3 now targets Black's pawn on a4. With axb3, the black pawn originally on a4 recaptures the attacking white pawn originally on a2. After Rh3, the black pawn originally on a4 is still present on b3. After Rh3, the white pawn originally on f5 is still present on f5. fxe6 moves the pawn out of the attack from Black's bishop on e6. With axb3, the black pawn originally on a4 captures the white knight originally on b3. After axb3, Black's pawn on b3 now targets White's pawn on c2. axb3 clears a4; later Rxa2 passes through that square in this line. With cxb3, the white pawn originally on c2 recaptures the black pawn originally on a4. With Rxa2, the black rook originally on a8 captures the white pawn originally on a2. After Qe3, the white pawn originally on c2 is still present on b3. The compared root choices are Nbd4 and fxe6. fxe6 clears f5; later Bxe6+ passes through that square in this line. After Bxe6+, White's bishop on e6 now targets Black's knight on d7. After fxe6, Black's rook on f8 now targets White's bishop on f1. Bh3 moves the bishop out of the attack from Black's rook on f8. fxe6 clears f5; later Bh3 uses the cleared line to target Black's pawn on e6 in this line. After Bh3, White's bishop on h3 now targets Black's pawn on e6. fxe6 captures the black bishop on e6. In the fxe6 line: fxe6 captures the white pawn on e6. Bxe6+ captures the black pawn on e6. In the provided Bxe6+ line: Bxe6+ gives check to the Black king on g8 with White's bishop on e6. Kh8 moves the king to h8.",
+      "first_target_response": null,
+      "next_issued_work": {
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "105d9cec71ac1de579caae8eb774c0af4d348a0a33a41b91c147fbf0350a3ebe",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d4",
+            "b4b3"
+          ]
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "d91d5e26f0890ce11f8163883dd2cc29786bced1c44b59126524595102a612e4",
+          "prefix_moves_uci": [
+            "b3d4"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 245,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:3",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "105d9cec71ac1de579caae8eb774c0af4d348a0a33a41b91c147fbf0350a3ebe",
+        "root_restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d4",
+            "b4b3"
+          ]
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "d91d5e26f0890ce11f8163883dd2cc29786bced1c44b59126524595102a612e4",
+          "prefix_moves_uci": [
+            "b3d4"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "response_comparison",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 5,
+        "physical_reports_accepted": 4
+      },
+      "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:eacbfe8b1f16e2317fd5b5af8405555126cbe71364b7adae7cfc060e48450d52",
+      "candidate_selection": "selected",
+      "question": "selected_comparison",
+      "price_core_unit_indices": [
+        2
+      ],
+      "price_detail_unit_indices": [
+        1,
+        2
+      ],
+      "core_units": [
+        {
+          "index": 2,
+          "role": "cost",
+          "en": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "ko": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "covered_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            }
+          ],
+          "proof_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "action_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            }
+          ],
+          "required_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "english_only": true,
+          "focus": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973",
+              "phase": "after",
+              "position_id": "31a6ab0f8d65d7f78e08efbe405847ebc3b670388f45b5f46bac3bc760fa2a41",
+              "squares": [
+                "e6",
+                "d7"
+              ],
+              "source_ids": [
+                "122b5d9c3ee74d0c74526127248e98584e6dc6ea1256dc9d0d154dfd973d3e82"
+              ]
+            }
+          ]
+        }
+      ],
+      "detail_summary": "Compare what happens to the white knight originally on b3 and the black bishop originally on e6 and the white pawn originally on f5 in the recorded Nbd4 and fxe6 lines. After Nbd4, White's knight on d4 adds support to White's pawn on f5, which is under attack from Black's bishop on e6, and now targets Black's bishop on e6. Nbd4 moves the knight out of the attacks from Black's pawn on a4 and Black's bishop on e6. After b3, White's pawn on a2 now targets Black's pawn on b3. bxc2+ moves the pawn out of the attack from White's pawn on a2. In the provided bxc2+ line: bxc2+ gives check to the White king on b1 with Black's pawn on c2; Nxc2 captures the checking pawn on c2. With exd4, the black pawn originally on e5 captures the white knight originally on b3; with Nxd4, the white knight originally on e2 recaptures that pawn. With bxc2+, the black pawn originally on b4 captures the white pawn originally on c2; with Nxc2, the white knight originally on e2 recaptures that pawn. With axb3, the white pawn originally on a2 captures the black bishop originally on e6. After axb3, White's pawn on b3 now targets Black's pawn on a4. With axb3, the black pawn originally on a4 recaptures the attacking white pawn originally on a2. After Rh3, the black pawn originally on a4 is still present on b3. After Rh3, the white pawn originally on f5 is still present on f5. fxe6 moves the pawn out of the attack from Black's bishop on e6. With axb3, the black pawn originally on a4 captures the white knight originally on b3. After axb3, Black's pawn on b3 now targets White's pawn on c2. axb3 clears a4; later Rxa2 passes through that square in this line. With cxb3, the white pawn originally on c2 recaptures the black pawn originally on a4. With Rxa2, the black rook originally on a8 captures the white pawn originally on a2. After Qe3, the white pawn originally on c2 is still present on b3. The compared root choices are Nbd4 and fxe6. fxe6 clears f5; later Bxe6+ passes through that square in this line. After Bxe6+, White's bishop on e6 now targets Black's knight on d7. After fxe6, Black's rook on f8 now targets White's bishop on f1. Bh3 moves the bishop out of the attack from Black's rook on f8. fxe6 clears f5; later Bh3 uses the cleared line to target Black's pawn on e6 in this line. After Bh3, White's bishop on h3 now targets Black's pawn on e6. fxe6 captures the black bishop on e6. In the fxe6 line: fxe6 captures the white pawn on e6. Bxe6+ captures the black pawn on e6. In the provided Bxe6+ line: Bxe6+ gives check to the Black king on g8 with White's bishop on e6. Kh8 moves the king to h8.",
+      "first_target_response": null,
+      "next_issued_work": {
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "595a73781a802ef2ee69db31bb6c8f9959953408bd0ca9f17d32a85fca2a5516",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "c18f63773d1b2f13ae000dc3b7f16a2338418a1c50517716605524bd99bec416",
+          "prefix_moves_uci": [
+            "b3d4",
+            "b4b3",
+            "c1b1",
+            "e5d4",
+            "e2d4",
+            "b3c2",
+            "d4c2"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 247,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:4",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "595a73781a802ef2ee69db31bb6c8f9959953408bd0ca9f17d32a85fca2a5516",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "c18f63773d1b2f13ae000dc3b7f16a2338418a1c50517716605524bd99bec416",
+          "prefix_moves_uci": [
+            "b3d4",
+            "b4b3",
+            "c1b1",
+            "e5d4",
+            "e2d4",
+            "b3c2",
+            "d4c2"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": "awaiting_engine_work",
+      "progress": {
+        "phase": "response_comparison",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 6,
+        "physical_reports_accepted": 5
+      },
+      "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:eacbfe8b1f16e2317fd5b5af8405555126cbe71364b7adae7cfc060e48450d52",
+      "candidate_selection": "selected",
+      "question": "selected_comparison",
+      "price_core_unit_indices": [
+        2
+      ],
+      "price_detail_unit_indices": [
+        1,
+        2
+      ],
+      "core_units": [
+        {
+          "index": 2,
+          "role": "cost",
+          "en": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "ko": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            " moves the pawn out of the attack from Black's bishop on e6. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", the black pawn originally on a4 captures the white knight originally on b3. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            ", Black's pawn on b3 now targets White's pawn on c2. ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            " clears a4; later ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            " passes through that square in this line. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            ", the white pawn originally on c2 recaptures the black pawn originally on a4. With ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            ", the black rook originally on a8 captures the white pawn originally on a2. After ",
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            },
+            ", the white pawn originally on c2 is still present on b3."
+          ],
+          "covered_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            }
+          ],
+          "proof_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "action_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            }
+          ],
+          "required_moves": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:0d5b93e4fad1a6db7958fc0725bf1e9f175c685a5f28e66842b614d86a6db1b4"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:4b9b04df98af52be48b156e9685ee0f9fe8739bb5975ab435b1dfbca4d976e41"
+            },
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:f4ecdad9c3770f0e53f42e6368729eb4e408cce55005926eeefc3dc31ac9b44e"
+            }
+          ],
+          "english_only": true,
+          "focus": [
+            {
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+              "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:035f5cf80e14918c1af9a350fb212fb2af6ad4dd7b2dd955a0f80c922e06c973",
+              "phase": "after",
+              "position_id": "31a6ab0f8d65d7f78e08efbe405847ebc3b670388f45b5f46bac3bc760fa2a41",
+              "squares": [
+                "e6",
+                "d7"
+              ],
+              "source_ids": [
+                "122b5d9c3ee74d0c74526127248e98584e6dc6ea1256dc9d0d154dfd973d3e82"
+              ]
+            }
+          ]
+        }
+      ],
+      "detail_summary": "Compare what happens to the white knight originally on b3 and the black bishop originally on e6 and the white pawn originally on f5 in the recorded Nbd4 and fxe6 lines. After Nbd4, White's knight on d4 adds support to White's pawn on f5, which is under attack from Black's bishop on e6, and now targets Black's bishop on e6. Nbd4 moves the knight out of the attacks from Black's pawn on a4 and Black's bishop on e6. After b3, White's pawn on a2 now targets Black's pawn on b3. bxc2+ moves the pawn out of the attack from White's pawn on a2. In the provided bxc2+ line: bxc2+ gives check to the White king on b1 with Black's pawn on c2; Nxc2 captures the checking pawn on c2. With exd4, the black pawn originally on e5 captures the white knight originally on b3; with Nxd4, the white knight originally on e2 recaptures that pawn. With bxc2+, the black pawn originally on b4 captures the white pawn originally on c2; with Nxc2, the white knight originally on e2 recaptures that pawn. With axb3, the white pawn originally on a2 captures the black bishop originally on e6. After axb3, White's pawn on b3 now targets Black's pawn on a4. With axb3, the black pawn originally on a4 recaptures the attacking white pawn originally on a2. After Rh3, the black pawn originally on a4 is still present on b3. After Rh3, the white pawn originally on f5 is still present on f5. fxe6 moves the pawn out of the attack from Black's bishop on e6. With axb3, the black pawn originally on a4 captures the white knight originally on b3. After axb3, Black's pawn on b3 now targets White's pawn on c2. axb3 clears a4; later Rxa2 passes through that square in this line. With cxb3, the white pawn originally on c2 recaptures the black pawn originally on a4. With Rxa2, the black rook originally on a8 captures the white pawn originally on a2. After Qe3, the white pawn originally on c2 is still present on b3. The compared root choices are Nbd4 and fxe6. fxe6 clears f5; later Bxe6+ passes through that square in this line. After Bxe6+, White's bishop on e6 now targets Black's knight on d7. After fxe6, Black's rook on f8 now targets White's bishop on f1. Bh3 moves the bishop out of the attack from Black's rook on f8. fxe6 clears f5; later Bh3 uses the cleared line to target Black's pawn on e6 in this line. After Bh3, White's bishop on h3 now targets Black's pawn on e6. fxe6 captures the black bishop on e6. In the fxe6 line: fxe6 captures the white pawn on e6. Bxe6+ captures the black pawn on e6. In the provided Bxe6+ line: Bxe6+ gives check to the Black king on g8 with White's bishop on e6. Kh8 moves the king to h8.",
+      "first_target_response": null,
+      "next_issued_work": {
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "fa97c59621b20f6c71f088d3faea8441b38a6035211238b0d6acb0ead7f0dc7e",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "d91d5e26f0890ce11f8163883dd2cc29786bced1c44b59126524595102a612e4",
+          "prefix_moves_uci": [
+            "b3d4"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      }
+    },
+    {
+      "journal_line": 249,
+      "response_kind": "report_response",
+      "accepted_work": {
+        "work_id": "work:5",
+        "purpose": "response_comparison",
+        "execution_key_sha256": "fa97c59621b20f6c71f088d3faea8441b38a6035211238b0d6acb0ead7f0dc7e",
+        "root_restriction": {
+          "kind": "unrestricted"
+        },
+        "search_anchor": {
+          "root_move": "b3d4",
+          "root_occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:bd266be18cc6a780a4d898f17ebbef1b1e17b51dacd437494aef0ce651a4bc03",
+          "position_id": "d91d5e26f0890ce11f8163883dd2cc29786bced1c44b59126524595102a612e4",
+          "prefix_moves_uci": [
+            "b3d4"
+          ]
+        },
+        "engine_limits": null,
+        "proposal_ownership": null
+      },
+      "state": null,
+      "progress": {
+        "phase": "completed",
+        "legal_move_count": 36,
+        "root_candidate_lines_admitted": 3,
+        "selected_commentaries_completed": 1,
+        "physical_works_issued": 6,
+        "physical_reports_accepted": 6
+      },
+      "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:eacbfe8b1f16e2317fd5b5af8405555126cbe71364b7adae7cfc060e48450d52",
+      "candidate_selection": "selected",
+      "question": "first_target_response",
+      "price_core_unit_indices": [],
+      "price_detail_unit_indices": [
+        0,
+        1,
+        2,
+        6,
+        7
+      ],
+      "core_units": [],
+      "detail_summary": "After Nbd4, White's knight on d4 now targets Black's bishop on e6. After Nbd4, White's knight on d4 is under attack from Black's pawn on e5; it is supported by White's queen on d2 and White's knight on e2 and White's bishop on e3. In the Nbd4 line: The recorded continuation is exd4 Nxd4. exd4 captures the white knight on d4. Nxd4 recaptures the black pawn on d4. In the fxe6 line: The recorded continuation is axb3. In the fxe6 line: axb3 captures the white knight on b3. cxb3 recaptures the black pawn on b3. The compared root choices are Nbd4 and fxe6. fxe6 clears f5; later Bxe6+ passes through that square in this line. After Bxe6+, White's bishop on e6 now targets Black's knight on d7. After fxe6, Black's rook on f8 now targets White's bishop on f1. Bh3 moves the bishop out of the attack from Black's rook on f8. fxe6 clears f5; later Bh3 uses the cleared line to target Black's pawn on e6 in this line. After Bh3, White's bishop on h3 now targets Black's pawn on e6. fxe6 captures the black bishop on e6. In the fxe6 line: fxe6 captures the white pawn on e6. Bxe6+ captures the black pawn on e6. In the provided Bxe6+ line: Bxe6+ gives check to the Black king on g8 with White's bishop on e6. Kh8 moves the king to h8.",
+      "first_target_response": {
+        "response_inquiry_id": "target-response:d5bfbf53ab6861ddc421765fc6661ed32608a178f97f35b0a6c3a0b160cfdb79",
+        "full_pool_work_id": "work:5",
+        "full_pool_execution_key_sha256": "fa97c59621b20f6c71f088d3faea8441b38a6035211238b0d6acb0ead7f0dc7e",
+        "capture_decline_work_id": "work:5",
+        "capture_decline_execution_key_sha256": "fa97c59621b20f6c71f088d3faea8441b38a6035211238b0d6acb0ead7f0dc7e"
+      },
+      "next_issued_work": null
+    }
+  ],
+  "cor03_explicit_current_first_reply_refs": [
+    {
+      "unit_index": 2,
+      "exact_ref": {
+        "move_ref": {
+          "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+          "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+        },
+        "ply_offset": 1,
+        "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+        "moves_uci": [
+          "f5e6",
+          "a4b3"
+        ]
+      }
+    },
+    {
+      "unit_index": 3,
+      "exact_ref": {
+        "move_ref": {
+          "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:48ac328c9941edfc25fb5f12ca84a239c4457952ddfe41fb23b7fe41ff457f6e",
+          "occurrence_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:transition:c81f876b1ac795faae8a82fa635559e2c8ae00de65643237a23acbf53218959f"
+        },
+        "ply_offset": 1,
+        "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+        "moves_uci": [
+          "f5e6",
+          "a4b3"
+        ]
+      }
+    }
+  ],
+  "cor03_type_evidence": {
+    "public_wire_limitation": "Public units do not serialize private Statement instances. The ClearedRoute type is identified from the matching passage wording and the current builder, not a private typed dump.",
+    "condition_uses": "CommentaryAnswer.conditionUses maps both RouteUse and ClearedRoute to (condition move,use).",
+    "construction_sites": [
+      "MoveWorkProjection.scala:589 produces ClearedRoute(index,offset) for continuous vacated corridors.",
+      "RootSubjectComparison.scala:1401 produces ClearedRoute(departure,use) for an actual capture ray through the departed blocker.",
+      "MoveWorkProjection.scala:2607 dispatches ClearedRoute to CommentaryEnglish.clearedRouteUse.",
+      "CommentaryEnglish.scala:156-160 formats passage as passes through the vacated square."
+    ],
+    "observed_mechanism": {
+      "condition_offset": 1,
+      "condition_move_uci": "a4b3",
+      "before_blocker": "original Black Pa4",
+      "use_offset": 5,
+      "use_move_uci": "a8a2",
+      "original_user": "Black Ra8",
+      "victim": "White Pa2"
+    }
+  },
+  "minimal_common_fix": {
+    "admission": "Retain only prior selected-core condition/use units whose condition is root offset0 or an explicitly selected first enemy reply at offset1 in the original completionSources.actionReferences, on the exact currently owned pair path with certified first enemy mover.",
+    "seams": [
+      "RootSubjectComparison.protect conditionUses filter accepts a bounded selectedReplies whitelist.",
+      "MoveWorkProjection.protectRootUses derives the whitelist once from original explicit completion sources, and applies the identical whitelist when closing retained uses."
+    ],
+    "closure": "Use existing comparisonAccount for the selected capture user and unchanged conditions/prices/check/ending closure, including section-level fail-closed fallback. Freeze original retained use/action/boundary sources; newly added prices cannot become new selected reply conditions.",
+    "does_not_admit": "No arbitrary future action, all raw-history price, unselected context first reply, unknown actor, foreign history, or newly generated price seed.",
+    "why_necessary": "The prior core proves a first-reply clearance consequence, while the compact lead deliberately keeps that first reply. A root0-only condition filter cannot carry its owned use.",
+    "why_bounded_sufficient": "The exact same owned 1→5 use already exists in previous.core and current explicit completion sources own departure1. Existing capture account has the price and complete positions. No new investigation or explanation mechanism is required.",
+    "regression_requirement": {
+      "positive": "Replay unchanged actual COR03 reports/whole issued keys under current source; retain first_target_response and core explicit axb3@1 plus exact Rxa2@5 covered MoveRef, original Ra8/Pa2 identity, check/reply/prices and whole numeric judgment.",
+      "negative_controls": [
+        "Historical C18 Qa5/Qc7 branch prices at14/15 must not become core merely because a full path is kept as discovery/context.",
+        "An old COR08 Bg3-history first reply not owned by current completionSources must not import its old Nxd4/Qxd4 prices.",
+        "A manufactured future or price-generated condition source must not enlarge selectedReplies.",
+        "Missing position or incomplete account must retain existing section-level episode fallback rather than hide a required price."
+      ]
+    }
+  },
+  "summary": {
+    "original_same_history_missing_refs_rows": 9,
+    "original_detail_only_rows": 1,
+    "original_statuses_preserved": 10,
+    "proved_same_current_core_dependency_regressions": 1,
+    "other_rows_no_proven_current_selected_core_dependency": 9,
+    "omission_rows_counted_as_success": 0,
+    "whole_seven_primary_and_prices_audit": "controlled35-to-final37-whole-verdict-price-audit.json",
+    "whole_seven_primary_and_prices_sha256": "d0ab8914bad952e955b4f68a9a1c6a73c1069be35d8fbb9ec63a8f501a899163"
+  },
+  "limitations": [
+    "The separate audit distinguishes current dependencies from the immutable original34 retention metric; it does not reclassify any old-history omission as success.",
+    "Current selected prices on a different history do not substitute for original exact refs.",
+    "No private typed core dump or product replay was run by this auditor in this step.",
+    "The identified common repair remains proposed until its actual red/green regression and replay are performed by the parent.",
+    "No utility, safest choice, strongest-root cause, or numeric evaluation causality follows from this file."
+  ],
+  "new_engine_queries": 0,
+  "product_runners_executed_here": 0,
+  "main_ui_test_edits": false
+}

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "title": "Chesstories 관계패턴 커버리지 지도",
+  "date": "2026-10-04",
+  "claim": "문헌과 현재 소스에 근거한 연구 지도. 체스 전체의 완전한 분류나 제품의 품질 측정이 아니다.",
+  "method": "저자군이 다른 이론서의 실제 목차와 선택 본문, 공식 전술 분류·검출 코드, 원 논문, 엔진·규칙의 일차 자료를 현재 코드 능력과 대조했다.",
+  "evidence_scope_policy": "최소 근거는 해당 주장에 필요한 범위를 뜻한다. 모든 항목을 언제나 충족해야 하는 검출 체크리스트가 아니다. 좁게 확인한 사실을 말할 때는 실제 사용·가격·종결을 그 주장에 필요한 만큼 요구하며, 비교·강제성·장기 결과를 주장할 때만 그 강도에 필요한 추가 근거를 요구한다.",
+  "coverage_axes": [
+    {"id":"fact","name":"사실 기반","meaning":"기물·칸·선·차례·이력의 자료가 있다. 해당 체스 주제의 판단이 구현됐다는 뜻은 아니다."},
+    {"id":"relation","name":"실제 관계 연결","meaning":"조건이 사용·변경·상실되는 실제 사건을 연결하는 현재 reader의 범위."},
+    {"id":"delivery","name":"기본 본문 입구","meaning":"현재 선택·전달 소스의 입구와 제한. 이번 조사에서는 실행 빈도나 읽기 품질을 측정하지 않았다."},
+    {"id":"quality","name":"품질 확인","meaning":"사실성·질문 적합성·응수와 대가 보존·독자 이해. 이번 문헌·코드 조사에서는 새 품질 측정을 하지 않았다."}
+  ],
+  "objects": ["원래 기물과 현재 역할","칸·선·영역","합법 행동과 사용 조건","상대의 응수 선택","물질·템포·남은 수·방어 능력","종결·반복·권리와 이력"],
+  "operators": [
+    {"id":"contact","name":"공격·지원","meaning":"기하학적 접촉, 합법 행동, 실제 사용을 구별한다."},
+    {"id":"availability","name":"가능성의 생성·상실","meaning":"어떤 행동의 조건이 생기거나 사라진다. 합법성과 유효성은 다르다."},
+    {"id":"route","name":"통로 개방·차단","meaning":"경로가 바뀌고 실제 목적에 사용되거나 응수로 막힌다."},
+    {"id":"duty","name":"의무 유지·충돌","meaning":"체크 응수, 방어할 대상, 동시에 지키기 어려운 행동을 구별한다."},
+    {"id":"transfer","name":"역할 인계·대체","meaning":"기물 정체성이 달라도 확인된 지원·점유의 기능이 이어질 수 있다."},
+    {"id":"resource","name":"가격·기능 전환","meaning":"획득·희생·회복과 그 뒤 남는 활동 또는 제약을 함께 읽는다."},
+    {"id":"timing","name":"차례·순서·기회","meaning":"강제 응수의 시간, 먼저 해야 할 행동, 남은 대기 수의 쓰임을 읽는다."},
+    {"id":"reply","name":"응수에 의한 수정","meaning":"상대가 앞의 이득을 제한·뒤집거나 다른 위험과 가격을 남긴다."},
+    {"id":"result","name":"잔존 상태·종결","meaning":"구간 변화량, 남은 기물, 확인된 종결, 탐색 추정을 구별한다."}
+  ],
+  "domains": [
+    {
+      "id":"contacts","name":"공격·지원·합법성","fact":"제어·지원·합법수","relation":"실제 사용을 일부 연결","delivery":"선택된 공격·지원 중심","frontier":"기하학적 접촉 → 실행 가능 → 실제 응수 → 남은 가격",
+      "code_categories":["geometric_contacts","legal_actions_and_king_exposure","geometric_support_states","support_use_retention_transfer_price"],
+      "source_refs":["external:F01","external:L06","local:SIC-attack-defense"],
+      "patterns":[
+        {"id":"legal-capture","name":"공격과 실제 포획","operators":["contact","availability","reply"],"current":"기초·일부 연결","phase":"제1단계 관측","composition":"공격자 → 대상 / 실제 차례의 포획 → 킹 안전과 응수","minimum_evidence":"정확한 보드·합법수·실제 포획·응수","unsafe_shortcut":"공격받으므로 공짜로 잡힌다."},
+        {"id":"support-use","name":"지원과 실제 되잡기","operators":["contact","duty","resource"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"지원자 → 대상 / 대상의 포획 → 같은 포획자 제거 / 지원자의 가격","minimum_evidence":"원래 정체성·지원 상태·실제 포획과 제거·필수 후속 손실","unsafe_shortcut":"지켜져 있으므로 안전하다."},
+        {"id":"pin-use","name":"핀·정렬과 행동 제약","operators":["route","availability","duty"],"current":"기초·일부 연결","phase":"추가 대안 조사","composition":"슬라이더 → 장애 기물 → 킹 또는 가치 표적 / 실제 이동의 법적·전술적 가격","minimum_evidence":"레이 점유·킹 노출·실제 합법 행동 또는 검증된 손실","unsafe_shortcut":"같은 선에 있으므로 움직일 수 없다."},
+        {"id":"new-contact","name":"새 공격·지원의 발생","operators":["contact","availability","reply"],"current":"변화 자료·귀속 제한","phase":"제1단계 관측","composition":"이동 전후 관계 변화 → 후속 행동의 사용 → 응수로 변경된 관계","minimum_evidence":"발생 위치와 변화 소유·실제 사용·같은 질문의 대상","unsafe_shortcut":"새 관계가 생겼으므로 그것이 평가차의 원인이다."}
+      ]
+    },
+    {
+      "id":"routes","name":"선·칸·진입과 탈출","fact":"레이·전후 변화·경로","relation":"실제 사용을 일부 연결","delivery":"통로·재점유의 일부 입구","frontier":"비워진 칸 자체보다 그 칸을 사용하는 행동과 응수",
+      "code_categories":["blocked_and_cleared_corridors","vacation_reoccupation_and_routes","owned_relation_changes"],
+      "source_refs":["external:L05","external:W01","root:silicon-road-2021"],
+      "patterns":[
+        {"id":"clearance-use","name":"통로를 열고 사용","operators":["route","availability","reply"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"장애물의 이동·제거 → 같은 목적 경로의 실제 사용 → 상대 응수","minimum_evidence":"전후 점유·정확한 사용자·경로 통과와 사용 효과","unsafe_shortcut":"같은 PV에서 나중에 그 선을 썼으므로 준비수다."},
+        {"id":"block-xray","name":"차단·간섭·엑스레이","operators":["route","contact","duty"],"current":"기초·일부 연결","phase":"제1단계 관측","composition":"슬라이더 경로의 장애 → 지원·공격의 단절 또는 잠재 관계 → 실제 사용","minimum_evidence":"레이 순서·장애 전후·관련 행동의 성립","unsafe_shortcut":"길을 막으면 상대 공격 전체가 끝난다."},
+        {"id":"vacate-reoccupy","name":"칸을 비우고 다른 기물 투입","operators":["route","transfer","resource"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"칸의 원래 점유 → 출발 → 새 점유자 → 확인된 역할과 출발의 가격","minimum_evidence":"첫 실제 진입·기능 변화·포기한 지원 또는 실제 손실","unsafe_shortcut":"비워진 칸을 누군가 쓰면 항상 원래 수의 목적이다."},
+        {"id":"escape-trap","name":"탈출·봉쇄·기물 포획망","operators":["availability","route","reply"],"current":"합법수 기반·일반 판정 미확인","phase":"추가 대안 조사","composition":"후보 탈출칸·경로 → 상대의 제어·포획 → 남는 실제 선택","minimum_evidence":"관련 합법 탈출과 응수의 확인·도망친 뒤의 가격","unsafe_shortcut":"이동 가능한 칸이 적으므로 기물이 갇혔다."}
+      ]
+    },
+    {
+      "id":"duties","name":"여러 표적·수비 의무","fact":"표적·지원·원래 정체성","relation":"초기 관계 중심·동적 연결 제한","delivery":"선택된 대상·가격 중심","frontier":"수순 중 새로 생기거나 다른 기물로 넘어가는 의무",
+      "code_categories":["attack_evasion_and_other_targets","support_use_retention_transfer_price","scoped_material_accounts_and_compensation"],
+      "source_refs":["external:R01","external:R03","external:W01","root:grooten-role-succession"],
+      "patterns":[
+        {"id":"multi-target","name":"포크와 대신 잃는 대상","operators":["contact","duty","resource","reply"],"current":"초기 대상·가격 일부 연결","phase":"제1단계 관측","composition":"같은 공격자 → 여러 원래 대상 / 하나를 피하는 선택 → 다른 대상의 실제 가격","minimum_evidence":"양쪽 대상 추적·실제 회피·포획·공격자 제거","unsafe_shortcut":"대상 두 개를 공격하면 하나를 반드시 얻는다."},
+        {"id":"competing-duties","name":"과부하와 경합하는 수비","operators":["duty","availability","reply"],"current":"기초 자료·일반 판정 미확인","phase":"추가 대안 조사","composition":"같은 수비 자원 → 서로 다른 보존 행동 / 한쪽 응수 → 다른 행동의 불성립","minimum_evidence":"동시 보존 가능성·대체 수비자·실제 대안과 결과","unsafe_shortcut":"한 기물이 둘을 지키므로 과부하다."},
+        {"id":"duty-change","name":"수비자 제거·이탈·추가","operators":["duty","transfer","contact","reply"],"current":"특정 연속 의무만 연결","phase":"제1단계 관측","composition":"기존 지원 의무 → 수비자 제거·이동·교체 → 실제 표적 손실 또는 보호","minimum_evidence":"전후 모든 관련 지원자·대상 이동·새 공격·실제 가격","unsafe_shortcut":"원래 지원자가 떠났으므로 뒤의 모든 손실은 그 수의 대가다."},
+        {"id":"goal-carrier","name":"같은 임무의 담당 기물 교체","operators":["transfer","duty","route"],"current":"지원 인계 일부·일반 목적 인계 미확인","phase":"관측과 제2단계 경계","composition":"확인된 점유·보호·제어 임무 → 다른 원래 기물의 같은 기능 → 응수 뒤 유지","minimum_evidence":"같은 대상 기능의 실제 유지·새 담당자의 가격·의도 추정과 구분","unsafe_shortcut":"같은 역할의 기물이 되잡으면 같은 전략 목적을 물려받는다."}
+      ]
+    },
+    {
+      "id":"prices","name":"교환·희생·승격의 가격","fact":"포획·회복·역할 변화","relation":"실제 장부보다 구간 귀속이 좁음","delivery":"가격·승격 맥락의 일부 입구","frontier":"다른 칸·앞선 손실·뒤의 회복을 같은 주장에 귀속",
+      "code_categories":["actual_captures_and_recovery_links","scoped_material_accounts_and_compensation","promotion_context_and_role_changes"],
+      "source_refs":["local:GC-sacrifice","local:AI-material-function","local:NB-compensated-trade","local:NB-uncompensated-trade"],
+      "patterns":[
+        {"id":"trade-recovery","name":"포획·되잡기·회복 뒤 손실","operators":["resource","reply","result"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"획득 → 실제 포획자의 제거 → 회복자 손실 → 주장 범위의 잔존 가격","minimum_evidence":"CaptureLink·원래 기물·선택된 가격 범위와 확인된 끝","unsafe_shortcut":"처음 얻은 기물의 가치만으로 교환을 요약한다."},
+        {"id":"other-square-price","name":"다른 칸에서의 보상 포획","operators":["resource","reply","duty"],"current":"장부 존재·귀속 제한","phase":"제1단계 관측","composition":"선택한 행동·응수 → 다른 대상의 실제 획득·손실 → 앞 주장에 대한 보상","minimum_evidence":"사건 소유·같은 질문의 작동 관계·가격 구간","unsafe_shortcut":"반대 부호의 포획이 뒤에 있으므로 보상이다."},
+        {"id":"before-after-price","name":"앞선 투자와 지연된 대가","operators":["resource","timing","reply"],"current":"시간 자료·귀속 제한","phase":"제1단계 관측","composition":"설명을 성립시키는 선행 손실 → 실제 행동 → 늦은 반격·회복","minimum_evidence":"필요 조건의 실제 사용·관련 응수·무관한 후속 거래와의 구분","unsafe_shortcut":"몇 수 이상 떨어졌으므로 무관하거나 같은 기물이므로 모두 관련 있다."},
+        {"id":"sacrifice-function","name":"물질을 활동·시간으로 전환","operators":["resource","route","timing","reply"],"current":"구성 재료·일반 가치 판정 미확인","phase":"관측과 제2단계 경계","composition":"실제 물질 투자 → 경로·차례·참여 기물의 변화 → 실제 사용과 반격","minimum_evidence":"가격과 기능의 전후 변화·실제 응수·충분한 보상은 별도 비교","unsafe_shortcut":"열린 선이나 활동성 증가만으로 희생이 옳다."},
+        {"id":"promoted-role","name":"승격 정체성과 남은 기물","operators":["transfer","resource","result"],"current":"맥락 보완 일부·본문 입구","phase":"제1단계 관측","composition":"원래 폰 → 새 역할 → 포획·회복·잔존 상태 / 다른 원래 퀸과 구별","minimum_evidence":"승격 전후 역할·원래 victim·capture-only 보호 경계","unsafe_shortcut":"승격한 퀸이 잡히면 원래 퀸 하나를 잃은 것으로 계산한다."}
+      ]
+    },
+    {
+      "id":"threats","name":"위협·예방·수의 순서","fact":"체크·차례·가정 후보·실제 비교","relation":"실제 위협 검증 범위 제한","delivery":"자동 후보 기본 꺼짐·좁은 본문","frontier":"PV에 나타나지 않은 위험과 그 위험의 실제 기능 변화",
+      "code_categories":["bounded_questions_and_threat_candidates","checks_and_actual_responses","matched_comparisons_and_mistake_attribution"],
+      "source_refs":["external:W01","external:L07","external:S02","local:AI-prophylaxis"],
+      "patterns":[
+        {"id":"verified-threat","name":"무대응 위험과 실제 방어 비교","operators":["availability","duty","reply","result"],"current":"가정 후보·실제 검증 일부","phase":"추가 대안 조사","composition":"패스 가정의 후보 → 실제 선택에서 합법 성립 → 응수·되잡기 뒤 결과","minimum_evidence":"가정과 실제 분리·정확한 실제 대안·필수 반격·미확인 상태","unsafe_shortcut":"null PV의 평가와 수순을 실제 국면의 위협 결과로 쓴다."},
+        {"id":"forcing-value","name":"체크가 바꾸는 응수 시간","operators":["duty","timing","reply"],"current":"체크 응수 자료·의미 연결 일부","phase":"제1단계 관측","composition":"체크 여부 또는 응수 자원의 차이 → 규칙상 응수 선택 → 후속 행동의 시간","minimum_evidence":"규칙상 의무는 실제 체커·합법 응수로 확인. 선택 효과를 비교할 때는 해당 주장에 필요한 체크 여부와 응수 시간의 실제 비교","unsafe_shortcut":"체크를 없앴으므로 상대 수 자체를 막았다."},
+        {"id":"intermediate-order","name":"중간수·되잡기 순서·기회 창","operators":["timing","resource","reply"],"current":"시간·포획 자료·전용 일반 판정 미확인","phase":"추가 대안 조사","composition":"미룬 포획 또는 다른 강제 행동 → 상대 응수 → 다시 가능한 회복 또는 상실","minimum_evidence":"같은 출발 선택의 순서 비교·관련 응수·최종 가격","unsafe_shortcut":"포획 두 개 사이의 수를 모두 중간수로 부른다."},
+        {"id":"quiet-prevention","name":"조용한 예방·준비·보존","operators":["availability","timing","duty","reply"],"current":"조건 비교 일부·자동 연결 제한","phase":"관측과 제2단계 경계","composition":"현재 상대 행동의 조건 → 그 합법성·강제성·효과 중 무엇이 달라짐 → 실제 대안의 가격","minimum_evidence":"상대 행동 기능의 명시·실제 비교·계속 남는 다른 자원","unsafe_shortcut":"상대 위험이 PV에 없으므로 예방 성공 또는 위협 부재다."}
+      ]
+    },
+    {
+      "id":"pawns","name":"폰 구조·돌파·봉쇄","fact":"연결·파일·통과폰·전진 자원","relation":"구조 변화와 일부 실제 사용","delivery":"몇 가지 폰 비교 중심","frontier":"구조 명칭 → 새 행동과 약점의 실제 사용",
+      "code_categories":["pawn_topology_passage_and_files","vacation_reoccupation_and_routes","owned_relation_changes"],
+      "source_refs":["local:SIC-structure-route","local:BEN-advance-function","local:EG-race-tactics","external:S10","external:F01","external:L05"],
+      "patterns":[
+        {"id":"pawn-support","name":"연결·통과폰·보호","operators":["contact","availability","result"],"current":"구조 기반·일부 본문","phase":"제1단계 관측","composition":"상대 폰의 방해 여부·아군 지원·전진 경로 → 실제 응수와 사용","minimum_evidence":"정확한 폰 위상·앞칸 점유·전체 기물의 제어·실제 전진","unsafe_shortcut":"통과폰 또는 보호된 폰이면 전진이 유리하다."},
+        {"id":"pawn-weakness","name":"고립·더블·약점의 공격","operators":["contact","duty","resource"],"current":"구조 기반·가치 연결 제한","phase":"관측과 제2단계 경계","composition":"폰 구조 → 실제 공격·방어 의무 → 남는 활동과 가격","minimum_evidence":"약점의 실제 접근성·방어·보상 행동·출처 범위","unsafe_shortcut":"고립·더블 폰이라는 이름만으로 나쁜 수다."},
+        {"id":"pawn-break","name":"폰 돌파와 선·칸의 전환","operators":["route","availability","resource","reply"],"current":"전후 자료·일부 연결","phase":"제1단계 관측","composition":"폰 접촉·교환·전진 → 열린 선과 새로 내준 칸 → 실제 기물 행동","minimum_evidence":"응수·되잡기 주체·전후 제어·행동의 실제 사용","unsafe_shortcut":"폰이 앞으로 갔으므로 공간만 늘었다."},
+        {"id":"pawn-blockade","name":"봉쇄와 봉쇄자의 기능","operators":["route","duty","transfer","reply"],"current":"앞칸 기반·장기 판정 미확인","phase":"관측과 제2단계 경계","composition":"전진칸 점유 → 차단과 지원 → 봉쇄자 이동·교환 시의 변화","minimum_evidence":"실제 전진 불가·다른 돌파·봉쇄자의 지속·기능 가격","unsafe_shortcut":"폰 앞을 막으면 영구적으로 약하게 만들었다."},
+        {"id":"pawn-race-window","name":"승격 경쟁과 후속 강제수","operators":["timing","availability","resource","result"],"current":"승격·차례 자료·일반 비교 제한","phase":"추가 대안 조사","composition":"전진 선택·도착 시간 → 승격 뒤 체크·포획·킹 응수 → 남은 결과","minimum_evidence":"승격 역할·킹 위치·필요한 강제 응수·선택한 결과 주장에 맞는 확인된 상태 또는 종결","unsafe_shortcut":"먼저 승격하거나 한 칸 더 가까우면 이긴다."},
+        {"id":"en-passant-window","name":"앙파상의 즉시 권리와 효과","operators":["timing","availability","route","resource"],"current":"권리·전후 자료·전용 기본 비교 제한","phase":"제1단계 관측","composition":"직전 두 칸 전진 → 현재 차례의 합법 포획 → 바뀐 점유·경로와 필요한 응수","minimum_evidence":"정확한 직전 조건·현재 차례·합법 포획·해당 질문에 필요한 응수와 가격","unsafe_shortcut":"같은 기물 배치이므로 직전 이동이나 권리도 같다."},
+        {"id":"promotion-role-choice","name":"승격할 기물의 기능 선택","operators":["transfer","availability","duty","result"],"current":"승격 역할·체크·종결 기반·일반 선택 가치 미확인","phase":"추가 대안 조사","composition":"같은 폰의 역할 대안 → 공격·지원·합법 응수의 변화 → 스테일메이트·포획·잔존 상태","minimum_evidence":"실제 승격 대안·역할별 기능·주장에 필요한 상대 응수와 결과","unsafe_shortcut":"퀸의 명목 가치가 높으므로 모든 승격에서 최선이다."}
+      ]
+    },
+    {
+      "id":"activity","name":"활동성·공간·협력","fact":"경로·제어·파일·남은 기물","relation":"국소 기능 연결·장기 의미 제한","delivery":"일부 기능 입구·일반 전략 미확인","frontier":"갈 수 있는 칸의 수보다 도착의 기능과 포기한 임무",
+      "code_categories":["vacation_reoccupation_and_routes","blocked_and_cleared_corridors","geometric_support_states","pawn_topology_passage_and_files"],
+      "source_refs":["local:GC-outpost","local:BEN-space-development","local:SIC-trade-role","root:silicon-road-2021"],
+      "patterns":[
+        {"id":"development-use","name":"전개·연결·캐슬링의 사용","operators":["route","availability","transfer"],"current":"행동 기반·평가 이유 제한","phase":"제1단계 관측","composition":"원래 배치 → 실제 참여·룩 이동·지원 변화 → 후속 사용","minimum_evidence":"실제 board effect·합법 권리·확인된 다음 기능","unsafe_shortcut":"캐슬링했으므로 킹 안전이 평가차의 원인이다."},
+        {"id":"outpost-use","name":"거점·안정된 점유","operators":["contact","duty","transfer","reply"],"current":"제어·지원 기반·지속 가치 미확인","phase":"관측과 제2단계 경계","composition":"칸의 지원·추방 자원 → 점유 → 기능의 사용과 교환 뒤 담당자","minimum_evidence":"상대의 실제 추방·교환 응수·점유와 활동의 연계","unsafe_shortcut":"중앙 칸을 차지하면 영구 거점이다."},
+        {"id":"rook-entry","name":"파일·열·진입 칸","operators":["route","contact","reply"],"current":"파일·경로 일부 연결","phase":"제1단계 관측","composition":"열린 경로 → 도착할 표적·진입 → 상대의 추방·교환·반격","minimum_evidence":"경로와 유효 표적·실제 진입·앞 이득을 뒤집는 응수","unsafe_shortcut":"열린 파일이나 7번째 열을 잡으면 자동으로 유리하다."},
+        {"id":"colour-role","name":"비숍·색의 수비와 협력","operators":["contact","transfer","resource","reply"],"current":"역할·제어 재료·전용 일반 선택 미확인","phase":"관측과 제2단계 경계","composition":"특정 색의 수비자·폰 배치 → 교환 → 남은 칸과 기물의 기능","minimum_evidence":"교환 후 실제 접근·지원·다른 기물 참여·가격","unsafe_shortcut":"비숍 쌍 또는 반대색 비숍이라는 구성만으로 우열·무승부를 정한다."},
+        {"id":"restricted-piece","name":"나쁜 기물·혼잡·활동 방어","operators":["route","duty","resource","reply"],"current":"경로·의무 재료·가치 판정 미확인","phase":"관측과 제2단계 경계","composition":"길막 또는 폰 방어 임무 → 제한된 참여 / 임무 포기 → 새 행동과 물질 가격","minimum_evidence":"실제 유효 행동·출발 임무·타이밍·상대 응수","unsafe_shortcut":"합법수가 적거나 물질을 내주면 그 기물은 나쁘다."}
+      ]
+    },
+    {
+      "id":"kings","name":"킹 공격·수비·회피","fact":"체커·합법 응수·노출·경로","relation":"체크와 실제 응수 일부 연결","delivery":"체크 중심·일반 안전 판정 미확인","frontier":"공격 참여·탈출·수비 자원·반격의 도착 시간",
+      "code_categories":["checks_and_actual_responses","legal_actions_and_king_exposure","confirmed_end_and_recorded_horizon"],
+      "source_refs":["local:GC-colour-attack","local:GC-sacrifice","local:SIC-attack-defense","external:F01"],
+      "patterns":[
+        {"id":"check-answer","name":"체크의 생성·차단·체커 제거","operators":["contact","route","duty","reply"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"정확한 체커 → 킹 이동·잡기·끼워막기 → 남는 관계와 가격","minimum_evidence":"실제 체크 상태·합법 응수·회복과 마지막 체크의 범위","unsafe_shortcut":"체크가 끝났거나 PV가 끝났으므로 공격이 끝났다."},
+        {"id":"mate-net","name":"메이트 망과 탈출 경로","operators":["route","duty","result"],"current":"합법 응수·종결 입구 / 메이트망 구성 해설 미확인","phase":"추가 대안 조사","composition":"킹의 도착칸 제어 + 체커 보존 + 끼워막기·포획 자원 → 확인된 종결","minimum_evidence":"필요한 응수와 종결의 실제 판정·수순 끝과 구분","unsafe_shortcut":"킹 주변에 공격이 많으므로 메이트다."},
+        {"id":"attack-counterplay","name":"공격 참여와 수비·반격","operators":["route","resource","timing","reply"],"current":"기초 자료·일반 연결 미확인","phase":"관측과 제2단계 경계","composition":"참여 기물·진입 경로·수비자 → 실제 응수 / 다른 쪽 반격과 먼저 도착하는 행동","minimum_evidence":"양쪽 실제 위협·가격·응수와 시점의 비교","unsafe_shortcut":"킹 앞 폰을 밀었으므로 공격만 강해졌다."},
+        {"id":"king-safety","name":"킹의 피난·보호·활동","operators":["route","availability","duty","reply"],"current":"법적 안전 자료·장기 안전 미확인","phase":"관측과 제2단계 경계","composition":"법적 노출·피난 경로·폰 보호 → 실제 상대 자원과 킹의 새 역할","minimum_evidence":"현재 합법성·실제 위험 대안·남는 경로·안전과 활동을 구분","unsafe_shortcut":"킹이 뒤로 가면 안전하고 앞으로 가면 위험하다."}
+      ]
+    },
+    {
+      "id":"endgames","name":"종결·반복·종반의 시간","fact":"종결·이력·폰 수·체크","relation":"종결 보존·종반 기법 연결 제한","delivery":"확인된 종결 중심","frontier":"차례 자원과 반복 수비를 실제 결과와 연결",
+      "code_categories":["confirmed_end_and_recorded_horizon","pawn_topology_passage_and_files","matched_comparisons_and_mistake_attribution"],
+      "source_refs":["local:EG-reserve-tempi","local:EG-triangulation","root:endgame-extended","external:S07","external:T01","external:F01"],
+      "patterns":[
+        {"id":"terminal-result","name":"종결과 중간 획득의 구별","operators":["resource","result"],"current":"일부 연결·본문 입구","phase":"제1단계 관측","composition":"전체 관련 교환 → 남은 상태 → 확인된 메이트·스테일메이트·무승부","minimum_evidence":"정확한 규칙·이력·종결 소유·주장 범위","unsafe_shortcut":"퀸을 얻은 변화량만으로 승리라고 설명한다."},
+        {"id":"repeated-defence","name":"반복·영구 체크와 피난","operators":["route","timing","duty","result"],"current":"이력·체크 자료·전략 반복 미확인","phase":"추가 대안 조사","composition":"반복되는 체크 접근과 응수 → 차단·피난 자원 → 남은 다른 무승부 자원","minimum_evidence":"실제 history와 권리·체크 가능성·반복 경로 이탈 비교","unsafe_shortcut":"같은 FEN이 나왔거나 한 체크 경로를 막았으므로 무승부·승리가 확정된다."},
+        {"id":"zugzwang-tempi","name":"대응칸·예비 템포·추크츠방","operators":["timing","duty","route","result"],"current":"차례·합법수 재료·전용 판정 미확인","phase":"추가 대안 조사","composition":"방어할 대응칸 + 대기 경로 비대칭 + 남은 폰 수 → 이동 의무와 진입","minimum_evidence":"필요 대안·흉내 낼 수 없는 경로·합법 행동·규칙 또는 tablebase 범위","unsafe_shortcut":"null 평가가 좋아지거나 왕이 세 번 움직이면 추크츠방·삼각 기동이다."},
+        {"id":"fortress-maintenance","name":"요새·반복 수비·복원","operators":["duty","route","availability","reply"],"current":"재료·전용 일반 판정 미확인","phase":"제2단계 이론","composition":"허용하지 않을 진입·돌파·체크 → 반복 가능한 수비 행동 → 오류 뒤 복원 가능성","minimum_evidence":"상대의 진입·돌파 자원과 수비 유지·충분한 분기 또는 지원 범위의 정확 판정","unsafe_shortcut":"막힌 구조나 평가가 0이면 요새다."},
+        {"id":"technical-conversion","name":"활동 룩·교환 뒤 킹·수비 기법","operators":["resource","transfer","route","result"],"current":"장부·경로 기반·기법 판단 미확인","phase":"관측과 제2단계 경계","composition":"물질과 활동의 선택 → 방어 배치에 도달할 조건 → 킹 진입·폰 지원·확인된 결과","minimum_evidence":"도달 가능성·상대 킹 응수·포기한 폰·남은 실제 수비","unsafe_shortcut":"Vancura 같은 모양이거나 활성 룩이면 자동으로 무승부다."}
+      ]
+    },
+    {
+      "id":"plans","name":"장기 계획·국면 전환","fact":"구조·경로·역할의 재료","relation":"국소 관측·일반 계획 미확인","delivery":"장기 목적의 명시 경로 미확인","frontier":"복수의 관련 목적 중 중요도와 유지 조건",
+      "code_categories":["question_owned_core_detail_and_closure","matched_comparisons_and_mistake_attribution","physical_identity_and_current_role"],
+      "source_refs":["root:silicon-road-2021","local:AI-closed-progress","local:NB-colour-successors","external:W01","external:M01","root:grooten-strategy-sample"],
+      "patterns":[
+        {"id":"wing-transfer","name":"두 날개·전장 이동·유인","operators":["route","duty","timing","reply"],"current":"국소 재료·일반 목적 연결 미확인","phase":"제2단계 이론","composition":"한쪽 압박 → 상대 자원 이동·양보 → 다른 쪽 접근과 가격","minimum_evidence":"실제 자원 이동·양보·새 경로 사용·이동과 유효 의무 제거를 구분","unsafe_shortcut":"상대 퀸을 옮겼으므로 필요한 수비를 제거했다."},
+        {"id":"exchange-purpose","name":"교환으로 남는 기능 선택","operators":["resource","transfer","duty","reply"],"current":"가격·기능 재료·일반 우열 미확인","phase":"관측과 제2단계 경계","composition":"교환 가격 → 남겨진 능동·수동 기물과 구조 → 이후 실제 행동","minimum_evidence":"같은 출발 선택·되잡기 주체·후속 기능·다른 보상","unsafe_shortcut":"앞서 있으므로 교환은 좋거나 같은 가격의 교환은 같은 선택이다."},
+        {"id":"stable-plan","name":"조용한 개선·계획 유지와 전환","operators":["availability","transfer","timing","reply"],"current":"질문·국소 사용·일반 중요도 미확인","phase":"제2단계 이론","composition":"목표 행동의 조건 → 여러 재배치·상대의 제약 → 사용 또는 다른 목표로 전환","minimum_evidence":"목표의 명시·계속 필요한 조건·상대 대안·실제 사용 또는 중단 이유","unsafe_shortcut":"PV에 이어지는 기동을 최초 수의 최적 계획으로 부른다."}
+      ]
+    }
+  ],
+  "current_failure_separation": [
+    "자료 불명 또는 미조사",
+    "관계가 성립하지 않음",
+    "사실은 있으나 실제 사용·응수 연결 미입증",
+    "질문 선택 또는 주장 범위가 부적절",
+    "선택한 답의 조건·가격·결과 구성 실패",
+    "기본·상세·보드 전달 실패",
+    "내용은 보존했으나 가독성과 유용성 미확인"
+  ],
+  "generalization_plan": {
+    "status":"향후 실험 설계. 이번 조사에서는 새 포지션을 실행하거나 성공률을 계산하지 않았다.",
+    "source":"별도 실제 마스터 기보. 기보 단위 분리·한 기보 한 평가 국면·선택 전 균형 기준을 고정한다. 실제 수 뒤 실수로 벌어지는 평가는 제외 사유가 아니다.",
+    "coverage":"전술 성공뿐 아니라 조용한 선택·폰 구조 변화·교환·킹 방어·종반을 포함한다. 같은 관계가 작동하는 사례와 성립하지 않는 사례를 함께 둔다.",
+    "cross_axes":["정체성 유지 또는 역할 담당자 교체","즉시 사용 또는 지연된 사용","같은 칸 또는 다른 칸의 가격","한 지원자 또는 교체·복수 지원자","직접 포획 또는 기능·차례의 변화","새 관계 발생 또는 기존 관계의 유지·상실","실제 종결 또는 단순 수순 끝"],
+    "pre_output":"출력 전에 무엇을 질문할지, 필요한 응수·가격·결과, 아직 주장할 수 없는 강도를 기록한다.",
+    "freeze":"출력 또는 반례를 본 뒤 바꾼 정책의 성공은 고정 정책의 새 기보 성공과 구분한다.",
+    "quality":"기존 14/18 유용하고 완결된 답·중요 가격 누락0·근거 없는 위협/공격 해소0의 기준을 변경하지 않는다. 지도상의 사실 기반이나 패턴 개수를 이 기준의 대용으로 쓰지 않는다.",
+    "reader":"실제 독자의 핵심 선택·응수·가격 이해와 자동 참조 검증은 따로 확인한다. 이번 독립 인간 평가는0이다."
+  },
+  "recommended_sequence": [
+    {"order":1,"unit":"동적 관계와 선택한 가격 구간","purpose":"새 공격·수비자 변경·다른 칸 보상·선행 투자·지연된 회복이 선택한 답을 바꾸는지 기존 질문과 실제 action-response 자료에서 연결한다.","boundary":"모든 후속 포획 또는 같은 기물의 전 생애를 한 계정으로 묶지 않는다.","completion":"서로 다른 실제 기보의 작동/불성립 사례에서 필요한 가격을 보존하고 무관한 거래를 제외. 새 framework나 그래프 없이 동일 공통 경로 사용."},
+    {"order":2,"unit":"가능성·강제성·효과의 구별","purpose":"위협과 예방에서 무엇이 불법·불가능해졌는지, 무엇의 체크·가격·후속 효과만 바뀌었는지 분리한다.","boundary":"패스 분석은 후보만 제공하고 실제 선택과 응수로 검증한다.","completion":"실제 공격자 제거 외의 방어 원리도 같은 조건·행동·응수·가격 전달 경로로 처리. 자동 조사 기본값 변경은 효용·시간 확인 후 별도 결정."},
+    {"order":3,"unit":"조용한 수의 실제 기능","purpose":"거점·활동·폰 돌파·교환에서 사용할 행동과 포기할 임무를 비교한다.","boundary":"거점·공간·비숍 쌍의 고정 점수로 중요도를 대신하지 않는다.","completion":"제공 수순에서 쓰인 기능을 짧게 전달하며 충분한 보상·장기 우세·최선 주장과 구별."},
+    {"order":4,"unit":"제2단계 목적과 선택 가치","purpose":"장기 계획·요새·색 전략·복수 목적의 중요도를 별도 근거로 연구한다.","boundary":"제1단계 관측 연결의 완료와 전체 체스적 판단의 완료를 동일시하지 않는다.","completion":"목표 후보·유지 조건·상대 대안·성공 또는 포기 조건을 고정해 새 기보에서 검증. 아직 구현이나 성공을 약속하지 않음."}
+  ],
+  "scope_limits": [
+    "이 지도는 자료 조사의 분류이지 제품의 새로운 selector나 graph가 아니다.",
+    "미확인은 이번에 읽은 관련 소스에서 일반 처리의 성립을 확인하지 못했다는 뜻이며, 필요한 기초 자료의 전면 부재나 모든 경우의 불가능을 뜻하지 않는다.",
+    "현대 오프닝·엔진 해설서의 비중이 크다. 선택 종반 페이지로 보강했지만 모든 클래식 전략·종반 유형을 읽은 것은 아니다.",
+    "관계 합성은 일반화 가능한 표현 단위의 후보다. 어떤 질문이 중요한지를 자동으로 해결한다는 성공 근거는 아직 없다.",
+    "원자의 수, 도표의 칸 수, 전술 명칭 수, 글자 수와 품질 커버율은 서로 바꿔 쓸 수 없다.",
+    "근거는 저자 의견·규칙·현재 소스·제한 탐색·실제 수순·확정 종결의 출처와 주장 강도를 보존해야 한다.",
+    "새 엔진·브라우저·Docker·전체 앱 실행·제품 수정·새 일반화 평가는 하지 않는다."
+  ]
+}

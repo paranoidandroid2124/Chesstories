@@ -1,0 +1,31 @@
+{
+  "closed_utc": "2026-10-07T12:55:12.631927+00:00",
+  "bounded_work_completed": [
+    "first failure and resource audit",
+    "selected comparison scheduling and deadline accounting",
+    "evaluation refresh and necessary first reply price protection",
+    "fixed repeated engine cohorts and unseen reference reading",
+    "exact recorded-input preservation, current UI delivery and controlled clock mismatch",
+    "standalone report and visible board inspection"
+  ],
+  "meaning_outcome": {
+    "T20_30s_complete": 3,
+    "T20_30s_trials": 3,
+    "H05_30s_full": 0,
+    "H05_30s_partial": 2,
+    "H05_30s_trials": 3,
+    "pair_10s_full": 0,
+    "pair_10s_trials": 6,
+    "new4_full": 0,
+    "new4_trials": 4
+  },
+  "unresolved": [
+    "H05 conditional choice value is not a product-owned comparison receipt when the refreshed PV chooses another equivalent move",
+    "Default 10-second pair runs did not deliver the full functional reason",
+    "New four positions lack complete central answers",
+    "N03 child-to-root relevance and depth demand remain open"
+  ],
+  "report_sha256": "4d6b34bd40ccbd490e7ca59e618efaf3a8bbc3732c5971fc6a41d92e0e9aa9bc",
+  "verification_sha256": "e56f7e11966e606680c1f7b05e525967fcc5ed135ad6cf735999c3125b2dfb44",
+  "screen_verified": true
+}

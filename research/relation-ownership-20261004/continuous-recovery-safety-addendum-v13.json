@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-04",
+  "reviewer": "concise_answer_review",
+  "method": "Read-only inspection of the last continuousRecovery legal-capture fallback and its existing inventory/source owners. No engine, UI, corpus, build or test execution; no product edits.",
+  "historical_review_preserved": {
+    "path": "research/relation-ownership-20261004/final-safety-review-addendum.json",
+    "sha256": "efed6fb0ae99c3cb4566853c71a268acbcd95c641e18800ce94aa67f46ccfc4b"
+  },
+  "source_fingerprints": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "8510efe762bfa0c967872620b9c00361e640b1efbf4b5cec3f0a914ac7363271",
+      "scope": "continuousRecovery at 546–563; unchanged covers/control/tracking at 478–518"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceResources.scala",
+      "sha256": "95c7f5aa2f7ec2231340c81d5b8d303056051bfb4b3afd5a39bd67ea5b36e77a",
+      "scope": "LegalMoveResource 22–31; completeFacts/legalRows 63–69; exact occurrence proof admission 277–293"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "cd49ef29dc8ecbf3d25f4246ac5d33898a78def0816960faffdda9c7199c6a28",
+      "scope": "Only Position.sourceRefs 28–31,69–71, packet-owned position construction 166, and final Arm.proofs delivery 3103 inspected in this addendum; not a review of every other delta."
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+      "sha256": "c558566ea90c87feb1a535d108e3b56b415e9c3bd52e44b0cc8c5971716bca21",
+      "scope": "Synthetic pinned-rook legality boundary at 854–872 read, not executed."
+    }
+  ],
+  "new_concrete_safety_findings": [],
+  "conclusion": "이번 좁은 변경에서 새 안전성 차단 사유를 찾지 못했다. 기존 기하 판정이 허용하지 못한 핀 선상의 포획을, 정확한 현재 위치에 이미 소유된 합법 수 자료로 보완한다.",
+  "checked_boundaries": [
+    {
+      "anchor": "RootQuestionSummary.scala:546",
+      "result": "removal은 기존 captureLinks의 실제 event이며, 더 뒤의 제거 event가 같은 original capturer를 잡아야 한다. 모든 중간 count에서 같은 original recovering/capturer의 현재 상태를 다시 읽는다. 추적 불명 또는 이미 제거된 기물을 같은 칸의 다른 기물로 바꾸어 받아들이지 않는다."
+    },
+    {
+      "anchors": ["RootQuestionSummary.scala:552", "OccurrenceResources.scala:63", "OccurrenceResources.scala:66"],
+      "result": "covers는 그대로다. 새 대체 증명은 해당 위치의 LegalMove 계열이 complete인 legalRows에서만 찾는다. 불완전한 legal inventory, 일치하는 행 부재, actor/target 추적 부재는 새 분기를 성공시키지 못한다. 기하 계열이 불명이어도 독립적으로 완전한 legal inventory에 정확한 긍정 증명이 있다면 이를 사용할 수 있으며, 불명을 거짓 또는 참으로 바꾸는 것은 아니다."
+    },
+    {
+      "anchors": ["RootQuestionSummary.scala:556", "OccurrenceResources.scala:26", "OccurrenceResources.scala:29"],
+      "result": "row.actor와 row.captures(target)는 현재 기물의 칸·역할·색을 모두 맞춘다. LegalMoveResource는 기존 실제 legal-row source에서만 만들어지며, 좌표/SAN 유사성 또는 역할 일치만으로 가상의 포획을 구성하지 않는다."
+    },
+    {
+      "anchors": ["RootQuestionSummary.scala:560", "MoveWorkProjection.scala:69", "OccurrenceResources.scala:287", "MoveWorkProjection.scala:3103"],
+      "result": "일치한 legal row의 semantic sourceId를 같은 Position의 EvidenceRecord ref로 해석하여 Arm.proofs에 추가한다. 그 PositionResourceView의 records는 같은 occurrence scope와 canonical expected relation이 일치하고 proofEligible인 자료이며, 최종 가격 전달에서 Arm.proofs를 합친다. 새 candidate, pass 평가, 외부 위치 또는 source-less virtual row를 받아들이는 경로는 없다."
+    }
+  ],
+  "scope": {
+    "supported": "관측한 실제 제거까지의 같은 물리 기물 관계를, 각 위치의 기존 기하 증명 또는 정확한 합법 포획 가능성 증명으로 유지한다. 최종 실제 제거는 기존 제공 수순의 event로 유지된다.",
+    "not_claimed": [
+      "중간 legal row가 실제로 실행됐다는 주장: row는 그 위치에서 정확한 대상의 포획이 합법적으로 가능하다는 증명이다. 이미 제공된 수순과 별도의 합법적인 선택일 수 있다.",
+      "모든 중간 위치의 capture legality 전수 확인: covers가 먼저 성공하면 기존 기하 증명을 그대로 사용한다. 새 분기는 실패한 경우의 독립적인 legal-row 증명이다.",
+      "응수가 강제이거나 방어/예방의 효과가 최선이라는 주장.",
+      "전체 수순의 거래가 모두 선택한 국소 가격에 속한다는 주장: continuousRecovery의 성공과 completeSelectedPrices의 원래 선택/구간 소유는 별도 경계다.",
+      "새 일반화·해설 품질·독립 인간 평가의 성공."
+    ]
+  },
+  "checks_read_not_run": [
+    "CommentaryDependencyTest.scala:854 — synthetic Rxb8 ...Rxb8는 covers가 false인 핀 상태에서도 exact legal row로 continuousRecovery를 입증하며, 두 실제 포획만 가격으로 전달하는 assertion이 있다. 이 사례는 코드 안전성 경계이며 품질/일반화 국면으로 세지 않는다."
+  ],
+  "recommendation": "위 관측 수순과 증명 범위로 채택 가능하다고 판단한다. v13의 컴파일/실행 결과는 루트가 별도로 기록하며, 기존 v10 감사는 역사 자료로 유지한다."
+}

@@ -1,0 +1,41 @@
+{
+  "scope": "One declared cold T20 at 10000ms, separate from the paired trials.",
+  "cases": [
+    {
+      "id": "T20Cold",
+      "category": "new_reference_under_v33",
+      "initial_fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "move_prefix_uci": [],
+      "fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "mainline_san": "",
+      "played_san": "g5",
+      "lines": [
+        [
+          "g6g5"
+        ]
+      ],
+      "alternatives_san": [
+        "Kd6",
+        "Ke6",
+        "Kf5"
+      ],
+      "source": "100 Endgame Patterns personal reading edition, PDF page 51, Kharlov-Ernst, Haninge 1992, 47...g5? versus drawing king moves. Diagram visually checked.",
+      "human_task": "The immediate opposing g4 counterbreak creates separated passed pawns. Explain that response if verified. Keeping a pawn move is not itself a complete account of this error.",
+      "falsifiers": [
+        "If no important difference is established between g5 and legal king choices, do not import the book loss into the product result.",
+        "Do not replace the actual g4 counterbreak with an unrelated king waiting route.",
+        "The later passed-pawn captures and promotions must remain attached to their actual branches."
+      ],
+      "history_limit": "The recorded prefix is replayed. Earlier game history is unavailable; initial zero halfmove clock cannot establish repetition or fifty-move claims.",
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "T20",
+      "trial": "separate cold JVM"
+    }
+  ],
+  "rule_freeze_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\critical-comparison-20261007\\final-rule-freeze-v11.json",
+  "rule_freeze_sha256": "266fbfdb9e75d13d6be7892b89c528ca39f8e62301bdc27470bcdeaba3db80a6",
+  "previous_registration_sha256": "b0d6a04937d6fea2afb06f6828d1dd59a9dd9bc4f9409b901c6c6f2038312823"
+}

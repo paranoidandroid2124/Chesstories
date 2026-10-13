@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only representation study. Main code is owned by the parent. Factual admission is separated from immediate material price, evaluated usefulness, strongest defense and original root causality.",
+  "read_sources_sha256": {
+    "FunctionalReplyReading.scala": "780e3e1ff4501a9dc2cc6ee7e7f8c1755c2264468d1fe496d1c8b92e7dfd916e",
+    "CommentaryAnswer.scala": "4a2cc5b71f0336d0f981abfc34c0be2c6fad1c749e5ee8a682775122fe76c246",
+    "CommentaryEnglish.scala": "64d6ef87ad0b558aeb56b7734754fe428d774abe8adc8b03d3a8d713118a02c2",
+    "CommentaryIdea.scala": "2a34c73aa6dc0a6317e01912f49303cf627b017ed95495135520c0cf5f5e0ba4",
+    "ObservedLineProtocol.scala": "51636fec8759ed68c17fe32639881fe666b7c0754beeb539e464d3493a376425"
+  },
+  "minimal_factual_representation": {
+    "proof": "Keep RootOwner, condition, reference, alternative, option, effect, action and price unchanged. A specific lost capture does not require an engine answer.",
+    "statement": "LegalReplyOption.remainingCapturers: Option[List[RelationColoredPieceWitness]]",
+    "builder": "FunctionalReplyReading.withRemainingCaptures(paths, value) derives the exact current actors from the original target and guard through this owner's reference path.",
+    "known_empty": "Some(Nil) is a complete legal inventory with no other capturer.",
+    "unknown": "None is absent, unattached or unavailable evidence; it must never be treated as an empty set.",
+    "factual_comment": "In the legal exf5/Nd5 continuation, the original e6 pawn can no longer capture that knight. The rook on c5 can still capture it. In the matched a5/Nd5 continuation, exd5 remains legal.",
+    "scope_limit": "This sentence establishes neither cheap versus expensive value, knight safety, Nd5 usefulness, an optimal defense, nor the numerical cause of exf5/a5, Red1 or White's current Nd5 judgment."
+  },
+  "exact_inventory_admission": [
+    "PreparedPaths must be this exact packet's owner; selected PreparedPath objects must be members by reference identity, fully certified, ids == declared and moves == sourceMoves.",
+    "Reference and alternative share the same exact canonical root and historical occurrence. Their tails are the same actual opposing action, and both legal action rows name the same tracked original actor.",
+    "The original target and guard must still exist at reference.size. Original e6/c3 are reviewed-root anchors retained through canonical full history, not current-square guesses or same-role substitutes.",
+    "The checked snapshot is the exact reference position after the conditional action, at reference.size, including its historical position ID. Another depth, earlier turn or matching FEN does not supply this inventory.",
+    "positionView(...).legalRows must be Some(rows), which already means the LegalMove family is complete. Geometric control and positive-only captured examples are insufficient.",
+    "Select every legal row whose captured physical witness equals the tracked original target; exclude only the tracked original guard. Map to current actor witnesses, distinct and sort canonically by side, role and square.",
+    "valid must reconstruct that complete list from the same owned position and compare exact equality. None, omitted actors, duplicates, stale squares, foreign sides, added actors or reordered noncanonical lists cannot certify the statement.",
+    "The separately owned price path must actually remove the original target with the original guard in the alternative context. A legal move of the guard without that capture is insufficient.",
+    "A present numeric receipt must still match its own line and occurrence IDs. A previous Black-root receipt cannot own a fresh White-root judgment even if the same physical idea is visible there."
+  ],
+  "immediate_recapture_representation_boundary": {
+    "already_available": "PreparedPaths.positionView(capturePath, count + 1).legalRows provides the complete legal recapture inventory after an individually retained legal capture; trackedPieceAfter or identitiesAfter maps the actual capturer to its same original physical actor.",
+    "current_statement_limit": "The distinct current actor list intentionally loses the individual move, promotion and child-position distinctions. It contains no immediate recapture inventory. Thus it is sufficient for an actor-naming factual caveat but not for a price comparison.",
+    "minimum_future_owned_attachment": "If a price statement is later needed, retain one existing PreparedPath for every immediate legal capture UCI from each compared conditional position, plus its complete List[LegalMoveResource] recaptures from that path's exact child. An optional complete inventory of (capture MoveRef, complete recapture rows) is sufficient; no new producer or engine receipt is needed for legality alone.",
+    "completeness_test": "The set of owned capture MoveRef UCIs must equal every complete target-capture row, including distinct promotion choices. For each capture path, complete recapture rows must equal every legal row capturing that exact moved original actor. Any missing capture child or missing LegalMove inventory leaves the price inventory unknown, rather than selecting one favorable recapture.",
+    "identity_test": "Check full prefix IDs, same historical parent position, exact legal capture actor/victim, original target removal, and capturer's tracked current identity after the capture. Recapture must take that capturer rather than a newly occupying same-role piece.",
+    "not_yet_a_material_value_proof": "Rows establish what can be taken and by whom. Complete material price additionally needs legally replayed capture/recapture branches and their promotion or check consequences. Every immediate legal recapture is inventoried before selecting the best one. Empty immediate recaptures do not account for forcing checks, mating compensation, later recovery or a stronger noncapture defense.",
+    "evaluated_utility_boundary": "Usefulness requires an owned comparison against the strongest relevant alternative defense, with search scope and adequate defenders retained. A factual loss of one denial plus a nominal rook-for-knight trade cannot substitute for that receipt. Original root causality requires an additional owned link to that root's actual comparison."
+  },
+  "test_representability_audit": {
+    "original_nine_issue": "The original helper built LegalReplyOption with the existing five fields, while the English expectation required a remaining Rc5 capture caveat. The renderer has no PreparedPaths parameter and the original Proof did not carry Rc5. This was an attachment gap, not a change to the chess criterion.",
+    "authorized_attachment_correction": "Only the helper wraps its existing constructor in the production withRemainingCaptures builder. Exact preservation of all nine assertion bodies and fixtures is verified by the v3 seal script.",
+    "current_recapture_test_limit": "The unchanged all-immediate-recaptures test verifies raw canonical board inventories and that retained legal witnesses are not independent evaluation observations. It does not assert that all those recaptures are carried in LegalReplyOption or that a best recapture has been evaluated.",
+    "new_negative_controls": "Two appended tests distinguish missing from complete empty and reject omitted, duplicate, stale, foreign or guard actors. Earlier foreign-history, wrong-turn, pinned-guard and current White-root negatives remain intact.",
+    "frozen_eleven_source_sha256": "02b31e1b22c3fb8219023d2c0ac181cfbc1673aed8b446519320a5e061539afa",
+    "v3_contract_sha256": "a9bb192262a7348ac373c0183c2b7e63284f9d13092dd26bcefd800f615f88ba",
+    "test_or_engine_execution_by_child": false
+  },
+  "control_lessons": {
+    "SG41": "Pe6 and Rc5 can both capture the same Nd5 when e6 remains; only Rc5 remains after exf5. Every observed pawn or rook capture has both Rd4xd5 and Pe4xd5 as legal immediate recaptures. A selected rook recapture cannot erase the pawn option. Stronger ...fxe4 and replacement defender geometry must be investigated before usefulness or root cause is claimed.",
+    "SG48": "Original Bg7 still captures Nf6 after Bxd4 because Bd4xf6 is legal; changing the guard square is therefore no lost capture. In either context Rf5xf6 has a complete empty immediate White recapture set, while forcing queen checks matter. Empty recapture inventory is not safety and nominal rook-for-knight material is not adequate value.",
+    "equal_priced_replacement": "Another pawn Pc6 can retain the same immediate capture after the original Pe6 loses it. The provider-specific fact remains correct and useful as a bounded detail, but its original guard is not thereby indispensable.",
+    "complete_empty_control": "A new composed legal position has no other immediate capturer after exf5/Nd5 and still distinguishes Some(Nil) from None. Even here the verified statement alone is not a safe-square or evaluated utility claim."
+  }
+}

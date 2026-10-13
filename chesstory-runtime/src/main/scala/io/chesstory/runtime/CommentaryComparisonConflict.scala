@@ -36,10 +36,6 @@ private[runtime] object CommentaryComparisonConflict:
         Set(MoveChoiceVerdict.Inaccuracy, MoveChoiceVerdict.Mistake, MoveChoiceVerdict.Blunder)(value.verdict))
     }
 
-  private def completedDepth(search: Search): Option[Int] =
-    val depths = search.lines.flatMap(_.evaluation.engineLine.map(_.depth))
-    Option.when(depths.nonEmpty && depths.size == search.lines.size && depths.distinct.size == 1)(depths.head)
-
   private def samePosition(left: Search, right: Search): Boolean =
     left.work.enginePositionInitialFen == right.work.enginePositionInitialFen &&
       left.work.enginePositionMovesUci == right.work.enginePositionMovesUci &&
@@ -50,8 +46,8 @@ private[runtime] object CommentaryComparisonConflict:
     * level. A divergent child is a new question, never a replacement value. */
   def betweenCurrentValues(packet: EvidenceBackedJudgmentPacket, left: Search, right: Search): List[Conflict] =
     if (left eq right) || !left.belongsTo(packet) || !right.belongsTo(packet) ||
-        !samePosition(left, right) || completedDepth(left).isEmpty ||
-        completedDepth(left) != completedDepth(right) then Nil
+        !samePosition(left, right) || left.completedDepth.isEmpty ||
+        left.completedDepth != right.completedDepth then Nil
     else left.lines.flatMap { a => right.lines.find(_.evaluation.moves.head == a.evaluation.moves.head).flatMap { b =>
       val first = a.evaluation
       val second = b.evaluation
@@ -61,20 +57,25 @@ private[runtime] object CommentaryComparisonConflict:
           reference <- first.moves.lift(shared.size)
           alternative <- second.moves.lift(shared.size)
         yield CompareMoves(RequirementId, left.anchor.prefixMoves ++ shared, reference, alternative)
-        Conflict(left.anchor.prefixMoves, first.moves.head, completedDepth(left).get,
+        Conflict(left.anchor.prefixMoves, first.moves.head, left.completedDepth.get,
           List(left.work.workId, right.work.workId), pair)
       }
     }}
 
-  private def invalidatesSelection(packet: EvidenceBackedJudgmentPacket, pool: Search, counter: Search): Boolean =
-    counter.work.rootRestriction != EngineRootRestriction.Unrestricted &&
-      samePosition(pool, counter) && completedDepth(pool).nonEmpty && completedDepth(pool) == completedDepth(counter) &&
-      (betweenCurrentValues(packet, pool, counter).nonEmpty || pool.lines.headOption.exists { leader =>
+  private def reversesRanking(packet: EvidenceBackedJudgmentPacket, pool: Search, counter: Search): Boolean =
+    counter.belongsTo(packet) && counter.anchor.scopeKey == pool.anchor.scopeKey &&
+      counter.work.engineProfile == pool.work.engineProfile && counter.completedDepth == pool.completedDepth &&
+      pool.lines.headOption.exists { leader =>
         counter.lines.exists(line => line.evaluation.moves.head != leader.evaluation.moves.head &&
           counter.pairAnswer(packet, leader.evaluation.moves.head, line.evaluation.moves.head).exists(answer =>
             answer.qualityBand.contains(PrincipalVariationComparison.QualityBand.Separated) &&
               answer.evaluationRelation == "better"))
-      })
+      }
+
+  private def invalidatesSelection(packet: EvidenceBackedJudgmentPacket, pool: Search, counter: Search): Boolean =
+    counter.work.rootRestriction != EngineRootRestriction.Unrestricted &&
+      samePosition(pool, counter) && pool.completedDepth.nonEmpty && pool.completedDepth == counter.completedDepth &&
+      (betweenCurrentValues(packet, pool, counter).nonEmpty || reversesRanking(packet, pool, counter))
 
   private case class Epoch(active: List[(Search, Int)], resets: List[(Search, Int)])
 
@@ -82,12 +83,12 @@ private[runtime] object CommentaryComparisonConflict:
     * epoch even when its finite top-N no longer returns an old candidate.
     * The receipts remain historical witnesses; only current value use changes. */
   private def epochs(packet: EvidenceBackedJudgmentPacket, searches: List[Search]): Epoch =
-    searches.zipWithIndex.filter((search, _) => search.belongsTo(packet) && completedDepth(search).nonEmpty)
+    searches.zipWithIndex.filter((search, _) => search.belongsTo(packet) && search.completedDepth.nonEmpty)
       .foldLeft(Epoch(Nil, Nil)) { case (state, (search, index)) =>
         val refresh = search.work.rootRestriction == EngineRootRestriction.Unrestricted &&
           state.active.exists { (old, at) =>
             old.work.rootRestriction == EngineRootRestriction.Unrestricted && samePosition(old, search) &&
-              completedDepth(old).get <= completedDepth(search).get &&
+              old.completedDepth.get <= search.completedDepth.get &&
               state.active.exists { (counter, after) =>
                 invalidatesSelection(packet, old, counter) &&
                   (after > at || betweenCurrentValues(packet, old, counter).nonEmpty)
@@ -95,26 +96,31 @@ private[runtime] object CommentaryComparisonConflict:
           }
         val active = state.active.filterNot { (old, _) =>
           search.work.rootRestriction == EngineRootRestriction.Unrestricted && samePosition(old, search) &&
-            completedDepth(old).get <= completedDepth(search).get &&
+            old.completedDepth.get <= search.completedDepth.get &&
             (refresh || old.work.rootRestriction == EngineRootRestriction.Unrestricted)
         }
         Epoch(active :+ (search -> index), if refresh then state.resets :+ (search -> index) else state.resets)
       }
 
-  /** Ordinary depth alignment can reuse a matching pair. A resolved earlier
-    * contradiction requires an exact pair owned by the new selection epoch. */
-  def selectionEpochStart(packet: EvidenceBackedJudgmentPacket, pool: Search, searches: List[Search]): Int =
-    val at = searches.indexWhere(_ eq pool)
-    epochs(packet, searches).resets.collect {
-      case (refresh, index) if index <= at && samePosition(refresh, pool) &&
-          completedDepth(refresh).get <= completedDepth(pool).get => index
-    }.lastOption.getOrElse(0)
+  /** Relative order and absolute-value conflicts stay separate, with one owned history. */
+  final class Selection(packet: EvidenceBackedJudgmentPacket, val pool: Search, searches: List[Search]):
+    private lazy val history = epochs(packet, searches)
+    lazy val rankingReversed: Boolean = searches.drop(searches.indexWhere(_ eq pool) + 1)
+      .exists(counter => reversesRanking(packet, pool, counter))
 
-  /** Repeating a named pair cannot erase a selection contradiction. Only a
-    * subsequent coherent full survey can close that old epoch. */
-  def selectionConflict(packet: EvidenceBackedJudgmentPacket, pool: Search,
-      searches: List[Search], moves: Set[String] = Set.empty): Option[Conflict] =
-    val active = epochs(packet, searches).active
+    // A refreshed pool cannot reuse an omitted resource's pre-refresh comparison.
+    lazy val epochStart: Int =
+      val at = searches.indexWhere(_ eq pool)
+      history.resets.collect {
+        case (refresh, index) if index <= at && samePosition(refresh, pool) &&
+            refresh.completedDepth.get <= pool.completedDepth.get => index
+      }.lastOption.getOrElse(0)
+
+    def valueConflict(moves: Set[String]): Option[Conflict] =
+      conflictIn(packet, pool, history.active, moves)
+
+  private def conflictIn(packet: EvidenceBackedJudgmentPacket, pool: Search,
+      active: List[(Search, Int)], moves: Set[String] = Set.empty): Option[Conflict] =
     active.find((search, _) => search eq pool).flatMap { _ =>
       active.iterator.filter((counter, _) => counter.work.rootRestriction != EngineRootRestriction.Unrestricted).flatMap { (counter, _) =>
         betweenCurrentValues(packet, pool, counter).filter(value => moves.isEmpty || moves(value.move))
@@ -126,13 +132,13 @@ private[runtime] object CommentaryComparisonConflict:
     // Repeated searches of the same pool supersede its older answer. Different histories,
     // profiles or achieved depths are not treated as repeated measurements of one position.
     val active = epochs(packet, searches).active.map(_._1)
-      .filter(search => completedDepth(search).exists(_ >= requiredDepth))
+      .filter(search => search.completedDepth.exists(_ >= requiredDepth))
     val current = active
       .reverse.foldLeft(List.empty[TargetResponseInvestigation.Search]) { (newer, search) =>
         if newer.exists(value => samePosition(value, search) &&
             ((value.work.rootRestriction == EngineRootRestriction.Unrestricted &&
               search.work.rootRestriction == EngineRootRestriction.Unrestricted &&
-              completedDepth(value) == completedDepth(search)) || search.lines.forall(line =>
+              value.completedDepth == search.completedDepth) || search.lines.forall(line =>
               value.lines.exists(fresh => fresh.evaluation.moves.head == line.evaluation.moves.head &&
                 fresh.evaluation.engineLine.map(_.depth).getOrElse(Int.MaxValue) >=
                   line.evaluation.engineLine.map(_.depth).getOrElse(Int.MaxValue))))) then newer
@@ -144,8 +150,9 @@ private[runtime] object CommentaryComparisonConflict:
         betweenCurrentValues(packet, left, right)
       }}
     }
+    val currentSelection = epochs(packet, active).active
     val unresolvedSelection = active.filter(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
-      .flatMap(pool => selectionConflict(packet, pool, active))
+      .flatMap(pool => conflictIn(packet, pool, currentSelection))
     (measured ++ unresolvedSelection).distinct
       .sortBy(value => (value.prefix.size, value.prefix.mkString(" "), value.move, value.workIds.mkString(" ")))
 

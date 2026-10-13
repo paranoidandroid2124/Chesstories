@@ -132,6 +132,27 @@ class BasicPurposeReadingTest extends munit.FunSuite:
     assert(answer.core.flatMap(_.covered).contains(MoveRef(pair.head, 1)))
     assert(answer.core.flatMap(_.covered).contains(MoveRef(pair.head, 2)))
 
+  test("quiet rook pressure keeps the replacement guard together and leaves later exchanges in detail"):
+    val (packet, paths, pair, positions, notes) = prepare(
+      "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      List("e3d3 h1g1 d3d2 c3c4 d2d3 b3a2 d3d4 c4d5 c6d5",
+        "f5d3 g2g4 e3f3 h1g2"))
+    val previous = prior(packet, paths, pair)
+    val answer = BasicPurposeReading.simplify(packet, paths, pair, positions, notes, previous)
+    val text = RootQuestionSummary.realize(paths, pair, answer).get.text
+    assert(answer != previous)
+    assert(text.contains("rook on d3") && text.contains("pawn on c3") && text.contains("pawn on d4"), text)
+    assert(text.contains("rook on e8") && text.contains("pawn on e2"), text)
+    assert(!text.contains("does not support") && !text.contains("ending its attack") && !text.contains("cxd5"), text)
+    assert(previous.core.flatMap(_.covered).forall(answer.details.flatMap(_.covered).contains))
+
+  test("quiet pressure cannot hide the loss of the last guard"):
+    val (packet, paths, pair, positions, notes) = prepare(
+      "8/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      List("e3d3 h1g1 d3d2 c3c4", "f5d3 g2g4 e3f3 h1g2"))
+    val previous = prior(packet, paths, pair)
+    assertEquals(BasicPurposeReading.simplify(packet, paths, pair, positions, notes, previous), previous)
+
   test("an error grade, mate forecast, explicit other question, absent board or unobserved reply retains the fuller answer"):
     val (packet, paths, pair, positions, notes) = prepare(pirc, quiet, prefix, List(-500, 0))
     val previous = prior(packet, paths, pair)

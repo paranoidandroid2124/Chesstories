@@ -1,0 +1,2775 @@
+{
+  "curation_date": "2026-10-10",
+  "kind": "verbatim_field_selection_from_historical_result",
+  "original_path": "research/structural-patterns-20261004/pattern-probe.json",
+  "original_sha256": "30c35ef43791f0e23bbe9cb926ff73139a40ea6efa8a461ca3d769bd6d8e979f",
+  "archive": "chesstories-research-curation-20261010/research-originals.zip",
+  "source_fields": {
+    "purpose": "Recognize saved-line structural candidates; not select importance or generate explanations.",
+    "engine_run": false,
+    "product_changed": false,
+    "rules_frozen_before_execution": true,
+    "input_hashes": {
+      "games.json": "c554cee074a8b3216c917536a8281878aa57ae66837436caaabea1bc17ab4892",
+      "all-moves-comparison.json": "f216b6efb8cbd2c7b890bed0b005979fe5ea51ba48e50e7a0014e53282504339",
+      "case-studies.json": "781e44fe951f7c676e8d5a17ea0e6303f8ef2233bf9110fdd5440e9d623abe63",
+      "extract_games.py": "ae526a07808b515d1e4a68e37e3559340852cc76602595fec28bd4cc37fec2b1",
+      "probe.py": "1a40ee5d1e9764f23a49948c6530f2e86eb65d930996f6c2921ebbb2e1903243"
+    },
+    "comparisons": 896,
+    "balanced_comparisons": 379,
+    "counts": {
+      "initial_target_capture_diff": {
+        "comparisons": 290,
+        "games": 10,
+        "balanced_comparisons": 122,
+        "without_partial_packet": 260
+      },
+      "legal_immediate_capture_availability_diff": {
+        "comparisons": 107,
+        "games": 10,
+        "balanced_comparisons": 40,
+        "without_partial_packet": 93
+      },
+      "same_captor_later_removed": {
+        "comparisons": 777,
+        "games": 10,
+        "balanced_comparisons": 367,
+        "without_partial_packet": 698
+      },
+      "non_immediate_or_different_square_captor_removal": {
+        "comparisons": 478,
+        "games": 10,
+        "balanced_comparisons": 246,
+        "without_partial_packet": 434
+      },
+      "different_square_adjacent_capture_candidate": {
+        "comparisons": 530,
+        "games": 10,
+        "balanced_comparisons": 238,
+        "without_partial_packet": 473
+      },
+      "promotion": {
+        "comparisons": 49,
+        "games": 8,
+        "balanced_comparisons": 1,
+        "without_partial_packet": 41
+      },
+      "promoted_piece_later_captured": {
+        "comparisons": 21,
+        "games": 4,
+        "balanced_comparisons": 1,
+        "without_partial_packet": 17
+      }
+    },
+    "color_and_rank_mirror_checks": [
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 21,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 47,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-03",
+        "ply": 17,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-03",
+        "ply": 93,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-05",
+        "ply": 83,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 49,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-04",
+        "ply": 59,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-06",
+        "ply": 119,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-06",
+        "ply": 129,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-04",
+        "ply": 76,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-08",
+        "ply": 38,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-10",
+        "ply": 117,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-07",
+        "ply": 56,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-09",
+        "ply": 33,
+        "passed": true
+      },
+      {
+        "game_id": "fundamentals-game-09",
+        "ply": 53,
+        "passed": true
+      }
+    ],
+    "limits": [
+      "Previously opened regression corpus; no held-out or reader quality result.",
+      "Initial contacts are geometric; legal capture availability uses actual post-root turns.",
+      "Different capture availability concerns one immediate capture, not all threats or optimal defenses.",
+      "A later capture of the same captor is a physical relation, not sufficient proof of relevance.",
+      "Different-square adjacent captures are temporal candidates, not proven compensation or causality.",
+      "Promotion identity does not make capture-only material arithmetic valid.",
+      "Mirror checks test color independence only; they are not new master-game evidence."
+    ],
+    "case_results": [
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 21,
+        "label": "11. Qb3",
+        "balanced_before_move": true,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "d1b1",
+            "captures": [
+              {
+                "offset": 6,
+                "SAN": "Qxe7",
+                "actor": 3,
+                "victim": 52,
+                "square": 52,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 7,
+                "SAN": "Rxe7",
+                "actor": 61,
+                "victim": 3,
+                "square": 52,
+                "actor_role": "r",
+                "victim_role": "q"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 6,
+                "captor_removed": 7,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 52,
+                "target": 20,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "d1b3",
+            "captures": [
+              {
+                "offset": 6,
+                "SAN": "Qxe7",
+                "actor": 3,
+                "victim": 52,
+                "square": 52,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 7,
+                "SAN": "Rxe7",
+                "actor": 61,
+                "victim": 3,
+                "square": 52,
+                "actor_role": "r",
+                "victim_role": "q"
+              },
+              {
+                "offset": 17,
+                "SAN": "dxc4",
+                "actor": 35,
+                "victim": 18,
+                "square": 26,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 18,
+                "SAN": "Rxc4",
+                "actor": 7,
+                "victim": 35,
+                "square": 26,
+                "actor_role": "r",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 6,
+                "captor_removed": 7,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 17,
+                "captor_removed": 18,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 52,
+                "target": 20,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 47,
+        "label": "24. f4",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "f2f4",
+            "captures": [
+              {
+                "offset": 2,
+                "SAN": "Rxb1",
+                "actor": 0,
+                "victim": 57,
+                "square": 1,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 3,
+                "SAN": "Qxb1+",
+                "actor": 37,
+                "victim": 0,
+                "square": 1,
+                "actor_role": "q",
+                "victim_role": "r"
+              },
+              {
+                "offset": 6,
+                "SAN": "Qxa7",
+                "actor": 34,
+                "victim": 48,
+                "square": 48,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 10,
+                "SAN": "Qxe8+",
+                "actor": 34,
+                "victim": 42,
+                "square": 60,
+                "actor_role": "q",
+                "victim_role": "b"
+              },
+              {
+                "offset": 16,
+                "SAN": "gxh3",
+                "actor": 14,
+                "victim": 55,
+                "square": 23,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 17,
+                "SAN": "Qxh2",
+                "actor": 37,
+                "victim": 15,
+                "square": 15,
+                "actor_role": "q",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 2,
+                "captor_removed": 3,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 16,
+                "next": 17
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 37,
+                "target": 36,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 37,
+                "target": 13,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "h2h3",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "Qxe5",
+                "actor": 37,
+                "victim": 36,
+                "square": 36,
+                "actor_role": "q",
+                "victim_role": "n"
+              },
+              {
+                "offset": 2,
+                "SAN": "Qxc6",
+                "actor": 34,
+                "victim": 42,
+                "square": 42,
+                "actor_role": "q",
+                "victim_role": "b"
+              },
+              {
+                "offset": 18,
+                "SAN": "Qxd5",
+                "actor": 34,
+                "victim": 35,
+                "square": 35,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 19,
+                "SAN": "Qxa6",
+                "actor": 37,
+                "victim": 40,
+                "square": 40,
+                "actor_role": "q",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 1,
+                "next": 2
+              },
+              {
+                "first": 18,
+                "next": 19
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 37,
+                "target": 36,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 37,
+                "target": 13,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 37,
+            "target": 36,
+            "target_role": "n",
+            "legal_capture_availability_differs": false
+          }
+        ],
+        "initial_multi_target_attackers": [
+          37
+        ]
+      },
+      {
+        "game_id": "fundamentals-game-03",
+        "ply": 17,
+        "label": "9. Rfd1",
+        "balanced_before_move": true,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "g5f6",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Bxf6",
+                "actor": 38,
+                "victim": 45,
+                "square": 45,
+                "actor_role": "b",
+                "victim_role": "n"
+              },
+              {
+                "offset": 1,
+                "SAN": "Bxf6",
+                "actor": 52,
+                "victim": 38,
+                "square": 45,
+                "actor_role": "b",
+                "victim_role": "b"
+              },
+              {
+                "offset": 5,
+                "SAN": "exf4",
+                "actor": 36,
+                "victim": 13,
+                "square": 29,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 10,
+                "SAN": "dxe6",
+                "actor": 27,
+                "victim": 61,
+                "square": 44,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 11,
+                "SAN": "bxc4",
+                "actor": 49,
+                "victim": 21,
+                "square": 26,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 12,
+                "SAN": "exf7+",
+                "actor": 27,
+                "victim": 53,
+                "square": 53,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 13,
+                "SAN": "Qxf7",
+                "actor": 32,
+                "victim": 27,
+                "square": 53,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 14,
+                "SAN": "exf4+",
+                "actor": 20,
+                "victim": 36,
+                "square": 29,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 16,
+                "SAN": "Bxc4",
+                "actor": 19,
+                "victim": 49,
+                "square": 26,
+                "actor_role": "b",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 0,
+                "captor_removed": 1,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 5,
+                "captor_removed": 14,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 10,
+                "captor_removed": 13,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 11,
+                "captor_removed": 16,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 12,
+                "captor_removed": 13,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 10,
+                "next": 11
+              },
+              {
+                "first": 11,
+                "next": 12
+              },
+              {
+                "first": 13,
+                "next": 14
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 36,
+                "target": 27,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 32,
+                "target": 18,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 32,
+                "target": 8,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "f1d1",
+            "captures": [
+              {
+                "offset": 4,
+                "SAN": "dxe5",
+                "actor": 27,
+                "victim": 36,
+                "square": 36,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 5,
+                "SAN": "dxe5",
+                "actor": 43,
+                "victim": 27,
+                "square": 36,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 12,
+                "SAN": "Bxe7",
+                "actor": 38,
+                "victim": 52,
+                "square": 52,
+                "actor_role": "b",
+                "victim_role": "b"
+              },
+              {
+                "offset": 13,
+                "SAN": "Qxe7",
+                "actor": 32,
+                "victim": 38,
+                "square": 52,
+                "actor_role": "q",
+                "victim_role": "b"
+              },
+              {
+                "offset": 15,
+                "SAN": "Nxc3",
+                "actor": 45,
+                "victim": 18,
+                "square": 18,
+                "actor_role": "n",
+                "victim_role": "n"
+              },
+              {
+                "offset": 16,
+                "SAN": "bxc3",
+                "actor": 9,
+                "victim": 45,
+                "square": 18,
+                "actor_role": "p",
+                "victim_role": "n"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 4,
+                "captor_removed": 5,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 12,
+                "captor_removed": 13,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 15,
+                "captor_removed": 16,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 36,
+                "target": 27,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 32,
+                "target": 18,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 32,
+                "target": 8,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": [
+          32
+        ]
+      },
+      {
+        "game_id": "fundamentals-game-03",
+        "ply": 93,
+        "label": "47. Nxc4",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "b6c4",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Nxc4",
+                "actor": 41,
+                "victim": 26,
+                "square": 26,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 3,
+                "SAN": "Kxc4",
+                "actor": 27,
+                "victim": 41,
+                "square": 26,
+                "actor_role": "k",
+                "victim_role": "n"
+              },
+              {
+                "offset": 13,
+                "SAN": "Nxg7+",
+                "actor": 54,
+                "victim": 46,
+                "square": 54,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 14,
+                "SAN": "fxg7",
+                "actor": 29,
+                "victim": 54,
+                "square": 54,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 17,
+                "SAN": "Kxa5",
+                "actor": 27,
+                "victim": 32,
+                "square": 32,
+                "actor_role": "k",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 0,
+                "captor_removed": 3,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 13,
+                "captor_removed": 14,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [
+              {
+                "offset": 16,
+                "actor": 29,
+                "new_role": "q",
+                "square": 62
+              }
+            ],
+            "promotion_captures": [],
+            "initial_contacts": []
+          },
+          {
+            "root_UCI": "a5a6",
+            "captures": [
+              {
+                "offset": 2,
+                "SAN": "axb7",
+                "actor": 32,
+                "victim": 49,
+                "square": 49,
+                "actor_role": "p",
+                "victim_role": "p"
+              },
+              {
+                "offset": 8,
+                "SAN": "Qxg7",
+                "actor": 32,
+                "victim": 54,
+                "square": 54,
+                "actor_role": "q",
+                "victim_role": "n"
+              },
+              {
+                "offset": 17,
+                "SAN": "Qxb6+",
+                "actor": 26,
+                "victim": 41,
+                "square": 41,
+                "actor_role": "q",
+                "victim_role": "n"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [
+              {
+                "offset": 4,
+                "actor": 32,
+                "new_role": "q",
+                "square": 57
+              },
+              {
+                "offset": 5,
+                "actor": 26,
+                "new_role": "q",
+                "square": 2
+              }
+            ],
+            "promotion_captures": [],
+            "initial_contacts": []
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-05",
+        "ply": 83,
+        "label": "42. Nc5",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": true,
+        "arms": [
+          {
+            "root_UCI": "e4c5",
+            "captures": [
+              {
+                "offset": 4,
+                "SAN": "Nxf8+",
+                "actor": 28,
+                "victim": 61,
+                "square": 61,
+                "actor_role": "n",
+                "victim_role": "r"
+              },
+              {
+                "offset": 6,
+                "SAN": "Rxc8",
+                "actor": 56,
+                "victim": 58,
+                "square": 58,
+                "actor_role": "r",
+                "victim_role": "b"
+              },
+              {
+                "offset": 7,
+                "SAN": "Nxf5+",
+                "actor": 35,
+                "victim": 37,
+                "square": 37,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 8,
+                "SAN": "gxf5",
+                "actor": 30,
+                "victim": 35,
+                "square": 37,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 13,
+                "SAN": "Kxf5",
+                "actor": 59,
+                "victim": 30,
+                "square": 37,
+                "actor_role": "k",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 7,
+                "captor_removed": 8,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 8,
+                "captor_removed": 13,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 6,
+                "next": 7
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 58,
+                "target": 37,
+                "contact_after_root": true,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 35,
+                "target": 25,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "e4d6",
+            "captures": [
+              {
+                "offset": 8,
+                "SAN": "Nxd7",
+                "actor": 28,
+                "victim": 58,
+                "square": 51,
+                "actor_role": "n",
+                "victim_role": "b"
+              },
+              {
+                "offset": 9,
+                "SAN": "Rxh7",
+                "actor": 61,
+                "victim": 55,
+                "square": 55,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 10,
+                "SAN": "Nxf6+",
+                "actor": 28,
+                "victim": 45,
+                "square": 45,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 12,
+                "SAN": "Nxh7",
+                "actor": 28,
+                "victim": 61,
+                "square": 55,
+                "actor_role": "n",
+                "victim_role": "r"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 9,
+                "captor_removed": 12,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 8,
+                "next": 9
+              },
+              {
+                "first": 9,
+                "next": 10
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 58,
+                "target": 37,
+                "contact_after_root": true,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 35,
+                "target": 25,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-01",
+        "ply": 49,
+        "label": "25. Qxb6",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "c5b6",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Qxb6",
+                "actor": 34,
+                "victim": 41,
+                "square": 41,
+                "actor_role": "q",
+                "victim_role": "r"
+              },
+              {
+                "offset": 1,
+                "SAN": "Qxe5",
+                "actor": 37,
+                "victim": 36,
+                "square": 36,
+                "actor_role": "q",
+                "victim_role": "n"
+              },
+              {
+                "offset": 2,
+                "SAN": "Qxc6",
+                "actor": 34,
+                "victim": 42,
+                "square": 42,
+                "actor_role": "q",
+                "victim_role": "b"
+              },
+              {
+                "offset": 3,
+                "SAN": "Qxe3+",
+                "actor": 37,
+                "victim": 20,
+                "square": 20,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 6,
+                "SAN": "Qxd5",
+                "actor": 34,
+                "victim": 35,
+                "square": 35,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 7,
+                "SAN": "Qxc3",
+                "actor": 37,
+                "victim": 18,
+                "square": 18,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 9,
+                "SAN": "Qxe5",
+                "actor": 37,
+                "victim": 34,
+                "square": 36,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 10,
+                "SAN": "fxe5",
+                "actor": 29,
+                "victim": 37,
+                "square": 36,
+                "actor_role": "p",
+                "victim_role": "q"
+              },
+              {
+                "offset": 19,
+                "SAN": "Kxe5",
+                "actor": 62,
+                "victim": 29,
+                "square": 36,
+                "actor_role": "k",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 0,
+                "captor_removed": 9,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 1,
+                "captor_removed": 10,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 2,
+                "captor_removed": 9,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 3,
+                "captor_removed": 10,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 6,
+                "captor_removed": 9,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 7,
+                "captor_removed": 10,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 9,
+                "captor_removed": 10,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 10,
+                "captor_removed": 19,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 0,
+                "next": 1
+              },
+              {
+                "first": 1,
+                "next": 2
+              },
+              {
+                "first": 2,
+                "next": 3
+              },
+              {
+                "first": 6,
+                "next": 7
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 41,
+                "target": 40,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 37,
+                "target": 36,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 37,
+                "target": 29,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "c5e7",
+            "captures": [
+              {
+                "offset": 2,
+                "SAN": "Nxc6",
+                "actor": 36,
+                "victim": 42,
+                "square": 42,
+                "actor_role": "n",
+                "victim_role": "b"
+              },
+              {
+                "offset": 7,
+                "SAN": "Rxa6",
+                "actor": 41,
+                "victim": 40,
+                "square": 40,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 8,
+                "SAN": "Rxa6",
+                "actor": 0,
+                "victim": 41,
+                "square": 40,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 9,
+                "SAN": "Qxa6",
+                "actor": 37,
+                "victim": 0,
+                "square": 40,
+                "actor_role": "q",
+                "victim_role": "r"
+              },
+              {
+                "offset": 12,
+                "SAN": "Qxg6+",
+                "actor": 34,
+                "victim": 37,
+                "square": 46,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 13,
+                "SAN": "fxg6",
+                "actor": 53,
+                "victim": 34,
+                "square": 46,
+                "actor_role": "p",
+                "victim_role": "q"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 7,
+                "captor_removed": 8,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 8,
+                "captor_removed": 9,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 9,
+                "captor_removed": 12,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 12,
+                "captor_removed": 13,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 41,
+                "target": 40,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 7,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 37,
+                "target": 36,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 37,
+                "target": 29,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 41,
+            "target": 40,
+            "target_role": "p",
+            "legal_capture_availability_differs": true
+          },
+          {
+            "attacker": 37,
+            "target": 36,
+            "target_role": "n",
+            "legal_capture_availability_differs": false
+          }
+        ],
+        "initial_multi_target_attackers": [
+          37
+        ]
+      },
+      {
+        "game_id": "fundamentals-game-04",
+        "ply": 59,
+        "label": "30. cxd5",
+        "balanced_before_move": true,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "d3b3",
+            "captures": [
+              {
+                "offset": 4,
+                "SAN": "Rxc3",
+                "actor": 19,
+                "victim": 35,
+                "square": 18,
+                "actor_role": "r",
+                "victim_role": "n"
+              },
+              {
+                "offset": 7,
+                "SAN": "Kxb7",
+                "actor": 56,
+                "victim": 32,
+                "square": 49,
+                "actor_role": "k",
+                "victim_role": "n"
+              },
+              {
+                "offset": 12,
+                "SAN": "Rcxe2",
+                "actor": 19,
+                "victim": 28,
+                "square": 12,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 13,
+                "SAN": "Rxc4+",
+                "actor": 60,
+                "victim": 26,
+                "square": 26,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 17,
+                "SAN": "Qxc5",
+                "actor": 61,
+                "victim": 34,
+                "square": 34,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 20,
+                "SAN": "Qxc5+",
+                "actor": 6,
+                "victim": 61,
+                "square": 34,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 21,
+                "SAN": "Kxc5",
+                "actor": 56,
+                "victim": 6,
+                "square": 34,
+                "actor_role": "k",
+                "victim_role": "q"
+              },
+              {
+                "offset": 23,
+                "SAN": "Rxc2+",
+                "actor": 60,
+                "victim": 19,
+                "square": 10,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 24,
+                "SAN": "Kxc2",
+                "actor": 2,
+                "victim": 60,
+                "square": 10,
+                "actor_role": "k",
+                "victim_role": "r"
+              },
+              {
+                "offset": 28,
+                "SAN": "Rxf7",
+                "actor": 3,
+                "victim": 53,
+                "square": 53,
+                "actor_role": "r",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 4,
+                "captor_removed": 23,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 12,
+                "captor_removed": 23,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 13,
+                "captor_removed": 24,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 17,
+                "captor_removed": 20,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 20,
+                "captor_removed": 21,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 23,
+                "captor_removed": 24,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 12,
+                "next": 13
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 61,
+                "target": 34,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 17,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 35,
+                "target": 29,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 28,
+                "target": 19,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "c4d5",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "cxd5",
+                "actor": 26,
+                "victim": 35,
+                "square": 35,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 1,
+                "SAN": "exd3",
+                "actor": 28,
+                "victim": 19,
+                "square": 19,
+                "actor_role": "p",
+                "victim_role": "r"
+              },
+              {
+                "offset": 2,
+                "SAN": "Nxc6",
+                "actor": 32,
+                "victim": 42,
+                "square": 42,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 4,
+                "SAN": "Rxd3",
+                "actor": 3,
+                "victim": 28,
+                "square": 19,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 7,
+                "SAN": "Rxc5",
+                "actor": 60,
+                "victim": 34,
+                "square": 34,
+                "actor_role": "r",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 1,
+                "captor_removed": 4,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 0,
+                "next": 1
+              },
+              {
+                "first": 1,
+                "next": 2
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 61,
+                "target": 34,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 35,
+                "target": 29,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 28,
+                "target": 19,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 61,
+            "target": 34,
+            "target_role": "p",
+            "legal_capture_availability_differs": false
+          },
+          {
+            "attacker": 28,
+            "target": 19,
+            "target_role": "r",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-06",
+        "ply": 119,
+        "label": "60. Qxb7",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "g2b2",
+            "captures": [
+              {
+                "offset": 2,
+                "SAN": "Qxb7+",
+                "actor": 14,
+                "victim": 49,
+                "square": 49,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 11,
+                "SAN": "Nxc8",
+                "actor": 45,
+                "victim": 26,
+                "square": 58,
+                "actor_role": "n",
+                "victim_role": "q"
+              },
+              {
+                "offset": 12,
+                "SAN": "Qxc8",
+                "actor": 14,
+                "victim": 45,
+                "square": 58,
+                "actor_role": "q",
+                "victim_role": "n"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 11,
+                "captor_removed": 12,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [
+              {
+                "offset": 10,
+                "actor": 26,
+                "new_role": "q",
+                "square": 58
+              }
+            ],
+            "promotion_captures": [
+              {
+                "promotion": 10,
+                "capture": 11,
+                "actor": 26,
+                "captured_role": "q"
+              }
+            ],
+            "initial_contacts": []
+          },
+          {
+            "root_UCI": "g2b7",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Qxb7",
+                "actor": 14,
+                "victim": 49,
+                "square": 49,
+                "actor_role": "q",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": []
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-06",
+        "ply": 129,
+        "label": "65. Kd4",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "e3d4",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "Bxc4",
+                "actor": 53,
+                "victim": 26,
+                "square": 26,
+                "actor_role": "b",
+                "victim_role": "p"
+              },
+              {
+                "offset": 4,
+                "SAN": "Qxc4+",
+                "actor": 32,
+                "victim": 53,
+                "square": 26,
+                "actor_role": "q",
+                "victim_role": "b"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 1,
+                "captor_removed": 4,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 53,
+                "target": 26,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              }
+            ]
+          },
+          {
+            "root_UCI": "a5a3",
+            "captures": [],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 53,
+                "target": 26,
+                "contact_after_root": true,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 53,
+            "target": 26,
+            "target_role": "p",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-04",
+        "ply": 76,
+        "label": "38... Kb8",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "a8b8",
+            "captures": [
+              {
+                "offset": 2,
+                "SAN": "Rxd7",
+                "actor": 59,
+                "victim": 51,
+                "square": 51,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 4,
+                "SAN": "Rxd3",
+                "actor": 59,
+                "victim": 19,
+                "square": 19,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 5,
+                "SAN": "Qxd3",
+                "actor": 40,
+                "victim": 59,
+                "square": 19,
+                "actor_role": "q",
+                "victim_role": "r"
+              },
+              {
+                "offset": 6,
+                "SAN": "Qxd3",
+                "actor": 28,
+                "victim": 40,
+                "square": 19,
+                "actor_role": "q",
+                "victim_role": "q"
+              },
+              {
+                "offset": 7,
+                "SAN": "Nxd3",
+                "actor": 17,
+                "victim": 28,
+                "square": 19,
+                "actor_role": "n",
+                "victim_role": "q"
+              },
+              {
+                "offset": 8,
+                "SAN": "Rxh2",
+                "actor": 12,
+                "victim": 15,
+                "square": 15,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 12,
+                "SAN": "Rxg3",
+                "actor": 12,
+                "victim": 22,
+                "square": 22,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 23,
+                "SAN": "Nxf6",
+                "actor": 17,
+                "victim": 45,
+                "square": 45,
+                "actor_role": "n",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 2,
+                "captor_removed": 5,
+                "immediate_same_square": false
+              },
+              {
+                "loss": 4,
+                "captor_removed": 5,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 5,
+                "captor_removed": 6,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 6,
+                "captor_removed": 7,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 7,
+                "next": 8
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 40,
+                "target": 48,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 40,
+                "target": 42,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "d8d7",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Rxd7",
+                "actor": 59,
+                "victim": 51,
+                "square": 51,
+                "actor_role": "r",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 40,
+                "target": 48,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 40,
+                "target": 42,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": [
+          40
+        ]
+      },
+      {
+        "game_id": "fundamentals-game-08",
+        "ply": 38,
+        "label": "19... Qb5",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "g5b5",
+            "captures": [
+              {
+                "offset": 11,
+                "SAN": "Rxe8+",
+                "actor": 7,
+                "victim": 56,
+                "square": 60,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 12,
+                "SAN": "Qxe8",
+                "actor": 38,
+                "victim": 7,
+                "square": 60,
+                "actor_role": "q",
+                "victim_role": "r"
+              },
+              {
+                "offset": 18,
+                "SAN": "Qxf6",
+                "actor": 38,
+                "victim": 29,
+                "square": 45,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 19,
+                "SAN": "Qxc7",
+                "actor": 28,
+                "victim": 50,
+                "square": 50,
+                "actor_role": "q",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 11,
+                "captor_removed": 12,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 18,
+                "next": 19
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 28,
+                "target": 55,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 28,
+                "target": 49,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 3,
+                "target": 43,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 29,
+                "target": 38,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 28,
+                "target": 25,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "b4c5",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "fxg5",
+                "actor": 29,
+                "victim": 38,
+                "square": 38,
+                "actor_role": "p",
+                "victim_role": "q"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 28,
+                "target": 55,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 28,
+                "target": 49,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 3,
+                "target": 43,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 29,
+                "target": 38,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 28,
+                "target": 25,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 29,
+            "target": 38,
+            "target_role": "q",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": [
+          28
+        ]
+      },
+      {
+        "game_id": "fundamentals-game-10",
+        "ply": 117,
+        "label": "59. g7",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "g6g7",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "Rxg7",
+                "actor": 48,
+                "victim": 46,
+                "square": 54,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 18,
+                "SAN": "Rxd8+",
+                "actor": 32,
+                "victim": 48,
+                "square": 59,
+                "actor_role": "r",
+                "victim_role": "r"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 1,
+                "captor_removed": 18,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [
+              {
+                "offset": 8,
+                "actor": 40,
+                "new_role": "q",
+                "square": 56
+              }
+            ],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 48,
+                "target": 40,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "e6d6",
+            "captures": [
+              {
+                "offset": 24,
+                "SAN": "Kxg4",
+                "actor": 44,
+                "victim": 48,
+                "square": 30,
+                "actor_role": "k",
+                "victim_role": "r"
+              }
+            ],
+            "capture_links": [],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [
+              {
+                "offset": 18,
+                "actor": 40,
+                "new_role": "q",
+                "square": 56
+              }
+            ],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 48,
+                "target": 40,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-07",
+        "ply": 56,
+        "label": "28... Nf4",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "d5f4",
+            "captures": [
+              {
+                "offset": 11,
+                "SAN": "Bxe6",
+                "actor": 12,
+                "victim": 35,
+                "square": 44,
+                "actor_role": "b",
+                "victim_role": "n"
+              },
+              {
+                "offset": 12,
+                "SAN": "fxe6",
+                "actor": 53,
+                "victim": 12,
+                "square": 44,
+                "actor_role": "p",
+                "victim_role": "b"
+              },
+              {
+                "offset": 16,
+                "SAN": "Rxb2",
+                "actor": 60,
+                "victim": 9,
+                "square": 9,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 17,
+                "SAN": "Rxe4",
+                "actor": 3,
+                "victim": 36,
+                "square": 28,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 19,
+                "SAN": "Rxe6",
+                "actor": 3,
+                "victim": 53,
+                "square": 44,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 24,
+                "SAN": "Rxa4",
+                "actor": 60,
+                "victim": 24,
+                "square": 24,
+                "actor_role": "r",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 11,
+                "captor_removed": 12,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 12,
+                "captor_removed": 19,
+                "immediate_same_square": false
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 16,
+                "next": 17
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 37,
+                "target": 43,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 12,
+                "target": 40,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 3,
+                "target": 35,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "e8d8",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "Rxd5",
+                "actor": 3,
+                "victim": 35,
+                "square": 35,
+                "actor_role": "r",
+                "victim_role": "n"
+              },
+              {
+                "offset": 8,
+                "SAN": "Rxb3",
+                "actor": 60,
+                "victim": 9,
+                "square": 17,
+                "actor_role": "r",
+                "victim_role": "p"
+              },
+              {
+                "offset": 9,
+                "SAN": "Rxb3",
+                "actor": 0,
+                "victim": 60,
+                "square": 17,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 10,
+                "SAN": "Rxb3",
+                "actor": 56,
+                "victim": 0,
+                "square": 17,
+                "actor_role": "r",
+                "victim_role": "r"
+              },
+              {
+                "offset": 11,
+                "SAN": "Bxa6",
+                "actor": 12,
+                "victim": 40,
+                "square": 40,
+                "actor_role": "b",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 8,
+                "captor_removed": 9,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 9,
+                "captor_removed": 10,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 10,
+                "next": 11
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 37,
+                "target": 43,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 12,
+                "target": 40,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 11,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 3,
+                "target": 35,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 12,
+            "target": 40,
+            "target_role": "p",
+            "legal_capture_availability_differs": false
+          },
+          {
+            "attacker": 3,
+            "target": 35,
+            "target_role": "n",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-09",
+        "ply": 33,
+        "label": "17. Nc3",
+        "balanced_before_move": true,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "a4c3",
+            "captures": [
+              {
+                "offset": 4,
+                "SAN": "Bxf6",
+                "actor": 38,
+                "victim": 45,
+                "square": 45,
+                "actor_role": "b",
+                "victim_role": "n"
+              },
+              {
+                "offset": 5,
+                "SAN": "Bxf6",
+                "actor": 52,
+                "victim": 38,
+                "square": 45,
+                "actor_role": "b",
+                "victim_role": "b"
+              },
+              {
+                "offset": 6,
+                "SAN": "Nxd5",
+                "actor": 24,
+                "victim": 35,
+                "square": 35,
+                "actor_role": "n",
+                "victim_role": "p"
+              },
+              {
+                "offset": 7,
+                "SAN": "Bxd5",
+                "actor": 49,
+                "victim": 24,
+                "square": 35,
+                "actor_role": "b",
+                "victim_role": "n"
+              },
+              {
+                "offset": 8,
+                "SAN": "Rxd5",
+                "actor": 3,
+                "victim": 49,
+                "square": 35,
+                "actor_role": "r",
+                "victim_role": "b"
+              },
+              {
+                "offset": 13,
+                "SAN": "Qxb2",
+                "actor": 58,
+                "victim": 9,
+                "square": 9,
+                "actor_role": "q",
+                "victim_role": "p"
+              },
+              {
+                "offset": 14,
+                "SAN": "Qxa6",
+                "actor": 12,
+                "victim": 40,
+                "square": 40,
+                "actor_role": "q",
+                "victim_role": "p"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 4,
+                "captor_removed": 5,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 6,
+                "captor_removed": 7,
+                "immediate_same_square": true
+              },
+              {
+                "loss": 7,
+                "captor_removed": 8,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [
+              {
+                "first": 5,
+                "next": 6
+              },
+              {
+                "first": 13,
+                "next": 14
+              }
+            ],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 33,
+                "target": 24,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "g5h4",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "bxa4",
+                "actor": 33,
+                "victim": 24,
+                "square": 24,
+                "actor_role": "p",
+                "victim_role": "n"
+              },
+              {
+                "offset": 8,
+                "SAN": "Bxe7",
+                "actor": 38,
+                "victim": 52,
+                "square": 52,
+                "actor_role": "b",
+                "victim_role": "b"
+              },
+              {
+                "offset": 9,
+                "SAN": "Qxe7",
+                "actor": 58,
+                "victim": 38,
+                "square": 52,
+                "actor_role": "q",
+                "victim_role": "b"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 8,
+                "captor_removed": 9,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 33,
+                "target": 24,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 33,
+            "target": 24,
+            "target_role": "n",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": []
+      },
+      {
+        "game_id": "fundamentals-game-09",
+        "ply": 53,
+        "label": "27. Nxe6",
+        "balanced_before_move": false,
+        "research_executor_partial_packet": false,
+        "arms": [
+          {
+            "root_UCI": "d4b3",
+            "captures": [
+              {
+                "offset": 1,
+                "SAN": "Nxf4",
+                "actor": 44,
+                "victim": 29,
+                "square": 29,
+                "actor_role": "n",
+                "victim_role": "b"
+              },
+              {
+                "offset": 2,
+                "SAN": "exf4",
+                "actor": 20,
+                "victim": 44,
+                "square": 29,
+                "actor_role": "p",
+                "victim_role": "n"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 1,
+                "captor_removed": 2,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 44,
+                "target": 29,
+                "contact_after_root": true,
+                "legal_capture_after_root": true,
+                "taken_by_same_attacker": 1,
+                "initial_contact_episode_reaches_capture": true
+              },
+              {
+                "attacker": 44,
+                "target": 27,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          },
+          {
+            "root_UCI": "d4e6",
+            "captures": [
+              {
+                "offset": 0,
+                "SAN": "Nxe6",
+                "actor": 27,
+                "victim": 44,
+                "square": 44,
+                "actor_role": "n",
+                "victim_role": "n"
+              },
+              {
+                "offset": 1,
+                "SAN": "Kxe6",
+                "actor": 52,
+                "victim": 27,
+                "square": 44,
+                "actor_role": "k",
+                "victim_role": "n"
+              }
+            ],
+            "capture_links": [
+              {
+                "loss": 0,
+                "captor_removed": 1,
+                "immediate_same_square": true
+              }
+            ],
+            "different_square_adjacent_capture_candidates": [],
+            "promotions": [],
+            "promotion_captures": [],
+            "initial_contacts": [
+              {
+                "attacker": 44,
+                "target": 29,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              },
+              {
+                "attacker": 44,
+                "target": 27,
+                "contact_after_root": false,
+                "legal_capture_after_root": false,
+                "taken_by_same_attacker": null,
+                "initial_contact_episode_reaches_capture": false
+              }
+            ]
+          }
+        ],
+        "initial_target_capture_differences": [
+          {
+            "attacker": 44,
+            "target": 29,
+            "target_role": "b",
+            "legal_capture_availability_differs": true
+          }
+        ],
+        "initial_multi_target_attackers": [
+          44
+        ]
+      }
+    ]
+  },
+  "omitted_fields": {
+    "results": "Full repetitive per-position machine payload is available in the original archive."
+  },
+  "new_engine_queries": 0,
+  "original_quality_or_success_criteria_changed": false
+}

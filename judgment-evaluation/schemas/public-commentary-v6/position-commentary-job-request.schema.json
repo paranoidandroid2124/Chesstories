@@ -115,7 +115,7 @@
         "version": { "type": "string", "minLength": 1, "maxLength": 128 },
         "source_refs": {
           "type": "array", "maxItems": 64,
-          "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
         }
       }
     },

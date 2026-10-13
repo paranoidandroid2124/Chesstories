@@ -1,0 +1,67 @@
+{
+  "current_run": {
+    "tests": 154,
+    "passed": 149,
+    "failures": [
+      "one observed king constraint discovers the recapture choice and supplements every omitted recapturer(io.chesstory.runtime.LineContinuationJobTest)",
+      "the remaining slot surveys an unobserved support use at the exact recapture peer frontier(io.chesstory.runtime.LineContinuationJobTest)",
+      "a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix(io.chesstory.runtime.LineContinuationJobTest)",
+      "a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture(io.chesstory.runtime.LineContinuationJobTest)",
+      "a supplied support extension is investigated when current premises are absent without washing its provenance(io.chesstory.runtime.LineContinuationJobTest)"
+    ],
+    "log": "target\\relationship-delivery-20261004\\test-run-timingv15.log"
+  },
+  "same_test_class_against_original": {
+    "product": "dutyv4",
+    "current_test_class": "timingv15",
+    "suite": "LineContinuationJobTest",
+    "exit_code": 1,
+    "elapsed_seconds": 133.39,
+    "failures": [
+      "There were 7 failures:",
+      "1) one immediate recovery does not preempt its opponent reply but an observed alternative preserves the choice(io.chesstory.runtime.LineContinuationJobTest)",
+      "2) one observed king constraint discovers the recapture choice and supplements every omitted recapturer(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:100",
+      "3) the remaining slot surveys an unobserved support use at the exact recapture peer frontier(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:152",
+      "4) a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:306",
+      "5) a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:329",
+      "6) a supplied support extension is investigated when current premises are absent without washing its provenance(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:401",
+      "7) an omitted eight-move route class uses one complete pool and never mixes the old representative score(io.chesstory.runtime.LineContinuationJobTest)",
+      "FAILURES!!!",
+      "Tests run: 24,  Failures: 7"
+    ],
+    "purpose": "Baseline comparison of identical test class, not a new engine trial."
+  },
+  "same_test_class_against_first_freeze": {
+    "product": "timingv14",
+    "current_test_class": "timingv15",
+    "suite": "LineContinuationJobTest",
+    "exit_code": 1,
+    "elapsed_seconds": 146.108,
+    "failures": [
+      "There were 6 failures:",
+      "1) one observed king constraint discovers the recapture choice and supplements every omitted recapturer(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:100",
+      "2) the remaining slot surveys an unobserved support use at the exact recapture peer frontier(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:152",
+      "3) a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:306",
+      "4) a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:329",
+      "5) a supplied support extension is investigated when current premises are absent without washing its provenance(io.chesstory.runtime.LineContinuationJobTest)",
+      "munit.ComparisonFailException: chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\LineContinuationJobTest.scala:401",
+      "6) an omitted eight-move route class uses one complete pool and never mixes the old representative score(io.chesstory.runtime.LineContinuationJobTest)",
+      "FAILURES!!!",
+      "Tests run: 24,  Failures: 6"
+    ],
+    "purpose": "Baseline comparison of identical test class, not a new engine trial."
+  },
+  "new_failures_vs_original": [],
+  "new_failures_vs_first_freeze": [],
+  "added_deadline_regression": "Fails against both archived products and passes against timingv15.",
+  "limitation": "Five existing suite expectations still fail. This record does not claim the full Scala test suite is green."
+}

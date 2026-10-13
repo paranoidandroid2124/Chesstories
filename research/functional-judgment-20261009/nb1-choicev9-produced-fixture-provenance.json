@@ -1,0 +1,20 @@
+{
+  "recorded_utc": "2026-10-08T20:03:37.372420+00:00",
+  "scope": "Verbatim actual final public response after all23 native descriptor/report pairs matched choicev9; no engine or diagnostic class override. Decoder still to be independently verified.",
+  "fixture": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\judgment-evaluation\\fixtures\\public-commentary-v6\\functional-choice-v9-completed-value-produced.json.gz",
+  "fixture_sha256": "d037de2bb1cf71e46922a26a79b62d092a7677fc130272c453c58337454f9878",
+  "raw_native_response_sha256": "d037de2bb1cf71e46922a26a79b62d092a7677fc130272c453c58337454f9878",
+  "copied_gzip_bytes_equal": true,
+  "request_fixture": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\judgment-evaluation\\fixtures\\public-commentary-v6\\functional-choice-v9-original-request-produced.json",
+  "request_fixture_sha256": "18d320b1dced16238b18bf8f252658a1316a2efaa97d38af154d347029749102",
+  "request_whole_object_unchanged": true,
+  "source_manifest_sha256": "3d1186c962cc85c279e19c0ecbb903be12ef750626d9cfeac28924a17a33c62c",
+  "source_native_receipts_sha256": "a95d59f710738cafbcbf67f047dac4fd0c578c17d9d5a8e0d76ae77b62a59dce",
+  "actual_replayed_receipts_sha256": "727f58e64384480db3aafdef0b73e6a1154b85c90e8d9d8b880f1dde362f896c",
+  "exact_whole_descriptor_checks_sha256": "ba161764b8bd8971c46db77cc45d8c7f625fcc6b694449a2c638bb3c602ebb72",
+  "actual_basic_export": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\nb1-choicev9-replay-basic.json",
+  "actual_basic_sha256": "67ab0d19d2bf3de3abca8cd7988397a50c129604fc167438633b7daf87356128",
+  "unchanged_full_current_primary": true,
+  "new_engine_queries": 0,
+  "engine_process_started": false
+}

@@ -1,0 +1,1060 @@
+{
+  "schema_version": "human-contract-supplement.v1",
+  "case": "H05",
+  "reviewer": "/root/endgame_human_reading",
+  "purpose": "원래 Ke3 대 이른 g4 판단을 사람에게 충분히 설명하기 위해 필요한 최소 기능 조건을, 이미 완료된 조사와 이론서로 정리한다. 기존 기준을 대체하지 않는 독해 보완이다.",
+  "scope_and_independence": {
+    "original_full_utility_cases": [
+      "NC4",
+      "NB1",
+      "A5",
+      "EXF5"
+    ],
+    "original_full_utility_result": "0/4 unchanged",
+    "H05_membership": "supplemental_quiet_important; 원래 고정 0/4의 구성원이 아니다.",
+    "product_or_test_or_UI_changes": [],
+    "new_engine_queries": 0,
+    "new_NB1_outputs_read": false,
+    "main_implementation_read": false,
+    "source_policy": "현재 작업트리의 기존 H05 연구 기록과 이전 8f44 작업트리의 원래 H05 plan/results만 읽었다. 이전 작업트리에서는 어떤 수정·실행·쓰기에도 관여하지 않았다. 새 합법 재생은 현재 작업트리에서 메모리 안에서 수행했다.",
+    "not_claimed": [
+      "원래 점수 차이의 단독 원인",
+      "모든 후속 방어의 수학적 완전 증명",
+      "연구 h128 영수증을 제품 h16 결과로 사용",
+      "현재 제품 출력이 이 보완을 이미 전달함",
+      "어느 한 PV의 강제성"
+    ]
+  },
+  "fixed_human_question": {
+    "position": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "played": "35.g4",
+    "comparison": "35.Ke3",
+    "question": "흑이 적절히 막을 때, 왜 지금 폰을 전진시키는 것보다 왕을 먼저 준비하며 g폰의 수를 남겨 두는 것이 승리를 유지하는가?",
+    "not_a_sufficient_question": "나중에 Kf4 또는 Kf5가 합법이 되었는가?",
+    "frozen_source": "development-cases.json: cases[id=H05]; h05-original-root-human-precomparison-criteria.json: human_questions Q1-Q7, required_counterexamples C1-C6",
+    "falsifiers_retained": [
+      "이른 g4가 적절한 방어에도 이긴다면 놓친 승리 가설을 버린다.",
+      "Ke3의 승리가 한정 조사에서도 유지되지 않으면 책의 승리 판정을 독립 증명으로 취급하지 않는다.",
+      "다수폰·예비 수·합법 진입 또는 높은 평가값 하나를 원인 설명으로 취급하지 않는다."
+    ]
+  },
+  "book_basis": {
+    "title": "Jesus de la Villa, 100 Endgame Patterns You Must Know",
+    "drive_url": "https://drive.google.com/file/d/1QN_salSDww0E14h6y-WPY8m8cDWzsrwW/view?usp=drivesdk",
+    "verified_local_copy": "G:/내 드라이브/GoodNotes Sync/Chess/100 Endgame Patterns.pdf",
+    "edition": "486쪽 개인 독서판. 아래 독서판/PDF 쪽수와 Source PDF 대응 범위를 구별한다. 원출판본 인쇄 쪽수는 새로 검증하지 않았다.",
+    "pages": [
+      {
+        "reading_page": 58,
+        "source_pdf": "90-92",
+        "anchor": "Pattern 11 Reserve tempi",
+        "lesson": "예비 수는 원하는 순간 상대에게 차례를 넘겨 왕의 역할을 유지하는 자원이다. 소유한 폰 수만으로 유효성을 판단하지 않는다."
+      },
+      {
+        "reading_page": 60,
+        "source_pdf": "94-95",
+        "anchor": "35. Ke3!",
+        "lesson": "이른 g4 뒤 ...f6는 g5 돌파를 억제하고 왕이 f5 진입을 막는다. e5 돌파로도 흑 왕이 퀸사이드에 제때 도착하는 방어를 보여 준다. Ke3 뒤 Kf3는 g3를 남겨 둔다."
+      },
+      {
+        "reading_page": 61,
+        "source_pdf": "96-97",
+        "anchor": "39. Kd2!",
+        "lesson": "왕 우회는 b4에 대한 실질적인 압력을 만들어 흑의 유효한 대기 수를 먼저 쓰게 한다. 준비 없는 cxb4 교환에는 ...c3 돌파가 있다. Ke3로 시작했더라도 Kf4 뒤 g4를 너무 일찍 쓰면 ...b3가 봉쇄를 유지한다."
+      },
+      {
+        "reading_page": 62,
+        "source_pdf": "97-99",
+        "anchor": "43. g4!",
+        "lesson": "준비된 왕을 f4에 둔 채 수를 넘겨 f5를 얻고, e5/fxe5/Kxe5 교환으로 퀸사이드에 침투한다. 흑은 나중에 g폰을 잡지만 백 왕이 흑 폰들을 먼저 잡는다. e폰과 g폰의 영구 생존은 이 전환의 조건이 아니다."
+      }
+    ],
+    "attribution": "책의 수 평가와 변형은 저자의 분석이다. 이 보완의 기능 조건과 최소 코멘트는 그 분석 및 완료 기록에 대한 별도 독해다."
+  },
+  "minimum_functional_prerequisites": [
+    {
+      "id": "F1_adequate_resistance",
+      "required": "원래 두 선택을 각자 적절한 흑 방어 아래에서 읽는다. 이른 g4의 한계는 ...f6가 선택 가능하다는 사실과 그 방어의 실제 기능으로 설명한다.",
+      "why": "이른 g4 뒤 ...Ke6 등의 약한 저항에서는 실제 유효한 진행이 있다. 편리한 같은 응수를 고른 조건부 성공이 원래 판단을 대신할 수 없다.",
+      "already_recorded": "두 원래 child의 all8 완료. Ke3 쪽 ...f6와 ...Ke6는 가까운 최상위 저항군이며, 이른 g4 쪽 ...f6가 한정 조사에서 무승부를 유지했다.",
+      "source": "h05-original-Ke3-all8-completed-human-reading-addendum.json: leading_resistance, comparison_with_earlier_separate_receipts"
+    },
+    {
+      "id": "F2_timing_counterfactual",
+      "required": "Ke3 자체와 g3가 한때 남았다는 사실을 성공으로 세지 않는다. 동일한 Ke3 ...f6 국면에서 지금 g4를 쓰는 선택과 왕을 움직이며 보존하는 선택의 차이를 연결한다.",
+      "why": "즉시 g4는 이른 g4 ...f6 Ke3와 같은 기물 배치·둘 차례를 만들어 여전히 문제를 남긴다. 유효한 시점까지 보존하는 것이 핵심이다.",
+      "already_recorded": "같은 정확한 이력의 Kf3/g4 named comparison이 완료됐다. 수치 차이는 보조 근거이고, ...f6의 g5 억제와 봉쇄를 왕 준비/압력으로 바꾸는 과정이 인간 설명이다.",
+      "source": "h05-original-root-leading-defenses-human-reading.json: same_adequate_f6_defense F1-F4"
+    },
+    {
+      "id": "F3_pressure_not_cycle",
+      "required": "왕의 순환이 왜 유용한지 말해야 한다. 왕을 준비해 b4를 압박하거나 다른 방어 의무를 만들어, 상대가 그대로 봉쇄하며 기다리는 선택을 유지하지 못하게 해야 한다.",
+      "why": "같은 배치로 돌아왔다는 기록이나 ...b3 한 번은 기능의 증명이 아니다. 왕이 준비되기 전의 교환은 ...c3를 허용하며, 준비된 뒤의 교환은 e4를 내주어도 왕 경주를 이길 수 있다.",
+      "already_recorded": "책 p61-62가 준비 전 교환과 Kd2 뒤 교환의 차이를 직접 제시한다. ...Ke6 최상위군의 완료 PV도 Kd2 뒤 퀸사이드 교환/왕 접근을 사용한다.",
+      "source": "book pp61-62; h05-original-Ke3-all8-completed-human-reading-addendum.json: branches[Ke6]"
+    },
+    {
+      "id": "F4_effective_reply_classes",
+      "required": "사용 시점에는 왕 응수뿐 아니라 남은 폰 응수가 무엇을 유지하거나 깨는지 포함한다. 모든 응수가 같은 진입 칸을 허용할 필요는 없다.",
+      "why": "모든 왕 이동이 진입을 허용해도 ...b3가 남으면 왕을 움직일 의무가 없다. 반대로 ...f5가 합법으로 남아도 exf5+와 지원된 통과폰 전환을 허용하면 좋은 예비 수가 될 수 있다.",
+      "already_recorded": "체크 g4+ all5와 조용한 g4 all5가 모두 완료됐지만 서로 다른 정확한 국면이다. 무폰 응수 조건과 체크 조건을 다른 국면에 이식하지 않는다.",
+      "source": "h05-book-and-late-wait-human-criteria.json: cheap_legal_counter_controls; h05-refreshed-quiet-g4-all5-human-reading-addendum.json: functional_conditions"
+    },
+    {
+      "id": "F5_useful_conversion",
+      "required": "합법 진입 뒤 왕이 실제로 어떤 일을 할 수 있는지 연결한다. 중앙 교환 후 퀸사이드 폰 획득, 통과폰 지원, 상대가 따라잡지 못하는 경주 중 해당 방어에서 살아남는 전환을 제시한다.",
+      "why": "Kf4가 합법·비교 가능하다는 사실은 그 수가 원래 선택을 바꿀 만큼 중요한 이유를 설명하지 않는다. Kf4/Kf5를 거치지 않는 Kd2 경로도 유효하면 인정한다.",
+      "already_recorded": "Ke3/...Ke6 PV는 Kf4/Kf5 없이 퀸사이드 교환과 b6 전진을 만든다. 후반 g4+의 ...Ke5/...Kg5는 즉시 Kf4가 불법이지만 다른 왕 접근 뒤 대가 있는 전환을 남긴다.",
+      "source": "h05-original-Ke3-all8-completed-human-reading-addendum.json: root_bounded_utility; h05-retained-pawn-all5-human-reading-addendum.json: functional_invariant"
+    },
+    {
+      "id": "F6_stage_specific_survival_and_price",
+      "required": "현재 기능에 필요한 왕 위치·폰 지원·접근로가 필요한 단계까지 유지됨을 설명하고, 기능을 넘겨받거나 희생하는 시점의 실제 가격을 보존한다.",
+      "why": "e4가 한때 진입을 막거나 지원했다고 영원히 살아야 하는 것은 아니다. g폰 역시 목적을 다한 뒤 잡힐 수 있다. 승격한 원래 폰이 나중에 잡히면 실제로 잃는 기물은 퀸이며, 무료 승격 성공처럼 말하면 안 된다.",
+      "already_recorded": "조용한 g4 왕 응수는 e5/fxe5/Kxe5로 e4를 내주지만 ...f5 응수는 exf5+ 후 그 폰을 살려 승격한다. 다른 완료 경로에서는 g폰 또는 승격한 퀸을 잃고도 다른 폰으로 전환한다.",
+      "source": "h05-refreshed-quiet-g4-all5-human-reading-addendum.json: functional_conditions; h05-original-Ke3-all8-completed-human-reading-addendum.json: branches[f5]"
+    },
+    {
+      "id": "F7_root_connection_without_exclusivity",
+      "required": "보존한 자원이 적절한 저항 아래에서 위 준비·대응·전환을 남기는 반면, 너무 이른 사용은 같은 과제를 회복하지 못하는 이유를 원래 질문으로 돌려준다.",
+      "why": "후반의 완결된 좋은 기능이 원래 차이의 독점 원인이 되는 것은 아니다. 이 원래 수 판단의 한정된 설명과 특정 후반 수의 조건부 효용을 구별한다.",
+      "already_recorded": "완료된 원래 all8, 같은 ...f6 타이밍 대조, 서로 다른 후반 all5는 함께 한정된 근거를 제공한다. 어느 child 수치 하나도 원래 평가값의 원인으로 승격시키지 않는다.",
+      "source": "h05-original-root-human-precomparison-criteria.json: claim_levels; h05-original-Ke3-all8-completed-human-reading-addendum.json: comparison_with_earlier_separate_receipts"
+    }
+  ],
+  "branch_dependent_plan_changes": [
+    {
+      "branch": "원래 이른 g4 뒤 ...f6",
+      "task": "폰 돌파와 왕 진입을 동시에 막는 적절한 방어를 뚫을 수 있는가?",
+      "meaning": "f6폰이 g5를 ...fxg5로 억제하고 흑 왕이 f5 접근을 막는다. e5로 돌파하면 ...fxe5+ 뒤 흑 통과폰/왕 경주라는 대가가 생긴다. 이번에 직접 읽은 all8의 ...f6 PV는 승격 전에 끝나므로 두 퀸 결말을 이 영수증의 결과로 붙이지 않는다.",
+      "minimum_contrast": "Ke3 ...f6 뒤에도 즉시 g4를 쓰면 같은 문제가 생기지만, 왕을 준비하며 남겨 두면 상대 방어를 바꾼 뒤 사용할 수 있다."
+    },
+    {
+      "branch": "원래 Ke3 뒤 ...f6, 중앙 폰이 남은 조용한 g4",
+      "task": "준비된 Kf4/e4를 움직이지 않고 흑에게 응수를 맡긴다.",
+      "meaning": "이 국면의 ...Kf5는 이미 백 Kf4와 e4 때문에 불법이다. g4를 새 금지 효과라고 설명하지 않는다. 왕 응수는 Kf5와 e5/fxe5/Kxe5 전환을 허용하고, ...f5는 exf5+ 및 g폰이 지원하는 통과폰 진행을 허용한다.",
+      "prices": "왕 응수들의 e폰 손실과 ...f5 응수의 e폰 생존은 서로 다른 결과다. 실제 g폰 또는 승격 퀸 손실은 소속 분기를 유지한다."
+    },
+    {
+      "branch": "원래 Ke3 뒤 ...Ke6",
+      "task": "f파일에 집착하지 않고 Kd2로 퀸사이드 교환을 준비한다.",
+      "meaning": "완료 all8의 최상위 저항군 PV는 Kd2, cxb4/cxb4/axb4, Kc2/Kc3, b5/Kxc4로 전환한다. Kf4/Kf5는 한 번도 없다. g4가 나중에 나와도 그것이 이 경로의 필요조건인지는 입증되지 않았다.",
+      "prices": "원래 백 c3폰은 제거되고 원래 a3폰이 b6으로 간다. 뒤의 bxa3는 원래 b2폰이다. 종점 f6폰에 대한 흑 킹 공격을 실행된 포획으로 만들거나 영구 안전으로 취급하지 않는다."
+    },
+    {
+      "branch": "이른 g4 뒤 ...Ke6 또는 첫 ...f5",
+      "task": "원래 실수의 실제 조건부 기능도 인정한다.",
+      "meaning": "...Ke6 뒤에는 f7폰이 아직 f6에 없어 즉시 ...fxg5 방어가 성립하지 않는다. 첫 ...f5/exf5 뒤에는 g4폰의 지원이 Kxf5를 막는 실제 차이도 있다. 이것이 흑이 선택할 수 있는 ...f6 방어를 없애지는 않는다.",
+      "boundary": "특정 방어에 유용하다는 사실과 원래 강한 방어에 대한 수 평가를 구별한다. 모든 응수에서 g4가 나빠야 하는 것은 아니다."
+    },
+    {
+      "branch": "중앙 교환 뒤 늦은 g4+",
+      "task": "체크로 흑 왕을 f5에서 내보내고 응수에 맞춰 왕을 접근시킨다.",
+      "meaning": "all5의 ...Kg5에는 Kg3를, ...Ke5에는 Ke3를 거쳐 Kf4로 간다. 즉시 Kf4가 불법이어도 기능은 실패하지 않는다. 지원 역할이 왕에게 넘어간 뒤 g폰을 내주고 퀸사이드 경주를 이기는 경로가 있다.",
+      "prices": "다섯 반환 경로 모두 원래 g3폰을 ...Kxg5로 잃고, 가장 강한 ...Kg5 경로는 원래 a3도 잃는다. 그 뒤 남은 b/c폰과 왕의 실제 결과가 효용의 내용이다."
+    },
+    {
+      "branch": "...b3 / ...bxa3 / ...bxc3 / 중앙 ...f5",
+      "task": "변한 구조에서 진입과 경주를 다시 평가한다.",
+      "meaning": "...b3는 원래 b4폰을 남기지만 ...bxc3 bxc3는 원래 백 c3를 없애고 b2폰을 c3에 둔다. 첫 ...f5 경로는 원래 e4폰이 f8에서 승격한 뒤 Qd7+ Kxd7로 사라지고 g폰 경주가 남는다. 같은 이름의 칸·동점 숫자·승격 사건만으로 동일한 전환으로 합치지 않는다."
+    }
+  ],
+  "why_prior_legal_entry_and_tempo_narration_failed": [
+    {
+      "failure": "예비 수를 남겼다/같은 배치로 돌아왔다까지만 말했다.",
+      "missing": "왕이 b4 압박을 준비해 왜 흑의 유효한 대기 방어를 바꾸는지, 그 뒤 무엇을 얻는지가 빠졌다.",
+      "record": "h05-basic-v26-human-reading.json: essential_missing; h05-current35-human-reading.json: book_cause_remaining"
+    },
+    {
+      "failure": "Kf4 또는 Kf5의 합법성을 유용함으로 취급하기 쉬웠다.",
+      "missing": "원래 ...Ke6 뒤 Kf4는 두 루트 모두 합법이다. 조용한 후반 g4의 ...Kf5는 이미 불법이다. 새 제어·새 합법성이라는 이름이 실제 차이인지 먼저 구별해야 했다.",
+      "record": "h05-original-root-human-precomparison-criteria.json: C2; h05-refreshed-quiet-g4-all5-human-reading-addendum.json: new_control_vs_existing_illegality"
+    },
+    {
+      "failure": "후반 한 응수의 좋은 child 비교를 원래 실수의 이유로 연결하려 했다.",
+      "missing": "강한 원래 ...f6의 억제 기능, 동일 국면에서 자원을 너무 빨리 다시 쓰는 대조, 도달 단계 사이의 역할 연결이 필요했다.",
+      "record": "h05-direct-human-criterion.json: human_reading_criteria; h05-original-root-leading-defenses-human-reading.json: same_adequate_f6_defense"
+    },
+    {
+      "failure": "기존 후반의 무폰 응수·체크·특정 진입·e4 생존 조건이 새 국면에도 적용될 위험이 있었다.",
+      "missing": "새 국면의 ...f5가 유효한 반론인지, 지원된 통과폰으로 계획을 바꿀 수 있는지, 기능을 언제까지 유지하면 충분한지 구분해야 했다.",
+      "record": "h05-current34-human-reading.json: fixed_human_criteria_reading; h05-current35-human-reading.json: changed_mode; completed quiet/checking all5 addenda"
+    },
+    {
+      "failure": "가격은 본문에 남아도 그 가격이 어느 선택의 어느 조건부 경로인지 불명확했다.",
+      "missing": "즉시-g4 실패의 폰 손실과 Ke3 성공 전환의 희생을 분리하고, 원래 폰의 승격 후 손실까지 실제 역할로 설명해야 했다.",
+      "record": "h05-current35-human-reading.json: necessary_prices_readable_but_scope_unclear; h05-original-Ke3-all8-completed-human-reading-addendum.json: limits_and_prices"
+    }
+  ],
+  "adequate_human_answer_not_a_fixed_template": {
+    "root_level_example_ours": "g4로 폰을 앞으로 밀려는 생각은 자연스럽지만, 흑의 ...f6 뒤에는 g5 돌파와 왕의 진입이 막힙니다. 먼저 Ke3로 왕을 준비하며 g4를 남겨 두면, 퀸사이드 압박으로 흑의 대기 방어를 바꾼 뒤 왕의 좋은 위치를 유지한 채 차례를 넘길 수 있습니다. 이후에는 흑의 응수에 따라 왕으로 들어가거나 지원된 통과폰을 만드는 쪽으로 전환합니다.",
+    "needed_if_reader_asks_why_pressure_matters": "책의 Kd2는 b4 교환을 준비합니다. 왕 준비 전에는 ...c3 돌파가 있어 교환해도 이기지 못하지만, 준비된 뒤에는 흑이 기다리거나 교환을 허용하면 백 왕이 경주에서 앞섭니다.",
+    "needed_if_Ke6_is_the_displayed_defense": "이 방어에는 Kd2로 퀸사이드 교환을 준비하는 것이 중요합니다. f4/f5 진입을 억지로 붙이지 말고, 내 c폰을 교환한 뒤 왕과 바깥쪽 폰이 어떻게 앞서는지 설명해야 합니다.",
+    "sufficiency_reading": "초심자가 지금 g4를 서두르면 무엇이 막히는지, 왕 준비가 상대에게 어떤 결정을 강요하는지, 나중에 남긴 수가 무엇을 가능하게 하는지를 회수하면 된다. 모든8분기와 긴 왕 경로를 기본 본문에 나열하는 것은 요구하지 않는다. 설명에 포함한 희생·체크·돌파의 중요한 가격은 숨기지 않는다.",
+    "attribution": "이 문단은 이번 연구의 한국어 설명 예시다. 제품 출력 또는 저자의 직접 인용이 아니다."
+  },
+  "resolved_by_existing_evidence": [
+    "원래 두 child의 all8 완료가 이제 있으므로 이전 Ke3 시간초과를 현재도 미완료라고 반복할 필요는 없다. 이전 실패 기록 자체는 실패로 보존한다.",
+    "동일 ...f6 국면에서 Kf3/g4를 비교한 타이밍 근거가 이미 있다. 숫자만 다시 얻기 위한 엔진 재실행은 이 보완에 필요하지 않다.",
+    "늦은 체크 g4+와 조용한 g4의 각 all5가 있어, 즉시 진입 불법/합법 폰 응수라는 반론을 단순히 미조사로 남길 단계는 지났다. 단, 서로의 정확한 위치와 가격을 합치지 않는다.",
+    "e4·g폰의 영구 생존, g4 체크, 모든 응수 뒤 즉시 Kf4/Kf5 같은 고정 사건이 보편적 성공 조건이 아니라는 실제 반례가 확보됐다."
+  ],
+  "unresolved_requirements": [
+    {
+      "id": "U1",
+      "requirement": "기본 답이 원래 억제-준비-대응변경-전환의 연결을 전달하는지 독립 판독해야 한다.",
+      "limit": "완료된 연구 근거가 존재한다는 사실이 현재 제품에서 그 의미가 선택·전달됐다는 검증은 아니다. 새 NB1/제품 출력을 보지 않았고 기존0/4는 변경하지 않는다."
+    },
+    {
+      "id": "U2",
+      "requirement": "표시하는 정확한 방어에 맞는 기능·가격을 유지해야 한다.",
+      "limit": "책 ...b3, 제품 ...bxc3, 새로운 ...bxa3, 직접 퀸사이드 교환 및 체크 g4+는 같은 고정 수순이 아니다. 어떤 소스가 바뀌어도 같은 문장으로 자동 승격할 근거는 없다."
+    },
+    {
+      "id": "U3",
+      "requirement": "필요성·유일성·완전 승리 증명 등 더 강한 주장에는 별도 근거가 필요하다.",
+      "limit": "all8/all5는 해당 첫 응수 집합의 완료된 유한 깊이 조사다. 모든 후속 방어가 별도 전수 조사됐다는 뜻은 아니다. 해당 강한 주장이 필요하지 않으면 새 엔진을 요구하지 않는다."
+    },
+    {
+      "id": "U4",
+      "requirement": "Ke3의 모든 성공 경로에서 g4가 꼭 필요하다는 주장은 보류한다.",
+      "limit": "특히 ...Ke6/Kd2 경로의 g4 등장만으로 필요성이 입증되지 않는다. 그 방어의 적절한 과제와 전환을 설명하면 되며 같은 f파일 기제를 강요하지 않는다."
+    },
+    {
+      "id": "U5",
+      "requirement": "과잉 설명과 의미 누락을 따로 판독한다.",
+      "limit": "위 핵심 연결을 얻었다고 모든 중앙 교환·왕 순환·승격을 본문에 확대하지 않는다. 설명을 짧게 했다는 사실만으로 중요한 가격 누락을 성공으로 세지 않는다."
+    }
+  ],
+  "verification": {
+    "new_engine_queries": 0,
+    "read_only_legal_replays": [
+      {
+        "id": "H05-original-after-Ke3-all-eight-black-d24-h128-long40min",
+        "old_results_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\results.json",
+        "profile": "sf18-smallnet-t2-h128-research-v1",
+        "original_prefix_uci": [
+          "f3e3"
+        ],
+        "exact_search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+        "existing_completed_depth": 24,
+        "legal_first_replies_covered": 8,
+        "all_legal_first_replies_covered": true,
+        "rows": [
+          {
+            "first_reply": "f6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 881
+            },
+            "plies": 28,
+            "all_legal": true,
+            "captures": [
+              "fxe5",
+              "Kxe5",
+              "Kxc4",
+              "Kxc5"
+            ],
+            "promotions": [],
+            "final_fen": "7k/8/8/6P1/p1K5/PpP5/1P6/8 b - - 2 49",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Ke6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 890
+            },
+            "plies": 27,
+            "all_legal": true,
+            "captures": [
+              "cxb4",
+              "cxb4",
+              "axb4",
+              "Kxc4",
+              "exf6",
+              "bxa3"
+            ],
+            "promotions": [],
+            "final_fen": "8/5k2/1P3P2/2K5/6P1/P7/8/8 w - - 1 49",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kf6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 956
+            },
+            "plies": 19,
+            "all_legal": true,
+            "captures": [
+              "Kxf7"
+            ],
+            "promotions": [
+              "e8=Q+"
+            ],
+            "final_fen": "4Q3/5K2/8/2p5/ppp3P1/P1P5/1P1k4/8 w - - 1 45",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kd6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 1016
+            },
+            "plies": 27,
+            "all_legal": true,
+            "captures": [
+              "Kxf7",
+              "bxa3",
+              "bxa3"
+            ],
+            "promotions": [],
+            "final_fen": "8/1k6/4PKP1/2p5/p1p5/P1P5/8/8 w - - 1 49",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "bxa3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 1831
+            },
+            "plies": 21,
+            "all_legal": true,
+            "captures": [
+              "bxa3",
+              "bxa3",
+              "Kxf7"
+            ],
+            "promotions": [],
+            "final_fen": "8/3kP3/5K2/2p5/p1p3P1/P1P5/8/8 w - - 1 46",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "bxc3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 1831
+            },
+            "plies": 19,
+            "all_legal": true,
+            "captures": [
+              "bxc3",
+              "bxc3"
+            ],
+            "promotions": [],
+            "final_fen": "8/5p2/4P3/2pk1K2/p1p3P1/P1P5/8/8 w - - 1 45",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "f5",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 2907
+            },
+            "plies": 26,
+            "all_legal": true,
+            "captures": [
+              "exf5",
+              "Kxd7"
+            ],
+            "promotions": [
+              "f8=Q"
+            ],
+            "final_fen": "8/2k5/6P1/2pK4/ppp5/P1P5/1P6/8 b - - 0 48",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "b3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 2907
+            },
+            "plies": 25,
+            "all_legal": true,
+            "captures": [
+              "exf6",
+              "Kxf6",
+              "Kxc4"
+            ],
+            "promotions": [],
+            "final_fen": "8/6P1/8/1Kp5/p3k3/PpP5/1P6/8 w - - 1 48",
+            "actual_checkmate": false
+          }
+        ]
+      },
+      {
+        "id": "H05-original-after-early-g4-all-eight-black-d24-h128",
+        "old_results_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-first-defenses\\results.json",
+        "profile": "sf18-smallnet-t2-h128-research-v1",
+        "original_prefix_uci": [
+          "g3g4"
+        ],
+        "exact_search_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+        "existing_completed_depth": 24,
+        "legal_first_replies_covered": 8,
+        "all_legal_first_replies_covered": true,
+        "rows": [
+          {
+            "first_reply": "f6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 0
+            },
+            "plies": 24,
+            "all_legal": true,
+            "captures": [
+              "fxe5+",
+              "Kxe3"
+            ],
+            "promotions": [],
+            "final_fen": "8/8/5kP1/2p5/p1p5/PpP5/1P1K4/8 b - - 2 47",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "bxc3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 6436
+            },
+            "plies": 24,
+            "all_legal": true,
+            "captures": [
+              "bxc3",
+              "bxc3",
+              "fxe6+",
+              "Kxe6"
+            ],
+            "promotions": [],
+            "final_fen": "7k/8/2K5/2p3P1/p1p5/P1P5/8/8 b - - 4 47",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Ke6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 56,
+            "all_legal": true,
+            "captures": [
+              "fxe6+",
+              "Kxe4",
+              "Kxg6",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [],
+            "final_fen": "8/2k5/8/P7/K7/2P5/1P6/8 b - - 6 63",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kd6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 34,
+            "all_legal": true,
+            "captures": [
+              "fxe6+",
+              "Kxe4"
+            ],
+            "promotions": [],
+            "final_fen": "8/8/4k1P1/2p5/p1p1K3/PpP5/1P6/8 b - - 0 52",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kf6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 46,
+            "all_legal": true,
+            "captures": [
+              "fxe6+",
+              "Kxe6",
+              "Kxg6",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [],
+            "final_fen": "8/3k4/8/P7/8/1KP5/1P6/8 b - - 2 58",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "b3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 25,
+            "all_legal": true,
+            "captures": [
+              "fxe6+",
+              "Kxe4",
+              "Kxg6",
+              "Kxc4"
+            ],
+            "promotions": [],
+            "final_fen": "8/8/8/1K3k2/p1p5/PpP5/1P6/8 w - - 0 48",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "bxa3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 35
+            },
+            "plies": 70,
+            "all_legal": true,
+            "captures": [
+              "bxa3",
+              "bxa3",
+              "fxe6+",
+              "Kxe6",
+              "Kxc5",
+              "Kxc4",
+              "Kxg6",
+              "Kxa4"
+            ],
+            "promotions": [
+              "c8=Q",
+              "a8=Q"
+            ],
+            "final_fen": "Q7/8/8/2K5/8/8/6Qk/8 b - - 6 70",
+            "actual_checkmate": true
+          },
+          {
+            "first_reply": "f5",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 23
+            },
+            "plies": 46,
+            "all_legal": true,
+            "captures": [
+              "gxf5",
+              "Kxf8",
+              "Qxa4",
+              "Kxc5"
+            ],
+            "promotions": [
+              "f8=Q+",
+              "e8=Q"
+            ],
+            "final_fen": "8/Q7/8/k1K5/2p5/PpP5/1P6/8 b - - 2 58",
+            "actual_checkmate": true
+          }
+        ]
+      },
+      {
+        "id": "H05-after-original-Ke3-f6-Kf3-versus-immediate-g4-d24-h128",
+        "old_results_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-same-defense-timing\\results.json",
+        "profile": "sf18-smallnet-t2-h128-research-v1",
+        "original_prefix_uci": [
+          "f3e3",
+          "f7f6"
+        ],
+        "exact_search_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+        "existing_completed_depth": 24,
+        "legal_first_replies_covered": 2,
+        "all_legal_first_replies_covered": false,
+        "rows": [
+          {
+            "first_reply": "Kf3",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 714
+            },
+            "plies": 26,
+            "all_legal": true,
+            "captures": [
+              "exf5",
+              "Kxf5"
+            ],
+            "promotions": [],
+            "final_fen": "6k1/8/8/2p2KP1/p1p5/PpP5/1P6/8 w - - 5 49",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "g4",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 0
+            },
+            "plies": 18,
+            "all_legal": true,
+            "captures": [],
+            "promotions": [],
+            "final_fen": "8/8/5p2/2p1k3/p1p1P1P1/PpP1K3/1P6/8 w - - 10 45",
+            "actual_checkmate": false
+          }
+        ]
+      },
+      {
+        "id": "H05-retained-original-g3-pawn-g4-check-all-five-replies-d24-h128",
+        "old_results_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-retained-pawn-check-replies\\results.json",
+        "profile": "sf18-smallnet-t2-h128-research-v1",
+        "original_prefix_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "e5d6",
+          "e3d2",
+          "b4b3",
+          "d2e3",
+          "d6e5",
+          "e3f3",
+          "f6f5",
+          "e4f5",
+          "e5f5",
+          "g3g4"
+        ],
+        "exact_search_fen": "8/8/8/2p2k2/p1p3P1/PpP2K2/1P6/8 b - - 0 43",
+        "existing_completed_depth": 24,
+        "legal_first_replies_covered": 5,
+        "all_legal_first_replies_covered": true,
+        "rows": [
+          {
+            "first_reply": "Kg5",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 44,
+            "all_legal": true,
+            "captures": [
+              "Kxg5",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3",
+              "Kxa5"
+            ],
+            "promotions": [],
+            "final_fen": "8/2k5/8/2P5/1P1K4/8/8/8 b - - 4 65",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Ke5",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 29
+            },
+            "plies": 58,
+            "all_legal": true,
+            "captures": [
+              "Kxg5",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [
+              "a8=Q+"
+            ],
+            "final_fen": "8/8/5KQk/1P6/2P5/8/8/8 b - - 6 72",
+            "actual_checkmate": true
+          },
+          {
+            "first_reply": "Kg6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 28
+            },
+            "plies": 56,
+            "all_legal": true,
+            "captures": [
+              "Kxg5",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [
+              "a8=Q+"
+            ],
+            "final_fen": "8/8/5KQk/1P6/2P5/8/8/8 b - - 6 71",
+            "actual_checkmate": true
+          },
+          {
+            "first_reply": "Ke6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 28
+            },
+            "plies": 56,
+            "all_legal": true,
+            "captures": [
+              "Kxg5",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [
+              "a8=Q+"
+            ],
+            "final_fen": "8/8/5KQk/1P6/2P5/8/8/8 b - - 6 71",
+            "actual_checkmate": true
+          },
+          {
+            "first_reply": "Kf6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 27
+            },
+            "plies": 54,
+            "all_legal": true,
+            "captures": [
+              "Kxg5",
+              "Kxc4",
+              "Kxa4",
+              "Kxc4",
+              "Kxb3"
+            ],
+            "promotions": [
+              "a8=Q+"
+            ],
+            "final_fen": "8/8/5KQk/1P6/2P5/8/8/8 b - - 6 70",
+            "actual_checkmate": true
+          }
+        ]
+      },
+      {
+        "id": "H05-refreshed-original-f6-quiet-g4-all-five-replies-d24-h128",
+        "old_results_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\results.json",
+        "profile": "sf18-smallnet-t2-h128-research-v1",
+        "original_prefix_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "b4b3",
+          "e3f3",
+          "e5d6",
+          "f3f4",
+          "d6e6",
+          "g3g4"
+        ],
+        "exact_search_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 41",
+        "existing_completed_depth": 24,
+        "legal_first_replies_covered": 5,
+        "all_legal_first_replies_covered": true,
+        "rows": [
+          {
+            "first_reply": "Ke7",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 34,
+            "all_legal": true,
+            "captures": [
+              "fxe5",
+              "Kxe5",
+              "Kxc5",
+              "Kxc4",
+              "Kxa4",
+              "Kxg7",
+              "Kxb3"
+            ],
+            "promotions": [],
+            "final_fen": "8/5k2/8/P7/2K5/2P5/1P6/8 b - - 0 58",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kd6",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 26,
+            "all_legal": true,
+            "captures": [
+              "fxe5",
+              "Kxe5",
+              "Kxc5",
+              "Kxc4",
+              "Kxg4",
+              "Kxa4"
+            ],
+            "promotions": [],
+            "final_fen": "8/8/8/1K2k3/8/PpP5/1P6/8 b - - 2 54",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kd7",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "cp",
+              "value": 8115
+            },
+            "plies": 28,
+            "all_legal": true,
+            "captures": [
+              "fxe5",
+              "Kxe5",
+              "Kxc5",
+              "Kxc4",
+              "Kxg4",
+              "Kxa4",
+              "Kxb3"
+            ],
+            "promotions": [],
+            "final_fen": "8/7k/8/8/P1K5/2P5/1P6/8 b - - 2 55",
+            "actual_checkmate": false
+          },
+          {
+            "first_reply": "Kf7",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 29
+            },
+            "plies": 58,
+            "all_legal": true,
+            "captures": [
+              "fxe5",
+              "Kxe5",
+              "Kxc5",
+              "Kxc4",
+              "Kxa4",
+              "Kxb3",
+              "Kxg8"
+            ],
+            "promotions": [
+              "g8=Q+",
+              "b8=Q",
+              "a8=Q"
+            ],
+            "final_fen": "6Q1/7k/8/2K3Q1/8/2P5/8/8 b - - 4 70",
+            "actual_checkmate": true
+          },
+          {
+            "first_reply": "f5",
+            "depth": 24,
+            "existing_reported_white_score": {
+              "kind": "mate",
+              "value": 15
+            },
+            "plies": 30,
+            "all_legal": true,
+            "captures": [
+              "exf5+"
+            ],
+            "promotions": [
+              "g8=Q+",
+              "f8=Q"
+            ],
+            "final_fen": "QQ6/8/1k2K3/2p5/p1p5/PpP5/1P6/8 b - - 4 56",
+            "actual_checkmate": true
+          }
+        ]
+      }
+    ],
+    "historical_failed_attempts_read": [
+      {
+        "id": "H05-original-after-Ke3-all-eight-black-d24-h128",
+        "outcome": "executor_failed",
+        "elapsed_ms": 1200105,
+        "historical_failure_preserved": true
+      }
+    ],
+    "completed_jobs_read": 5,
+    "completed_returned_lines_replayed": 28,
+    "completed_suffix_plies_replayed": 1005,
+    "published_source_hashes_matched": [
+      "target/meaning-conditions-20261008/h05-original-Ke3-all8-long40min/plan.json",
+      "target/meaning-conditions-20261008/h05-original-Ke3-all8-long40min/results.json",
+      "target/meaning-conditions-20261008/h05-original-first-defenses/plan.json",
+      "target/meaning-conditions-20261008/h05-original-first-defenses/results.json",
+      "target/meaning-conditions-20261008/h05-same-defense-timing/plan.json",
+      "target/meaning-conditions-20261008/h05-same-defense-timing/results.json",
+      "target/meaning-conditions-20261008/h05-retained-pawn-check-replies/plan.json",
+      "target/meaning-conditions-20261008/h05-retained-pawn-check-replies/results.json",
+      "target/meaning-conditions-20261008/h05-refreshed-quiet-g4-all5/results.json"
+    ],
+    "all_read_sources_unchanged_before_after": true,
+    "numeric_limit": "원래 결과와 새 child 결과의 점수는 다른 위치/깊이 horizon의 유한 평가다. 수치 차이를 인간 설명의 단독 원인 또는 제품 평가 갱신으로 사용하지 않았다.",
+    "legal_replay_limit": "합법 재생은 완료 영수증의 물리적 수순/포획/승격 확인이다. 엔진을 다시 실행하지 않았고 수치 자체를 새로 증명하지 않았다.",
+    "source_book_page62_visually_inspected": true
+  },
+  "source_manifest": [
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\development-cases.json",
+      "sha256": "f16489e57ffa8af8f10fb8c8755c31acf2d666dbb0e6dc9d82ae68573d153929",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-direct-human-criterion.json",
+      "sha256": "be0e46d787de9187f2949e249d611c4c9c256323add8bcb54061705f2871ca57",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-leading-defenses-human-reading.json",
+      "sha256": "a34e15cea60bf3730d919145aa60ecd42dd6756c6a9ea0e8b479e23de578a054",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-Ke3-all8-completed-human-reading-addendum.json",
+      "sha256": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min-final-independent-addendum.json",
+      "sha256": "6bc1240319113b06f9b7539ecc1e6bd2249c201c37bdda1efa8bca805d7cd10a",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-first-defenses-final-independent-audit.json",
+      "sha256": "60cb68b013492167e2bd3c8055ed2293157b58cd6675825109f4c2c729a5c28e",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-completed-inventory-theory-audit.json",
+      "sha256": "3ee93c5c9612eef6d11f4a6723273ecb863e6df45ac2ce210f478c27bacd2afa",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-retained-pawn-all5-human-reading-addendum.json",
+      "sha256": "15f0ff25fa48994b306c53fbd9ab56971e42d6cb4e99341e2b2f59aed7cd2455",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5-human-reading-addendum.json",
+      "sha256": "9433e3f1198a214e6c021b771ce783a571baf398d2541cd42b5538e9f2164d5b",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-basic-v26-human-reading.json",
+      "sha256": "d297bf99627d1425a44a16697936bd93fbcce41e818af0981f35e6d4f099e7dc",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-current34-human-reading.json",
+      "sha256": "ce773fbbbf2e36435451543568045a4966490a26fac6822b7789fcb8016ccd14",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-current35-human-reading.json",
+      "sha256": "a13e604abf2c709556319c133bbe412aacd3718eff281a9fab9f7e7b0dbcc4c9",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\final-medium-goal-outcome.json",
+      "sha256": "13c2f2abcd0ee42a8b90e26570605c20464099415b214ac7ee5575f53c8378e2",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\plan.json",
+      "sha256": "bd9d0466af6df94c4273370556543dfa663264b9a8593a850835437a706577b2",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\results.json",
+      "sha256": "559d8073afe452b3ea1e1e276febe6ef5bfab965ea3e471cd262e238cabde1ac",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-first-defenses\\plan.json",
+      "sha256": "e226a6f60ec44358d56632f888ce97a755ad3d0938c96cc5c1036c5f3c848195",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-first-defenses\\results.json",
+      "sha256": "9f75c140deaef68e0e9a19d8f8782f67c109040c2eac250932d760252f79c0d4",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-same-defense-timing\\plan.json",
+      "sha256": "fca44dbfab2772a56fd5e7fd307aa33ddcba9dfc6d7ab4cb010c55655b24a834",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-same-defense-timing\\results.json",
+      "sha256": "48281af483317bbd79c99a12a767bb85b4193751e937377cd56078f1a47e8d98",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-retained-pawn-check-replies\\plan.json",
+      "sha256": "9c21153e348384daff02a3b50e207633d816bfea4b63bba57f3acbdbbb07719c",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-retained-pawn-check-replies\\results.json",
+      "sha256": "93798a8d14c0324aa255d549931d12058bb430d86369b77065f72ebba3065df7",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\plan.json",
+      "sha256": "6eab46607dfd700dcebace2f5e0f187f15262c6c6dff49969d5dec1e2710974f",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\results.json",
+      "sha256": "d0592c6a9adf01528e02ecbc84139d2a6fdef2966032b6ad5cde79a93310c319",
+      "read_only": true
+    },
+    {
+      "absolute_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\100 Endgame Patterns.pdf",
+      "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3",
+      "read_only": true
+    },
+    {
+      "absolute_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-original-chess-criteria\\source-book-p62.png",
+      "sha256": "1e116551128ad55b1a43f03078ebb2e98c2d9e422fab5e5025805daa9130e60e",
+      "read_only": true,
+      "use": "page62 visually inspected; matches previously recorded image hash"
+    }
+  ],
+  "created_utc": "2026-10-08T18:50:47.374735+00:00"
+}

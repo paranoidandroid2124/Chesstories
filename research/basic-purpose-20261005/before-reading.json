@@ -1,0 +1,30 @@
+{
+  "assessment": "초기 동결 기준에 대한 같은 연구자의 판독. 독립 사용자 품질 평가 아님.",
+  "groups": {
+    "adequate_before": [
+      "B01",
+      "B06",
+      "B12",
+      "B13"
+    ],
+    "missing_basic_role": [
+      "B02",
+      "B03",
+      "B04",
+      "B05"
+    ],
+    "price_or_dependency_retained_before": [
+      "B07",
+      "B09",
+      "B10"
+    ],
+    "overextended_and_missing_check": [
+      "B08"
+    ],
+    "transport_limitation": [
+      "B11"
+    ]
+  },
+  "terminal_note": "B11은 유한 메이트 수순에 교육용 중립 점수를 넣은 개발 입력에서 root comparison이 발급되지 않았다. 별도 정상 작업 경로 또는 직접 인증 답으로 확인해야 하며 성공으로 세지 않는다.",
+  "B08": "초기 포획, Nxf7 및 Kxf7는 보였으나 Qf3+가 기본 본문에서 빠졌다. 독립된 h7 지원 차이가 남았다."
+}

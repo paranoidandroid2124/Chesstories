@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T21:23:41.307074+00:00",
+  "phase": "Independent held10b resume180 BASIC-only first reading, sealed before opening current10b native/evidence/Task audit",
+  "input": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-resume180-basic.json",
+    "sha256": "883ce7e1907311a352a1402ae6a01e2ed6806c07999a069bba22ef7e7ae13992",
+    "exported_source_sha256": "2a341fab7cb7cb83c62893c99f9aafc8ec201772d19f1aaef387a37a61999c49",
+    "case_id": "H05",
+    "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "g3g4",
+      "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+    },
+    "verdict": {
+      "kind": "move_verdict",
+      "comparison_evidence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:candidate-comparison:59634c0d64ea1adc65ef89b82a04186236a375e759b2dd6a97a159227f590024",
+      "verdict_code": "blunder",
+      "verdict_confidence": "engine_backed",
+      "mover": "white",
+      "delta": {
+        "candidate_win_percent_delta_for_mover": -20.06847027264081,
+        "kind": "engine_evaluation"
+      }
+    },
+    "text": "g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance.",
+    "text_sha256": "a7fe2259e61ba87cfc467683e233aec1f62115933cf6091c826893ef9a59c6a9",
+    "text_characters": 317,
+    "default_question": "investigated_mechanism"
+  },
+  "unchanged_frozen_criteria": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-functional-root-value-human-contract-supplement-20261009.json",
+      "sha256": "194934ce44a158d83356246d32be3257133f56bc032c3dbb83f86a62dde2ab30",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+      "changed": false
+    }
+  ],
+  "presealed_reasoning_supplement": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+    "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94",
+    "role": "Additional reasoning under the old contract, fixed before reading this10b output. It does not revise acceptance or score."
+  },
+  "preserved_prior_firstpasses": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-choicev9-fresh180-human-firstpass.json",
+      "sha256": "967986b8479ff8dc614caeb09a4d7f2ce3508ebaf8b22360943b60e1bb577238",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-human-firstpass.json",
+      "sha256": "b1259299b8113581025be17d24f6bfbc3685fbfe539d0e01ed692686862afc82",
+      "changed": false
+    }
+  ],
+  "visible_10a_to_10b": {
+    "prior_basic": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-basic.json",
+      "sha256": "342687a5a837b76bf85ad3a6ffd3a8d0ec74b74c10571519839ece3dd89bfe29"
+    },
+    "prose_byte_identical": true,
+    "question_identical": true,
+    "10a_fen_and_verdict_were_missing": true,
+    "10b_root_fen_and_verdict_visible": true,
+    "new_numeric_label": "blunder",
+    "reported_delta": {
+      "candidate_win_percent_delta_for_mover": -20.06847027264081,
+      "kind": "engine_evaluation"
+    },
+    "numeric_accuracy_independently_checked": false,
+    "meaning": "Recoverable current root metadata and an explicit numerical verdict are additional visible information; the human explanation remains exactly the same317-character text."
+  },
+  "human_status": {
+    "limited_retained_tempo_purpose": "delivered",
+    "tested_Kf3_over_immediate_g4_after_f6": "delivered with tested scope",
+    "recorded_cycle_turn_transfer": "delivered with recorded scope",
+    "adequate_f6_defense_function_and_price": "not_explained",
+    "why_opponent_must_change_viable_defense": "not_explained",
+    "response_sensitive_useful_conversion": "not_explained",
+    "original_g4_vs_Ke3_judgment": "partial",
+    "whole_human_question": "partial",
+    "sole_root_numerical_cause": "unestablished and not explicitly claimed"
+  },
+  "recoverable": "Ke3 retains a pawn move; after the named f6 response, tested Kf3 evaluates above spending g4; a recorded king manoeuvre restores placement with Black to move and Pg3 retained.",
+  "minimum_connections_missing": [
+    "Why f6 is an adequate defense: the relevant blockade and the g5 capture price or equivalent current task.",
+    "Why king preparation creates meaningful pressure or an obligation for the opponent, instead of merely exhibiting a placement cycle.",
+    "What useful entry, exchange, supported passer or race the retained move secures after adequate resistance.",
+    "How another Ke6 defense changes the appropriate plan, including when a Kd2 queenside route or a different king approach is adequate.",
+    "How the checked conditional function contributes to the original g4-versus-Ke3 judgment while preserving necessary conversion price."
+  ],
+  "price_requirement_boundary": "No concrete conversion is described, so this pass does not require every book pawn sacrifice. It requires the consequential price of whatever progress is asserted; the missing functional step cannot be replaced by the blunder label.",
+  "unnecessary_explanation": "No broad relation list or severe verbosity. The five-move recorded cycle is relevant as a limited witness; its repetition or extension would not on its own justify useful progress.",
+  "explicit_unsupported_causal_claim_count": 0,
+  "explicit_forced_or_unique_win_claim_count": 0,
+  "interpretation_risk": "With the new blunder label, a reader may attribute the full root loss to a recorded cycle and retained pawn despite the missing adequate defense/conversion connection. The body says recorded/tested, so this is an incompleteness risk rather than an explicit all-defense or sole-cause statement.",
+  "internal_evidence_boundary": "No current10b native response, ownership/Task/depth/completion audit or new engine result was read before this seal. The separately inspected10a audit only explains the previous attempt and cannot fill this text. Run completion, resumed transport and current verdict presence are not human-utility proof.",
+  "honest_gain": "The displayed root metadata/number is now available, but there is no new user-visible explanatory gain over10a because the prose and question are identical. The gain over the much earlier no-material-change fallback remains the limited timing mechanism.",
+  "preserved_results": {
+    "old_four_full_utility": "0/4 unchanged; H05 supplemental",
+    "eight_source_full_utility": "0/8 unchanged",
+    "priorH05": "Earlier first passes and the three criterion files unchanged",
+    "new10b": "Separate exposed development result, same partial original human answer"
+  },
+  "work_scope": "New research record only. No source/main/test/UI/runner edits, compiler or engine. Only new BASIC export, prior BASIC files and fixed criteria/reasoning memo were used at this stage.",
+  "next_phase": "A separate evidence supplement may establish which response-sensitive values/prices now completed, and which remain unproved or absent from prose. Preserve this first pass."
+}

@@ -1,0 +1,196 @@
+{
+  "scope": "Exact recorded capture occurrences versus basic typed price/proof ownership; not an all-PV narration requirement.",
+  "method": "Physical victims and capturers are read from source paths. Covered price ownership, inline SAN visibility and proof ownership are separate. Missing price is not inferred from an absent SAN alone.",
+  "findings": [
+    {
+      "game_id": "wch2016-09",
+      "arm": "reference",
+      "source_index": 17,
+      "san": "Rxd5",
+      "uci": "d8d5",
+      "original_victim": "True:queen:d1",
+      "original_capturer": "False:rook:b8",
+      "reference": {
+        "line_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114",
+        "occurrence_id": "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:transition:b327ada4dfb316f6c0d666eeecf34b64fe8e90ab0a1d4d051b8fd5c23433ddb9"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2016-11",
+      "arm": "candidate",
+      "source_index": 1,
+      "san": "dxc3",
+      "uci": "d4c3",
+      "original_victim": "True:pawn:c3",
+      "original_capturer": "False:pawn:d4",
+      "reference": {
+        "line_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff",
+        "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2016-12",
+      "arm": "candidate",
+      "source_index": 8,
+      "san": "dxc4",
+      "uci": "d5c4",
+      "original_victim": "True:pawn:c3",
+      "original_capturer": "False:pawn:d5",
+      "reference": {
+        "line_id": "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:c9b5aba878188e30591c124092400c76d87509925fe1ecf5e1e9e3f85b507dbc",
+        "occurrence_id": "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:evidence:transition:a1080a1704a61631298ab8a587f9122e567af11efb84979b73153ad1f77198d5"
+      },
+      "diagnostic_class": "scope_sensitive",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "candidates2018-08",
+      "arm": "candidate",
+      "source_index": 6,
+      "san": "Qxd4",
+      "uci": "f6d4",
+      "original_victim": "True:pawn:d4",
+      "original_capturer": "False:queen:f6",
+      "reference": {
+        "line_id": "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:739cb8ae71825e298a72e8fdfcc849bfc01ecd8e4e74b31565e5773b1e150c86",
+        "occurrence_id": "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:evidence:transition:400d6a6b8338d76405ebc79e830aa1c0e5382f13d26e654332d8c076c7160001"
+      },
+      "diagnostic_class": "scope_sensitive",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "candidates2018-09",
+      "arm": "reference",
+      "source_index": 19,
+      "san": "Qxb2",
+      "uci": "e5b2",
+      "original_victim": "True:pawn:b2",
+      "original_capturer": "False:queen:e7",
+      "reference": {
+        "line_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+        "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "candidates2018-10",
+      "arm": "reference",
+      "source_index": 14,
+      "san": "Raxb8",
+      "uci": "a8b8",
+      "original_victim": "True:knight:c6",
+      "original_capturer": "False:rook:a8",
+      "reference": {
+        "line_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100",
+        "occurrence_id": "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:transition:4b333b4b1b1d72001e604ee03bde0e0eeccd270bffb69d3c21b3fe5a4e68789c"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2024-09",
+      "arm": "reference",
+      "source_index": 3,
+      "san": "Qxb6",
+      "uci": "a7b6",
+      "original_victim": "True:knight:b6",
+      "original_capturer": "False:queen:a7",
+      "reference": {
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:23aa5c79157b19c70ab315b7675e0698fe9af883c5d456ae22153a43790a4807",
+        "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:dbef1ee53bd657f31bb4bf189ce4f79933dd125022c00308b6607511092dea0d"
+      },
+      "diagnostic_class": "complete_noninline",
+      "core_covered": true,
+      "core_proof": true,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2024-09",
+      "arm": "candidate",
+      "source_index": 3,
+      "san": "Qxb6",
+      "uci": "a7b6",
+      "original_victim": "True:knight:b6",
+      "original_capturer": "False:queen:a7",
+      "reference": {
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:91317ddd01ffe99d72c154dff5d0e091ca4c0c95edcb45e5d19bd8b27cae0273",
+        "occurrence_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:transition:f4d91ba9eed1e456fb988bf9877216c4fe227a06ab93db488e2932cd737068c4"
+      },
+      "diagnostic_class": "complete_noninline",
+      "core_covered": true,
+      "core_proof": true,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2024-12",
+      "arm": "candidate",
+      "source_index": 13,
+      "san": "Rxd7",
+      "uci": "d1d7",
+      "original_victim": "False:queen:d8",
+      "original_capturer": "True:rook:d1",
+      "reference": {
+        "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+        "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:af0d1efc539a47397f90c5ae25f6f6eaebf1ab13221244226df1631197d0ef93"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    },
+    {
+      "game_id": "wch2024-12",
+      "arm": "candidate",
+      "source_index": 16,
+      "san": "Bxd7",
+      "uci": "f5d7",
+      "original_victim": "True:rook:d1",
+      "original_capturer": "False:bishop:g6",
+      "reference": {
+        "line_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125",
+        "occurrence_id": "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:transition:a9bfe3988af8cc7aa78f82017728ffb99cac97dfdf762cee0cf3d3c2b008718d"
+      },
+      "diagnostic_class": "high",
+      "core_covered": false,
+      "core_proof": false,
+      "core_inline": false,
+      "detail_covered": true,
+      "detail_proof": true
+    }
+  ]
+}

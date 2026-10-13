@@ -1,0 +1,317 @@
+{
+  "reg2024replay43": {
+    "text": "Compare what happens to the white pawn originally on c5 in the recorded Qd3 and Qb5 lines. The recorded continuation is Qd3. With Bxc5, the black bishop originally on e7 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that bishop. After Rc6, the white rook originally on c1 is still present on c6. After Qb5, White's queen on b5 adds support to White's pawn on c5, which is under attack from Black's bishop on e7. The recorded continuation is g6. With Rxc5, the black rook originally on a6 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that rook; with Bxc5, the black bishop originally on e7 recaptures that rook. With Bxb6, the black bishop originally on e7 captures the white knight originally on b6. After Ba5, the black bishop originally on e7 is still present on a5. In the Qd3 line: After Ra6, Black's rook on a6 now targets White's rook on a1. Rxc5 clears c1; Rc1 later occupies that square in this line. Rc1 moves the rook out of the attack from Black's rook on a6. Qd3 clears b1; later Rc1 passes through that square in this line. After Qd3, White's queen on d3 does not support White's knight on b6; after Qb5, White's queen on b5 supports White's knight on b6. After Qd3, White's queen on d3 now targets Black's rook on a6. Raxb6 moves the rook out of the attack from White's queen on d3. With Raxb6, the black rook originally on a6 captures the white knight originally on b6; with Rxa1, the white rook originally on d1 captures that rook; with Qxa1+, the black queen originally on a7 recaptures that rook. The recorded continuation is Kg2. Qd3 clears b1; later Rxa1 passes through that square in this line. After Rxa1, White's rook on a1 now targets Black's queen on a7. After e4, White's bishop on f3 now targets Black's queen on d1. Qd8 moves the queen out of the attack from White's bishop on f3. After Qxa1+, the black queen originally on a7 is still present on a1. In the provided Rxa1 line: Qxa1+ gives check to the White king on g1 with Black's queen on a1; Kg2 moves the king to g2. After Rc6, the black queen originally on a7 is still present on d8.",
+    "question": "selected_comparison",
+    "priced": [
+      {
+        "moves": [
+          "b1d3",
+          "e7c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5",
+          "f4f6",
+          "c5b6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6",
+          "d3c3",
+          "b8f8",
+          "d1a1",
+          "b6a6",
+          "a1c1",
+          "a6a3",
+          "c3b2",
+          "a3a2",
+          "b2b4",
+          "a2a1",
+          "c1a1"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6",
+          "d3c3",
+          "b8f8",
+          "d1a1",
+          "b6a6",
+          "a1c1",
+          "a6a3",
+          "c3b2",
+          "a3a2",
+          "b2b4",
+          "a2a1",
+          "c1a1",
+          "a7a1"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6",
+          "d3c3",
+          "b8f8",
+          "d1a1",
+          "b6a6",
+          "a1c1",
+          "a6a3",
+          "c3b2",
+          "a3a2",
+          "b2b4",
+          "a2a1",
+          "c1a1"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6",
+          "d3c3",
+          "b8f8",
+          "d1a1",
+          "b6a6",
+          "a1c1",
+          "a6a3",
+          "c3b2",
+          "a3a2",
+          "b2b4",
+          "a2a1",
+          "c1a1",
+          "a7a1"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0368221fb6835e9af480a18818c94aba8ce5f0c898e9b8874460c8d30d6e6b04"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5",
+          "f4f6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5",
+          "f4f6",
+          "c5b6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:81fa0e9f0baf305716acc540397d51b1c3293da995da273495af1a897a886b47"
+      }
+    ]
+  },
+  "criticalreg2024complete": {
+    "text": "Qd3 attacks the a6-rook. Raxb6 moves that rook out of the attack. That rook remains at the end of the line. In the Qb5 line: After Ra5, White's queen on c3 now targets Black's rook on a5. Qxc5 clears b5; Rb5 later occupies that square in this line. Rb5 moves the rook out of the attack from White's queen on c3. Qb5 attacks the a6-rook. Rb5 moves that rook out of the attack. That rook remains at the end of the line. In the Qd3 line: Raxb6 captures the white knight on b6. In the Qb5 line: Bxc5 captures the white pawn on c5. Qxc5 recaptures the black bishop on c5.",
+    "question": "selected_target_response",
+    "priced": [
+      {
+        "moves": [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:0199f6eb9d4730258c60710cac5bbf46b6065b276196f103c2423a0031d5b27d"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "e7c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:cebd737f26b4f28f7005c94beca36bcfa52aa6d0bd55c67545177363f9099492"
+      },
+      {
+        "moves": [
+          "b1b5",
+          "e7c5",
+          "b5c5"
+        ],
+        "role": "cost",
+        "line_id": "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:cebd737f26b4f28f7005c94beca36bcfa52aa6d0bd55c67545177363f9099492"
+      }
+    ]
+  },
+  "lost_on_retained_paths": [
+    [
+      "b1d3",
+      "e7c5",
+      "c1c5"
+    ],
+    [
+      "b1d3",
+      "e7c5"
+    ]
+  ]
+}

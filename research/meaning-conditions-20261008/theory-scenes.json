@@ -1,0 +1,2501 @@
+{
+  "fixed_utc": "2026-10-07T20:22:57.179269+00:00",
+  "method": {
+    "new_product_outputs_seen": false,
+    "new_engine_outputs_seen": false,
+    "source": "G드라이브 두 PDF 본문과 도표. 과거 여섯 사례 파일은 국면 정체성만 참고했으며 제품 출력은 읽지 않음.",
+    "extent": "선택 장면의 깊은 독해, 완독이 아님. 저자 판단은 외부 증명이나 현대 엔진 최선 판정과 구분.",
+    "reading_text_pages": {
+      "supergm": [
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        324,
+        325,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        332,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536
+      ],
+      "swindler": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ]
+    },
+    "diagrams_visually_checked": {
+      "supergm": [
+        47,
+        146,
+        149,
+        153,
+        324,
+        531
+      ],
+      "swindler": [
+        25,
+        26,
+        39
+      ]
+    },
+    "rendering": "Poppler pdftoppm, scale-to 1600, 본인 연구 기록만 수정.",
+    "fen_warning": "도표에서 얻은 국면은 기물/차례/권리를 정확히 읽되 미제공 실제 앞 이력은 복원했다고 주장하지 않는다. 복원 가능한 책의 전체/부분 이력은 각 항목에 따로 기록."
+  },
+  "books": [
+    {
+      "id": "supergm",
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "bytes": 60589424,
+      "modified_utc": "2026-10-06T16:54:48.661000+00:00",
+      "pages": 603,
+      "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+      "metadata": {
+        "format": "PDF 1.4",
+        "title": "Think Like a Super-GM · Personal Reading Edition",
+        "author": "Michael Adams and Philip Hurtado",
+        "subject": "(unspecified)",
+        "keywords": "",
+        "creator": "(unspecified)",
+        "producer": "ReportLab PDF Library - (opensource)",
+        "creationDate": "D:20261007015424+09'00'",
+        "modDate": "D:20261007015424+09'00'",
+        "trapped": "",
+        "encryption": null
+      }
+    },
+    {
+      "id": "swindler",
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\The Complete Chess Swindler - Reading Edition.pdf",
+      "bytes": 12165027,
+      "modified_utc": "2026-10-07T12:52:58.176000+00:00",
+      "pages": 446,
+      "sha256": "ce6e06704a6c4479d8e97fe0d30b088e9d63d6f35fab2694ee94a0d9b93def17",
+      "metadata": {
+        "format": "PDF 1.4",
+        "title": "The Complete Chess Swindler · Personal Reading Edition",
+        "author": "David Smerdon",
+        "subject": "(unspecified)",
+        "keywords": "",
+        "creator": "(unspecified)",
+        "producer": "ReportLab PDF Library - (opensource)",
+        "creationDate": "D:20261007214214+09'00'",
+        "modDate": "D:20261007214214+09'00'",
+        "trapped": "",
+        "encryption": null
+      }
+    }
+  ],
+  "existing_scenes_deepened": [
+    {
+      "id": "SG02",
+      "book": "supergm",
+      "pdf_pages": [
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "fen": "2r3k1/1p3rp1/2p4p/1p1b2q1/1Q1P4/P4PB1/1P4PP/2RR2K1 b - - 0 1",
+      "played_san": "Rxf3",
+      "played_uci": "f7f3",
+      "source_game": "N.N. - Philip Hurtado, internet blitz 2019",
+      "source_pdf_pages": "53-61",
+      "fen_provenance": "도표 47을 직접 확인. 최초 수순·실제 반수시계는 제공되지 않아 0 1로 정규화.",
+      "author_judgment": "Rxf3가 가장 강한 선택이지만 Qd2! 뒤 최소한의 이점/압박. 정확한 큰 기물 교환으로 거의 무승부에 이르며 강제 승리가 아님.",
+      "human_question": "왜 비숍이 아닌 룩으로 f3를 잡아야 하며, 상대가 희생을 거절하면 그 선택에서 무엇이 남는가?",
+      "core_function": [
+        "d5 비숍을 남겨 백 왕 주변 밝은 칸을 통제한다. d4 백 폰 때문에 그 비숍을 쉽게 몰아내지 못한다.",
+        "현재 백의 퀸과 룩이 퀸사이드에 치우친 시간을 이용한다. 백이 퀸을 수비로 되돌린 뒤에는 같은 공격 결론을 유지하면 안 된다.",
+        "즉시 gxf3는 Qe3+ 뒤 체크/밝은 칸 공격을 허용한다. 룩 포획 자체는 강제가 아니다.",
+        "Qd2가 Qe3+를 막고 퀸 교환을 요구한다. 이어 Rc3로 큰 기물 교환을 추진하면 공격 기대를 제한된 압박으로 수정해야 한다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Rxf3",
+          "move": "Qd2",
+          "uci": "b4d2",
+          "why": "저자가 찾은 가장 중요한 거절. 승리 주장을 제한된 이점으로 바꾼다."
+        },
+        {
+          "root_after": "Rxf3 Qd2 Re3",
+          "move": "Rc3",
+          "uci": "c1c3",
+          "why": "큰 기물 교환을 피하기 어렵게 만드는 정확한 후속 방어."
+        },
+        {
+          "root_after": "Rxf3 Qd2 Qg4",
+          "move": "gxf3",
+          "uci": "g2f3",
+          "why": "같은 포획이 처음에는 지지만 퀸 이동 뒤에는 정확한 무승부 수가 될 수 있다. 포획 SAN만으로 같은 위험을 부여하면 안 된다."
+        }
+      ],
+      "misleading_claims": [
+        "Rxf3는 상대에게 gxf3를 강제한다.",
+        "Rxf3가 강제 승리이며 비숍을 남기는 사실만으로 그 평가를 증명한다.",
+        "Qd2 뒤 처음의 체크/포획 목록이 사라지면 원래 비숍 보존의 의미도 자동으로 반증된다.",
+        "2...Qg4는 Qd2를 논박한다."
+      ],
+      "comment_if_best_defense": "룩으로 f3를 잡아 d5 비숍의 밝은 칸 통제를 남깁니다. 곧바로 룩을 잡으면 왕이 공격받지만, 백은 Qd2로 체크를 막고 교환을 요구할 수 있습니다. 정확히 교환을 추진하면 흑의 공격은 제한된 압박으로 줄어듭니다.",
+      "invalidation_policy": "gxf3가 새 국면에서도 벌을 받는지, 남은 비숍이 실제 위협/유리한 교환 뒤 역할을 갖는지 따로 검증한다. 강한 거절이 균형을 유지하면 강제승리 문장을 철회하고 남는 압박만 설명한다.",
+      "samples_are": "저자의 수용/거절 비교를 보여 주는 예시. 모든 최선 방어의 증명이나 처음 PV를 보존해야 하는 조건이 아님.",
+      "unknowns": [
+        "새 엔진 버전에서 Rxf3/Bxf3/Re8의 정확한 상대 평가",
+        "거절 뒤 비숍의 가치가 원래 수의 우열에 얼마나 기여하는지에 대한 독립 인과 증명",
+        "최초 대국 전체 이력"
+      ],
+      "sample_lines": [
+        {
+          "san": "Rxf3 gxf3 Qe3+ Kf1 Qxf3+ Ke1 Re8+ Be5 Qe3+ Kf1 Be6 Kg2 Bh3+ Kh1 Qf3+ Kg1 Qg2#",
+          "moves": [
+            {
+              "san": "Rxf3",
+              "uci": "f7f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+            },
+            {
+              "san": "gxf3",
+              "uci": "g2f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4PB1/1P5P/2RR2K1 b - - 0 2"
+            },
+            {
+              "san": "Qe3+",
+              "uci": "g5e3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/1Q1P4/P3qPB1/1P5P/2RR2K1 w - - 1 3"
+            },
+            {
+              "san": "Kf1",
+              "uci": "g1f1",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/1Q1P4/P3qPB1/1P5P/2RR1K2 b - - 2 3"
+            },
+            {
+              "san": "Qxf3+",
+              "uci": "e3f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/1Q1P4/P4qB1/1P5P/2RR1K2 w - - 0 4"
+            },
+            {
+              "san": "Ke1",
+              "uci": "f1e1",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/1Q1P4/P4qB1/1P5P/2RRK3 b - - 1 4"
+            },
+            {
+              "san": "Re8+",
+              "uci": "c8e8",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1b4/1Q1P4/P4qB1/1P5P/2RRK3 w - - 2 5"
+            },
+            {
+              "san": "Be5",
+              "uci": "g3e5",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1bB3/1Q1P4/P4q2/1P5P/2RRK3 b - - 3 5"
+            },
+            {
+              "san": "Qe3+",
+              "uci": "f3e3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1bB3/1Q1P4/P3q3/1P5P/2RRK3 w - - 4 6"
+            },
+            {
+              "san": "Kf1",
+              "uci": "e1f1",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1bB3/1Q1P4/P3q3/1P5P/2RR1K2 b - - 5 6"
+            },
+            {
+              "san": "Be6",
+              "uci": "d5e6",
+              "fen_after": "4r1k1/1p4p1/2p1b2p/1p2B3/1Q1P4/P3q3/1P5P/2RR1K2 w - - 6 7"
+            },
+            {
+              "san": "Kg2",
+              "uci": "f1g2",
+              "fen_after": "4r1k1/1p4p1/2p1b2p/1p2B3/1Q1P4/P3q3/1P4KP/2RR4 b - - 7 7"
+            },
+            {
+              "san": "Bh3+",
+              "uci": "e6h3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P3q2b/1P4KP/2RR4 w - - 8 8"
+            },
+            {
+              "san": "Kh1",
+              "uci": "g2h1",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P3q2b/1P5P/2RR3K b - - 9 8"
+            },
+            {
+              "san": "Qf3+",
+              "uci": "e3f3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P4q1b/1P5P/2RR3K w - - 10 9"
+            },
+            {
+              "san": "Kg1",
+              "uci": "h1g1",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P4q1b/1P5P/2RR2K1 b - - 11 9"
+            },
+            {
+              "san": "Qg2#",
+              "uci": "f3g2",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P6b/1P4qP/2RR2K1 w - - 12 10"
+            }
+          ],
+          "end_fen": "4r1k1/1p4p1/2p4p/1p2B3/1Q1P4/P6b/1P4qP/2RR2K1 w - - 12 10"
+        },
+        {
+          "san": "Bxf3 gxf3 Qe3+ Bf2 Qxf3 Rd2",
+          "moves": [
+            {
+              "san": "Bxf3",
+              "uci": "d5f3",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p4q1/1Q1P4/P4bB1/1P4PP/2RR2K1 w - - 0 2"
+            },
+            {
+              "san": "gxf3",
+              "uci": "g2f3",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p4q1/1Q1P4/P4PB1/1P5P/2RR2K1 b - - 0 2"
+            },
+            {
+              "san": "Qe3+",
+              "uci": "g5e3",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p6/1Q1P4/P3qPB1/1P5P/2RR2K1 w - - 1 3"
+            },
+            {
+              "san": "Bf2",
+              "uci": "g3f2",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p6/1Q1P4/P3qP2/1P3B1P/2RR2K1 b - - 2 3"
+            },
+            {
+              "san": "Qxf3",
+              "uci": "e3f3",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p6/1Q1P4/P4q2/1P3B1P/2RR2K1 w - - 0 4"
+            },
+            {
+              "san": "Rd2",
+              "uci": "d1d2",
+              "fen_after": "2r3k1/1p3rp1/2p4p/1p6/1Q1P4/P4q2/1P1R1B1P/2R3K1 b - - 1 4"
+            }
+          ],
+          "end_fen": "2r3k1/1p3rp1/2p4p/1p6/1Q1P4/P4q2/1P1R1B1P/2R3K1 b - - 1 4"
+        },
+        {
+          "san": "Rxf3 Qd2 Re3 Rc3 Rce8 Rxe3 Qxe3+ Qxe3 Rxe3 Kf2 Rb3 Rd2 b4 axb4 Rxb4",
+          "moves": [
+            {
+              "san": "Rxf3",
+              "uci": "f7f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+            },
+            {
+              "san": "Qd2",
+              "uci": "b4d2",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2"
+            },
+            {
+              "san": "Re3",
+              "uci": "f3e3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P3r1B1/1P1Q2PP/2RR2K1 w - - 2 3"
+            },
+            {
+              "san": "Rc3",
+              "uci": "c1c3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P1R1r1B1/1P1Q2PP/3R2K1 b - - 3 3"
+            },
+            {
+              "san": "Rce8",
+              "uci": "c8e8",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1b2q1/3P4/P1R1r1B1/1P1Q2PP/3R2K1 w - - 4 4"
+            },
+            {
+              "san": "Rxe3",
+              "uci": "c3e3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1b2q1/3P4/P3R1B1/1P1Q2PP/3R2K1 b - - 0 4"
+            },
+            {
+              "san": "Qxe3+",
+              "uci": "g5e3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1b4/3P4/P3q1B1/1P1Q2PP/3R2K1 w - - 0 5"
+            },
+            {
+              "san": "Qxe3",
+              "uci": "d2e3",
+              "fen_after": "4r1k1/1p4p1/2p4p/1p1b4/3P4/P3Q1B1/1P4PP/3R2K1 b - - 0 5"
+            },
+            {
+              "san": "Rxe3",
+              "uci": "e8e3",
+              "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/P3r1B1/1P4PP/3R2K1 w - - 0 6"
+            },
+            {
+              "san": "Kf2",
+              "uci": "g1f2",
+              "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/P3r1B1/1P3KPP/3R4 b - - 1 6"
+            },
+            {
+              "san": "Rb3",
+              "uci": "e3b3",
+              "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/Pr4B1/1P3KPP/3R4 w - - 2 7"
+            },
+            {
+              "san": "Rd2",
+              "uci": "d1d2",
+              "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/Pr4B1/1P1R1KPP/8 b - - 3 7"
+            },
+            {
+              "san": "b4",
+              "uci": "b5b4",
+              "fen_after": "6k1/1p4p1/2p4p/3b4/1p1P4/Pr4B1/1P1R1KPP/8 w - - 0 8"
+            },
+            {
+              "san": "axb4",
+              "uci": "a3b4",
+              "fen_after": "6k1/1p4p1/2p4p/3b4/1P1P4/1r4B1/1P1R1KPP/8 b - - 0 8"
+            },
+            {
+              "san": "Rxb4",
+              "uci": "b3b4",
+              "fen_after": "6k1/1p4p1/2p4p/3b4/1r1P4/6B1/1P1R1KPP/8 w - - 0 9"
+            }
+          ],
+          "end_fen": "6k1/1p4p1/2p4p/3b4/1r1P4/6B1/1P1R1KPP/8 w - - 0 9"
+        },
+        {
+          "san": "Rxf3 Qd2 Qg4 gxf3 Qxf3 Rf1 Qh1+ Kf2 Rf8+ Bf4 Qe4 Kg3 Rf6 h4 Rg6+ Bg5 hxg5 hxg5 Rxg5+ Qxg5 Qg2+ Kh4 Qh2+ Kg4 Qg2+",
+          "moves": [
+            {
+              "san": "Rxf3",
+              "uci": "f7f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+            },
+            {
+              "san": "Qd2",
+              "uci": "b4d2",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2"
+            },
+            {
+              "san": "Qg4",
+              "uci": "g5g4",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P2q1/P4rB1/1P1Q2PP/2RR2K1 w - - 2 3"
+            },
+            {
+              "san": "gxf3",
+              "uci": "g2f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P2q1/P4PB1/1P1Q3P/2RR2K1 b - - 0 3"
+            },
+            {
+              "san": "Qxf3",
+              "uci": "g4f3",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P4/P4qB1/1P1Q3P/2RR2K1 w - - 0 4"
+            },
+            {
+              "san": "Rf1",
+              "uci": "d1f1",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P4/P4qB1/1P1Q3P/2R2RK1 b - - 1 4"
+            },
+            {
+              "san": "Qh1+",
+              "uci": "f3h1",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P4/P5B1/1P1Q3P/2R2RKq w - - 2 5"
+            },
+            {
+              "san": "Kf2",
+              "uci": "g1f2",
+              "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P4/P5B1/1P1Q1K1P/2R2R1q b - - 3 5"
+            },
+            {
+              "san": "Rf8+",
+              "uci": "c8f8",
+              "fen_after": "5rk1/1p4p1/2p4p/1p1b4/3P4/P5B1/1P1Q1K1P/2R2R1q w - - 4 6"
+            },
+            {
+              "san": "Bf4",
+              "uci": "g3f4",
+              "fen_after": "5rk1/1p4p1/2p4p/1p1b4/3P1B2/P7/1P1Q1K1P/2R2R1q b - - 5 6"
+            },
+            {
+              "san": "Qe4",
+              "uci": "h1e4",
+              "fen_after": "5rk1/1p4p1/2p4p/1p1b4/3PqB2/P7/1P1Q1K1P/2R2R2 w - - 6 7"
+            },
+            {
+              "san": "Kg3",
+              "uci": "f2g3",
+              "fen_after": "5rk1/1p4p1/2p4p/1p1b4/3PqB2/P5K1/1P1Q3P/2R2R2 b - - 7 7"
+            },
+            {
+              "san": "Rf6",
+              "uci": "f8f6",
+              "fen_after": "6k1/1p4p1/2p2r1p/1p1b4/3PqB2/P5K1/1P1Q3P/2R2R2 w - - 8 8"
+            },
+            {
+              "san": "h4",
+              "uci": "h2h4",
+              "fen_after": "6k1/1p4p1/2p2r1p/1p1b4/3PqB1P/P5K1/1P1Q4/2R2R2 b - - 0 8"
+            },
+            {
+              "san": "Rg6+",
+              "uci": "f6g6",
+              "fen_after": "6k1/1p4p1/2p3rp/1p1b4/3PqB1P/P5K1/1P1Q4/2R2R2 w - - 1 9"
+            },
+            {
+              "san": "Bg5",
+              "uci": "f4g5",
+              "fen_after": "6k1/1p4p1/2p3rp/1p1b2B1/3Pq2P/P5K1/1P1Q4/2R2R2 b - - 2 9"
+            },
+            {
+              "san": "hxg5",
+              "uci": "h6g5",
+              "fen_after": "6k1/1p4p1/2p3r1/1p1b2p1/3Pq2P/P5K1/1P1Q4/2R2R2 w - - 0 10"
+            },
+            {
+              "san": "hxg5",
+              "uci": "h4g5",
+              "fen_after": "6k1/1p4p1/2p3r1/1p1b2P1/3Pq3/P5K1/1P1Q4/2R2R2 b - - 0 10"
+            },
+            {
+              "san": "Rxg5+",
+              "uci": "g6g5",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2r1/3Pq3/P5K1/1P1Q4/2R2R2 w - - 0 11"
+            },
+            {
+              "san": "Qxg5",
+              "uci": "d2g5",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3Pq3/P5K1/1P6/2R2R2 b - - 0 11"
+            },
+            {
+              "san": "Qg2+",
+              "uci": "e4g2",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3P4/P5K1/1P4q1/2R2R2 w - - 1 12"
+            },
+            {
+              "san": "Kh4",
+              "uci": "g3h4",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3P3K/P7/1P4q1/2R2R2 b - - 2 12"
+            },
+            {
+              "san": "Qh2+",
+              "uci": "g2h2",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3P3K/P7/1P5q/2R2R2 w - - 3 13"
+            },
+            {
+              "san": "Kg4",
+              "uci": "h4g4",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3P2K1/P7/1P5q/2R2R2 b - - 4 13"
+            },
+            {
+              "san": "Qg2+",
+              "uci": "h2g2",
+              "fen_after": "6k1/1p4p1/2p5/1p1b2Q1/3P2K1/P7/1P4q1/2R2R2 w - - 5 14"
+            }
+          ],
+          "end_fen": "6k1/1p4p1/2p5/1p1b2Q1/3P2K1/P7/1P4q1/2R2R2 w - - 5 14"
+        }
+      ]
+    },
+    {
+      "id": "SG13",
+      "book": "supergm",
+      "pdf_pages": [
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152
+      ],
+      "fen": "4Q3/5pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 w - - 2 30",
+      "played_san": "Bd5",
+      "played_uci": "c6d5",
+      "source_game": "Michael Adams - David Navara, Biel 2015",
+      "source_pdf_pages": "169-177",
+      "fen_provenance": "도표 146, 본문 148의 착수 1.e4부터 29...Qf3까지 합법 재생. 이전 연구 FEN과 기물 배치/차례 동일하나 정확한 반수시계는 2.",
+      "complete_source_history_san": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 g3 e5 Nde2 Be7 Bg2 b5 Nd5 Nbd7 Nec3 Bb7 a4 Nxd5 Nxd5 O-O axb5 axb5 Rxa8 Bxa8 O-O Nc5 b4 Ne6 h4 Bxd5 Qxd5 Nd4 c3 Ne2+ Kh2 Nxc1 Rxc1 Qb6 Kg1 Rb8 Ra1 g6 Ra8 Rxa8 Qxa8+ Kg7 Bf1 Qc7 Qe8 Bf6 Bxb5 Qxc3 Bc6 Qf3",
+      "complete_source_history_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "d7d6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "a7a6",
+        "g2g3",
+        "e7e5",
+        "d4e2",
+        "f8e7",
+        "f1g2",
+        "b7b5",
+        "c3d5",
+        "b8d7",
+        "e2c3",
+        "c8b7",
+        "a2a4",
+        "f6d5",
+        "c3d5",
+        "e8g8",
+        "a4b5",
+        "a6b5",
+        "a1a8",
+        "b7a8",
+        "e1g1",
+        "d7c5",
+        "b2b4",
+        "c5e6",
+        "h2h4",
+        "a8d5",
+        "d1d5",
+        "e6d4",
+        "c2c3",
+        "d4e2",
+        "g1h2",
+        "e2c1",
+        "f1c1",
+        "d8b6",
+        "h2g1",
+        "f8b8",
+        "c1a1",
+        "g7g6",
+        "a1a8",
+        "b8a8",
+        "d5a8",
+        "g8g7",
+        "g2f1",
+        "b6c7",
+        "a8e8",
+        "e7f6",
+        "f1b5",
+        "c7c3",
+        "b5c6",
+        "c3f3"
+      ],
+      "author_judgment": "즉시 Bd5?는 Bxh4!의 체크/교환 자원으로 무승부. Qd7!로 먼저 g4 체크를 통제하고 Bd5를 준비한다. 가장 강한 ...g5! 뒤 hxg5?는 이점을 줄이며, 정확한 Bd5!가 승리 유지 수.",
+      "human_question": "자연스러운 Bd5를 바로 하면 왜 이기지 못하며, 먼저 Qd7을 둔 뒤 상대의 최강 반격 g5를 상대로도 계획이 성립하는가?",
+      "core_function": [
+        "Bxh4 뒤 gxh4를 강제한다고 설명하지 않는다. gxh4의 Qg4+ 반복 체크와 폰 전진/퀸 교환 시도의 별도 방어를 모두 고려해야 한다.",
+        "Qd7은 g4를 통제해 상대의 즉시 반복 체크 자원을 바꾸며 f7 압박을 준비한다. 모든 체크가 영구히 사라졌다는 의미는 아니다.",
+        "...g5는 흑 왕의 공간과 반격을 만든다. 백이 hxg5로 반응하는 대신 Bd5 뒤 강제 체크를 정밀하게 계산해야 승리 주장을 유지한다.",
+        "뒤에 Qh6 또는 Be6처럼 g4/도주 칸을 통제하는 조용한 수가 다시 필요하다. 체크 수만 오래 나열하면 결정적인 기능을 놓친다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Bd5",
+          "move": "Bxh4",
+          "uci": "f6h4",
+          "why": "폰 방패를 열고 체크로 무승부를 만드는 자원."
+        },
+        {
+          "root_after": "Qd7",
+          "move": "g5",
+          "uci": "g6g5",
+          "why": "저자가 명시한 최강 시도. 왕 공간과 자체 위협을 만들고 백에게 정확한 계산을 요구."
+        },
+        {
+          "root_after": "Qd7 g5",
+          "compare": [
+            "Bd5",
+            "hxg5"
+          ],
+          "uci": [
+            "c6d5",
+            "h4g5"
+          ],
+          "fen": "8/3Q1pkp/2Bp1b2/4p1p1/1P2P2P/5qP1/5P2/6K1 w - - 0 31",
+          "why": "승리 유지와 이점 감소를 구분하는 실제 선택. 실제 대국의 마지막 승리만으로 hxg5를 정당화하지 않는다."
+        },
+        {
+          "root_after": "Qd7 g5 Bd5 gxh4 Qxf7+ Kh6 Qf8+",
+          "moves": [
+            "Kg6",
+            "Kg5",
+            "Kh5"
+          ],
+          "why": "흑 왕을 전진시킨 반격에 백의 강제 승리 계산이 유지되는지 확인."
+        }
+      ],
+      "misleading_claims": [
+        "Bd5는 비숍을 공짜로 잡으므로 승리.",
+        "Qd7은 모든 체크 가능성을 없앤다.",
+        "폰을 잃는다는 사실만으로 ...g5의 핵심을 설명했다.",
+        "hxg5 뒤 실제 대국에서 백이 이겼으므로 hxg5도 최선.",
+        "강한 반격 g5를 끝내 보지 않고 Qd7의 승리 원인을 확정."
+      ],
+      "comment_if_best_defense": "바로 Bd5를 두면 ...Bxh4 뒤 왕이 반복 체크를 받거나 교환으로 이점이 사라집니다. 먼저 Qd7로 g4 체크를 통제해야 합니다. 흑의 ...g5가 가장 어려운 저항이며, 그 뒤에는 폰을 잡기보다 Bd5와 정확한 체크 수순으로 먼저 결정타를 내야 합니다.",
+      "invalidation_policy": "...g5 아래 정확한 승리 계산이 확인되지 않으면 Qd7의 예방 기능까지만 인정하고 강제 승리는 미확정. 더 강한 방어가 반복 체크/균형을 확인하면 승리 문장 철회.",
+      "samples_are": "서로 다른 반격과 정확한 후속 수의 기능을 보여 주는 책의 예시. 하나의 왕 응수만 유지돼도 된다는 증명은 아님.",
+      "unknowns": [
+        "깊은 비교 결과가 책의 Bd5/hxg5 판단과 일치하는지",
+        "Qd7 이후 모든 주요 방어에서 동일한 기능이 유지되는지",
+        "확인한 승리 수순이 기본 답으로 조직되는 자동 경로"
+      ],
+      "sample_lines": [
+        {
+          "san": "Bd5 Bxh4 gxh4 Qg4+ Kf1 Qd1+ Kg2 Qg4+ Kh2 Qxh4+ Kg2 Qg4+",
+          "moves": [
+            {
+              "san": "Bd5",
+              "uci": "c6d5",
+              "fen_after": "4Q3/5pkp/3p1bp1/3Bp3/1P2P2P/5qP1/5P2/6K1 b - - 3 30"
+            },
+            {
+              "san": "Bxh4",
+              "uci": "f6h4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2b/5qP1/5P2/6K1 w - - 0 31"
+            },
+            {
+              "san": "gxh4",
+              "uci": "g3h4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2P/5q2/5P2/6K1 b - - 0 31"
+            },
+            {
+              "san": "Qg4+",
+              "uci": "f3g4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P1qP/8/5P2/6K1 w - - 1 32"
+            },
+            {
+              "san": "Kf1",
+              "uci": "g1f1",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P1qP/8/5P2/5K2 b - - 2 32"
+            },
+            {
+              "san": "Qd1+",
+              "uci": "g4d1",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2P/8/5P2/3q1K2 w - - 3 33"
+            },
+            {
+              "san": "Kg2",
+              "uci": "f1g2",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2P/8/5PK1/3q4 b - - 4 33"
+            },
+            {
+              "san": "Qg4+",
+              "uci": "d1g4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P1qP/8/5PK1/8 w - - 5 34"
+            },
+            {
+              "san": "Kh2",
+              "uci": "g2h2",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P1qP/8/5P1K/8 b - - 6 34"
+            },
+            {
+              "san": "Qxh4+",
+              "uci": "g4h4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2q/8/5P1K/8 w - - 0 35"
+            },
+            {
+              "san": "Kg2",
+              "uci": "h2g2",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2q/8/5PK1/8 b - - 1 35"
+            },
+            {
+              "san": "Qg4+",
+              "uci": "h4g4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P1q1/8/5PK1/8 w - - 2 36"
+            }
+          ],
+          "end_fen": "4Q3/5pkp/3p2p1/3Bp3/1P2P1q1/8/5PK1/8 w - - 2 36"
+        },
+        {
+          "san": "Bd5 Bxh4 b5 Bxg3 Qxf7+ Qxf7 Bxf7 Bh4 b6 Bd8",
+          "moves": [
+            {
+              "san": "Bd5",
+              "uci": "c6d5",
+              "fen_after": "4Q3/5pkp/3p1bp1/3Bp3/1P2P2P/5qP1/5P2/6K1 b - - 3 30"
+            },
+            {
+              "san": "Bxh4",
+              "uci": "f6h4",
+              "fen_after": "4Q3/5pkp/3p2p1/3Bp3/1P2P2b/5qP1/5P2/6K1 w - - 0 31"
+            },
+            {
+              "san": "b5",
+              "uci": "b4b5",
+              "fen_after": "4Q3/5pkp/3p2p1/1P1Bp3/4P2b/5qP1/5P2/6K1 b - - 0 31"
+            },
+            {
+              "san": "Bxg3",
+              "uci": "h4g3",
+              "fen_after": "4Q3/5pkp/3p2p1/1P1Bp3/4P3/5qb1/5P2/6K1 w - - 0 32"
+            },
+            {
+              "san": "Qxf7+",
+              "uci": "e8f7",
+              "fen_after": "8/5Qkp/3p2p1/1P1Bp3/4P3/5qb1/5P2/6K1 b - - 0 32"
+            },
+            {
+              "san": "Qxf7",
+              "uci": "f3f7",
+              "fen_after": "8/5qkp/3p2p1/1P1Bp3/4P3/6b1/5P2/6K1 w - - 0 33"
+            },
+            {
+              "san": "Bxf7",
+              "uci": "d5f7",
+              "fen_after": "8/5Bkp/3p2p1/1P2p3/4P3/6b1/5P2/6K1 b - - 0 33"
+            },
+            {
+              "san": "Bh4",
+              "uci": "g3h4",
+              "fen_after": "8/5Bkp/3p2p1/1P2p3/4P2b/8/5P2/6K1 w - - 1 34"
+            },
+            {
+              "san": "b6",
+              "uci": "b5b6",
+              "fen_after": "8/5Bkp/1P1p2p1/4p3/4P2b/8/5P2/6K1 b - - 0 34"
+            },
+            {
+              "san": "Bd8",
+              "uci": "h4d8",
+              "fen_after": "3b4/5Bkp/1P1p2p1/4p3/4P3/8/5P2/6K1 w - - 1 35"
+            }
+          ],
+          "end_fen": "3b4/5Bkp/1P1p2p1/4p3/4P3/8/5P2/6K1 w - - 1 35"
+        },
+        {
+          "san": "Qd7 g5 hxg5 Bxg5 Qxd6",
+          "moves": [
+            {
+              "san": "Qd7",
+              "uci": "e8d7",
+              "fen_after": "8/3Q1pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 b - - 3 30"
+            },
+            {
+              "san": "g5",
+              "uci": "g6g5",
+              "fen_after": "8/3Q1pkp/2Bp1b2/4p1p1/1P2P2P/5qP1/5P2/6K1 w - - 0 31"
+            },
+            {
+              "san": "hxg5",
+              "uci": "h4g5",
+              "fen_after": "8/3Q1pkp/2Bp1b2/4p1P1/1P2P3/5qP1/5P2/6K1 b - - 0 31"
+            },
+            {
+              "san": "Bxg5",
+              "uci": "f6g5",
+              "fen_after": "8/3Q1pkp/2Bp4/4p1b1/1P2P3/5qP1/5P2/6K1 w - - 0 32"
+            },
+            {
+              "san": "Qxd6",
+              "uci": "d7d6",
+              "fen_after": "8/5pkp/2BQ4/4p1b1/1P2P3/5qP1/5P2/6K1 b - - 0 32"
+            }
+          ],
+          "end_fen": "8/5pkp/2BQ4/4p1b1/1P2P3/5qP1/5P2/6K1 b - - 0 32"
+        },
+        {
+          "san": "Qd7 g5 Bd5 gxh4 Qxf7+ Kh6 Qf8+ Kg6 Bf7+ Kg5 gxh4+ Kf4 Be6 Kxe4 Bd5+ Kxd5 Qa8+",
+          "moves": [
+            {
+              "san": "Qd7",
+              "uci": "e8d7",
+              "fen_after": "8/3Q1pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 b - - 3 30"
+            },
+            {
+              "san": "g5",
+              "uci": "g6g5",
+              "fen_after": "8/3Q1pkp/2Bp1b2/4p1p1/1P2P2P/5qP1/5P2/6K1 w - - 0 31"
+            },
+            {
+              "san": "Bd5",
+              "uci": "c6d5",
+              "fen_after": "8/3Q1pkp/3p1b2/3Bp1p1/1P2P2P/5qP1/5P2/6K1 b - - 1 31"
+            },
+            {
+              "san": "gxh4",
+              "uci": "g5h4",
+              "fen_after": "8/3Q1pkp/3p1b2/3Bp3/1P2P2p/5qP1/5P2/6K1 w - - 0 32"
+            },
+            {
+              "san": "Qxf7+",
+              "uci": "d7f7",
+              "fen_after": "8/5Qkp/3p1b2/3Bp3/1P2P2p/5qP1/5P2/6K1 b - - 0 32"
+            },
+            {
+              "san": "Kh6",
+              "uci": "g7h6",
+              "fen_after": "8/5Q1p/3p1b1k/3Bp3/1P2P2p/5qP1/5P2/6K1 w - - 1 33"
+            },
+            {
+              "san": "Qf8+",
+              "uci": "f7f8",
+              "fen_after": "5Q2/7p/3p1b1k/3Bp3/1P2P2p/5qP1/5P2/6K1 b - - 2 33"
+            },
+            {
+              "san": "Kg6",
+              "uci": "h6g6",
+              "fen_after": "5Q2/7p/3p1bk1/3Bp3/1P2P2p/5qP1/5P2/6K1 w - - 3 34"
+            },
+            {
+              "san": "Bf7+",
+              "uci": "d5f7",
+              "fen_after": "5Q2/5B1p/3p1bk1/4p3/1P2P2p/5qP1/5P2/6K1 b - - 4 34"
+            },
+            {
+              "san": "Kg5",
+              "uci": "g6g5",
+              "fen_after": "5Q2/5B1p/3p1b2/4p1k1/1P2P2p/5qP1/5P2/6K1 w - - 5 35"
+            },
+            {
+              "san": "gxh4+",
+              "uci": "g3h4",
+              "fen_after": "5Q2/5B1p/3p1b2/4p1k1/1P2P2P/5q2/5P2/6K1 b - - 0 35"
+            },
+            {
+              "san": "Kf4",
+              "uci": "g5f4",
+              "fen_after": "5Q2/5B1p/3p1b2/4p3/1P2Pk1P/5q2/5P2/6K1 w - - 1 36"
+            },
+            {
+              "san": "Be6",
+              "uci": "f7e6",
+              "fen_after": "5Q2/7p/3pBb2/4p3/1P2Pk1P/5q2/5P2/6K1 b - - 2 36"
+            },
+            {
+              "san": "Kxe4",
+              "uci": "f4e4",
+              "fen_after": "5Q2/7p/3pBb2/4p3/1P2k2P/5q2/5P2/6K1 w - - 0 37"
+            },
+            {
+              "san": "Bd5+",
+              "uci": "e6d5",
+              "fen_after": "5Q2/7p/3p1b2/3Bp3/1P2k2P/5q2/5P2/6K1 b - - 1 37"
+            },
+            {
+              "san": "Kxd5",
+              "uci": "e4d5",
+              "fen_after": "5Q2/7p/3p1b2/3kp3/1P5P/5q2/5P2/6K1 w - - 0 38"
+            },
+            {
+              "san": "Qa8+",
+              "uci": "f8a8",
+              "fen_after": "Q7/7p/3p1b2/3kp3/1P5P/5q2/5P2/6K1 b - - 1 38"
+            }
+          ],
+          "end_fen": "Q7/7p/3p1b2/3kp3/1P5P/5q2/5P2/6K1 b - - 1 38"
+        },
+        {
+          "san": "Qd7 g5 Bd5 gxh4 Qxf7+ Kh6 Qf8+ Kg5 gxh4+ Kg4 Qh6 Qd1+ Kh2 Qd3 Qxf6",
+          "moves": [
+            {
+              "san": "Qd7",
+              "uci": "e8d7",
+              "fen_after": "8/3Q1pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 b - - 3 30"
+            },
+            {
+              "san": "g5",
+              "uci": "g6g5",
+              "fen_after": "8/3Q1pkp/2Bp1b2/4p1p1/1P2P2P/5qP1/5P2/6K1 w - - 0 31"
+            },
+            {
+              "san": "Bd5",
+              "uci": "c6d5",
+              "fen_after": "8/3Q1pkp/3p1b2/3Bp1p1/1P2P2P/5qP1/5P2/6K1 b - - 1 31"
+            },
+            {
+              "san": "gxh4",
+              "uci": "g5h4",
+              "fen_after": "8/3Q1pkp/3p1b2/3Bp3/1P2P2p/5qP1/5P2/6K1 w - - 0 32"
+            },
+            {
+              "san": "Qxf7+",
+              "uci": "d7f7",
+              "fen_after": "8/5Qkp/3p1b2/3Bp3/1P2P2p/5qP1/5P2/6K1 b - - 0 32"
+            },
+            {
+              "san": "Kh6",
+              "uci": "g7h6",
+              "fen_after": "8/5Q1p/3p1b1k/3Bp3/1P2P2p/5qP1/5P2/6K1 w - - 1 33"
+            },
+            {
+              "san": "Qf8+",
+              "uci": "f7f8",
+              "fen_after": "5Q2/7p/3p1b1k/3Bp3/1P2P2p/5qP1/5P2/6K1 b - - 2 33"
+            },
+            {
+              "san": "Kg5",
+              "uci": "h6g5",
+              "fen_after": "5Q2/7p/3p1b2/3Bp1k1/1P2P2p/5qP1/5P2/6K1 w - - 3 34"
+            },
+            {
+              "san": "gxh4+",
+              "uci": "g3h4",
+              "fen_after": "5Q2/7p/3p1b2/3Bp1k1/1P2P2P/5q2/5P2/6K1 b - - 0 34"
+            },
+            {
+              "san": "Kg4",
+              "uci": "g5g4",
+              "fen_after": "5Q2/7p/3p1b2/3Bp3/1P2P1kP/5q2/5P2/6K1 w - - 1 35"
+            },
+            {
+              "san": "Qh6",
+              "uci": "f8h6",
+              "fen_after": "8/7p/3p1b1Q/3Bp3/1P2P1kP/5q2/5P2/6K1 b - - 2 35"
+            },
+            {
+              "san": "Qd1+",
+              "uci": "f3d1",
+              "fen_after": "8/7p/3p1b1Q/3Bp3/1P2P1kP/8/5P2/3q2K1 w - - 3 36"
+            },
+            {
+              "san": "Kh2",
+              "uci": "g1h2",
+              "fen_after": "8/7p/3p1b1Q/3Bp3/1P2P1kP/8/5P1K/3q4 b - - 4 36"
+            },
+            {
+              "san": "Qd3",
+              "uci": "d1d3",
+              "fen_after": "8/7p/3p1b1Q/3Bp3/1P2P1kP/3q4/5P1K/8 w - - 5 37"
+            },
+            {
+              "san": "Qxf6",
+              "uci": "h6f6",
+              "fen_after": "8/7p/3p1Q2/3Bp3/1P2P1kP/3q4/5P1K/8 b - - 0 37"
+            }
+          ],
+          "end_fen": "8/7p/3p1Q2/3Bp3/1P2P1kP/3q4/5P1K/8 b - - 0 37"
+        }
+      ]
+    }
+  ],
+  "unexposed_book_first_scenes": [
+    {
+      "id": "MC-SG14",
+      "book": "supergm",
+      "pdf_pages": [
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163
+      ],
+      "fen": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R3K2R w KQkq - 7 14",
+      "played_san": "Qb3",
+      "played_uci": "a4b3",
+      "type": "예방 수와 이미 합법인 전개 수의 유용성 차이",
+      "source_game": "Magnus Carlsen - Pere Garriga Cazorla, Banter Blitz 2019",
+      "source_pdf_pages": "177-190",
+      "source_history_san": "c4 c5 Nf3 Nc6 Nc3 Nf6 e3 g6 d4 cxd4 exd4 d5 cxd5 Nxd5 Qb3 Nxc3 Bc4 e6 bxc3 Bg7 Ba3 Na5 Bb5+ Bd7 Qa4 Nc6",
+      "fen_provenance": "도표 153과 본문 156의 전체 13수 이력을 대조. 차례·캐슬링 권리·반수시계까지 재생.",
+      "author_judgment": "Qb3는 ...a6에 의해 비숍-나이트 교환을 강요받고 퀸을 공격당하는 문제를 먼저 다루는 최선의 예방. 백의 전개 우세나 a3 비숍만으로 큰 이점을 주장하면 안 되며 ...Ne7! 등 정확한 방어로 균형.",
+      "human_question": "캐슬링과 Ne5가 이미 가능한데 왜 퀸을 먼저 b3로 되돌려야 하는가?",
+      "core_function": [
+        "...a6가 좋은 비숍 교환과 퀸 공격을 동반해 흑의 조정을 쉽게 해 주는 것을 막는다.",
+        "Qb3는 비숍이 전진 수를 피할 여지를 남기고, Qc2와 달리 느슨한 비숍들을 겨냥한 ...Nxd4/...Qa5+ 기제를 피한다.",
+        "a3 비숍의 캐슬링 방해는 유용하지만 흑의 단단한 구조와 ...Ne7 준비를 넘어 강제 이점을 증명하지 않는다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Qb3",
+          "move": "Ne7",
+          "why": "흑이 캐슬링을 준비하고 교환을 통해 주도권을 낮추는 정확한 개선. 책의 실제 ...Na5보다 강함."
+        },
+        {
+          "root_after": "O-O",
+          "move": "a6",
+          "why": "자연스러운 전개 뒤 흑이 편한 균형을 얻는 비교."
+        },
+        {
+          "root_after": "Qc2 a6 Be2",
+          "move": "Nxd4",
+          "why": "처음 보이는 비숍 퇴로의 유용성을 무너뜨리는 중앙 전술."
+        }
+      ],
+      "misleading_claims": [
+        "Qb3가 ...a6를 합법적으로 불가능하게 한다.",
+        "a3 비숍이 캐슬링을 막기 때문에 백은 승리.",
+        "실제 대국의 ...Na5와 뒤 승리만으로 Qb3의 객관적 이점 입증."
+      ],
+      "comment_if_best_defense": "캐슬링 전에 퀸을 b3로 되돌려 ...a6가 비숍 교환과 퀸 공격을 얻는 것을 막습니다. 백의 전개를 잠시 늦추지만 중요한 비숍을 남길 수 있습니다. 흑도 ...Ne7로 준비를 갖추면 균형을 유지할 수 있습니다.",
+      "invalidation_policy": "...a6 뒤 비숍 유지가 실제로 중앙 전술을 견디는지 확인. 더 강한 ...Ne7이 균형이면 예방 목적 설명은 유지하되 큰 우열/승리 문장 철회.",
+      "unknowns": [
+        "Qb3 이후 ...Ne7을 포함한 새 엔진의 최강 응수",
+        "백이 비숍 유지로 갖는 정확한 비교 가치",
+        "책에서 Qc2와 달라지는 최소 기제의 자동 판독"
+      ],
+      "sample_lines": [
+        {
+          "san": "Qb3 Ne7 Ne5 Bxe5 dxe5 Bxb5 Qxb5+ Qd7 Qb3 O-O Rd1 Qc7 Bd6 Qd7",
+          "moves": [
+            {
+              "san": "Qb3",
+              "uci": "a4b3",
+              "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/3P4/BQP2N2/P4PPP/R3K2R b KQkq - 8 14"
+            },
+            {
+              "san": "Ne7",
+              "uci": "c6e7",
+              "fen_after": "r2qk2r/pp1bnpbp/4p1p1/1B6/3P4/BQP2N2/P4PPP/R3K2R w KQkq - 9 15"
+            },
+            {
+              "san": "Ne5",
+              "uci": "f3e5",
+              "fen_after": "r2qk2r/pp1bnpbp/4p1p1/1B2N3/3P4/BQP5/P4PPP/R3K2R b KQkq - 10 15"
+            },
+            {
+              "san": "Bxe5",
+              "uci": "g7e5",
+              "fen_after": "r2qk2r/pp1bnp1p/4p1p1/1B2b3/3P4/BQP5/P4PPP/R3K2R w KQkq - 0 16"
+            },
+            {
+              "san": "dxe5",
+              "uci": "d4e5",
+              "fen_after": "r2qk2r/pp1bnp1p/4p1p1/1B2P3/8/BQP5/P4PPP/R3K2R b KQkq - 0 16"
+            },
+            {
+              "san": "Bxb5",
+              "uci": "d7b5",
+              "fen_after": "r2qk2r/pp2np1p/4p1p1/1b2P3/8/BQP5/P4PPP/R3K2R w KQkq - 0 17"
+            },
+            {
+              "san": "Qxb5+",
+              "uci": "b3b5",
+              "fen_after": "r2qk2r/pp2np1p/4p1p1/1Q2P3/8/B1P5/P4PPP/R3K2R b KQkq - 0 17"
+            },
+            {
+              "san": "Qd7",
+              "uci": "d8d7",
+              "fen_after": "r3k2r/pp1qnp1p/4p1p1/1Q2P3/8/B1P5/P4PPP/R3K2R w KQkq - 1 18"
+            },
+            {
+              "san": "Qb3",
+              "uci": "b5b3",
+              "fen_after": "r3k2r/pp1qnp1p/4p1p1/4P3/8/BQP5/P4PPP/R3K2R b KQkq - 2 18"
+            },
+            {
+              "san": "O-O",
+              "uci": "e8g8",
+              "fen_after": "r4rk1/pp1qnp1p/4p1p1/4P3/8/BQP5/P4PPP/R3K2R w KQ - 3 19"
+            },
+            {
+              "san": "Rd1",
+              "uci": "a1d1",
+              "fen_after": "r4rk1/pp1qnp1p/4p1p1/4P3/8/BQP5/P4PPP/3RK2R b K - 4 19"
+            },
+            {
+              "san": "Qc7",
+              "uci": "d7c7",
+              "fen_after": "r4rk1/ppq1np1p/4p1p1/4P3/8/BQP5/P4PPP/3RK2R w K - 5 20"
+            },
+            {
+              "san": "Bd6",
+              "uci": "a3d6",
+              "fen_after": "r4rk1/ppq1np1p/3Bp1p1/4P3/8/1QP5/P4PPP/3RK2R b K - 6 20"
+            },
+            {
+              "san": "Qd7",
+              "uci": "c7d7",
+              "fen_after": "r4rk1/pp1qnp1p/3Bp1p1/4P3/8/1QP5/P4PPP/3RK2R w K - 7 21"
+            }
+          ],
+          "end_fen": "r4rk1/pp1qnp1p/3Bp1p1/4P3/8/1QP5/P4PPP/3RK2R w K - 7 21"
+        },
+        {
+          "san": "O-O a6 Bxc6 Bxc6 Qb3 Bxf3 gxf3 Qg5+ Kh1 Qb5",
+          "moves": [
+            {
+              "san": "O-O",
+              "uci": "e1g1",
+              "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R4RK1 b kq - 8 14"
+            },
+            {
+              "san": "a6",
+              "uci": "a7a6",
+              "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R4RK1 w kq - 0 15"
+            },
+            {
+              "san": "Bxc6",
+              "uci": "b5c6",
+              "fen_after": "r2qk2r/1p1b1pbp/p1B1p1p1/8/Q2P4/B1P2N2/P4PPP/R4RK1 b kq - 0 15"
+            },
+            {
+              "san": "Bxc6",
+              "uci": "d7c6",
+              "fen_after": "r2qk2r/1p3pbp/p1b1p1p1/8/Q2P4/B1P2N2/P4PPP/R4RK1 w kq - 0 16"
+            },
+            {
+              "san": "Qb3",
+              "uci": "a4b3",
+              "fen_after": "r2qk2r/1p3pbp/p1b1p1p1/8/3P4/BQP2N2/P4PPP/R4RK1 b kq - 1 16"
+            },
+            {
+              "san": "Bxf3",
+              "uci": "c6f3",
+              "fen_after": "r2qk2r/1p3pbp/p3p1p1/8/3P4/BQP2b2/P4PPP/R4RK1 w kq - 0 17"
+            },
+            {
+              "san": "gxf3",
+              "uci": "g2f3",
+              "fen_after": "r2qk2r/1p3pbp/p3p1p1/8/3P4/BQP2P2/P4P1P/R4RK1 b kq - 0 17"
+            },
+            {
+              "san": "Qg5+",
+              "uci": "d8g5",
+              "fen_after": "r3k2r/1p3pbp/p3p1p1/6q1/3P4/BQP2P2/P4P1P/R4RK1 w kq - 1 18"
+            },
+            {
+              "san": "Kh1",
+              "uci": "g1h1",
+              "fen_after": "r3k2r/1p3pbp/p3p1p1/6q1/3P4/BQP2P2/P4P1P/R4R1K b kq - 2 18"
+            },
+            {
+              "san": "Qb5",
+              "uci": "g5b5",
+              "fen_after": "r3k2r/1p3pbp/p3p1p1/1q6/3P4/BQP2P2/P4P1P/R4R1K w kq - 3 19"
+            }
+          ],
+          "end_fen": "r3k2r/1p3pbp/p3p1p1/1q6/3P4/BQP2P2/P4P1P/R4R1K w kq - 3 19"
+        },
+        {
+          "san": "Qc2 a6 Be2 Nxd4 Nxd4 Bxd4 cxd4 Qa5+",
+          "moves": [
+            {
+              "san": "Qc2",
+              "uci": "a4c2",
+              "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/3P4/B1P2N2/P1Q2PPP/R3K2R b KQkq - 8 14"
+            },
+            {
+              "san": "a6",
+              "uci": "a7a6",
+              "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/1B6/3P4/B1P2N2/P1Q2PPP/R3K2R w KQkq - 0 15"
+            },
+            {
+              "san": "Be2",
+              "uci": "b5e2",
+              "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/8/3P4/B1P2N2/P1Q1BPPP/R3K2R b KQkq - 1 15"
+            },
+            {
+              "san": "Nxd4",
+              "uci": "c6d4",
+              "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3n4/B1P2N2/P1Q1BPPP/R3K2R w KQkq - 0 16"
+            },
+            {
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3N4/B1P5/P1Q1BPPP/R3K2R b KQkq - 0 16"
+            },
+            {
+              "san": "Bxd4",
+              "uci": "g7d4",
+              "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3b4/B1P5/P1Q1BPPP/R3K2R w KQkq - 0 17"
+            },
+            {
+              "san": "cxd4",
+              "uci": "c3d4",
+              "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3P4/B7/P1Q1BPPP/R3K2R b KQkq - 0 17"
+            },
+            {
+              "san": "Qa5+",
+              "uci": "d8a5",
+              "fen_after": "r3k2r/1p1b1p1p/p3p1p1/q7/3P4/B7/P1Q1BPPP/R3K2R w KQkq - 1 18"
+            }
+          ],
+          "end_fen": "r3k2r/1p1b1p1p/p3p1p1/q7/3P4/B7/P1Q1BPPP/R3K2R w KQkq - 1 18"
+        },
+        {
+          "san": "Ne5 Nxe5 dxe5 a6 Bxd7+ Qxd7 Qxd7+ Kxd7 O-O-O+ Kc6",
+          "moves": [
+            {
+              "san": "Ne5",
+              "uci": "f3e5",
+              "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B2N3/Q2P4/B1P5/P4PPP/R3K2R b KQkq - 8 14"
+            },
+            {
+              "san": "Nxe5",
+              "uci": "c6e5",
+              "fen_after": "r2qk2r/pp1b1pbp/4p1p1/1B2n3/Q2P4/B1P5/P4PPP/R3K2R w KQkq - 0 15"
+            },
+            {
+              "san": "dxe5",
+              "uci": "d4e5",
+              "fen_after": "r2qk2r/pp1b1pbp/4p1p1/1B2P3/Q7/B1P5/P4PPP/R3K2R b KQkq - 0 15"
+            },
+            {
+              "san": "a6",
+              "uci": "a7a6",
+              "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/1B2P3/Q7/B1P5/P4PPP/R3K2R w KQkq - 0 16"
+            },
+            {
+              "san": "Bxd7+",
+              "uci": "b5d7",
+              "fen_after": "r2qk2r/1p1B1pbp/p3p1p1/4P3/Q7/B1P5/P4PPP/R3K2R b KQkq - 0 16"
+            },
+            {
+              "san": "Qxd7",
+              "uci": "d8d7",
+              "fen_after": "r3k2r/1p1q1pbp/p3p1p1/4P3/Q7/B1P5/P4PPP/R3K2R w KQkq - 0 17"
+            },
+            {
+              "san": "Qxd7+",
+              "uci": "a4d7",
+              "fen_after": "r3k2r/1p1Q1pbp/p3p1p1/4P3/8/B1P5/P4PPP/R3K2R b KQkq - 0 17"
+            },
+            {
+              "san": "Kxd7",
+              "uci": "e8d7",
+              "fen_after": "r6r/1p1k1pbp/p3p1p1/4P3/8/B1P5/P4PPP/R3K2R w KQ - 0 18"
+            },
+            {
+              "san": "O-O-O+",
+              "uci": "e1c1",
+              "fen_after": "r6r/1p1k1pbp/p3p1p1/4P3/8/B1P5/P4PPP/2KR3R b - - 1 18"
+            },
+            {
+              "san": "Kc6",
+              "uci": "d7c6",
+              "fen_after": "r6r/1p3pbp/p1k1p1p1/4P3/8/B1P5/P4PPP/2KR3R w - - 2 19"
+            }
+          ],
+          "end_fen": "r6r/1p3pbp/p1k1p1p1/4P3/8/B1P5/P4PPP/2KR3R w - - 2 19"
+        }
+      ]
+    },
+    {
+      "id": "MC-SG32",
+      "book": "supergm",
+      "pdf_pages": [
+        324,
+        325,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        332
+      ],
+      "fen": "3Q1nk1/1q1p2pp/p3p3/1p6/4P1N1/5PP1/PPr3P1/3R2K1 w - - 0 1",
+      "played_san": "Kh2",
+      "played_uci": "g1h2",
+      "type": "조용한 기물 개선과 공격 시점",
+      "source_game": "Magnus Carlsen - Hikaru Nakamura, Baerum Chess960 rapid 2018",
+      "source_pdf_pages": "384-394",
+      "fen_provenance": "도표 324 직접 확인. 양 왕·룩이 이동한 중후반 위치로 캐슬링 없음. 이전 실제 착수와 반수시계는 제공되지 않아 0 1로 정규화.",
+      "author_judgment": "지금 공격을 서두르기보다 왕을 체크에서 피하는 작은 개선이 유용하다. 상대의 수비 체크를 없애 선택을 어렵게 하지만, Qc7 뒤 ...g5!나 Qc6의 복잡한 수순으로 흑이 버티므로 강제승리로 설명하면 안 됨.",
+      "human_question": "Ne5와 퀸 공격이 이미 가능한데, 왕을 h2로 옮기는 것이 그 선택들을 어떻게 더 쓸 만하게 하는가?",
+      "core_function": [
+        "g4 나이트는 f2를 수비하므로 즉시 Ne5는 ...Qa7+ 뒤 ...Qf2를 허용한다.",
+        "Kh2는 즉시 퀸 체크의 템포를 없애 공격 수와 교환 후 나이트 활동을 개선한다.",
+        "공격 선택이 여러 개로 남아 흑에게 판단을 요구한다. 실제 상대의 실수 확률은 책의 실전 해석이며 측정한 객관적 수치가 아님."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Ne5",
+          "moves": [
+            "Qa7+",
+            "Qf2"
+          ],
+          "why": "나이트를 공격 칸으로 옮기면서 사라진 f2 수비의 실제 비용."
+        },
+        {
+          "root_after": "Kh2 Qc7 Qxc7 Rxc7 Ne5 Rc2 Rd6 Rxb2 Rxa6",
+          "move": "g5",
+          "why": "나이트가 좋아진 교환 국면에서도 흑 왕의 공간으로 버티는 강한 방어."
+        },
+        {
+          "root_after": "Kh2",
+          "move": "Qc6",
+          "why": "위험해 보이지만 중간 체크/룩 희생과 반복 체크로 무승부라는 책의 계산."
+        },
+        {
+          "root_after": "Qg5",
+          "move": "Qc8",
+          "why": "직접 공격이 뜻대로 강화되지 않는 정확한 방어."
+        }
+      ],
+      "misleading_claims": [
+        "Kh2가 Ne5를 처음 합법으로 만든다.",
+        "Kh2는 모든 체크를 없애며 강제로 이긴다.",
+        "직접 공격보다 점수가 높다는 이유만으로 공격의 기능을 설명했다.",
+        "상대가 반드시 잘못 반응한다."
+      ],
+      "comment_if_best_defense": "먼저 왕을 h2로 옮겨 퀸 체크에 쫓길 걱정을 줄입니다. 나이트가 f2 수비를 떠나 Ne5로 가거나 퀸을 공격에 쓰기 쉬워집니다. 당장 공격을 강행하는 것보다 편하게 압박을 이어갈 수 있지만, 정확한 방어에는 흑도 버팁니다.",
+      "invalidation_policy": "체크가 실제로 다른 강한 응수에서 계속 기능하면 제거 범위를 축소. 강한 방어가 무승부면 작은 개선·실전 어려움까지만 주장.",
+      "unknowns": [
+        "최근 엔진에서 Kh2와 직접 공격의 차이가 얼마나 안정적인지",
+        "흑의 정확한 무승부 경로 중 실제 최강 응수",
+        "상대 인간이 겪는 어려움의 크기나 확률"
+      ],
+      "sample_lines": [
+        {
+          "san": "Ne5 Qa7+ Kh2 Qf2 Rg1 Qc5",
+          "moves": [
+            {
+              "san": "Ne5",
+              "uci": "g4e5",
+              "fen_after": "3Q1nk1/1q1p2pp/p3p3/1p2N3/4P3/5PP1/PPr3P1/3R2K1 b - - 1 1"
+            },
+            {
+              "san": "Qa7+",
+              "uci": "b7a7",
+              "fen_after": "3Q1nk1/q2p2pp/p3p3/1p2N3/4P3/5PP1/PPr3P1/3R2K1 w - - 2 2"
+            },
+            {
+              "san": "Kh2",
+              "uci": "g1h2",
+              "fen_after": "3Q1nk1/q2p2pp/p3p3/1p2N3/4P3/5PP1/PPr3PK/3R4 b - - 3 2"
+            },
+            {
+              "san": "Qf2",
+              "uci": "a7f2",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1p2N3/4P3/5PP1/PPr2qPK/3R4 w - - 4 3"
+            },
+            {
+              "san": "Rg1",
+              "uci": "d1g1",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1p2N3/4P3/5PP1/PPr2qPK/6R1 b - - 5 3"
+            },
+            {
+              "san": "Qc5",
+              "uci": "f2c5",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1pq1N3/4P3/5PP1/PPr3PK/6R1 w - - 6 4"
+            }
+          ],
+          "end_fen": "3Q1nk1/3p2pp/p3p3/1pq1N3/4P3/5PP1/PPr3PK/6R1 w - - 6 4"
+        },
+        {
+          "san": "Kh2 Qc7 Qxc7 Rxc7 Ne5 Rc2 Rd6 Rxb2 Rxa6 g5",
+          "moves": [
+            {
+              "san": "Kh2",
+              "uci": "g1h2",
+              "fen_after": "3Q1nk1/1q1p2pp/p3p3/1p6/4P1N1/5PP1/PPr3PK/3R4 b - - 1 1"
+            },
+            {
+              "san": "Qc7",
+              "uci": "b7c7",
+              "fen_after": "3Q1nk1/2qp2pp/p3p3/1p6/4P1N1/5PP1/PPr3PK/3R4 w - - 2 2"
+            },
+            {
+              "san": "Qxc7",
+              "uci": "d8c7",
+              "fen_after": "5nk1/2Qp2pp/p3p3/1p6/4P1N1/5PP1/PPr3PK/3R4 b - - 0 2"
+            },
+            {
+              "san": "Rxc7",
+              "uci": "c2c7",
+              "fen_after": "5nk1/2rp2pp/p3p3/1p6/4P1N1/5PP1/PP4PK/3R4 w - - 0 3"
+            },
+            {
+              "san": "Ne5",
+              "uci": "g4e5",
+              "fen_after": "5nk1/2rp2pp/p3p3/1p2N3/4P3/5PP1/PP4PK/3R4 b - - 1 3"
+            },
+            {
+              "san": "Rc2",
+              "uci": "c7c2",
+              "fen_after": "5nk1/3p2pp/p3p3/1p2N3/4P3/5PP1/PPr3PK/3R4 w - - 2 4"
+            },
+            {
+              "san": "Rd6",
+              "uci": "d1d6",
+              "fen_after": "5nk1/3p2pp/p2Rp3/1p2N3/4P3/5PP1/PPr3PK/8 b - - 3 4"
+            },
+            {
+              "san": "Rxb2",
+              "uci": "c2b2",
+              "fen_after": "5nk1/3p2pp/p2Rp3/1p2N3/4P3/5PP1/Pr4PK/8 w - - 0 5"
+            },
+            {
+              "san": "Rxa6",
+              "uci": "d6a6",
+              "fen_after": "5nk1/3p2pp/R3p3/1p2N3/4P3/5PP1/Pr4PK/8 b - - 0 5"
+            },
+            {
+              "san": "g5",
+              "uci": "g7g5",
+              "fen_after": "5nk1/3p3p/R3p3/1p2N1p1/4P3/5PP1/Pr4PK/8 w - - 0 6"
+            }
+          ],
+          "end_fen": "5nk1/3p3p/R3p3/1p2N1p1/4P3/5PP1/Pr4PK/8 w - - 0 6"
+        },
+        {
+          "san": "Kh2 Qc6 Ne5 Rxg2+ Kxg2 Qc2+ Kh3 Qxd1 Qe7 Qh1+ Kg4 h5+ Kg5 Nh7+ Kg6 Nf8+ Kg5 Nh7+",
+          "moves": [
+            {
+              "san": "Kh2",
+              "uci": "g1h2",
+              "fen_after": "3Q1nk1/1q1p2pp/p3p3/1p6/4P1N1/5PP1/PPr3PK/3R4 b - - 1 1"
+            },
+            {
+              "san": "Qc6",
+              "uci": "b7c6",
+              "fen_after": "3Q1nk1/3p2pp/p1q1p3/1p6/4P1N1/5PP1/PPr3PK/3R4 w - - 2 2"
+            },
+            {
+              "san": "Ne5",
+              "uci": "g4e5",
+              "fen_after": "3Q1nk1/3p2pp/p1q1p3/1p2N3/4P3/5PP1/PPr3PK/3R4 b - - 3 2"
+            },
+            {
+              "san": "Rxg2+",
+              "uci": "c2g2",
+              "fen_after": "3Q1nk1/3p2pp/p1q1p3/1p2N3/4P3/5PP1/PP4rK/3R4 w - - 0 3"
+            },
+            {
+              "san": "Kxg2",
+              "uci": "h2g2",
+              "fen_after": "3Q1nk1/3p2pp/p1q1p3/1p2N3/4P3/5PP1/PP4K1/3R4 b - - 0 3"
+            },
+            {
+              "san": "Qc2+",
+              "uci": "c6c2",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1p2N3/4P3/5PP1/PPq3K1/3R4 w - - 1 4"
+            },
+            {
+              "san": "Kh3",
+              "uci": "g2h3",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1p2N3/4P3/5PPK/PPq5/3R4 b - - 2 4"
+            },
+            {
+              "san": "Qxd1",
+              "uci": "c2d1",
+              "fen_after": "3Q1nk1/3p2pp/p3p3/1p2N3/4P3/5PPK/PP6/3q4 w - - 0 5"
+            },
+            {
+              "san": "Qe7",
+              "uci": "d8e7",
+              "fen_after": "5nk1/3pQ1pp/p3p3/1p2N3/4P3/5PPK/PP6/3q4 b - - 1 5"
+            },
+            {
+              "san": "Qh1+",
+              "uci": "d1h1",
+              "fen_after": "5nk1/3pQ1pp/p3p3/1p2N3/4P3/5PPK/PP6/7q w - - 2 6"
+            },
+            {
+              "san": "Kg4",
+              "uci": "h3g4",
+              "fen_after": "5nk1/3pQ1pp/p3p3/1p2N3/4P1K1/5PP1/PP6/7q b - - 3 6"
+            },
+            {
+              "san": "h5+",
+              "uci": "h7h5",
+              "fen_after": "5nk1/3pQ1p1/p3p3/1p2N2p/4P1K1/5PP1/PP6/7q w - - 0 7"
+            },
+            {
+              "san": "Kg5",
+              "uci": "g4g5",
+              "fen_after": "5nk1/3pQ1p1/p3p3/1p2N1Kp/4P3/5PP1/PP6/7q b - - 1 7"
+            },
+            {
+              "san": "Nh7+",
+              "uci": "f8h7",
+              "fen_after": "6k1/3pQ1pn/p3p3/1p2N1Kp/4P3/5PP1/PP6/7q w - - 2 8"
+            },
+            {
+              "san": "Kg6",
+              "uci": "g5g6",
+              "fen_after": "6k1/3pQ1pn/p3p1K1/1p2N2p/4P3/5PP1/PP6/7q b - - 3 8"
+            },
+            {
+              "san": "Nf8+",
+              "uci": "h7f8",
+              "fen_after": "5nk1/3pQ1p1/p3p1K1/1p2N2p/4P3/5PP1/PP6/7q w - - 4 9"
+            },
+            {
+              "san": "Kg5",
+              "uci": "g6g5",
+              "fen_after": "5nk1/3pQ1p1/p3p3/1p2N1Kp/4P3/5PP1/PP6/7q b - - 5 9"
+            },
+            {
+              "san": "Nh7+",
+              "uci": "f8h7",
+              "fen_after": "6k1/3pQ1pn/p3p3/1p2N1Kp/4P3/5PP1/PP6/7q w - - 6 10"
+            }
+          ],
+          "end_fen": "6k1/3pQ1pn/p3p3/1p2N1Kp/4P3/5PP1/PP6/7q w - - 6 10"
+        },
+        {
+          "san": "Qg5 Qc8 Nh6+ Kh8 Nf7+ Kg8 Nd6 Qc7 Kh2 Ng6",
+          "moves": [
+            {
+              "san": "Qg5",
+              "uci": "d8g5",
+              "fen_after": "5nk1/1q1p2pp/p3p3/1p4Q1/4P1N1/5PP1/PPr3P1/3R2K1 b - - 1 1"
+            },
+            {
+              "san": "Qc8",
+              "uci": "b7c8",
+              "fen_after": "2q2nk1/3p2pp/p3p3/1p4Q1/4P1N1/5PP1/PPr3P1/3R2K1 w - - 2 2"
+            },
+            {
+              "san": "Nh6+",
+              "uci": "g4h6",
+              "fen_after": "2q2nk1/3p2pp/p3p2N/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 b - - 3 2"
+            },
+            {
+              "san": "Kh8",
+              "uci": "g8h8",
+              "fen_after": "2q2n1k/3p2pp/p3p2N/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 w - - 4 3"
+            },
+            {
+              "san": "Nf7+",
+              "uci": "h6f7",
+              "fen_after": "2q2n1k/3p1Npp/p3p3/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 b - - 5 3"
+            },
+            {
+              "san": "Kg8",
+              "uci": "h8g8",
+              "fen_after": "2q2nk1/3p1Npp/p3p3/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 w - - 6 4"
+            },
+            {
+              "san": "Nd6",
+              "uci": "f7d6",
+              "fen_after": "2q2nk1/3p2pp/p2Np3/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 b - - 7 4"
+            },
+            {
+              "san": "Qc7",
+              "uci": "c8c7",
+              "fen_after": "5nk1/2qp2pp/p2Np3/1p4Q1/4P3/5PP1/PPr3P1/3R2K1 w - - 8 5"
+            },
+            {
+              "san": "Kh2",
+              "uci": "g1h2",
+              "fen_after": "5nk1/2qp2pp/p2Np3/1p4Q1/4P3/5PP1/PPr3PK/3R4 b - - 9 5"
+            },
+            {
+              "san": "Ng6",
+              "uci": "f8g6",
+              "fen_after": "6k1/2qp2pp/p2Np1n1/1p4Q1/4P3/5PP1/PPr3PK/3R4 w - - 10 6"
+            }
+          ],
+          "end_fen": "6k1/2qp2pp/p2Np1n1/1p4Q1/4P3/5PP1/PPr3PK/3R4 w - - 10 6"
+        }
+      ]
+    },
+    {
+      "id": "MC-SGET05",
+      "book": "supergm",
+      "pdf_pages": [
+        531,
+        532,
+        533,
+        534,
+        535,
+        536
+      ],
+      "fen": "r4rk1/p2Pbppp/5n2/6q1/1pp5/2N2Q2/PPB2PPP/R3R1K1 w - - 0 1",
+      "played_san": "Rxe7",
+      "played_uci": "e1e7",
+      "type": "평범한 좋은 포획과 여러 충분한 선택",
+      "source_game": "Philip Hurtado - N.N., internet blitz 2019",
+      "source_pdf_pages": "649-658",
+      "fen_provenance": "도표 531을 확대 렌더링하여 직접 확인. c2 비숍·b2 폰과 f7 폰을 구분하고 모든 표본 수순 합법 검사. 최초 전체 이력·반수시계는 미제공.",
+      "author_judgment": "Rxe7이 간단하고 강한 선택. Ne4도 ...Qb5! 뒤 정확히 두면 이기며 h4/Rad1/Na4도 충분히 강하다. 다른 좋은 수에 허구의 결함을 붙일 이유가 없다.",
+      "human_question": "왜 복잡한 전술을 찾기보다 비숍을 바로 잡아도 충분하며, 공격받은 나이트를 잃은 뒤 무엇이 남는가?",
+      "core_function": [
+        "Rxe7 bxc3 bxc3 뒤 백은 폰 하나가 더 많고 d7 통과 폰 때문에 흑 기물이 크게 묶인다.",
+        "d7 폰이 즉시 승격하지 않아도 제약이 지속된다. 단순히 폰이 일곱째 줄에 있다는 것만으로 승리 증명은 아님.",
+        "Ne4의 유혹은 흑이 Nxe4로 응해야 하는 강제가 아니다. Qb5가 직접적인 승리를 피하지만 백의 승리를 완전히 반박하지는 않는다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Ne4",
+          "move": "Qb5",
+          "why": "쉬운 양면 공격 이야기를 막는 정확한 응수. 복잡성을 늘리지만 후보 자체를 나쁜 수로 판정하지 않는다."
+        },
+        {
+          "root_after": "Rxe7",
+          "move": "bxc3",
+          "why": "맞은편 나이트 손실을 생략하면 공짜 비숍 포획으로 오도."
+        },
+        {
+          "root_after": "Rxe7 bxc3 bxc3",
+          "moves": [
+            "Rad8",
+            "Nd5"
+          ],
+          "why": "d7 폰을 묶거나 공격하려는 실제 방어도 가격과 함께 확인."
+        }
+      ],
+      "misleading_claims": [
+        "Rxe7은 공짜 비숍을 얻는다.",
+        "Ne4는 Qb5 때문에 틀린 수.",
+        "단순한 포획은 설명할 내용이 없으므로 반드시 더 큰 전술을 찾아야 한다.",
+        "d7 통과 폰은 곧바로 승격이 강제된다."
+      ],
+      "comment_if_best_defense": "비숍을 바로 잡는 것으로 충분합니다. 반대편 나이트가 잡혀도 되잡은 뒤 폰 하나가 남고, d7 통과 폰이 흑 기물을 수비에 묶습니다. Ne4로 전술을 노릴 수도 있지만 ...Qb5 뒤 더 정확한 계산이 필요합니다.",
+      "invalidation_policy": "반대편 포획 후 material/봉쇄가 달라지면 결론 수정. Ne4의 직접 승리만 반증됐으면 전체 후보를 철회하지 않고 정확한 후속 승리 여부를 계속 확인.",
+      "unknowns": [
+        "현재 엔진 조건 아래 단순 수와 복잡한 수의 순위",
+        "실제 초심자에게 가격과 봉쇄를 짧게 전달하는 문장의 이해도"
+      ],
+      "sample_lines": [
+        {
+          "san": "Rxe7 bxc3 bxc3 Rad8 Rd1 g6 Ba4 Kg7 g3 Qa5 Bc6 Qxa2 Rd6 Ng8 Re8",
+          "moves": [
+            {
+              "san": "Rxe7",
+              "uci": "e1e7",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/1pp5/2N2Q2/PPB2PPP/R5K1 b - - 0 1"
+            },
+            {
+              "san": "bxc3",
+              "uci": "b4c3",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/2p5/2p2Q2/PPB2PPP/R5K1 w - - 0 2"
+            },
+            {
+              "san": "bxc3",
+              "uci": "b2c3",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/2p5/2P2Q2/P1B2PPP/R5K1 b - - 0 2"
+            },
+            {
+              "san": "Rad8",
+              "uci": "a8d8",
+              "fen_after": "3r1rk1/p2PRppp/5n2/6q1/2p5/2P2Q2/P1B2PPP/R5K1 w - - 1 3"
+            },
+            {
+              "san": "Rd1",
+              "uci": "a1d1",
+              "fen_after": "3r1rk1/p2PRppp/5n2/6q1/2p5/2P2Q2/P1B2PPP/3R2K1 b - - 2 3"
+            },
+            {
+              "san": "g6",
+              "uci": "g7g6",
+              "fen_after": "3r1rk1/p2PRp1p/5np1/6q1/2p5/2P2Q2/P1B2PPP/3R2K1 w - - 0 4"
+            },
+            {
+              "san": "Ba4",
+              "uci": "c2a4",
+              "fen_after": "3r1rk1/p2PRp1p/5np1/6q1/B1p5/2P2Q2/P4PPP/3R2K1 b - - 1 4"
+            },
+            {
+              "san": "Kg7",
+              "uci": "g8g7",
+              "fen_after": "3r1r2/p2PRpkp/5np1/6q1/B1p5/2P2Q2/P4PPP/3R2K1 w - - 2 5"
+            },
+            {
+              "san": "g3",
+              "uci": "g2g3",
+              "fen_after": "3r1r2/p2PRpkp/5np1/6q1/B1p5/2P2QP1/P4P1P/3R2K1 b - - 0 5"
+            },
+            {
+              "san": "Qa5",
+              "uci": "g5a5",
+              "fen_after": "3r1r2/p2PRpkp/5np1/q7/B1p5/2P2QP1/P4P1P/3R2K1 w - - 1 6"
+            },
+            {
+              "san": "Bc6",
+              "uci": "a4c6",
+              "fen_after": "3r1r2/p2PRpkp/2B2np1/q7/2p5/2P2QP1/P4P1P/3R2K1 b - - 2 6"
+            },
+            {
+              "san": "Qxa2",
+              "uci": "a5a2",
+              "fen_after": "3r1r2/p2PRpkp/2B2np1/8/2p5/2P2QP1/q4P1P/3R2K1 w - - 0 7"
+            },
+            {
+              "san": "Rd6",
+              "uci": "d1d6",
+              "fen_after": "3r1r2/p2PRpkp/2BR1np1/8/2p5/2P2QP1/q4P1P/6K1 b - - 1 7"
+            },
+            {
+              "san": "Ng8",
+              "uci": "f6g8",
+              "fen_after": "3r1rn1/p2PRpkp/2BR2p1/8/2p5/2P2QP1/q4P1P/6K1 w - - 2 8"
+            },
+            {
+              "san": "Re8",
+              "uci": "e7e8",
+              "fen_after": "3rRrn1/p2P1pkp/2BR2p1/8/2p5/2P2QP1/q4P1P/6K1 b - - 3 8"
+            }
+          ],
+          "end_fen": "3rRrn1/p2P1pkp/2BR2p1/8/2p5/2P2QP1/q4P1P/6K1 b - - 3 8"
+        },
+        {
+          "san": "Ne4 Qb5 Nxf6+ Bxf6 Rad1 Rad8 Rd5 Qa6 b3 Qxa2 Qe4 g6 Qxc4 a5 Red1 a4 R5d2 Bc3 Re2",
+          "moves": [
+            {
+              "san": "Ne4",
+              "uci": "c3e4",
+              "fen_after": "r4rk1/p2Pbppp/5n2/6q1/1pp1N3/5Q2/PPB2PPP/R3R1K1 b - - 1 1"
+            },
+            {
+              "san": "Qb5",
+              "uci": "g5b5",
+              "fen_after": "r4rk1/p2Pbppp/5n2/1q6/1pp1N3/5Q2/PPB2PPP/R3R1K1 w - - 2 2"
+            },
+            {
+              "san": "Nxf6+",
+              "uci": "e4f6",
+              "fen_after": "r4rk1/p2Pbppp/5N2/1q6/1pp5/5Q2/PPB2PPP/R3R1K1 b - - 0 2"
+            },
+            {
+              "san": "Bxf6",
+              "uci": "e7f6",
+              "fen_after": "r4rk1/p2P1ppp/5b2/1q6/1pp5/5Q2/PPB2PPP/R3R1K1 w - - 0 3"
+            },
+            {
+              "san": "Rad1",
+              "uci": "a1d1",
+              "fen_after": "r4rk1/p2P1ppp/5b2/1q6/1pp5/5Q2/PPB2PPP/3RR1K1 b - - 1 3"
+            },
+            {
+              "san": "Rad8",
+              "uci": "a8d8",
+              "fen_after": "3r1rk1/p2P1ppp/5b2/1q6/1pp5/5Q2/PPB2PPP/3RR1K1 w - - 2 4"
+            },
+            {
+              "san": "Rd5",
+              "uci": "d1d5",
+              "fen_after": "3r1rk1/p2P1ppp/5b2/1q1R4/1pp5/5Q2/PPB2PPP/4R1K1 b - - 3 4"
+            },
+            {
+              "san": "Qa6",
+              "uci": "b5a6",
+              "fen_after": "3r1rk1/p2P1ppp/q4b2/3R4/1pp5/5Q2/PPB2PPP/4R1K1 w - - 4 5"
+            },
+            {
+              "san": "b3",
+              "uci": "b2b3",
+              "fen_after": "3r1rk1/p2P1ppp/q4b2/3R4/1pp5/1P3Q2/P1B2PPP/4R1K1 b - - 0 5"
+            },
+            {
+              "san": "Qxa2",
+              "uci": "a6a2",
+              "fen_after": "3r1rk1/p2P1ppp/5b2/3R4/1pp5/1P3Q2/q1B2PPP/4R1K1 w - - 0 6"
+            },
+            {
+              "san": "Qe4",
+              "uci": "f3e4",
+              "fen_after": "3r1rk1/p2P1ppp/5b2/3R4/1pp1Q3/1P6/q1B2PPP/4R1K1 b - - 1 6"
+            },
+            {
+              "san": "g6",
+              "uci": "g7g6",
+              "fen_after": "3r1rk1/p2P1p1p/5bp1/3R4/1pp1Q3/1P6/q1B2PPP/4R1K1 w - - 0 7"
+            },
+            {
+              "san": "Qxc4",
+              "uci": "e4c4",
+              "fen_after": "3r1rk1/p2P1p1p/5bp1/3R4/1pQ5/1P6/q1B2PPP/4R1K1 b - - 0 7"
+            },
+            {
+              "san": "a5",
+              "uci": "a7a5",
+              "fen_after": "3r1rk1/3P1p1p/5bp1/p2R4/1pQ5/1P6/q1B2PPP/4R1K1 w - - 0 8"
+            },
+            {
+              "san": "Red1",
+              "uci": "e1d1",
+              "fen_after": "3r1rk1/3P1p1p/5bp1/p2R4/1pQ5/1P6/q1B2PPP/3R2K1 b - - 1 8"
+            },
+            {
+              "san": "a4",
+              "uci": "a5a4",
+              "fen_after": "3r1rk1/3P1p1p/5bp1/3R4/ppQ5/1P6/q1B2PPP/3R2K1 w - - 0 9"
+            },
+            {
+              "san": "R5d2",
+              "uci": "d5d2",
+              "fen_after": "3r1rk1/3P1p1p/5bp1/8/ppQ5/1P6/q1BR1PPP/3R2K1 b - - 1 9"
+            },
+            {
+              "san": "Bc3",
+              "uci": "f6c3",
+              "fen_after": "3r1rk1/3P1p1p/6p1/8/ppQ5/1Pb5/q1BR1PPP/3R2K1 w - - 2 10"
+            },
+            {
+              "san": "Re2",
+              "uci": "d2e2",
+              "fen_after": "3r1rk1/3P1p1p/6p1/8/ppQ5/1Pb5/q1B1RPPP/3R2K1 b - - 3 10"
+            }
+          ],
+          "end_fen": "3r1rk1/3P1p1p/6p1/8/ppQ5/1Pb5/q1B1RPPP/3R2K1 b - - 3 10"
+        },
+        {
+          "san": "Rxe7 bxc3 Qxc3 Nd5 Re5 Nxc3 Rxg5 Ne2+ Kf1 Nd4 Ba4",
+          "moves": [
+            {
+              "san": "Rxe7",
+              "uci": "e1e7",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/1pp5/2N2Q2/PPB2PPP/R5K1 b - - 0 1"
+            },
+            {
+              "san": "bxc3",
+              "uci": "b4c3",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/2p5/2p2Q2/PPB2PPP/R5K1 w - - 0 2"
+            },
+            {
+              "san": "Qxc3",
+              "uci": "f3c3",
+              "fen_after": "r4rk1/p2PRppp/5n2/6q1/2p5/2Q5/PPB2PPP/R5K1 b - - 0 2"
+            },
+            {
+              "san": "Nd5",
+              "uci": "f6d5",
+              "fen_after": "r4rk1/p2PRppp/8/3n2q1/2p5/2Q5/PPB2PPP/R5K1 w - - 1 3"
+            },
+            {
+              "san": "Re5",
+              "uci": "e7e5",
+              "fen_after": "r4rk1/p2P1ppp/8/3nR1q1/2p5/2Q5/PPB2PPP/R5K1 b - - 2 3"
+            },
+            {
+              "san": "Nxc3",
+              "uci": "d5c3",
+              "fen_after": "r4rk1/p2P1ppp/8/4R1q1/2p5/2n5/PPB2PPP/R5K1 w - - 0 4"
+            },
+            {
+              "san": "Rxg5",
+              "uci": "e5g5",
+              "fen_after": "r4rk1/p2P1ppp/8/6R1/2p5/2n5/PPB2PPP/R5K1 b - - 0 4"
+            },
+            {
+              "san": "Ne2+",
+              "uci": "c3e2",
+              "fen_after": "r4rk1/p2P1ppp/8/6R1/2p5/8/PPB1nPPP/R5K1 w - - 1 5"
+            },
+            {
+              "san": "Kf1",
+              "uci": "g1f1",
+              "fen_after": "r4rk1/p2P1ppp/8/6R1/2p5/8/PPB1nPPP/R4K2 b - - 2 5"
+            },
+            {
+              "san": "Nd4",
+              "uci": "e2d4",
+              "fen_after": "r4rk1/p2P1ppp/8/6R1/2pn4/8/PPB2PPP/R4K2 w - - 3 6"
+            },
+            {
+              "san": "Ba4",
+              "uci": "c2a4",
+              "fen_after": "r4rk1/p2P1ppp/8/6R1/B1pn4/8/PP3PPP/R4K2 b - - 4 6"
+            }
+          ],
+          "end_fen": "r4rk1/p2P1ppp/8/6R1/B1pn4/8/PP3PPP/R4K2 b - - 4 6"
+        }
+      ]
+    },
+    {
+      "id": "MC-SWMARCO",
+      "book": "swindler",
+      "pdf_pages": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "fen": "2k5/1pp4R/4N3/2P5/r7/1pb3P1/6KP/8 w - - 1 45",
+      "played_san": "c6",
+      "played_uci": "c5c6",
+      "type": "실전적 함정과 정확한 거절",
+      "source_game": "Frank Marshall - Georg Marco, Monaco 1904 (4)",
+      "source_pdf_pages": "32-38",
+      "fen_provenance": "도표 25의 41수 국면을 읽고 도표 26에 이르는 8플라이를 합법 재생. 반수시계 1은 44.Nxe6+ 뒤 Kc8에 의해 알려짐. 그 이전 완전 대국 이력은 미확인.",
+      "initial_fen": "8/1pp1k2p/4p3/p1P5/rP3R2/2bN2P1/6KP/8 w - - 0 41",
+      "source_prefix_san": "Rh4 axb4 Rxh7+ Kd8 Nf4 b3 Nxe6+ Kc8",
+      "source_prefix_uci": [
+        "f4h4",
+        "a5b4",
+        "h4h7",
+        "e7d8",
+        "d3f4",
+        "b4b3",
+        "f4e6",
+        "d8c8"
+      ],
+      "author_judgment": "c6는 여전히 객관적으로 진 국면에서 상대에게 판정이 어려운 선택을 주는 실전적 함정. ...bxc6!는 승리를 유지하며 ...Be5??가 승리를 놓친 실제 오류.",
+      "human_question": "이 폰 전진이 객관적으로 구원하는가, 아니면 정확한 방어와 착각하기 쉬운 방어 사이의 함정을 만드는가?",
+      "core_function": [
+        "c6를 잡는 선택과 c7을 지키는 선택을 상대에게 준다. c7 보존이 무조건 안전하다는 일반 원칙을 악용한다.",
+        "...Be5 뒤 cxb7+와 나이트·룩의 연속 중간수/승격 전술이 가능하지만 ...bxc6에는 성립하지 않는다.",
+        "최후 결과는 여러 후속 실수 뒤 백 승리. 최초 c6가 상대 실수 없이 승리/무승부를 강제한 것은 아니다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "c6",
+          "move": "bxc6",
+          "why": "최초 구원 주장에 대한 정확한 반례. 저자가 명시한 승리 유지 경로."
+        },
+        {
+          "root_after": "c6",
+          "move": "Be5",
+          "why": "실제 잘못된 방어와 그 이유를 정확한 방어와 대조."
+        },
+        {
+          "root_after": "Rxc7+ Kb8 Rd7",
+          "moves": [
+            "Be5",
+            "Bf6"
+          ],
+          "why": "다른 유혹 후보에도 명확한 해독제가 있음."
+        }
+      ],
+      "misleading_claims": [
+        "c6는 무승부를 강제한다.",
+        "상대는 c7 폰을 지켜야 하므로 Be5가 강제.",
+        "실전 승리는 이 수의 객관적 최선/우열 증명.",
+        "실수 확률을 엔진 점수로 이미 측정했다."
+      ],
+      "comment_if_best_defense": "객관적으로는 흑이 이기지만 c6로 마지막 어려운 선택을 만듭니다. ...bxc6가 정확한 방어이고, c7 폰을 지키려는 ...Be5에는 cxb7+와 후속 중간수 전술이 있어 승리를 놓칩니다.",
+      "invalidation_policy": "...bxc6가 승리 유지하면 객관적 구원 주장은 철회하되 조건부 함정 설명은 유지. 새 정확한 방어가 더 간단해지면 어려운 선택을 준다는 실전 평가의 범위도 재검토.",
+      "unknowns": [
+        "현대 엔진에서 정확한 방어의 순위",
+        "상대가 두 선택의 함정을 발견할 실제 확률",
+        "책에서 Marco의 동기를 설명한 서술을 독립 확인하지 않음"
+      ],
+      "sample_lines": [
+        {
+          "san": "c6 bxc6 Rxc7+ Kb8 Rxc6 b2 Rb6+ Kc8 Rb3 Rb4 Rxc3+ Kb8",
+          "moves": [
+            {
+              "san": "c6",
+              "uci": "c5c6",
+              "fen_after": "2k5/1pp4R/2P1N3/8/r7/1pb3P1/6KP/8 b - - 0 45"
+            },
+            {
+              "san": "bxc6",
+              "uci": "b7c6",
+              "fen_after": "2k5/2p4R/2p1N3/8/r7/1pb3P1/6KP/8 w - - 0 46"
+            },
+            {
+              "san": "Rxc7+",
+              "uci": "h7c7",
+              "fen_after": "2k5/2R5/2p1N3/8/r7/1pb3P1/6KP/8 b - - 0 46"
+            },
+            {
+              "san": "Kb8",
+              "uci": "c8b8",
+              "fen_after": "1k6/2R5/2p1N3/8/r7/1pb3P1/6KP/8 w - - 1 47"
+            },
+            {
+              "san": "Rxc6",
+              "uci": "c7c6",
+              "fen_after": "1k6/8/2R1N3/8/r7/1pb3P1/6KP/8 b - - 0 47"
+            },
+            {
+              "san": "b2",
+              "uci": "b3b2",
+              "fen_after": "1k6/8/2R1N3/8/r7/2b3P1/1p4KP/8 w - - 0 48"
+            },
+            {
+              "san": "Rb6+",
+              "uci": "c6b6",
+              "fen_after": "1k6/8/1R2N3/8/r7/2b3P1/1p4KP/8 b - - 1 48"
+            },
+            {
+              "san": "Kc8",
+              "uci": "b8c8",
+              "fen_after": "2k5/8/1R2N3/8/r7/2b3P1/1p4KP/8 w - - 2 49"
+            },
+            {
+              "san": "Rb3",
+              "uci": "b6b3",
+              "fen_after": "2k5/8/4N3/8/r7/1Rb3P1/1p4KP/8 b - - 3 49"
+            },
+            {
+              "san": "Rb4",
+              "uci": "a4b4",
+              "fen_after": "2k5/8/4N3/8/1r6/1Rb3P1/1p4KP/8 w - - 4 50"
+            },
+            {
+              "san": "Rxc3+",
+              "uci": "b3c3",
+              "fen_after": "2k5/8/4N3/8/1r6/2R3P1/1p4KP/8 b - - 0 50"
+            },
+            {
+              "san": "Kb8",
+              "uci": "c8b8",
+              "fen_after": "1k6/8/4N3/8/1r6/2R3P1/1p4KP/8 w - - 1 51"
+            }
+          ],
+          "end_fen": "1k6/8/4N3/8/1r6/2R3P1/1p4KP/8 w - - 1 51"
+        },
+        {
+          "san": "c6 Be5 cxb7+ Kb8 Nc5 Ra2+ Kh3 b2 Re7 Ka7 Re8 c6 Ra8+ Kb6 Rxa2 b1=Q b8=Q+ Bxb8 Rb2+ Qxb2 Na4+ Kb5 Nxb2",
+          "moves": [
+            {
+              "san": "c6",
+              "uci": "c5c6",
+              "fen_after": "2k5/1pp4R/2P1N3/8/r7/1pb3P1/6KP/8 b - - 0 45"
+            },
+            {
+              "san": "Be5",
+              "uci": "c3e5",
+              "fen_after": "2k5/1pp4R/2P1N3/4b3/r7/1p4P1/6KP/8 w - - 1 46"
+            },
+            {
+              "san": "cxb7+",
+              "uci": "c6b7",
+              "fen_after": "2k5/1Pp4R/4N3/4b3/r7/1p4P1/6KP/8 b - - 0 46"
+            },
+            {
+              "san": "Kb8",
+              "uci": "c8b8",
+              "fen_after": "1k6/1Pp4R/4N3/4b3/r7/1p4P1/6KP/8 w - - 1 47"
+            },
+            {
+              "san": "Nc5",
+              "uci": "e6c5",
+              "fen_after": "1k6/1Pp4R/8/2N1b3/r7/1p4P1/6KP/8 b - - 2 47"
+            },
+            {
+              "san": "Ra2+",
+              "uci": "a4a2",
+              "fen_after": "1k6/1Pp4R/8/2N1b3/8/1p4P1/r5KP/8 w - - 3 48"
+            },
+            {
+              "san": "Kh3",
+              "uci": "g2h3",
+              "fen_after": "1k6/1Pp4R/8/2N1b3/8/1p4PK/r6P/8 b - - 4 48"
+            },
+            {
+              "san": "b2",
+              "uci": "b3b2",
+              "fen_after": "1k6/1Pp4R/8/2N1b3/8/6PK/rp5P/8 w - - 0 49"
+            },
+            {
+              "san": "Re7",
+              "uci": "h7e7",
+              "fen_after": "1k6/1Pp1R3/8/2N1b3/8/6PK/rp5P/8 b - - 1 49"
+            },
+            {
+              "san": "Ka7",
+              "uci": "b8a7",
+              "fen_after": "8/kPp1R3/8/2N1b3/8/6PK/rp5P/8 w - - 2 50"
+            },
+            {
+              "san": "Re8",
+              "uci": "e7e8",
+              "fen_after": "4R3/kPp5/8/2N1b3/8/6PK/rp5P/8 b - - 3 50"
+            },
+            {
+              "san": "c6",
+              "uci": "c7c6",
+              "fen_after": "4R3/kP6/2p5/2N1b3/8/6PK/rp5P/8 w - - 0 51"
+            },
+            {
+              "san": "Ra8+",
+              "uci": "e8a8",
+              "fen_after": "R7/kP6/2p5/2N1b3/8/6PK/rp5P/8 b - - 1 51"
+            },
+            {
+              "san": "Kb6",
+              "uci": "a7b6",
+              "fen_after": "R7/1P6/1kp5/2N1b3/8/6PK/rp5P/8 w - - 2 52"
+            },
+            {
+              "san": "Rxa2",
+              "uci": "a8a2",
+              "fen_after": "8/1P6/1kp5/2N1b3/8/6PK/Rp5P/8 b - - 0 52"
+            },
+            {
+              "san": "b1=Q",
+              "uci": "b2b1q",
+              "fen_after": "8/1P6/1kp5/2N1b3/8/6PK/R6P/1q6 w - - 0 53"
+            },
+            {
+              "san": "b8=Q+",
+              "uci": "b7b8q",
+              "fen_after": "1Q6/8/1kp5/2N1b3/8/6PK/R6P/1q6 b - - 0 53"
+            },
+            {
+              "san": "Bxb8",
+              "uci": "e5b8",
+              "fen_after": "1b6/8/1kp5/2N5/8/6PK/R6P/1q6 w - - 0 54"
+            },
+            {
+              "san": "Rb2+",
+              "uci": "a2b2",
+              "fen_after": "1b6/8/1kp5/2N5/8/6PK/1R5P/1q6 b - - 1 54"
+            },
+            {
+              "san": "Qxb2",
+              "uci": "b1b2",
+              "fen_after": "1b6/8/1kp5/2N5/8/6PK/1q5P/8 w - - 0 55"
+            },
+            {
+              "san": "Na4+",
+              "uci": "c5a4",
+              "fen_after": "1b6/8/1kp5/8/N7/6PK/1q5P/8 b - - 1 55"
+            },
+            {
+              "san": "Kb5",
+              "uci": "b6b5",
+              "fen_after": "1b6/8/2p5/1k6/N7/6PK/1q5P/8 w - - 2 56"
+            },
+            {
+              "san": "Nxb2",
+              "uci": "a4b2",
+              "fen_after": "1b6/8/2p5/1k6/8/6PK/1N5P/8 b - - 0 56"
+            }
+          ],
+          "end_fen": "1b6/8/2p5/1k6/8/6PK/1N5P/8 b - - 0 56"
+        },
+        {
+          "san": "Rxc7+ Kb8 Rd7 Be5",
+          "moves": [
+            {
+              "san": "Rxc7+",
+              "uci": "h7c7",
+              "fen_after": "2k5/1pR5/4N3/2P5/r7/1pb3P1/6KP/8 b - - 0 45"
+            },
+            {
+              "san": "Kb8",
+              "uci": "c8b8",
+              "fen_after": "1k6/1pR5/4N3/2P5/r7/1pb3P1/6KP/8 w - - 1 46"
+            },
+            {
+              "san": "Rd7",
+              "uci": "c7d7",
+              "fen_after": "1k6/1p1R4/4N3/2P5/r7/1pb3P1/6KP/8 b - - 2 46"
+            },
+            {
+              "san": "Be5",
+              "uci": "c3e5",
+              "fen_after": "1k6/1p1R4/4N3/2P1b3/r7/1p4P1/6KP/8 w - - 3 47"
+            }
+          ],
+          "end_fen": "1k6/1p1R4/4N3/2P1b3/r7/1p4P1/6KP/8 w - - 3 47"
+        }
+      ]
+    },
+    {
+      "id": "MC-SWARIO",
+      "book": "swindler",
+      "pdf_pages": [
+        39,
+        40
+      ],
+      "fen": "b2r1b1k/5q2/p4P1p/3Pp2p/1r5P/2N1BR2/PP3QP1/3RK3 b - - 0 34",
+      "played_san": "Bxd5",
+      "played_uci": "a8d5",
+      "type": "실전적 기물 포획과 성급한 전술의 반증",
+      "source_game": "Levon Aronian - Magnus Carlsen, London 2019 (2.2)",
+      "source_pdf_pages": "53-55",
+      "fen_provenance": "도표 39 직접 확인. f3 룩·f6 백 폰·a8 비숍을 구분. 실제 앞 수순·반수시계는 제공되지 않아 0 34로 정규화.",
+      "author_judgment": "...Bxd5는 불리한 국면의 실전 도박. Rf5!나 a3! 같은 정상적인 수는 여전히 백 승리. 즉시 Bc5??일 때 ...Rd4!!가 통신을 끊고 중간수로 백의 이점을 크게 줄임.",
+      "human_question": "핀 된 비숍을 즉시 공격하는 Bc5가 왜 수확을 보장하지 않으며, 평범한 개선 수가 왜 더 안전한가?",
+      "core_function": [
+        "...Bxd5 뒤 d파일 핀처럼 보이는 배열이 있어도 상대의 ...Rd4 중간수를 고려해야 한다.",
+        "...Rd4는 d파일 룩 연결과 g1-a7 대각선 연결을 동시에 끊고, 어느 기물로 잡는가에 따라 별도의 중간수를 만든다.",
+        "Rf5로 e5/h5를 겨냥하거나 a3로 활성 룩을 밀어내는 평범한 수는 상대 함정에 응하지 않고 승리를 유지한다."
+      ],
+      "essential_refutations": [
+        {
+          "root_after": "Bxd5",
+          "moves": [
+            "Rf5",
+            "a3"
+          ],
+          "why": "...Bxd5가 객관적 구원/강제 함정이라는 주장을 반증하는 정상적인 좋은 수 두 개."
+        },
+        {
+          "root_after": "Bxd5 Bc5",
+          "move": "Rd4",
+          "why": "즉시 핀 수확을 반증하는 상대의 가장 중요한 중간수."
+        },
+        {
+          "root_after": "Bxd5 Bc5 Rd4",
+          "moves": [
+            "Bxf8",
+            "Rxd4",
+            "Bxd4"
+          ],
+          "why": "한 포획 선택만 예시로 검사하면 다른 중간수의 가격을 놓친다."
+        }
+      ],
+      "misleading_claims": [
+        "Bxd5는 백에게 Bc5를 강제하며 무승부 보장.",
+        "Bc5는 핀 된 비숍을 공격하므로 즉시 기물을 딴다.",
+        "실제 대국이 무승부였으므로 Bxd5가 객관적 균형을 만들었다.",
+        "Rf5와 a3는 전술적 설명이 없으므로 해설할 가치가 없다."
+      ],
+      "comment_if_best_defense": "흑은 폰을 잡으며 즉시 핀을 이용해 이기려는 백을 유혹합니다. 백은 Rf5나 a3로 천천히 개선하면 승리를 유지할 수 있습니다. Bc5로 바로 수확하려 하면 ...Rd4가 룩과 비숍의 연결을 끊고 중간수로 계산을 뒤집습니다.",
+      "invalidation_policy": "정상 수 Rf5/a3 아래 흑이 진다면 객관적 구원 주장은 철회하고 조건부 함정만 남긴다. Bc5 뒤 모든 주요 포획에서 중간수 가격을 확인하기 전 물질적 결론 확정 금지.",
+      "unknowns": [
+        "현대 엔진에서 정상 수들의 실제 우열 및 흑의 최강 후속 저항",
+        "Bc5 이후 백이 여전히 가진 이점의 정확한 크기",
+        "게임 앞 이력과 실제 반수시계"
+      ],
+      "sample_lines": [
+        {
+          "san": "Bxd5 Rf5",
+          "moves": [
+            {
+              "san": "Bxd5",
+              "uci": "a8d5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+            },
+            {
+              "san": "Rf5",
+              "uci": "f3f5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bpR1p/1r5P/2N1B3/PP3QP1/3RK3 b - - 1 35"
+            }
+          ],
+          "end_fen": "3r1b1k/5q2/p4P1p/3bpR1p/1r5P/2N1B3/PP3QP1/3RK3 b - - 1 35"
+        },
+        {
+          "san": "Bxd5 a3",
+          "moves": [
+            {
+              "san": "Bxd5",
+              "uci": "a8d5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+            },
+            {
+              "san": "a3",
+              "uci": "a2a3",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/P1N1BR2/1P3QP1/3RK3 b - - 0 35"
+            }
+          ],
+          "end_fen": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/P1N1BR2/1P3QP1/3RK3 b - - 0 35"
+        },
+        {
+          "san": "Bxd5 Bc5 Rd4 Bxf8 Rxd1+",
+          "moves": [
+            {
+              "san": "Bxd5",
+              "uci": "a8d5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+            },
+            {
+              "san": "Bc5",
+              "uci": "e3c5",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+            },
+            {
+              "san": "Rd4",
+              "uci": "b4d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36"
+            },
+            {
+              "san": "Bxf8",
+              "uci": "c5f8",
+              "fen_after": "3r1B1k/5q2/p4P1p/3bp2p/3r3P/2N2R2/PP3QP1/3RK3 b - - 0 36"
+            },
+            {
+              "san": "Rxd1+",
+              "uci": "d4d1",
+              "fen_after": "3r1B1k/5q2/p4P1p/3bp2p/7P/2N2R2/PP3QP1/3rK3 w - - 0 37"
+            }
+          ],
+          "end_fen": "3r1B1k/5q2/p4P1p/3bp2p/7P/2N2R2/PP3QP1/3rK3 w - - 0 37"
+        },
+        {
+          "san": "Bxd5 Bc5 Rd4 Rxd4 Bxc5",
+          "moves": [
+            {
+              "san": "Bxd5",
+              "uci": "a8d5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+            },
+            {
+              "san": "Bc5",
+              "uci": "e3c5",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+            },
+            {
+              "san": "Rd4",
+              "uci": "b4d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36"
+            },
+            {
+              "san": "Rxd4",
+              "uci": "d1d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3R3P/2N2R2/PP3QP1/4K3 b - - 0 36"
+            },
+            {
+              "san": "Bxc5",
+              "uci": "f8c5",
+              "fen_after": "3r3k/5q2/p4P1p/2bbp2p/3R3P/2N2R2/PP3QP1/4K3 w - - 0 37"
+            }
+          ],
+          "end_fen": "3r3k/5q2/p4P1p/2bbp2p/3R3P/2N2R2/PP3QP1/4K3 w - - 0 37"
+        },
+        {
+          "san": "Bxd5 Bc5 Rd4 Bxd4 Bxf3 gxf3 exd4",
+          "moves": [
+            {
+              "san": "Bxd5",
+              "uci": "a8d5",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+            },
+            {
+              "san": "Bc5",
+              "uci": "e3c5",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+            },
+            {
+              "san": "Rd4",
+              "uci": "b4d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36"
+            },
+            {
+              "san": "Bxd4",
+              "uci": "c5d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/3B3P/2N2R2/PP3QP1/3RK3 b - - 0 36"
+            },
+            {
+              "san": "Bxf3",
+              "uci": "d5f3",
+              "fen_after": "3r1b1k/5q2/p4P1p/4p2p/3B3P/2N2b2/PP3QP1/3RK3 w - - 0 37"
+            },
+            {
+              "san": "gxf3",
+              "uci": "g2f3",
+              "fen_after": "3r1b1k/5q2/p4P1p/4p2p/3B3P/2N2P2/PP3Q2/3RK3 b - - 0 37"
+            },
+            {
+              "san": "exd4",
+              "uci": "e5d4",
+              "fen_after": "3r1b1k/5q2/p4P1p/7p/3p3P/2N2P2/PP3Q2/3RK3 w - - 0 38"
+            }
+          ],
+          "end_fen": "3r1b1k/5q2/p4P1p/7p/3p3P/2N2P2/PP3Q2/3RK3 w - - 0 38"
+        }
+      ]
+    }
+  ],
+  "cross_scene_insights": [
+    {
+      "problem": "핵심 기능의 적용 시점과 전환",
+      "scenes": [
+        "SG13",
+        "MC-SG14",
+        "MC-SG32"
+      ],
+      "insight": "최소 조건도 영구적인 기물 생존/한 칸 통제로 바꾸면 다시 잘못된다. SG13의 Qd7은 첫 체크 자원을 차단하는 준비 단계이며 ...g5 뒤 Qxf7+로 왕 추격에 전환하고 Qh6/Be6에서 다시 g4 통제가 필요하다. SG14의 Qb3는 ...a6 강제 교환의 템포를 피하는 기능이고, ...Ne7 아래 자발적 교환으로 균형을 얻는 수순은 비숍이 사라져도 그 예방을 반증하지 않는다."
+    },
+    {
+      "problem": "반론을 확인한 뒤 무엇을 철회할 것인가",
+      "scenes": [
+        "SG02",
+        "MC-SG32",
+        "MC-SGET05",
+        "MC-SWMARCO",
+        "MC-SWARIO"
+      ],
+      "insight": "강한 반론은 특정 주장에 작용한다. Qd2는 Rxf3의 강제승리 주장을 철회하지만 제한된 압박을 자동으로 지우지는 않는다. Qb5는 Ne4의 즉시 승리만 반박하고 후보 전체를 나쁜 수로 만들지 않는다. bxc6와 Rf5/a3는 실전 함정의 객관적 구원 주장을 반박하지만 조건부 함정 자체는 남는다. 철회 대상 문장/판단을 구체적으로 정해야 한다."
+    },
+    {
+      "problem": "이미 합법인 선택의 유용성",
+      "scenes": [
+        "SG13",
+        "MC-SG14",
+        "MC-SG32"
+      ],
+      "insight": "합법성 변화는 필요 조건일 때만 의미의 핵심이다. 퇴로·체크 템포·비숍 보존·교환 후 활동처럼 이미 합법인 행동의 결과와 상대의 방어 부담을 비교해야 한다."
+    },
+    {
+      "problem": "핵심 조건과 넓은 사건 목록",
+      "scenes": [
+        "SG02",
+        "SG13",
+        "MC-SGET05",
+        "MC-SWARIO"
+      ],
+      "insight": "포획 목록 하나의 보존은 아이디어 전체의 생존 조건이 아니다. 동시에 남은 기물/한 칸 통제만으로도 평가를 증명하지 못한다. 정확한 기능과 상대의 강한 방어 아래 결과를 함께 고정해야 한다."
+    },
+    {
+      "problem": "가장 강한 반론의 선정",
+      "scenes": [
+        "SG02",
+        "SG13",
+        "MC-SG14",
+        "MC-SG32",
+        "MC-SGET05"
+      ],
+      "insight": "나쁜 수용/성급한 수를 잡아내는 계산 뒤에도 Qd2, g5, Ne7, Qc6/Qc7, Qb5 같은 냉정한 응수를 더 검사해야 한다. 이 응수의 완료로 최초 주장이 줄어드는 경우가 설명의 정당한 결과다."
+    },
+    {
+      "problem": "보호/새 경로 누적",
+      "scenes": [
+        "MC-SGET05",
+        "MC-SWMARCO",
+        "MC-SWARIO"
+      ],
+      "insight": "새 전술 이야기를 반드시 골라야 한다는 가정부터 피한다. 충분한 포획/천천한 개선, 객관적으로 진 상태의 조건부 실전 함정, 강제 구원을 각각 정상적인 코멘트로 인정해야 한다."
+    }
+  ],
+  "independent_validation": {
+    "positions_valid": true,
+    "all_listed_san_lines_legal": true,
+    "engine_wdl_not_computed_here": true
+  },
+  "render_files": [
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\supergm-p149.png",
+      "sha256": "3ee9d103291534b7a0ccc288956d2459ba3fdd09c844ab31b103bfbe6a9b8583"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\supergm-p153.png",
+      "sha256": "6be6df24e0f8aa860e00ef874ba1c19ffcba6059ad53ba7851df16c09e2d6912"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\supergm-p324.png",
+      "sha256": "1774b7948b04dc0534c7852386c297aaf3e4fe38fbfe8d60d80f1b91f9d43cc5"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\supergm-p531-diagram-0.png",
+      "sha256": "12949784363feb0b4d47e7a78455a4000f274077c6caefb08f9afaf9552a0495"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\supergm-p531.png",
+      "sha256": "2112ea1afbb83b9986824893be9c6812fe40d0706cbb262ba833239ebbf8ca34"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\swindler-p025.png",
+      "sha256": "468656467fdbb6cbb6a6c840bd893264f4bf07c42ff507affad98deb79aad8be"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\swindler-p026.png",
+      "sha256": "3834fcd5800f18c42489293572b1076fba897ad6e499765bdd2e4dbb617607fe"
+    },
+    {
+      "path": "target\\meaning-conditions-20261008\\books\\swindler-p039.png",
+      "sha256": "7d91c307bfd287585f4e786107c8911fe591df8e91216891a9723f9efe84456a"
+    }
+  ]
+}

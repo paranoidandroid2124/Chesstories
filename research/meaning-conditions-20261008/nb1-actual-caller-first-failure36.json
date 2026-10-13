@@ -1,0 +1,62 @@
+{
+  "actual_caller": true,
+  "original_reports_matched": 6,
+  "new_engine_queries": 0,
+  "gates_log_count": 75,
+  "stages": {
+    "read_entry": 12,
+    "read_yield": 12,
+    "actual_with_answer_begin": 3,
+    "actual_carrier_scope": 21,
+    "valid_quiet_inputs": 9,
+    "valid_result": 9,
+    "actual_central_conditions": 3,
+    "actual_central_result": 3,
+    "actual_with_answer_result": 3
+  },
+  "probe_manifest_sha256": "a659b22f975884cefde08a66dd3d9462fa5fd702e96b76bb9c792402b999579e",
+  "gates_sha256": "8aaac73e75df4e1e9e6758a27f38949b62cd30cb789206790f91717734c5452d",
+  "actual_snapshots_sha256": "63536693821b897da86fc0e61716806ab01b3bc6ba4aca7af96a969fa497a1fe",
+  "runner_sha256": "066b5ffd9c20f3dec9abd183c73f86cd83a795f516ebb754c3e6146517751ada",
+  "observed_quiet_gates": [
+    {
+      "proposal_id": "discovery:41899e251b5f051b6aa889aeb875335dbc1cf935f5427608e5bb5bde3e8a34b1",
+      "shared": true,
+      "receipt_owned": true,
+      "same_recapture": false,
+      "reference_in_investigation_paths": true,
+      "alternative_in_investigation_paths": false,
+      "reference_continuation_reading": true,
+      "alternative_continuation_reading": false,
+      "available_action": "legal",
+      "alternative_action": "illegal",
+      "reference_effect": "legal",
+      "alternative_effect": "illegal",
+      "both_actual_checks": false
+    },
+    {
+      "proposal_id": "discovery:3992d3d2ed16eb3083c102f5a0789f84a9620de3747ab3b32b22532ed32c8615",
+      "shared": true,
+      "receipt_owned": true,
+      "same_recapture": false,
+      "reference_in_investigation_paths": false,
+      "alternative_in_investigation_paths": false,
+      "reference_continuation_reading": false,
+      "alternative_continuation_reading": false,
+      "available_action": "legal",
+      "alternative_action": "illegal",
+      "reference_effect": "legal",
+      "alternative_effect": "illegal",
+      "both_actual_checks": false
+    }
+  ],
+  "first_failed_typed_gate": "sameRecapture: exact owned alternative has no reading in scheduling inventory",
+  "current_result": "selected_comparison retained; no quiet recapture admitted as central value",
+  "conclusion": "Legal declared hypotheses and independent scheduling seeds have different scopes. A scheduling collection is not a complete inventory of already certified material events.",
+  "proposed_common_change": "Read this exact certified owned path through the existing material reader and cache; retain readAll and investigationPaths seed scope unchanged.",
+  "limits": [
+    "The repair does not prove root evaluation causality or optimality.",
+    "The current central redundancy and price checks must still run.",
+    "Discovery-only paths must not become independent scheduling seeds."
+  ]
+}

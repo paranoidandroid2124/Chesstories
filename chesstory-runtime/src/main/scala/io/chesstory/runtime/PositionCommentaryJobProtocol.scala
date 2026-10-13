@@ -435,11 +435,19 @@ object PositionCommentaryJobProtocol:
       "variant" -> Variant,
       "deadline_epoch_ms" -> snapshot.deadlineEpochMs,
       "focus" -> focusJson(state.playedMoveUci, state.resultingFen)
-    ) ++ verificationJson(state.verification) ++ state.observationsPacket.map(packet => Json.obj("observations" ->
-      RuntimeProtocol.observationsJson(packet, state.inquiries, state.pvComparisons,
+    // Intermediate short-job work carries its independent assessment without
+    // eagerly serializing the whole proof graph. Terminal states retain it.
+    ) ++ verificationJson(state.verification) ++ state.observationsPacket.filterNot(_ =>
+      state.deferObservationDelivery).map(packet => Json.obj("observations" ->
+      (state match
+        case pending: AwaitingEngineWork if pending.issuedWork.purpose == EngineWorkPurpose.ResponseComparison &&
+            pending.issuedWork.searchAnchor.exists(_.plyOffset == 1) && pending.issuedWork.proposalRefs.isEmpty &&
+            state.proposalEntries.isEmpty => RuntimeProtocol.responseWorkObservationsJson(packet,
+          state.preparedPaths.get, state.responseInquiries, state.responseSearches)
+        case _ => RuntimeProtocol.observationsJson(packet, state.inquiries, state.pvComparisons,
         state.responseInquiries, state.preparedPaths, state.responseSearches,
         state.continuationReadings, state.continuationInquiries, state.rootSearches,
-        state.proposalEntries, state.localExpansionsUsed, state.discoveryState)))
+        state.proposalEntries, state.localExpansionsUsed, state.discoveryState))))
       .getOrElse(Json.obj())
 
   private[runtime] def verificationJson(value: Option[CommentaryVerification]): JsObject =

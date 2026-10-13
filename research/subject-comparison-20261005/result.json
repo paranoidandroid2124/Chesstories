@@ -1,0 +1,147 @@
+{
+  "status": "implemented_and_verified",
+  "version": "subjectv9",
+  "generated_at_utc": "2026-10-05T11:05:52.346586+00:00",
+  "objective": "Choose shared original subjects before broad histories, preserve their actual responses/prices and independently verified root uses, and deliver the chosen answer as basic commentary.",
+  "counts": {
+    "positions": 35,
+    "fully_replayed": 35,
+    "shared_subject_selected": 24,
+    "upstream_unchanged": 35,
+    "raw_observed_facts_unchanged": 35,
+    "lost_delivery": 0,
+    "text_changed": 25,
+    "prices_lost_everywhere": 0,
+    "duplicate_core_price_cases": 0
+  },
+  "runtime_tests": 332,
+  "new_regression_tests": 7,
+  "unmodified_product_control_equal_snapshots": 35,
+  "frontend": {
+    "accepted_snapshots": 35,
+    "exact_inline_frames": 1772,
+    "rejected_negative_mutations": 10,
+    "scope": "Actual Node/JSDOM decoder and VNode event callbacks; not a live browser or app session."
+  },
+  "modified_product_sources": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala"
+  ],
+  "added_product_sources": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala"
+  ],
+  "added_product_test": "chesstory-runtime/src/test/scala/io/chesstory/runtime/RootSubjectComparisonTest.scala",
+  "required_basic_prices": {
+    "COR06-02": {
+      "b4d5": [
+        13
+      ]
+    },
+    "COR06-08": {
+      "f6d7": [
+        2,
+        3,
+        7,
+        8,
+        9,
+        10
+      ],
+      "c8d7": [
+        17,
+        18,
+        20
+      ]
+    },
+    "COR06-09": {
+      "d5b3": [
+        2,
+        3,
+        6,
+        7,
+        11,
+        12
+      ],
+      "c2c3": [
+        1,
+        2,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "candidates2018-10": {
+      "e5f4": [
+        11,
+        12
+      ],
+      "h6f4": [
+        14,
+        15
+      ]
+    },
+    "COR06-03": {
+      "f5e6": [
+        5
+      ]
+    }
+  },
+  "content_reading": [
+    {
+      "id": "COR06-02",
+      "finding": "사전 질문의 핵심을 회수할 수 있음",
+      "reason": "같은 원래 b4 나이트의 두 초기 대응과 실제 백 응수, 뒤 e4/Nb4/Bxb4 손실, 비교 수순 끝의 잔존을 전달한다. 다른 원래 나이트의 거래는 이 질문의 가격으로 합치지 않는다."
+    },
+    {
+      "id": "COR06-08",
+      "finding": "사전 질문의 핵심과 다른 칸의 가격을 회수할 수 있음",
+      "reason": "중앙 나이트 교환, Qd4의 Nc3 지원, Qxd6의 지원 종료와 Qxc3 손실을 잇는다. 비교 쪽의 두 백 나이트 잔존과 Na2 뒤 열린 Qxc2 포획도 남긴다."
+    },
+    {
+      "id": "COR06-09",
+      "finding": "사전 질문의 핵심과 원래 기물의 가격을 회수할 수 있음",
+      "reason": "Bb3의 초기 회피와 뒤 비숍 교환, 첫 Nd4 응수의 양쪽 공격, 원래 f3/e3 나이트의 실제 거래를 구분한다. c3의 독립된 실제 폰 지원 사용은 함께 남긴다. 보호된 설명의 반복은 남아 있다."
+    },
+    {
+      "id": "candidates2018-10",
+      "finding": "뒤의 나이트 거래에서 중요한 가격 누락을 해소함",
+      "reason": "Qxc5 앞의 Raxb8 나이트 손실과 다른 수순의 Bxg6/hxg6 비숍 가격을 기본 답에 함께 남긴다. 초기 포획이 이 후속 거래를 강제했다고 주장하지 않는다. 여전히 보호된 관계 설명이 길다."
+    },
+    {
+      "id": "COR06-03",
+      "finding": "보호된 기제와 포획 가격을 보존함",
+      "reason": "초기 선택으로 열린 실제 Rxa2 포획과 체크 응수를 보존한다. 여러 독립된 관계가 공존해 기본 해설은 여전히 길다."
+    },
+    {
+      "id": "wch2024-10",
+      "finding": "같은 원래 룩의 서로 다른 포획 거래를 기본 답으로 조직함",
+      "reason": "기존의 중요한 룩 거래를 보존하며 공통 대상을 먼저 이름 붙인다. 새로운 질문 경쟁의 전반적 우수성을 뜻하지 않는다."
+    },
+    {
+      "id": "candidates2018-08",
+      "finding": "실제 비교 응수 부족; 해결 성공으로 계산하지 않음",
+      "reason": "한쪽이 초기 한 수뿐이므로 새 비교 후보를 만들지 않는다. 기존 제한된 답은 양쪽의 실제 대응을 완성한 답이 아니다."
+    },
+    {
+      "id": "wch2024-11",
+      "finding": "한쪽 설명만 풍부한 문제 미해결",
+      "reason": "같은 관찰 결과에서 중요한 선택 차이를 고르는 근거가 부족하다. 새 공통 대상 후보가 없고 기존 비대칭 설명이 남는다."
+    }
+  ],
+  "assessment_method": "Same research agent reading already-open development cases against older obligations. Not an independent human evaluation or a fresh held-out quality score.",
+  "limits": [
+    "Already-open old18 plus accepted fresh17 stored reports only; no new engine execution.",
+    "Observed finite outcomes do not prove forced responses or evaluation causes.",
+    "Existing terminal and completed mechanism question priorities are preserved; general importance ranking remains open.",
+    "A candidate being selected, shorter text, and contract success are not semantic quality scores.",
+    "No publication, deployment or commit was performed; earlier workspace changes are preserved."
+  ],
+  "artifacts": {
+    "subjectv9-comparison.json": "90b82db73629fc8158aba4fc847893094a2f830cb4a44c2a939b901db8b762eb",
+    "frontend-contract.json": "611ed4090603b48bac4a0d2354b1a65118b078f184b28faa9697329afd0e5a43",
+    "source-manifest.json": "9dbf5bd6335a7eba86ef9de2ba2cdcd707c4ba0acf2fc3b3d3ca83cbdb6a0997",
+    "test-run-subjectv9.json": "dbf2944492b6c7987f51fe6c011afe78a5a4ece00d62cb4d9905dfc588f00260"
+  }
+}

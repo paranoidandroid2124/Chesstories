@@ -1,0 +1,181 @@
+{
+  "created_utc": "2026-10-06T00:54:35.685849+00:00",
+  "rule_freeze_sha256": "8b1d28189bccf7ddee1e611d3fcee3d0d9642798b3c689c6ab13c5508e2182d7",
+  "scope": "Four new boards chosen after the first rule freeze, before any product output or engine probe for these boards. Book judgments are falsifiable human hypotheses. Related chess families, not a random sample or novice user study.",
+  "cases": [
+    {
+      "id": "H01",
+      "category": "quiet_important",
+      "initial_fen": "8/8/p3pkp1/1p6/1P2KP2/8/P6P/8 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "8/8/p3pkp1/1p6/1P2KP2/8/P6P/8 w - - 0 1",
+      "mainline_san": "",
+      "played_san": "h4",
+      "lines": [
+        [
+          "h2h4"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "h2h3",
+        "a2a3"
+      ],
+      "alternatives_san": [
+        "h3",
+        "a3"
+      ],
+      "source": "100 Endgame Patterns, personal reading PDF page 59, reserve tempi position3; diagram visually checked.",
+      "human_task": "The h-pawn can supply two separate waiting moves. Explain whether h4 spends a tempo needed for the king to enter and complete its detour, compared with h3.",
+      "falsifiers": [
+        "If h4 preserves the same winning result against best defence, do not call it a lost win.",
+        "A passed-pawn or capture ledger alone does not explain the reserve-tempo difference.",
+        "The h3 book line is a hypothesis; inspect other king and pawn replies."
+      ],
+      "product_output_previously_read": false,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "H02",
+      "category": "quiet_important",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "e7e6",
+        "b1c3",
+        "e6d5",
+        "c4d5",
+        "d7d6",
+        "e2e4",
+        "g7g6",
+        "f2f4",
+        "f8g7",
+        "g1f3",
+        "e8g8",
+        "f1e2",
+        "b8d7",
+        "e1g1",
+        "f8e8",
+        "d1c2",
+        "d8e7"
+      ],
+      "fen": "r1b1r1k1/pp1nqpbp/3p1np1/2pP4/4PP2/2N2N2/PPQ1B1PP/R1B2RK1 w - - 9 12",
+      "mainline_san": "d4 Nf6 c4 c5 d5 e6 Nc3 exd5 cxd5 d6 e4 g6 f4 Bg7 Nf3 O-O Be2 Nbd7 O-O Re8 Qc2 Qe7",
+      "played_san": "Nd2",
+      "lines": [
+        [
+          "f3d2"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1e1",
+        "e2d3"
+      ],
+      "alternatives_san": [
+        "Re1",
+        "Bd3"
+      ],
+      "source": "John Doknjas, Opening Repertoire The Modern Benoni, PDF pages59-60 (printed58-59), Game7 variation12Nd2?!; successor12...Nb6 diagram visually checked.",
+      "human_task": "Nd2 supports e4 but withdraws the active f3 knight. Test whether ...Nb6 and the threat ...Nfxd5 make this natural defence inferior to Re1; explain the concrete enabled response and its cost.",
+      "falsifiers": [
+        "Do not claim ...Nb6 forces material gain from one PV.",
+        "The queen on c2 and bishop on e2 must be tracked; an attack count is not a proof of an unanswerable threat.",
+        "If modern equal-depth analysis does not separate the alternatives, report the book hypothesis as unconfirmed."
+      ],
+      "product_output_previously_read": false,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "H03",
+      "category": "ordinary_or_uncertain",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "g2g3",
+        "d7d5",
+        "g1f3",
+        "f8e7"
+      ],
+      "fen": "rnbqk2r/ppp1bppp/4pn2/3p4/2PP4/5NP1/PP2PP1P/RNBQKB1R w KQkq - 2 5",
+      "mainline_san": "d4 Nf6 c4 e6 g3 d5 Nf3 Be7",
+      "played_san": "Bg2",
+      "lines": [
+        [
+          "f1g2"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "b1c3"
+      ],
+      "alternatives_san": [
+        "Nc3"
+      ],
+      "source": "Catalan introductory fianchetto setup; new early position selected after the rule freeze.",
+      "human_task": "Explain completing the fianchetto and the bishop diagonal. Several sound development orders may exist; avoid inventing a defect to explain a small ranking difference.",
+      "falsifiers": [
+        "If a concrete immediate threat or significant stable difference appears, the ordinary-purpose assumption must be revised in the reading.",
+        "Do not claim full equality from a short engine search or safety from the development label."
+      ],
+      "product_output_previously_read": false,
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "H04",
+      "category": "tactical_boundary",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "c7c5",
+        "d4d5",
+        "e7e6",
+        "b1c3",
+        "e6d5",
+        "c4d5",
+        "d7d6",
+        "e2e4",
+        "g7g6",
+        "f2f4",
+        "f8g7",
+        "g1f3",
+        "e8g8"
+      ],
+      "fen": "rnbq1rk1/pp3pbp/3p1np1/2pP4/4PP2/2N2N2/PP4PP/R1BQKB1R w KQ - 3 9",
+      "mainline_san": "d4 Nf6 c4 c5 d5 e6 Nc3 exd5 cxd5 d6 e4 g6 f4 Bg7 Nf3 O-O",
+      "played_san": "e5",
+      "lines": [
+        [
+          "e4e5"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f1e2",
+        "f1d3"
+      ],
+      "alternatives_san": [
+        "Be2",
+        "Bd3"
+      ],
+      "source": "John Doknjas, Opening Repertoire The Modern Benoni, Game6, printed page51 (PDF52), variation9e5?.",
+      "human_task": "The central break is premature if ...dxe5, fxe5 and ...Ng4/...Nxe5 win the pawn without enough return. Explain the actual reply and complete price rather than praising space alone.",
+      "falsifiers": [
+        "Inspect White alternatives to fxe5 and Black alternatives to Ng4.",
+        "An initial pawn loss is not itself evidence of inadequate compensation.",
+        "Do not call the published line forced."
+      ],
+      "product_output_previously_read": false,
+      "provided_future_lines": false,
+      "provided_scores": false
+    }
+  ]
+}

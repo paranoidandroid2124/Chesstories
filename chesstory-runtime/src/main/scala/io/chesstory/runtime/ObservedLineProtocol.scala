@@ -44,6 +44,14 @@ private[runtime] object ObservedLineProtocol:
       val eligible: Set[String], val resourceIds: Set[String], val paths: List[PreparedPath]
   ):
     lazy val notation = new CommentaryNotation(owner)
+    private[runtime] lazy val movePurpose = MovePurpose.discover(owner, this)
+    private val purposePositions = scala.collection.mutable.Map.empty[(String, Int), Option[MoveWorkProjection.Position]]
+    private[runtime] def purposePosition(path: PreparedPath, count: Int): Option[MoveWorkProjection.Position] =
+      if !paths.exists(_ eq path) then None else purposePositions.synchronized {
+        purposePositions.getOrElseUpdate(path.line.ref.id -> count,
+          positionView(path, count).map(new MoveWorkProjection.Position(_))
+            .filter(_.complete(RelationFactKind.GeometricControl)))
+      }
     private[runtime] lazy val workSelection = MoveWorkProjection.buildSelection(owner, this)
     private[runtime] lazy val resourceJson = owner.resources.map(PositionResourceProtocol.json)
     def belongsTo(packet: EvidenceBackedJudgmentPacket): Boolean = owner eq packet

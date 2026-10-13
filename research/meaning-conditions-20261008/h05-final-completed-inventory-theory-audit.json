@@ -1,0 +1,1353 @@
+{
+  "schema_version": "h05.completed-inventory-theory-audit.v1",
+  "sealed_utc": "2026-10-08T08:08:21.179861+00:00",
+  "scope": "Read-only audit of already executed standalone research, exact canonical legal inventories and returned depth. No new engine call, product submission, source change or test run. This is a new supplement; all original plans, failed outcomes and fixed human criteria remain immutable.",
+  "profile_boundary": "Six final descendant queries use the separately declared 128MB research profile. Original root stability uses the product-like 16MB profile. Neither set is an owned product receipt. An engine depth/value is finite-search evidence, not a mathematical proof of all later defenses.",
+  "completed_descendant_queries": [
+    {
+      "id": "H05-current-late-black-all-legal-d24-h128-research-control",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4"
+      ],
+      "fen": "8/8/4kp2/2p5/p1p1PKP1/P1P5/8/8 b - - 0 43",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 192665432,
+      "elapsed_ms": 32706,
+      "max_elapsed_ms": 1202000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 10000000000,
+        "movetimeMs": 1200000,
+        "multiPv": 5
+      },
+      "work_key": "a76c6507fe4d54cbb5821fd4c3e9d6ff9fb1ceb33c4b09e5298cad232122f725",
+      "all_legal_roots": [
+        {
+          "uci": "e6d6",
+          "san": "Kd6"
+        },
+        {
+          "uci": "e6d7",
+          "san": "Kd7"
+        },
+        {
+          "uci": "e6e7",
+          "san": "Ke7"
+        },
+        {
+          "uci": "e6f7",
+          "san": "Kf7"
+        },
+        {
+          "uci": "f6f5",
+          "san": "f5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": true,
+      "original_named_uci": [
+        "e6d7",
+        "f6f5"
+      ],
+      "values": [
+        {
+          "uci": "e6f7",
+          "san": "Kf7",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 50,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e6d7",
+          "san": "Kd7",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 45,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e6e7",
+          "san": "Ke7",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 39,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e6d6",
+          "san": "Kd6",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 45,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f6f5",
+          "san": "f5",
+          "white_value": {
+            "kind": "mate",
+            "value": 13
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 26,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-completion-control\\results.json",
+        "sha256": "5619e0d5fc48bb48dfec8e9ae4df459ff67d4af8cc6d3d05a15dac8fc469b861"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-hash128-completion-control-plan.json",
+        "sha256": "c9658ec5d76fc2404db094b751957d761558d02936fa898bff5195ca2270626d"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd6-all-legal-d24-h128-research-control",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4",
+        "e6d6"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4",
+        "Kd6"
+      ],
+      "fen": "8/8/3k1p2/2p5/p1p1PKP1/P1P5/8/8 w - - 1 44",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 365780199,
+      "elapsed_ms": 79046,
+      "max_elapsed_ms": 1202000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 10000000000,
+        "movetimeMs": 1200000,
+        "multiPv": 6
+      },
+      "work_key": "865943f73086a61d51250f143c9b575bef7aa446b3171d3a7fd6a9cc3363b625",
+      "all_legal_roots": [
+        {
+          "uci": "e4e5",
+          "san": "e5+"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": true,
+      "original_named_uci": [
+        "f4f5"
+      ],
+      "values": [
+        {
+          "uci": "f4f5",
+          "san": "Kf5",
+          "white_value": {
+            "kind": "mate",
+            "value": 27
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 53,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3",
+          "white_value": {
+            "kind": "mate",
+            "value": 29
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 57,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3",
+          "white_value": {
+            "kind": "mate",
+            "value": 32
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 63,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5+",
+          "white_value": {
+            "kind": "cp",
+            "value": 8029
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 25,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8010
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 33,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8009
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 27,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-entry-completion\\results.json",
+        "sha256": "341942f673c55a4f1bf7baeae3291e8e2fd25a51609074c0fa6539660f632af2"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-hash128-entry-completion-plan.json",
+        "sha256": "dec7819dac6d0951908a09ec1d436545cf9d58f0c9ff0f2f07b180b4408372e0"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd7-all-legal-d24-h128-research-control",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4",
+        "e6d7"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4",
+        "Kd7"
+      ],
+      "fen": "8/3k4/5p2/2p5/p1p1PKP1/P1P5/8/8 w - - 1 44",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 311900894,
+      "elapsed_ms": 77261,
+      "max_elapsed_ms": 1202000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 10000000000,
+        "movetimeMs": 1200000,
+        "multiPv": 6
+      },
+      "work_key": "c7b4bd018153e53d9f79eecb015d494f6ef371c59787960af6c2f246f01bb3ac",
+      "all_legal_roots": [
+        {
+          "uci": "e4e5",
+          "san": "e5"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": true,
+      "original_named_uci": [
+        "f4f5"
+      ],
+      "values": [
+        {
+          "uci": "g4g5",
+          "san": "g5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 32,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 28,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 28,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 28,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 27,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8112
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 27,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-entry-completion\\results.json",
+        "sha256": "341942f673c55a4f1bf7baeae3291e8e2fd25a51609074c0fa6539660f632af2"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-hash128-entry-completion-plan.json",
+        "sha256": "dec7819dac6d0951908a09ec1d436545cf9d58f0c9ff0f2f07b180b4408372e0"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Ke7-all-legal-d24-h128-final",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4",
+        "e6e7"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4",
+        "Ke7"
+      ],
+      "fen": "8/4k3/5p2/2p5/p1p1PKP1/P1P5/8/8 w - - 1 44",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 391485487,
+      "elapsed_ms": 90583,
+      "max_elapsed_ms": 122000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 500000000,
+        "movetimeMs": 120000,
+        "multiPv": 6
+      },
+      "work_key": "42143d1ff19f950bb54993cfedc7c8683101c0370a9271e1337b6db4eeb5e246",
+      "all_legal_roots": [
+        {
+          "uci": "e4e5",
+          "san": "e5"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": true,
+      "original_named_uci": [
+        "f4f5"
+      ],
+      "values": [
+        {
+          "uci": "e4e5",
+          "san": "e5",
+          "white_value": {
+            "kind": "mate",
+            "value": 27
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 53,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3",
+          "white_value": {
+            "kind": "mate",
+            "value": 29
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 57,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3",
+          "white_value": {
+            "kind": "mate",
+            "value": 30
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 59,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 29,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 25,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 37,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\results.json",
+        "sha256": "b2f22489c6f5ca16c681bdddd4899066f9433da11e43cacc463e56404319b379"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-response-inventories-plan.json",
+        "sha256": "07386c011a78ebc22aaabf524a06f93811dc2b7769ef094d5d3fc83dc326e085"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kf7-all-legal-d24-h128-completion-1200s",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4",
+        "e6f7"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4",
+        "Kf7"
+      ],
+      "fen": "8/5k2/5p2/2p5/p1p1PKP1/P1P5/8/8 w - - 1 44",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 522519581,
+      "elapsed_ms": 103631,
+      "max_elapsed_ms": 1202000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 10000000000,
+        "movetimeMs": 1200000,
+        "multiPv": 6
+      },
+      "work_key": "91fd77c4dd203731eba98fc7a477d16cb1d1b852ceddf454e2b7c9ebacabe94b",
+      "all_legal_roots": [
+        {
+          "uci": "e4e5",
+          "san": "e5"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4f5",
+          "san": "Kf5"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": true,
+      "original_named_uci": [
+        "f4f5"
+      ],
+      "values": [
+        {
+          "uci": "f4f5",
+          "san": "Kf5",
+          "white_value": {
+            "kind": "mate",
+            "value": 28
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 55,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 29,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 35,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 31,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 33,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8100
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 31,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-inventory-completion\\results.json",
+        "sha256": "e5b0f812e1e9859ee1a821c07a1bf0566d064d0b4ad14d139073825dd4f92d2b"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-inventory-completion-plan.json",
+        "sha256": "47767381ce6a81883c1e1621c06ef440d49aa11b003793291e8dad168422a6da"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-f5-all-legal-d24-h128-completion-1200s",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "exact_prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6c6",
+        "f2e3",
+        "c6c7",
+        "e3d2",
+        "b4c3",
+        "b2c3",
+        "c7c6",
+        "d2e3",
+        "c6d6",
+        "e3f4",
+        "d6e6",
+        "g3g4",
+        "f6f5"
+      ],
+      "exact_prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Kc6",
+        "Ke3",
+        "Kc7",
+        "Kd2",
+        "bxc3+",
+        "bxc3",
+        "Kc6",
+        "Ke3",
+        "Kd6",
+        "Kf4",
+        "Ke6",
+        "g4",
+        "f5"
+      ],
+      "fen": "8/8/4k3/2p2p2/p1p1PKP1/P1P5/8/8 w - - 0 44",
+      "profile": "sf18-smallnet-t2-h128-research-v1",
+      "research_hash_mb": 128,
+      "requested_depth": 24,
+      "completed_depth": 24,
+      "nodes": 470698613,
+      "elapsed_ms": 97963,
+      "max_elapsed_ms": 1202000,
+      "search_limits": {
+        "depth": 24,
+        "nodes": 10000000000,
+        "movetimeMs": 1200000,
+        "multiPv": 8
+      },
+      "work_key": "fc7ec8c02fcd89736487d239bcae0fd6c8b13194ac7c1205d5737b2bc93d1e0d",
+      "all_legal_roots": [
+        {
+          "uci": "e4e5",
+          "san": "e5"
+        },
+        {
+          "uci": "e4f5",
+          "san": "exf5+"
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3"
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3"
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3"
+        },
+        {
+          "uci": "f4g5",
+          "san": "Kg5"
+        },
+        {
+          "uci": "g4f5",
+          "san": "gxf5+"
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5"
+        }
+      ],
+      "canonical_complete_inventory": true,
+      "display_metadata_matches_inventory": false,
+      "original_named_uci": [
+        "f4f5"
+      ],
+      "values": [
+        {
+          "uci": "e4f5",
+          "san": "exf5+",
+          "white_value": {
+            "kind": "mate",
+            "value": 13
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 25,
+          "suffix_ends_in_checkmate": true,
+          "complete_suffix_uci": [
+            "e4f5",
+            "e6f6",
+            "g4g5",
+            "f6f7",
+            "f5f6",
+            "f7g6",
+            "f4g4",
+            "g6f7",
+            "g4f5",
+            "f7f8",
+            "g5g6",
+            "f8g8",
+            "f5e6",
+            "g8f8",
+            "g6g7",
+            "f8g8",
+            "e6e7",
+            "g8h7",
+            "e7f7",
+            "h7h6",
+            "g7g8q",
+            "h6h5",
+            "g8g3",
+            "h5h6",
+            "g3g6"
+          ]
+        },
+        {
+          "uci": "g4f5",
+          "san": "gxf5+",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 31,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4f3",
+          "san": "Kf3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 23,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "g4g5",
+          "san": "g5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 28,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4e3",
+          "san": "Ke3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 32,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g3",
+          "san": "Kg3",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 43,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "f4g5",
+          "san": "Kg5",
+          "white_value": {
+            "kind": "cp",
+            "value": 8115
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 35,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        },
+        {
+          "uci": "e4e5",
+          "san": "e5",
+          "white_value": {
+            "kind": "cp",
+            "value": 0
+          },
+          "depth": 24,
+          "returned_suffix_legal": true,
+          "suffix_plies": 11,
+          "suffix_ends_in_checkmate": false,
+          "complete_suffix_uci": null
+        }
+      ],
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-inventory-completion\\results.json",
+        "sha256": "e5b0f812e1e9859ee1a821c07a1bf0566d064d0b4ad14d139073825dd4f92d2b"
+      },
+      "plan_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-inventory-completion-plan.json",
+        "sha256": "47767381ce6a81883c1e1621c06ef440d49aa11b003793291e8dad168422a6da"
+      }
+    }
+  ],
+  "completed_root_stability_queries": [
+    {
+      "id": "H05-current-root-stability-all-legal-d20",
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "profile": "sf18-smallnet-t2-h16-v1",
+      "depth": 20,
+      "complete_legal_roots": 9,
+      "Ke3": {
+        "kind": "cp",
+        "value": 316
+      },
+      "g4": {
+        "kind": "cp",
+        "value": 0
+      },
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    },
+    {
+      "id": "H05-current-root-stability-all-legal-d24",
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "profile": "sf18-smallnet-t2-h16-v1",
+      "depth": 24,
+      "complete_legal_roots": 9,
+      "Ke3": {
+        "kind": "cp",
+        "value": 471
+      },
+      "g4": {
+        "kind": "cp",
+        "value": 0
+      },
+      "result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    }
+  ],
+  "preserved_failed_attempts": [
+    {
+      "id": "H05-current-late-black-defenses-all-legal-d20",
+      "kind": "executor_failed",
+      "elapsed_ms": 120019,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 285373539,
+      "diagnostic": "{\"lastDepth\":19,\"pvDepths\":[19,19,19,19,19],\"bounds\":[null,null,null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    },
+    {
+      "id": "H05-current-late-black-defenses-all-legal-d24",
+      "kind": "executor_failed",
+      "elapsed_ms": 120020,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 339222312,
+      "diagnostic": "{\"lastDepth\":22,\"pvDepths\":[22,22,22,22,22],\"bounds\":[null,null,null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd6-all-legal-d24",
+      "kind": "executor_failed",
+      "elapsed_ms": 120016,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 341720651,
+      "diagnostic": "{\"lastDepth\":23,\"pvDepths\":[23,23,23,23,23,23],\"bounds\":[null,null,null,null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd7-all-legal-d24",
+      "kind": "executor_failed",
+      "elapsed_ms": 87573,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 500000755,
+      "diagnostic": "{\"lastDepth\":19,\"pvDepths\":[19,19,19,19,19,19],\"bounds\":[null,null,null,null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+        "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+      }
+    },
+    {
+      "id": "H05-current-late-black-defenses-all-legal-d24-completion-1200s",
+      "kind": "executor_failed",
+      "elapsed_ms": 1200016,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 1995502688,
+      "diagnostic": "{\"lastDepth\":22,\"pvDepths\":[22,22,22,22,22],\"bounds\":[null,null,null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-defense-completion\\results.json",
+        "sha256": "8390863c21a5f90d8dca2bdaccf4cc7e59c004cee878f6a0c39fc65d1d36cfb9"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd6-all-legal-d24-completion-1200s",
+      "kind": "executor_failed",
+      "elapsed_ms": 1200021,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 1812900859,
+      "diagnostic": "{\"lastDepth\":21,\"pvDepths\":[21,21,21,21,21,21],\"bounds\":[null,null,null,null,null,null],\"nodesOver\":false,\"timeOver\":true,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-defense-completion\\results.json",
+        "sha256": "8390863c21a5f90d8dca2bdaccf4cc7e59c004cee878f6a0c39fc65d1d36cfb9"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kd7-all-legal-d24-completion-1200s",
+      "kind": "executor_failed",
+      "elapsed_ms": 1200014,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 2939181484,
+      "diagnostic": "{\"lastDepth\":18,\"pvDepths\":[18,18,18,18,18,18],\"bounds\":[null,null,null,null,null,null],\"nodesOver\":false,\"timeOver\":false,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-defense-completion\\results.json",
+        "sha256": "8390863c21a5f90d8dca2bdaccf4cc7e59c004cee878f6a0c39fc65d1d36cfb9"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-Kf7-all-legal-d24-h128-final",
+      "kind": "executor_failed",
+      "elapsed_ms": 85002,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 500000857,
+      "diagnostic": "{\"lastDepth\":19,\"pvDepths\":[19,19,19,19,19,19],\"bounds\":[null,null,null,null,null,null],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\results.json",
+        "sha256": "b2f22489c6f5ca16c681bdddd4899066f9433da11e43cacc463e56404319b379"
+      }
+    },
+    {
+      "id": "H05-current-entry-after-f5-all-legal-d24-h128-final",
+      "kind": "executor_failed",
+      "elapsed_ms": 600029,
+      "failure_code": "search_budget_exhausted",
+      "observed_nodes": 2245108129,
+      "diagnostic": "{\"lastDepth\":21,\"pvDepths\":[21,21,21,21,21,21,21,21],\"bounds\":[null,null,null,null,null,null,null,null],\"nodesOver\":false,\"timeOver\":false,\"leaseExpired\":false}",
+      "original_result_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\results.json",
+        "sha256": "b2f22489c6f5ca16c681bdddd4899066f9433da11e43cacc463e56404319b379"
+      }
+    }
+  ],
+  "counts": {
+    "late_black_first_replies": 5,
+    "white_immediate_replies_after_four_king_defenses": 24,
+    "white_immediate_replies_after_f5": 8,
+    "final_descendant_queries": 6,
+    "final_descendant_root_rows": 37,
+    "descendant_completed_elapsed_ms": 481190,
+    "root_stability_queries": 2
+  },
+  "metadata_discrepancy": {
+    "affected_ids": [
+      "H05-current-entry-after-f5-all-legal-d24-h128-completion-1200s"
+    ],
+    "description": "The copied f5 legal_root_san/named_uci display fields list the six king-reply options, including Kf5. The actual work.rootRestriction and returned complete root inventory correctly contain eight legal replies. In particular, Black owns f5 immediately, so Kf5 is unavailable; exf5+ and gxf5+ are legal. No query/result has been rewritten.",
+    "canonical_labels_source": "python-chess exact legal replay from each original work enginePositionInitialFen/history, checked against searchFen."
+  },
+  "chess_conclusions": [
+    "At the reached late g4 state Black still has the pawn move f5. The noPawnMovesLeft mechanism from the older four-king-only state is inapplicable.",
+    "All five Black roots have a winning White assessment in the final depth24 research profile. The four king retreats each permit Kf5, and each of the six legal White roots there has a winning assessment: Kf5 is useful but nonunique.",
+    "After f5, exf5+ returns mate13 and a fully legal 25-ply mating suffix. Seven of eight legal White roots have a winning assessment while e5 has value0. A fixed king-entry or any-legal-pawn-push explanation would be wrong.",
+    "The late sampled route starts with Ke3 and contains bxc3/bxc3. It is neither the book b3 route nor a proof that all original root responses must reach this descendant.",
+    "Completed original-root comparisons support Ke3 above earlyg4 at both depths20/24, but do not by themselves prove the reserve-tempo/late-entry feature causes that root numerical gap."
+  ],
+  "provenance": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-hash128-completion-control-plan.json",
+      "sha256": "c9658ec5d76fc2404db094b751957d761558d02936fa898bff5195ca2270626d"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-completion-control\\results.json",
+      "sha256": "5619e0d5fc48bb48dfec8e9ae4df459ff67d4af8cc6d3d05a15dac8fc469b861"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-completion-control\\manifest.json",
+      "sha256": "2791b35d8ac5085cd1fcafd3c65253a1d5f46a0d90e627f58a25085bcd6a18ba"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-hash128-entry-completion-plan.json",
+      "sha256": "dec7819dac6d0951908a09ec1d436545cf9d58f0c9ff0f2f07b180b4408372e0"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-entry-completion\\results.json",
+      "sha256": "341942f673c55a4f1bf7baeae3291e8e2fd25a51609074c0fa6539660f632af2"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-hash128-entry-completion\\manifest.json",
+      "sha256": "88a9ea7a8b0e6ee0f6b7531d644cd1bb6a1bf48d60659cb1fd6dff852e7da88e"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-response-inventories-plan.json",
+      "sha256": "07386c011a78ebc22aaabf524a06f93811dc2b7769ef094d5d3fc83dc326e085"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\results.json",
+      "sha256": "b2f22489c6f5ca16c681bdddd4899066f9433da11e43cacc463e56404319b379"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\manifest.json",
+      "sha256": "97fe3bb8f49dc3f00b20538bb2c765d2251ca85a5dbe617774d6106e6c8456d0"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-inventory-completion-plan.json",
+      "sha256": "47767381ce6a81883c1e1621c06ef440d49aa11b003793291e8dad168422a6da"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-inventory-completion\\results.json",
+      "sha256": "e5b0f812e1e9859ee1a821c07a1bf0566d064d0b4ad14d139073825dd4f92d2b"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-inventory-completion\\manifest.json",
+      "sha256": "b18321a148a639b376977c4f42e236e1d5fe99a3b721de797ca27b6bc31d9630"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+      "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-defense-completion\\results.json",
+      "sha256": "8390863c21a5f90d8dca2bdaccf4cc7e59c004cee878f6a0c39fc65d1d36cfb9"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-final-response-inventories\\results.json",
+      "sha256": "b2f22489c6f5ca16c681bdddd4899066f9433da11e43cacc463e56404319b379"
+    }
+  ]
+}

@@ -32,7 +32,9 @@ private[runtime] object MoveWorkProjection:
       functionalChoice: Option[FunctionalChoiceReading.Task] = None,
       anchoredChoice: Option[AnchoredChoiceReading.Task] = None,
       anchoredFamily: Option[AnchoredChoiceReading.Family] = None,
-      firstTarget: Option[TargetResponseInvestigation.FirstTarget] = None)
+      firstTarget: Option[TargetResponseInvestigation.FirstTarget] = None,
+      purposeSearches: List[TargetResponseInvestigation.Search] = Nil,
+      purposeRoots: List[CommentaryInvestigation.EngineCandidates] = Nil)
   private val values = Map("pawn" -> 1, "knight" -> 3, "bishop" -> 3, "rook" -> 5, "queen" -> 9, "king" -> 0)
   private[runtime] type Piece = RelationColoredPieceWitness
 
@@ -115,10 +117,7 @@ private[runtime] object MoveWorkProjection:
       note: Note, index: Int, selectedIndex: Option[Int], selection: CommentarySelection.Display):
     lazy val id: String = CommentarySelection.stableId("fact", List(edge.evidence.id, note.factKey.toString))
     def evidence: List[String] =
-      def refs(position: Position, sources: List[String]): List[String] =
-        val wanted = sources.toSet
-        position.sourceByRef.iterator.collect { case (ref, source) if wanted(source) => ref }.toList.sorted
-      note.premises ++ refs(before, note.beforeSources) ++ refs(after, note.afterSources) :+ edge.evidence.id
+      note.premises ++ before.sourceRefs(note.beforeSources) ++ after.sourceRefs(note.afterSources) :+ edge.evidence.id
 
     lazy val highlight: JsObject =
       val owners = Set(edge.evidence.id, before.view.occurrence.id, after.view.occurrence.id)
@@ -1536,6 +1535,54 @@ private[runtime] object MoveWorkProjection:
             left.moves.take(index) == prefix && right.moves.take(index) == prefix &&
             left.positions.lift(index).nonEmpty && left.positions.lift(index) == right.positions.lift(index) => pair
         case _ => Nil
+      // The reviewed move and its owned first replies form one question. Read
+      // that account before constructing unrelated long-line explanations.
+      val purposeOwners = requests.flatMap(_._2.flatMap(_.firstTarget)).distinctBy(_.id)
+      val purposeSearches = requests.flatMap(_._2.flatMap(_.purposeSearches)).distinct
+      if index == 0 && (detail \ "type").as[String] == "root_comparison" && ownedPair.size == 2 then
+        val referencePurpose = ReferencePurposeReading.read(packet, paths, ownedPair).flatMap { reading =>
+          ReferencePurposeReading.answer(packet, paths, ownedPair, reading,
+            value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
+            .flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
+        }
+        if referencePurpose.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
+          if owner != 0 then value else value ++ Json.obj(
+            "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ referencePurpose.get.evidence).distinct,
+            "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
+              "summary" -> referencePurpose.get.text, "summary_kind" -> "question_answer",
+              "summary_question" -> referencePurpose.get.json)))
+        }
+        val functional = MovePurpose.read(packet, paths, purposeSearches, local,
+          requests.flatMap(_._2.flatMap(_.purposeRoots)).distinct).flatMap { reading =>
+          MovePurpose.answer(packet, paths, ownedPair, reading,
+            value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
+            .flatMap(RootQuestionSummary.realize(paths, ownedPair, _)).map(value => value.copy(
+              json = value.json + ("move_purpose" -> reading.ownershipJson)))
+        }
+        if functional.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
+          if owner != 0 then value else value ++ Json.obj(
+            "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ functional.get.evidence).distinct,
+            "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
+              "summary" -> functional.get.text, "summary_kind" -> "question_answer",
+              "summary_question" -> functional.get.json)))
+        }
+      if index == 0 && (detail \ "type").as[String] == "root_comparison" &&
+          ownedPair.size == 2 && purposeOwners.size == 1 &&
+          !packet.assembly.input.positionHistory.currentPosition.check.yes then
+        val seed = CommentaryAnswer.Answer("selected_comparison", List(CommentaryAnswer.Section(
+          List(CommentaryAnswer.Continuation(ownedPair.map(RootQuestionSummary.MoveRef(_, 0)))))), Nil, Nil)
+        val purpose = ResponsePurposeReading.withAnswer(packet, paths, ownedPair, purposeOwners, local, seed,
+          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
+        if purpose.question != seed.question then
+          val reading = RootQuestionSummary.realize(paths, ownedPair, purpose).map(value => value.copy(
+            json = value.json + ("first_target_response" -> purposeOwners.head.ownershipJson)))
+          if reading.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
+            if owner != 0 then value else value ++ Json.obj(
+              "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ reading.get.evidence).distinct,
+              "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
+                "summary" -> reading.get.text, "summary_kind" -> "question_answer",
+                "summary_question" -> reading.get.json)))
+          }
       val questionFocus = requests.flatMap { (recipient, context) =>
         val questionRefs = (recipient \ "detail" \ "question_refs").asOpt[List[JsObject]].getOrElse(Nil)
         context.flatMap(_.question).filter { focus =>
@@ -3034,9 +3081,6 @@ private[runtime] object MoveWorkProjection:
         .map(answer => FunctionalReplyReading.withAnswer(packet, paths, ownedPair,
           requests.flatMap(_._2.flatMap(_.replyFunction)).distinct, answer,
           (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
-        .map(answer => TargetResponseInvestigation.withAnswer(packet, paths, ownedPair, firstTargets, local, answer,
-          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value),
-          (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
         .map(answer => TargetResponseInvestigation.withOwnTargetSupport(packet, paths, ownedPair, answer))
         .map(answer => FunctionalChoiceReading.withAnswer(packet, paths, ownedPair,
           requests.flatMap(_._2.flatMap(_.functionalChoice)).distinct, answer,
@@ -3049,11 +3093,14 @@ private[runtime] object MoveWorkProjection:
         .map(answer => AnchoredChoiceAnswer.withFamily(packet, paths, ownedPair,
           requests.flatMap(_._2.flatMap(_.anchoredFamily)).distinct, answer,
           (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
+        .map(answer => ResponsePurposeReading.withAnswer(packet, paths, ownedPair, firstTargets, local, answer,
+          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value)))
         .flatMap(answer => completeSelectedConditions(packet, paths, ownedPair, positions, local, answer))
         .map(answer => BasicPurposeReading.simplify(packet, paths, ownedPair, positions, local, answer))
         .map(answer => RootSubjectComparison.withMaterialContrast(answer, ownedPair, packet.assembly.playedTransition.map(_.moveUci)))
         .flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
-        .map(reading => if (reading.json \ "question").asOpt[String].contains("first_target_response") &&
+        .map(reading => if (reading.json \ "question").asOpt[String].exists(
+            Set("first_target_response", "exchange_function")) &&
           firstTargets.size == 1 then reading.copy(json = reading.json +
             ("first_target_response" -> firstTargets.head.ownershipJson)) else reading)
       val unavailable = unavailableAnswer(answerChoice.map(_.fold(_.question, _.question)), commonReading)
@@ -3387,8 +3434,10 @@ private[runtime] object MoveWorkProjection:
     })
     val additions = selectedConditionSections(arms, selectedAnswer, notes)
     val core = additions.foldLeft(selectedAnswer.core) { case (sections, (use, condition)) =>
-      val owner = sections.indexWhere(section => section.references.contains(use) &&
-        (condition.statements.nonEmpty || condition.required.forall(section.references.contains)))
+      // A reply's conditions belong with its action, after any preceding comparison of values.
+      val owners = sections.indices.filter(index => sections(index).references.contains(use) &&
+        (condition.statements.nonEmpty || condition.required.forall(sections(index).references.contains)))
+      val owner = owners.find(index => sections(index).actionReferences.contains(use)).getOrElse(owners.head)
       val selected = sections(owner)
       val before = selected.statements.indexWhere(_.references.contains(use))
       // A complete comparison states the decision and the tested reply together.

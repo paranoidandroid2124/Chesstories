@@ -25,13 +25,17 @@ object CommentaryProposal:
 
   val MaximumRequirements = 600
   val MaximumLocalExpansions = 600
+  // Evidence IDs include the job, position and relation hashes. Keep the exact
+  // reference: truncating it would disconnect a generated question from its proof.
+  val MaximumSourceRefLength = 512
   private val SourceKinds = Set("user", "author", "model", "generator", "none")
   private val Relations = Set("better", "equal", "worse")
 
   def validRequests(requests: List[Request]): Boolean =
     def text(value: String, maximum: Int) = value.nonEmpty && value.length <= maximum
     def source(value: Source) = SourceKinds(value.kind) && text(value.producer, 128) &&
-      value.version.forall(text(_, 128)) && value.sourceRefs.size <= 64 && value.sourceRefs.forall(text(_, 256))
+      value.version.forall(text(_, 128)) && value.sourceRefs.size <= 64 &&
+        value.sourceRefs.forall(text(_, MaximumSourceRefLength))
     def prefix(value: List[String]) = value.size < CommentaryFact.MaximumPly && value.forall(EngineLineAdmission.acceptsCanonicalLowercaseUci)
     def valid(requirement: Requirement): Boolean = RuntimeProtocol.acceptsRequestId(requirement.id) && (requirement match
       case ObserveMove(_, moves, move) => prefix(moves) && EngineLineAdmission.acceptsCanonicalLowercaseUci(move)
@@ -83,7 +87,19 @@ object CommentaryProposal:
       alternativeMove: Option[String], headRequirementIds: List[String], memberRequirementIds: List[String],
       source: Source, sourceRefs: List[String])
   private[runtime] final case class Entry(request: Request, readings: List[Reading], admission: String = "submitted",
-      generatedArms: List[GeneratedArm] = Nil, questionText: Option[String] = None)
+      generatedArms: List[GeneratedArm] = Nil, questionText: Option[String] = None):
+    // Callers supply the complete per-owner union, so one branch cannot retire its sibling.
+    def withCurrentDecisions(valuePrefix: String, currentIds: Set[String]): Entry =
+      val comparisons = request.requirements.collect { case value: CompareMoves => value.id }.toSet
+      copy(readings = readings.map { reading =>
+        if reading.requirementId.startsWith(valuePrefix) && !currentIds(reading.requirementId) &&
+            comparisons(reading.requirementId) && Set("deferred", "awaiting_engine")(reading.state) then
+          reading.copy(state = "stopped", stopReason = Some("not_required_for_decision"), answer = None, workId = None)
+        else if currentIds(reading.requirementId) && reading.state == "stopped" &&
+            reading.stopReason.contains("not_required_for_decision") then
+          reading.copy(state = "deferred", stopReason = None, answer = None, workId = None)
+        else reading
+      })
 
   private[runtime] def entries(requests: List[Request]): List[Entry] = requests.map(request =>
     Entry(request, request.requirements.map {

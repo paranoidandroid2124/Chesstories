@@ -1,0 +1,2119 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "LLM research reading; not independent human evaluation",
+  "policy": "comparison-policy.json",
+  "productCodeEdited": false,
+  "enginesUsedByReviewer": false,
+  "frozenIndependentNotesModified": false,
+  "informationBoundary": "Actual-game and book continuations are not obligations when incompatible with the supplied product pair. A cost is required only when it changes the claim selected in the visible basic body; not every PV capture is core. Unavailable core is hidden, and research-executor packet caveats are distinct from browser failures.",
+  "failureBoundaryMeaning": "Observable content/delivery boundary, not a proven source-code root cause.",
+  "automatic_structure_observations": {
+    "reader_version": 3,
+    "product_event_count": 121,
+    "contentJudgementsGeneratedAutomatically": false,
+    "all_121_review_rows_have_matching_ply_and_label": true,
+    "all_review_evidence_line_ids_belong_to_the_same_move_supplied_pair": true,
+    "all_quality_and_failure_labels_match_policy": true,
+    "all_review_reasons_are_nonempty": true,
+    "semantic_correctness_checked_by_script": false,
+    "product_reader_sha256": "bf5be58628be46e942c1a1cfe262ff3b45466d46fbce76eeffa0a24c6498f875",
+    "frozen_independent_notes_sha256": "4f2134dbc654a8417ae62e34a657c1c9a834363f4aafbf04a85795c94235a983",
+    "execution_label": "full-flow",
+    "progress_phase_counts": {
+      "completed": 121
+    },
+    "verification_state_counts": {
+      "complete": 105,
+      "stopped": 16
+    },
+    "assessment_state_counts": {
+      "current": 106,
+      "needs_refresh": 15
+    },
+    "stopped_verification_records": [
+      {
+        "ply": 20,
+        "label": "10... Be7",
+        "state": "stopped",
+        "target_depth": 25,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 25,
+        "label": "13. h3",
+        "state": "stopped",
+        "target_depth": 23,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 30,
+        "label": "15... Qg7",
+        "state": "stopped",
+        "target_depth": 31,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 42,
+        "label": "21... Bxd5",
+        "state": "stopped",
+        "target_depth": 29,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 52,
+        "label": "26... Kf6",
+        "state": "stopped",
+        "target_depth": 25,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 55,
+        "label": "28. fxg5+",
+        "state": "stopped",
+        "target_depth": 21,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 70,
+        "label": "35... Rxc5",
+        "state": "stopped",
+        "target_depth": 30,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2",
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 72,
+        "label": "36... Kf8",
+        "state": "stopped",
+        "target_depth": 25,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 80,
+        "label": "40... Kxg6",
+        "state": "stopped",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 84,
+        "label": "42... d5",
+        "state": "stopped",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": null,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 88,
+        "label": "44... Ra1",
+        "state": "stopped",
+        "target_depth": 27,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 91,
+        "label": "46. c3",
+        "state": "stopped",
+        "target_depth": 35,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2",
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 96,
+        "label": "48... Rxb4",
+        "state": "stopped",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "invalid_engine_work_report"
+      },
+      {
+        "ply": 103,
+        "label": "52. g4",
+        "state": "stopped",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": null,
+        "stop_reason": "invalid_engine_work_report"
+      },
+      {
+        "ply": 111,
+        "label": "56. g5",
+        "state": "stopped",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": null,
+        "stop_reason": "search_budget_exhausted"
+      },
+      {
+        "ply": 116,
+        "label": "58... Ke8",
+        "state": "stopped",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": null,
+        "stop_reason": "search_budget_exhausted"
+      }
+    ],
+    "stopped_verification_reason_counts": {
+      "search_budget_exhausted": 14,
+      "invalid_engine_work_report": 2
+    },
+    "browser_execution_performed_by_reviewer": false,
+    "runtime_limit": "Completed research progress, partial or stopped verification, and invalid research work reports are recorded separately. They do not establish a browser failure, an exact source cause, or a fully verified all-response claim."
+  },
+  "games": [
+    {
+      "game_id": "fundamentals-game-10",
+      "moves": [
+        {
+          "ply": 1,
+          "label": "1. e4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "e4's clearance of e2 is actually used by Qe2 and its queen exchange is closed by Bxe2. Independent queen-target and Nf3 development reports obscure this narrow distinction; the remote actual-book opening is not mandatory.",
+          "evidence_line_ids": [
+            "move-review:74092311100646a61eafc85a7d9cfa459d5eff5cd569c68beab955129b3f64c1:0:e2e4:line:083e1fe40c1f6159fe9bdf679691c00cc04d5cf3798a8a4330fa35c0499d12af",
+            "move-review:74092311100646a61eafc85a7d9cfa459d5eff5cd569c68beab955129b3f64c1:0:e2e4:line:82b8c247129a21fdd17344d153c2bd0aebed2f0434b8c64962c2357d57bcd06f"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 2,
+          "label": "1... e5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Both c5 and e5 continuations explicitly close the pawn and knight trades. The useful distinction is which central pawn is exchanged, but repeated origin-and-route sentences make the account read as two event lists.",
+          "evidence_line_ids": [
+            "move-review:e638411f4f627088980d06ebecad1db81089e18519f26a77bbd1d61087ebc121:1:e7e5:line:4f32d7781939b771f29aeb0193b7d60657494b64d636ec855554c6c9ee83c4e7",
+            "move-review:e638411f4f627088980d06ebecad1db81089e18519f26a77bbd1d61087ebc121:1:e7e5:line:9886a7ee66e5d1aa4265e02d16d750a8404ac91a85cea5f4ee3e72e53cddb3d0"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 3,
+          "label": "2. Nf3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Nf3's support is used by Nxd4 after exd4 and the subsequent Nxc6/bxc6 trade is closed. Castling clearance, repeated targets and independent Nc3 development compete with that coherent supporting-recapture answer.",
+          "evidence_line_ids": [
+            "move-review:5ad13669756d0d568a6a4abd1c91d9b71ce78bdbf29dee71a9d7dbf4ca7fa24a:2:g1f3:line:e16d531d08a883e9b14c91c174a027b34bcf35351d6b3bcfa230bb459afb448f",
+            "move-review:5ad13669756d0d568a6a4abd1c91d9b71ce78bdbf29dee71a9d7dbf4ca7fa24a:2:g1f3:line:884a96dd204b80acfcbce634a99e71faab4f3879e339bbe6632de9bf3533b946"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 4,
+          "label": "2... Nf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "The Nf6 line retains Nxe5 and Nxe4 as the two sides of the central pawn exchange. Multiple future pawn-survival reports and the separate Nc6 exchanges bury the counterattack and recovery mechanism rather than losing its material price.",
+          "evidence_line_ids": [
+            "move-review:378c18dddf0080b023705e54fd782d2c83a03cc5ce41b678e0f6aa077b29ee70:3:g8f6:line:a3a241b8178e31b000525ab36b89463f89a2c8cf14eb53c0ba74d75a18b230f6",
+            "move-review:378c18dddf0080b023705e54fd782d2c83a03cc5ce41b678e0f6aa077b29ee70:3:g8f6:line:4f6dac785e1b1bb2be3fdf5aaa7e0fe203067954363ebe3a5ebde92120337ca0"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 5,
+          "label": "3. Nxe5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": false,
+          "reason": "The reviewed Nxe5 pawn gain is followed in its supplied line by Nxe4 taking White's e-pawn. Basic describes that native Nxe4 only as an attack on f2, while the explicit Nxe4 capture is labelled solely in the d4 alternative; the reviewed capture's balancing cost is not clearly preserved.",
+          "evidence_line_ids": [
+            "move-review:ccce3f37791a9595132f13ef170224d082e3f48be97dbe38598c8319f9015521:4:f3e5:line:37051a67559d7481d14925bc61bd59408512707ecdd2dfd56817b40ef11c5558",
+            "move-review:ccce3f37791a9595132f13ef170224d082e3f48be97dbe38598c8319f9015521:4:f3e5:line:d625d99e8b6851061cf3ee4ca2238ffe23d96ec813566865108fbb46c98efe47"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 6,
+          "label": "3... d6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "d6 attacks the e5 knight and Nf3 saves it; the premature Nxe4 alternative loses its knight to Qxe4, which basic retains. Multiple remote pawn-survival statements obscure this useful attack-and-retreat contrast.",
+          "evidence_line_ids": [
+            "move-review:97e0819257ddc61576f89df29a2789a6f12b15723c9131378d6f248c05b13d9b:5:d7d6:line:d458744b28fef18346c4362a14823f880ffaaf5d52108f44c050713d3de1f3ab",
+            "move-review:97e0819257ddc61576f89df29a2789a6f12b15723c9131378d6f248c05b13d9b:5:d7d6:line:a57fa569d80d1c81dcadfd1cd288aebeeff23506487c623400fca94874ff7fbd"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 7,
+          "label": "4. Nf3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Both Nf3 and Nd3 escape the d6 attack and allow Nxe4, whose capture is stated in both branches. The long series of d2/f2 survival and later knight-support reports obscures the compared retreat choices; the actual future queen/rook trades are not necessary for this bounded escape claim.",
+          "evidence_line_ids": [
+            "move-review:af2df3e23c1b37058b1ad0702eadedc0b052a86c38af963c966bf3e40a869a02:6:e5f3:line:97ed37da81da2b44f79515a3ffe9be694565e0ea091ee03c45d9025d1db93fea",
+            "move-review:af2df3e23c1b37058b1ad0702eadedc0b052a86c38af963c966bf3e40a869a02:6:e5f3:line:6b3ce7efd4ebf1db2e641d3e7f28bb403008191e1679c256cf0d372b9b3052a8"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 8,
+          "label": "4... Nxe4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Nxe4's pawn capture and Nxc3/bxc3 exchange are retained, with Nc6 as a development alternative. Many later queen and pawn locations surround the knight's concrete continuation; they add independent histories rather than explain the current choice.",
+          "evidence_line_ids": [
+            "move-review:da118744f33d60219e19f97a1a874aedc4c7af4a05204269382fb7b51ae9b422:7:f6e4:line:4a9bb85aa52e63e8a546f001cf3b22aab32dbc6d08973ec5378d7d49e333df0c",
+            "move-review:da118744f33d60219e19f97a1a874aedc4c7af4a05204269382fb7b51ae9b422:7:f6e4:line:f9cead4e216a21d956aa35ab97459f12da88d842a6f833f1303848210ec49b25"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 9,
+          "label": "5. Qe2",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qe2 attacks Ne4 and protects f2; d3 then makes the knight retreat to f6, while d4 removes the attacked d-pawn in the alternative. The selected attack/defence answer is intelligible and its mentioned Bxf6 exchange is closed; the later queen trade need not be added to this narrower claim.",
+          "evidence_line_ids": [
+            "move-review:28a5a385596dd6b7d662409a632011ce331a5d89bcb6baf92ff8243694c8d3ef:8:d1e2:line:518ea28d5e49cc4afeb6a25014228373fcbf13cae31d95bcdeefbdae8bd98dca",
+            "move-review:28a5a385596dd6b7d662409a632011ce331a5d89bcb6baf92ff8243694c8d3ef:8:d1e2:line:56678b3c83aa8fd1fb95de4c5ba6376bfa4bbef500a0deccdc8748bca2328256"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 10,
+          "label": "5... Qe7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qe7 supports the attacked knight and its recorded Qxe2+/Bxe2 exchange is closed; the d5 alternative's dxe4/fxe4 exchange is also kept. Reports of every target of the capturing queen and later minor-piece interactions overwhelm the initial support and queen-exchange mechanism.",
+          "evidence_line_ids": [
+            "move-review:24c844752789862f60ebaa89cd15627ac1bee0b80ed2fa282d010da3ec46f6ac:9:d8e7:line:6f0c3c7fe83382efdf4c588d011b27c9621c34a7accc09a963da61524d5c80bb",
+            "move-review:24c844752789862f60ebaa89cd15627ac1bee0b80ed2fa282d010da3ec46f6ac:9:d8e7:line:a3d4985650e3bd8eccb48d3585a8cff4ca720497f84927f71bf2ff5441e93b4a"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 11,
+          "label": "6. d3",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "d3 drives Ne4 back to f6, whereas Nc3 permits Nxc3/dxc3 and the queen exchange. The selected target-response answer preserves the different knight outcomes and the whole stated exchange; minor repetition does not displace its point.",
+          "evidence_line_ids": [
+            "move-review:11e03d15cccd93ab94cc967ce5f1745f4b2420e31e56fe1f6d8c0cc76a2e47f0:10:d2d3:line:82f4b57fc7a4fc7411f08d3b8f7686921e037124782d923a2f7e3241f113f8b0",
+            "move-review:11e03d15cccd93ab94cc967ce5f1745f4b2420e31e56fe1f6d8c0cc76a2e47f0:10:d2d3:line:0ab92373fd0e159a0c7c08ff3001e78a20f6007d1a48d847c134be8772861264"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 12,
+          "label": "6... Nf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Nf6 saves Ne4 and permits a closed queen exchange. The Nc6 alternative is described as development plus the later pawn exchange, but its immediate dxe4 loses Black's e4 knight and is omitted from basic; that is the decisive price of failing to retreat the attacked knight.",
+          "evidence_line_ids": [
+            "move-review:0b8221a3a2b65f68b43d265301af407b8fda664924963cc4f21b6fd6475af572:11:e4f6:line:a38af4f93d321b2ee5ebbffa04a862d2d2b163fd3b7f862accea0eddf296e53d",
+            "move-review:0b8221a3a2b65f68b43d265301af407b8fda664924963cc4f21b6fd6475af572:11:e4f6:line:8e37fca2738a7670e908d8fef4cc25834f3e7f29979747ec0840c72204f516e0"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 13,
+          "label": "7. Bg5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Bg5's alignment/pin and its breaking queen exchange are retained. In the Nc3 alternative basic explicitly includes Rxd4 taking White's bishop but omits the immediate gxf5 taking Black's bishop, leaving that selected two-square exchange one-sided amid many later rook-target histories.",
+          "evidence_line_ids": [
+            "move-review:644fd873b62832ad7788d29c191f6510a982a3f6302b5527b0791540b79659b7:12:c1g5:line:94c7606247d952a298516b72c85c17d3f7bd683a7a9cdf0652d7150b4d289284",
+            "move-review:644fd873b62832ad7788d29c191f6510a982a3f6302b5527b0791540b79659b7:12:c1g5:line:f07a9ad754a446bdb6a27390a9dc739e8843ae43e4c8ee44f903a1b6d37d6aed"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 14,
+          "label": "7... Be6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Be6 blocks the queen exchange while Nc6 keeps the queens facing each other; this is a verified current difference. Separate bishop-target, pawn-blocking and knight-survival histories dilute it, but the knight exchange actually included in basic is closed.",
+          "evidence_line_ids": [
+            "move-review:c32faf4541bbecbb13bcd10fb3fdbef898b5a60945a8e2f7dd1d2e3e0eeaa515:13:c8e6:line:33ba07d9ab642790eab2f7a3cd5849028558adbd83bcf7888b6a8126b2eb6882",
+            "move-review:c32faf4541bbecbb13bcd10fb3fdbef898b5a60945a8e2f7dd1d2e3e0eeaa515:13:c8e6:line:af521c88727068710c50b0699bab5307540ca2252b33a983fde243a241f11d69"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 15,
+          "label": "8. Nc3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Nc3 develops and protects the attacked a2 pawn. The d4 alternative dominates the rest with queen targets and remote liquidation, although its bishop exchange, a7/e3 pawn captures and queen trade are all preserved; the root knight's function is present but no longer central.",
+          "evidence_line_ids": [
+            "move-review:b6d612d5ac71363f5b58ad8e4d6902059c7b145de940927a3614ba26ea76273d:14:b1c3:line:85f3bee28845c5fa7ad8592369ce2fac5e67c86da7226ae8fbc1f52bb845d544",
+            "move-review:b6d612d5ac71363f5b58ad8e4d6902059c7b145de940927a3614ba26ea76273d:14:b1c3:line:57fbf76bf39c114842287714980897b67e9b931b31936752b818a42f5fdbe2f8"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 16,
+          "label": "8... h6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "h6 challenges Bg5 and Bxf6/Qxf6 closes the resulting bishop-for-knight trade. Reports of the later queen retreat, g-pawn support and another knight trade surround this clear forcing response without adding a missing material price.",
+          "evidence_line_ids": [
+            "move-review:fb311290d0dfb9e9ec0de7b8cac6ff1f21606874833a55e3cfe65c0392d2a9dc:15:h7h6:line:324b25479298799f06a8daf8249c5da5d9177aca3c1169af4b0b9523755c5233",
+            "move-review:fb311290d0dfb9e9ec0de7b8cac6ff1f21606874833a55e3cfe65c0392d2a9dc:15:h7h6:line:26b0da81538ce4ad06bc8ac26294916f13d92e0d2fdc6948965e02b731981c2b"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 17,
+          "label": "9. Bxf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bxf6 escapes the h6 attack by exchanging for the knight, with Qxf6 explicitly recapturing it; Be3 instead retreats. Subsequent queen targets and repeated a7/h6 survival reports obscure that complete capture-versus-retreat distinction.",
+          "evidence_line_ids": [
+            "move-review:1e74de7cb2f660ea61554a532318092eb906dc1d2768be1bcc5264e01c866f6c:16:g5f6:line:e5911b8a4b4c9bc77aefc9fb987d4f1960fe1f03d3b8d59e41173005ee8b7bee",
+            "move-review:1e74de7cb2f660ea61554a532318092eb906dc1d2768be1bcc5264e01c866f6c:16:g5f6:line:db5c49d99c256dc2c04adb1b783f41fe975a499ea06b2e9f329fbb086c7769bb"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 18,
+          "label": "9... Qxf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qxf6 keeps g7 while gxf6 produces doubled f-pawns, and both recapture the same bishop. The structural comparison is useful and complete, but independent knight-target and survival reports take most of the remaining basic body.",
+          "evidence_line_ids": [
+            "move-review:1713f652df58fd7abd8e2845ace141a1f361c16c8f5bbdcdad8d5f076e1c3a29:17:e7f6:line:d4df03c51ddcc30187b42e8236541ca3bfb87caa3e188f3ad9a1733b9a5cec33",
+            "move-review:1713f652df58fd7abd8e2845ace141a1f361c16c8f5bbdcdad8d5f076e1c3a29:17:e7f6:line:e337f26baae39d15c11ac9287f20d4a8d9ede5231c698306c3af74243b76f04e"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 19,
+          "label": "10. d4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "d4 is connected to d5 attacking Be6 and Bg4's escape; the castling alternative changes rook placement and a2 support. The separate later bishop capture/knight recapture is closed, but it competes with rather than sharpens the central-pawn-versus-castling answer.",
+          "evidence_line_ids": [
+            "move-review:90e2883a223ea2f7f04fb9a7039b078fc2181c4518c7cfa7496c9f274c2d3c1f:18:d3d4:line:0b8a4fb3a6c7ba293bbbaa1c263309d1f85e4050588483b24ad748c1867a2359",
+            "move-review:90e2883a223ea2f7f04fb9a7039b078fc2181c4518c7cfa7496c9f274c2d3c1f:18:d3d4:line:3e9e6cf4a4a403f0c6d50d7eae13425d7219245235abacef5975548952bcded5"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 20,
+          "label": "10... Be7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Be7 develops, supports d6 and allows Qb5+/Nd7/Qxb7; Qe7 retains the original bishop's absence from d6 support. The check response and chosen b7 capture are supplied, but a separate later queen-target report blurs the immediate development-and-concession comparison.",
+          "evidence_line_ids": [
+            "move-review:572e6b5395c681f0dd98395232e805f2864c5511dc30629fc839a828fe4cce48:19:f8e7:line:1f8642ef4dcbf0c89cbba160c911c2d1928eb268ef00b9524b0ef58d1267de5b",
+            "move-review:572e6b5395c681f0dd98395232e805f2864c5511dc30629fc839a828fe4cce48:19:f8e7:line:124f162b1f01946607e78578592bd6cab3b3b8d340d8b93a32b7b9f758548a0f"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 21,
+          "label": "11. Qb5+",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qb5+ checks, Nd7 blocks and Qxb7 takes the pawn; the later Bxd5/Qxd5 trade is also closed. The many unrelated rook/pawn fates and castling-support comparisons obscure this complete check-and-pawn-gain mechanism.",
+          "evidence_line_ids": [
+            "move-review:1a910962ddf74a21de6821a9dc48c2953731279477f7f957cd50d5dba4e2731e:20:e2b5:line:39bc51c768f676aaa813b83ce6dce0c7933af305ec2dc5f9e6faa67f605196a5",
+            "move-review:1a910962ddf74a21de6821a9dc48c2953731279477f7f957cd50d5dba4e2731e:20:e2b5:line:1ba7d8896b58401360dcbcbc1306546a6dedd077e64fc681c305a132cf4105bb"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 22,
+          "label": "11... Nd7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Nd7 blocks the check and clears b8 for the rook, but the Bd7 alternative's Qxa8 rook gain and Bxf3/gxf3/Qxf3 counterplay omit the following Qxg2 capture of White's bishop. That supplied compensation changes the selected rook-gain account; extensive later targets do not replace it.",
+          "evidence_line_ids": [
+            "move-review:92bcbecd66aa7effc6410c930d514a47b058f6c3360161025210c8a5f840703f:21:b8d7:line:70ae203d8580809e87f6c2da2e60accee4547239f6c6b0b97ff8a008f91208ac",
+            "move-review:92bcbecd66aa7effc6410c930d514a47b058f6c3360161025210c8a5f840703f:21:b8d7:line:caee5e31716cc831fd202c8de89c46f0364f1890bc46530e84ba19ae16a7e7ac"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 23,
+          "label": "12. Bd3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Bd3 is only explained as development controlling e4; most of basic follows the alternative Qxb7 queen's targets and retreat. Its selected Bxd5/Qxd5 exchange is complete, but the reviewed bishop's function is secondary to a different answer.",
+          "evidence_line_ids": [
+            "move-review:ece7a750973968f88d42dcdc004f28d2530a1322709e925c01b875815f6c19f3:22:f1d3:line:29a6d4ef437bb9f8f8a41ba1337f6f382466cfe4d7ac623d12ec92298e7e80d7",
+            "move-review:ece7a750973968f88d42dcdc004f28d2530a1322709e925c01b875815f6c19f3:22:f1d3:line:9f91bc35e678eb289a1784e8dbccf23a5472448beabd4a120cb6d4ddc95d3a7a"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 24,
+          "label": "12... g5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "g5's clearance is actually used by Qh8 and g4 attacks Nf3, with the queen escape retained. The Rb8 alternative's mentioned minor-piece and g6 pawn exchanges are closed, but remote target-survival histories overwhelm the useful clearance-versus-rook-development contrast.",
+          "evidence_line_ids": [
+            "move-review:903634623c3c996d72d5d8ee1ad3393f5eb593538f3a00c81fcfab4b178ddc96:23:g7g5:line:480955d8877569aaa93635bf3d141bc2653e8178f2406fb1adb2683311cafabc",
+            "move-review:903634623c3c996d72d5d8ee1ad3393f5eb593538f3a00c81fcfab4b178ddc96:23:g7g5:line:3d5ebe3fbc727acf2ea1e7cdcdaf5c1378a1710405b4f1138dfd182e662f961a"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 25,
+          "label": "13. h3",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The reviewed h3 is reduced to receiving g2 support while the alternative's queen raid and repeated rook chases fill basic. The displayed alternative pawn gains and queen escape are supplied; the problem is that these do not establish why choosing h3 matters, not that the actual game's future g4 must be invented.",
+          "evidence_line_ids": [
+            "move-review:5f151f4a46042b797b2b542c1591f96a2763a21f0484b4a431f9fc74143e894b:24:h2h3:line:b1c807252d00fb3494f76211e8f0a0ab3c6784bd505dfe24a75afb428e00fd55",
+            "move-review:5f151f4a46042b797b2b542c1591f96a2763a21f0484b4a431f9fc74143e894b:24:h2h3:line:7f4725a1414aa69af9b57c835723614ee94ee470b2a3858ad5e0eaab4a3f9c38"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 26,
+          "label": "13... O-O",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "The two castling rook/king placements are compared, but the queenside line labels Bxg3/fxg3 as a queen-for-bishop transaction while omitting the preceding Qxe1/Rxe1 capture of Black's queen. That makes the selected queen loss one-sided despite the same supplied line closing the cross-square queen exchange.",
+          "evidence_line_ids": [
+            "move-review:6cae1efbfa37df7b05c5d7efe1fb69f07d5cbe9a10a7a76527d263f5721698bb:25:e8g8:line:ed82c6557e51a20facbdc311a1531a7bff130a878c85b9953defbf6eee471f7b",
+            "move-review:6cae1efbfa37df7b05c5d7efe1fb69f07d5cbe9a10a7a76527d263f5721698bb:25:e8g8:line:020a857f214836e480903162e31ed808eb0eff2fb5d26b7e0d384d0971089e30"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 27,
+          "label": "14. Qxb7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qxb7's pawn gain and the Qc6/Qe4 escape from rook and bishop attacks are kept. Repeated fates of a7, c7 and d6 plus the separate Ne4 queen/pawn histories obscure that coherent capture-and-escape answer; no absent book reply is required.",
+          "evidence_line_ids": [
+            "move-review:105fc72108c27e46b6fb1de32b47914b9e3bfeaa89d9921f09153ee738417dad:26:b5b7:line:bcbed564869907bac510278c13190090d8258a869c6d2cfcdf8e5ad4c1859738",
+            "move-review:105fc72108c27e46b6fb1de32b47914b9e3bfeaa89d9921f09153ee738417dad:26:b5b7:line:32ff15439fa3964b68b7f7e7b07801f2cabf7cdc2c518d7bb6bb44bac4f54f4d"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 28,
+          "label": "14... Rab8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rab8 attacks the queen, Qxc7 escapes and opens Rxb2, while Qxa7's further pawn capture is also kept. The actual loss-and-countercapture account is present, but several defence and surviving-target histories compete with this concrete rook-activity concession.",
+          "evidence_line_ids": [
+            "move-review:e3b14c84d65f8c8e3d44a4f1de8ba6db1d23e5d30b0ded4ab02f2c3e236fb7fd:27:a8b8:line:c9ea463c80695fdf9029f8ca47427fc8b2664db891f56be0f884244ae797965f",
+            "move-review:e3b14c84d65f8c8e3d44a4f1de8ba6db1d23e5d30b0ded4ab02f2c3e236fb7fd:27:a8b8:line:818839d40313fadf8d7fc9d1e9cdb07bce46ba74705f7979cc30730130beb8d4"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 29,
+          "label": "15. Qe4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Qe4 escapes the rook and supports Nf3 relative to Qxc7; its later Qxe7 bishop gain is accompanied by Bxd5 costing White's knight. The supplied exchanges are closed, but the queen's many unrelated targets dominate, and the board-based h7 mating threat is not the selected answer.",
+          "evidence_line_ids": [
+            "move-review:cb4b2e817d770f7cd420e55445e0f3c7e42fee1b28a81d826f0f31f8c13651f9:28:b7e4:line:48e1e6c57d52632efde2058d1434f317f766dd4fe8dff5ca6ce4700d3cd70803",
+            "move-review:cb4b2e817d770f7cd420e55445e0f3c7e42fee1b28a81d826f0f31f8c13651f9:28:b7e4:line:f1008100f5bebd90cc371fc44a111e49c7fe524620c1b0760fc7042c8808ea3d"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 30,
+          "label": "15... Qg7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Qg7's g5 defence and clearance of f6 are compared with Qh8, and the chosen pawn/minor-piece exchanges and f7 recapture support are retained. Many alignment and queen-chase histories obscure the immediate defensive queen choice; neither the book's mating threat nor every later pawn capture is imposed on this selected answer.",
+          "evidence_line_ids": [
+            "move-review:bf69a0ee00a943fd7c60096c827c29dcf0281162f47d272569ebc858514cb0c2:29:f6g7:line:1cd234a97abe6528b3eca198961292a4c6b0775eacf79c3decb29d754497d363",
+            "move-review:bf69a0ee00a943fd7c60096c827c29dcf0281162f47d272569ebc858514cb0c2:29:f6g7:line:267a08146da7c3fe2c094ba68708d92ee311f2fda89155bf7c2b6096849b1880"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 31,
+          "label": "16. b3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "b3 obtains pawn support against the rook/bishop while castling uses the king to defend b2 and leaves a2 to Bxa2. Those actual defence differences and the stated dxc5/Qxc5 trade are present; a long independent queen-target continuation dilutes them.",
+          "evidence_line_ids": [
+            "move-review:f3eaddd0ac6447a8c2ab657232ee54eca0be0a349bb1c2acd35f3dc572615ecd:30:b2b3:line:8d8a9bb7069653efa2332ecdda22a9d8ccd28b74b7b1487f71e972b3a43bfe58",
+            "move-review:f3eaddd0ac6447a8c2ab657232ee54eca0be0a349bb1c2acd35f3dc572615ecd:30:b2b3:line:ddd5753b4072a8607932324ee7350047456d4fc1db0e459ed4f818ef5cde6006"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 32,
+          "label": "16... c5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "c5 attacks d4 and clears c7 for Rbc8 to support c5; dxc5/Bxc5 completes the selected pawn exchange. The Bf6 alternative contributes many separate attacks and remote exchanges; their existence does not make every earlier capture a compulsory cost of this bounded c5/support claim.",
+          "evidence_line_ids": [
+            "move-review:e9351793aaed41d4e23925a42ca6bdaa9cdb29d8b3d8b10774174899597f8d95:31:c7c5:line:98f96ef8882f526c375a6c2c6965b8b4ae3985a6aba38ec9af534cc21aafc13b",
+            "move-review:e9351793aaed41d4e23925a42ca6bdaa9cdb29d8b3d8b10774174899597f8d95:31:c7c5:line:6c5f55cab91ca432b91be0d9e31a8b6a2e176b2ebb14fc9c8a163f05fa9c8c7f"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 33,
+          "label": "17. O-O",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "O-O before Rad1 and Rd1 before O-O are shown reaching the same recorded position after Bd8. This useful move-order answer is bounded at the actual convergence, so different later exchanges remain outside its core obligations.",
+          "evidence_line_ids": [
+            "move-review:bcf384ff31be26e047937795dafd1b2ce55a6c4b027f2d6efb02f5afcfe26451:32:e1g1:line:b159e8e06cfa5b3b6d3800363ffd05ed246e0f213b694871e1ece485a94dc4df",
+            "move-review:bcf384ff31be26e047937795dafd1b2ce55a6c4b027f2d6efb02f5afcfe26451:32:e1g1:line:06e497cb3fcfe310787dd4a19f62a498dd97a6ae5805d61627a221d4686286bb"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 34,
+          "label": "17... cxd4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "cxd4 attacks Nc3, creates doubled d-pawns and clears the c-file for the rook; Nd5 and the pawn recapture are included. The selected pawn and minor-piece exchanges are closed, but the Bd8 line's mutual-rook supports and later queen/knight exchanges expand the basic answer into separate histories.",
+          "evidence_line_ids": [
+            "move-review:072774e1b8432a1c70f2bf2a91bb142bb493d70bbbb20e1185702ccf625713bc:33:c5d4:line:66b68042485ecf947db07817594a059525abb1d6664057c0a0ecea0a129860b0",
+            "move-review:072774e1b8432a1c70f2bf2a91bb142bb493d70bbbb20e1185702ccf625713bc:33:c5d4:line:0de95280dcb9a3aba1a02e76e2458922e1253af6e643016cc06af7db5617f01f"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 35,
+          "label": "18. Nd5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Nd5 escapes the d4 pawn, attacks Be7 and later saves the same knight with Nb4. The Nxd4 alternative's b3 loss and minor-piece recaptures are retained, but the many future queen, bishop and knight-target reports bury the immediate knight choice.",
+          "evidence_line_ids": [
+            "move-review:bf0aa3e7793c0a28334bb3aa3563877464477d13765b748e7ccbadee92453a66:34:c3d5:line:93a38088234faffb2840fba42b23ffb5c5a7c874e603b188d1ec53240fadf3dd",
+            "move-review:bf0aa3e7793c0a28334bb3aa3563877464477d13765b748e7ccbadee92453a66:34:c3d5:line:2fb8b09ac77e3e7ab1df20eb7050b8dd342b8bb0e99c1fd89d10169e49261cbb"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 36,
+          "label": "18... Bd8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bd8 saves Be7 while Bxd5 exchanges the other bishop for Nd5 with Qxd5 explicitly recapturing it. The additional pawn captures and remote queen targets are separate stories, and mutual-rook-support lists obscure this complete retreat-versus-exchange answer.",
+          "evidence_line_ids": [
+            "move-review:ec33cc12cdc6c3a082a6ce658d35a60f961909e43372b3011d8b2c5784901477:35:e7d8:line:839cb82c0e01292850b69051a29a6a0b5f37b826335ab40de1d5c030dd46f164",
+            "move-review:ec33cc12cdc6c3a082a6ce658d35a60f961909e43372b3011d8b2c5784901477:35:e7d8:line:96590e36abb8d53199a338244e5e906c5c1579c02c2f5576f9d8b3b76d49a877"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 37,
+          "label": "19. Bc4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bc4 keeps defending Nd5 after Qd3 withdraws the queen's support, and Bxd5 actually recaptures Nxd5. That coherent provider-transfer mechanism is complete; repeated f7/pawn-target histories and the independent b4 line overwhelm it rather than supply a missing price.",
+          "evidence_line_ids": [
+            "move-review:bbb5eb95c1f24a6f2eeff66e23a7426ea31c6743b781d78c49108d40b609fde6:36:d3c4:line:43020a4a7f5c4cc11c7df7812968e22cff754abb1eefca6fb9e7d532b4e1047f",
+            "move-review:bbb5eb95c1f24a6f2eeff66e23a7426ea31c6743b781d78c49108d40b609fde6:36:d3c4:line:1128016dd0476f0c7f5da23af9853a518e8f2fce8adc9320467bafa05e0118cc"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 38,
+          "label": "19... Nc5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Nc5's queen attack is answered by Qxd4 and the native exchanges are retained. In the Rc8 alternative basic explicitly includes Rxc8 taking White's bishop but omits the immediately preceding Rxd4 taking Black's knight; the selected cross-square minor-piece exchange is therefore one-sided.",
+          "evidence_line_ids": [
+            "move-review:142bd342b879b81c43baf807dac6f9569d949e1a9d38b7c5421660a80a38a386:37:d7c5:line:3721663d1ba47c3303d7c5e8810beab2e427eb7ab6f3d88c50a8024bc4d9e42c",
+            "move-review:142bd342b879b81c43baf807dac6f9569d949e1a9d38b7c5421660a80a38a386:37:d7c5:line:5a902df397ee7fcba61491650e2c2cc65f001aae4db7b08cfedc835b775855c3"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 39,
+          "label": "20. Qxd4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qxd4 captures the pawn, escapes Nc5 and is defended against Black's queen; later Qd2 restores c2 support. The alternative's queen and pawn exchanges are closed, but separate queen/bishop targets and multiple retained-support differences obscure this complete capture-and-retreat answer.",
+          "evidence_line_ids": [
+            "move-review:796469f6fa2179c0c9c434da25ee5acf983f1f63c5062ea05cde29298bdbfb6d:38:e4d4:line:a7cc909d10f9de4a0f10fd8e3e43fb5b3438884fcd602af4020f3963112e7dc5",
+            "move-review:796469f6fa2179c0c9c434da25ee5acf983f1f63c5062ea05cde29298bdbfb6d:38:e4d4:line:8b6b04092f7091d1014fcd1bc03961705b97a2db55a6cc82012d9eb83d3f11ba"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 40,
+          "label": "20... Qxd4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Qxd4/Nxd4 explicitly completes the queen trade and frees g7 for the king, whereas h5 keeps queen support and allows a closed g4 pawn exchange. Independent future targets and several later minor-piece/rook exchanges drown the immediate simplification contrast.",
+          "evidence_line_ids": [
+            "move-review:0bb8f80b0c7cee1bdf07c1777a0085198d2271190d270580a464d452d14c5184:39:g7d4:line:7ec47612b82e21a4bb296ba0514dcfcb6f61f7704572d44c7dd69eb449b1bd5b",
+            "move-review:0bb8f80b0c7cee1bdf07c1777a0085198d2271190d270580a464d452d14c5184:39:g7d4:line:2ef09227a07b6b3b81b133c34be6eca10733467003ac617f366d227d748482b7"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 41,
+          "label": "21. Nxd4",
+          "quality_label": "incomplete/unavailable",
+          "failure_boundary": "composition/delivery",
+          "question_fit": "unknown",
+          "required_reply_cost_preserved": null,
+          "reason": "The selected_target_response is answer_not_delivered, with basic_text null and only an incomplete notice visible. Completed analysis and complete verification do not supply a visible answer; hidden legacy prose and research packets are not counted as browser text.",
+          "evidence_line_ids": [
+            "move-review:f51f9be33a04a47c7a7e38814699bdd6a6ecf675a9dbf80f9dac1182ed13c748:40:f3d4:line:47f538fa0f0cc4df95c039c4113eecfea7ad698ae59fbc50e85811bec4a026b8",
+            "move-review:f51f9be33a04a47c7a7e38814699bdd6a6ecf675a9dbf80f9dac1182ed13c748:40:f3d4:line:8ac18486cd908e1d9deb9f7aac30ceac0751aca76db9904490776922712d9e3c"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 42,
+          "label": "21... Bxd5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bxd5 escapes Nd4's attack by taking the other knight, and Bxd5 recaptures the bishop; Bd7 instead retreats. The chosen later Nxd4/Bxd4 and f5 exchanges are also closed, but long unrelated f7/h3/queen and pawn-survival histories dilute the initial exchange-versus-retreat distinction.",
+          "evidence_line_ids": [
+            "move-review:a27b8977aa0fc935afa4e374b70ebfedb517778fcf20f5f3ecc42bbbbedfa6c6:41:e6d5:line:9a0513bac05950199fa7abdcedd4cfa3178be77fb7848a2af5f08ec76c83d22a",
+            "move-review:a27b8977aa0fc935afa4e374b70ebfedb517778fcf20f5f3ecc42bbbbedfa6c6:41:e6d5:line:828b6e66599cac4df99a2e47cd5043ef5619ac5788d77923a970d0154469e5a9"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 43,
+          "label": "22. Bxd5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bxd5 recaptures the bishop and Bf3 later escapes Nb4's attack, while Nf5 instead permits Bxc4/bxc4. The described rook and pawn trades are closed, but many later bishop/knight targets crowd out the recapture and retained b3-support comparison.",
+          "evidence_line_ids": [
+            "move-review:514b5886ddce113b22f339f5df3d115e8006c651a63ee1a5971e678f7b4b5fa8:42:c4d5:line:4eb99d1c3e2cac5a56cf1e881f9062cd014bf4de65a23b498d3c73630b906513",
+            "move-review:514b5886ddce113b22f339f5df3d115e8006c651a63ee1a5971e678f7b4b5fa8:42:c4d5:line:e997e60d7f4ddb7a55259818380032f291f9876990b88474c0d35088996248fd"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 44,
+          "label": "22... Bf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Bf6 attacks Nd4 and its native Nxa7 gain is retained. The Na6 alternative ends with Nxc2 taking White's pawn but omits White's earlier Rxd6 taking Black's d6 pawn, even though basic raises the attack on d6; the selected pawn-gain contrast lacks that supplied price.",
+          "evidence_line_ids": [
+            "move-review:6c85ce8e440cf81ed493fa6c780f0e6da656ad53721f17349e3f94d67cd40282:43:d8f6:line:7f08306921d93d21c6a69ebb6f31b51aa157985bbf15a21f91d2b3cec1e5940a",
+            "move-review:6c85ce8e440cf81ed493fa6c780f0e6da656ad53721f17349e3f94d67cd40282:43:d8f6:line:a1711152a87488eec89b3e0f7fdc384fb2f706c06b8f1a1ca93489a68b2d3264"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 45,
+          "label": "23. Rad1",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rad1's defence is actually used in Bxd4/Rxd4. The Nc6 alternative is described as Nxb8/Rxb8 winning a rook for the knight, but Bxa1/Rxa1 is omitted despite the body explicitly identifying the attack on Ra1; those captures close a rook trade and bishop-for-knight exchange rather than an isolated rook gain.",
+          "evidence_line_ids": [
+            "move-review:13869bffc02a5ddf232048a994908ed846374799de3229b7d3e8ff084e95e92f:44:a1d1:line:dccf56de2c3df721f1639cb5099392c87a151b05f72655b2cfe3b540017ad51f",
+            "move-review:13869bffc02a5ddf232048a994908ed846374799de3229b7d3e8ff084e95e92f:44:a1d1:line:b006d9a31797cce93223c148262a8bfa2c6e56a4d1c294f9596d36461baae273"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 46,
+          "label": "23... Bxd4",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bxd4 removes the knight and Rxd4 pays the bishop, with f6 subsequently available to the king. The short body preserves the reviewed capture's essential recapture and does not claim a free knight win; Rbd8 is only the named comparison continuation.",
+          "evidence_line_ids": [
+            "move-review:5c568d9e2306b1b9db4ccfdbf49856fd5178bab1de57fd228d0be909f5e1a6da:45:f6d4:line:df35c2d26a6e7d483fb04b23efca3fafb6ea59b6b18e19d46efb09da33841d1f",
+            "move-review:5c568d9e2306b1b9db4ccfdbf49856fd5178bab1de57fd228d0be909f5e1a6da:45:f6d4:line:7a8923163a31a0fb70e0a3e35ba274714ff5731633d4ad433948f7e866c703d8"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 47,
+          "label": "24. Rxd4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rxd4 completes the bishop recapture and later allows Rd5; the Bxf7+ alternative explicitly pays that bishop to Kxf7. Independent d6 escape and distant rook-route reports compete with the closed recapture-versus-bishop-sacrifice answer.",
+          "evidence_line_ids": [
+            "move-review:6f3ce14a770098d9727047ed7a0a3a59af54909aa65ff4f4c05f86f6b6dc14b6:46:d1d4:line:0adb429305e1411bd21ca51ee05625907bbcc1221ff2c3542631139cfa0e9002",
+            "move-review:6f3ce14a770098d9727047ed7a0a3a59af54909aa65ff4f4c05f86f6b6dc14b6:46:d1d4:line:3ecc40dbd5eee79d18eecaa3ac26590da771c457f566ff277e552911d5f97551"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 48,
+          "label": "24... Kg7",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Kg7 is connected to the same king's Kg6 supporting the attacked g5 pawn, and the alternative's stated fxg5/hxg5 exchange is closed. This is a bounded observed king-route function, without asserting that Kg7 is necessary or that the pawn is won.",
+          "evidence_line_ids": [
+            "move-review:bf0b8d80590858e7a0d4591b0746d6ef27212574797edca05c56dcd52d5fbff1:47:g8g7:line:3ae178206c511f4aa1e80ac3aa018d2081eaf1db654ac648448e52d1b8d97c55",
+            "move-review:bf0b8d80590858e7a0d4591b0746d6ef27212574797edca05c56dcd52d5fbff1:47:g8g7:line:553773056405e5f6acd5a4b4f58e7dfcf12c8cae6722cb48afc7babf5371e858"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 49,
+          "label": "25. Bc4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bc4 clears d5 for Rd5 and opens the rook's d6 attack, while Re1 frees f1 for the king. Repeated Ne6/Nc5 attacks and surviving d6/f7/g5 reports dilute the clear bishop-clearance mechanism; no capture price is missing from that selected claim.",
+          "evidence_line_ids": [
+            "move-review:9769cb3dd0ad7d5c13bd926afacc6e56e7cba364ed6d1d0c19520109bcde60f2:48:d5c4:line:e4b1c7bb8287987db315d38cb89d242cb978009509899e3cf7434b9c0d503d45",
+            "move-review:9769cb3dd0ad7d5c13bd926afacc6e56e7cba364ed6d1d0c19520109bcde60f2:48:d5c4:line:853d150a03da7e9aa95fbfbfb7420f649178c33e24000d4af1eb3620cff836f9"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 50,
+          "label": "25... Rb6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rb6 and Rfd8 both defend d6, but Rb6 keeps Rf8 defending f7. The basic answer preserves this current defensive difference; the later b3 survival and king escape from Re1 add separate histories.",
+          "evidence_line_ids": [
+            "move-review:0eb4294bb80ea5200db6f1e95ab8f2d77c37ce6c64352dc285d764cf39c11fd1:49:b8b6:line:6069912c13f447abdb7625df2ca00aac26ef274031b56916a835e56299bac4aa",
+            "move-review:0eb4294bb80ea5200db6f1e95ab8f2d77c37ce6c64352dc285d764cf39c11fd1:49:b8b6:line:52221e4ba35f98081135b377008617d9b3492f2dd12d5fd35f1bd16fa7bed4ea"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 51,
+          "label": "26. Re1",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "The explicit comparison shows Rd5 blocking Bc4's control of e6 while Re1 leaves that line open, with Ne6 escaping the rook attack. This is a real bounded current difference, though the actual Re1 rook's own later purpose is not explained and no lasting bishop-control claim is made.",
+          "evidence_line_ids": [
+            "move-review:ca5dde7a2e1544be4b5fe65941e9db5d4af95ab79f3bde90ee58ac59e3648c80:50:f1e1:line:f10545b97238b2b732cef49a5931b1151e37860766db86c359b18cf7d9c03312",
+            "move-review:ca5dde7a2e1544be4b5fe65941e9db5d4af95ab79f3bde90ee58ac59e3648c80:50:f1e1:line:02f2c22f5dcef0358b0e0d5a2d70bb2f2b2e013769703d63ed4f95780b492d6f"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 52,
+          "label": "26... Kf6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kf6 defends g5 and later Ke7 defends d6, while Rd8 gives d6 a rook defender and later restores f7 support from d7. Both selected fxg5/hxg5 exchanges are closed; several independent defender histories dilute the comparison.",
+          "evidence_line_ids": [
+            "move-review:a154725b2d6d779a6156f8a52842ed85db2b5a5b5d9fc4840fd8893aab6bd9de:51:g7f6:line:0974aa467b198d42f9333d131dc8b785d57c359172cd5b6ecad364a6a76b35ff",
+            "move-review:a154725b2d6d779a6156f8a52842ed85db2b5a5b5d9fc4840fd8893aab6bd9de:51:g7f6:line:893d27459c1e7201d79ef3408094ee16bbc734de1ac0f0da8ff001c5fb2fb37e"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 53,
+          "label": "27. f4",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "f4 attacks g5 under rook support and fxg5+/hxg5 completes the observed checking pawn exchange. The body retains the recapture and limits its claim to the supplied line rather than importing the actual game's different Ne6 reply.",
+          "evidence_line_ids": [
+            "move-review:89f6c217688a984401159318f080351690386224cb1bad17d3f3c080e7b0ad9b:52:f2f4:line:3a9d08873d9e0d17e9f9e12732a9a6b168ab85bd349f3c0d5e4db82124b1f438",
+            "move-review:89f6c217688a984401159318f080351690386224cb1bad17d3f3c080e7b0ad9b:52:f2f4:line:10e44b6861f7859deeabf6d300d31b4087d06be9e23d5c44610dde11516c3181"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 54,
+          "label": "27... Ne6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Ne6's attack on Rd4/f4 and the checking sequence followed by Rd5 save the rook. Basic later selects Rxg5+ and Rxe6 as pawn captures but omits Rxc2 between them taking White's c2 pawn; the selected pawn-gain account is incomplete despite the original double-attack response being preserved.",
+          "evidence_line_ids": [
+            "move-review:45e96406001f66f18df4fcb8f219c8cd4e444e4acc6a3a17c47b1f12cbe73b6a:53:c5e6:line:8d72ac0318d6bbc37f7ff7346800e1cc81b0c7d82e0cd314df436278b064d161",
+            "move-review:45e96406001f66f18df4fcb8f219c8cd4e444e4acc6a3a17c47b1f12cbe73b6a:53:c5e6:line:427be312f089b7c9a78f36fe933742a2b96b71b531f76504cb5a73996bbff267"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 55,
+          "label": "28. fxg5+",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "fxg5+/hxg5 and its f-file clearance are complete. In the Bxe6 alternative the body selects Rxa7 and Kxd5 pawn gains but omits the intervening Rxg2 taking White's pawn, so that chosen late material account lacks its witnessed countercapture; this is separate from the sound initial pawn-exchange explanation.",
+          "evidence_line_ids": [
+            "move-review:85679615fb2b07493e28eda057a0ab4fa4b905b5f28c4ac10567adca73359150:54:f4g5:line:f2d2be1906056265ac63455e374e146cc26e1661585f6c8f878aa9f11c4b3b78",
+            "move-review:85679615fb2b07493e28eda057a0ab4fa4b905b5f28c4ac10567adca73359150:54:f4g5:line:0ef21f906903350d0527fc047f545965a40a2a1b5567f06244e66c73baa23386"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 56,
+          "label": "28... hxg5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Nxg5 moves the knight out of the e6 attacks and opens Bc4's f7 line while defending f7 itself; hxg5 instead leaves that line screened and later frees h6 for the king. The recapture/check responses are retained, but remote pawn and rook-chase histories dilute this concrete recapturer difference.",
+          "evidence_line_ids": [
+            "move-review:668e22dcf9d9d6f51fd907372b07a9f270be384528b681a686bd5eda3be33ee8:55:h6g5:line:5406442629e02b83a58b9adb4f2e37c806f3a30f099dd6f51f3f1de5ea6e7a58",
+            "move-review:668e22dcf9d9d6f51fd907372b07a9f270be384528b681a686bd5eda3be33ee8:55:h6g5:line:96d74693e6befb8f9ef3c6b09d48abe58df2f0754b81e44cae9b7ce1f8d47219"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 57,
+          "label": "29. Rf1+",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": false,
+          "reason": "Rd2's escape from Ne6 is explicit, but native Rf1+/Kg7 is followed in the supplied line by Rd5 saving the attacked d4 rook, absent from basic. The body pursues f7 and later alternative histories without closing this current rook-danger answer; the missing event is an escape rather than a capture.",
+          "evidence_line_ids": [
+            "move-review:1c72019d68dd4dd611b1758c09a5806e24c9202cc4b26da864e17d997c304b6d:56:e1f1:line:6f4ec01a9b061010b0d969c92d4a368e6a412a8adc0a6d6b4149e063c86f694d",
+            "move-review:1c72019d68dd4dd611b1758c09a5806e24c9202cc4b26da864e17d997c304b6d:56:e1f1:line:986f388dc9d422b7504be49cad6979e8e9e0ac2c8b55854a6791135b2f58fa68"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 58,
+          "label": "29... Ke7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Ke7 escapes the f-file check while retaining e6/d6 support, and its Bxe6/fxe6/Rxe6 account is kept. Kg7's chosen h4 pawn exchange is also closed, but many later pawn and rook chases obscure the current defensive king choice.",
+          "evidence_line_ids": [
+            "move-review:9d42225ac31e7b7c7f998eb220277e836fe1c17af7777be78be0a88da6bc9cb6:57:f6e7:line:3b70622cad418bac2498108f19e3e0d5a1ca221d09ac55622d32990a1f5cf3a3",
+            "move-review:9d42225ac31e7b7c7f998eb220277e836fe1c17af7777be78be0a88da6bc9cb6:57:f6e7:line:e7fd4dae01d50d24cb8d801bb6441627c714850173c606704e68c8dc13577a04"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 59,
+          "label": "30. Rg4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rg4 saves the attacked rook and the later h4 exchange is closed. In the Re4 alternative basic keeps Rxe6/Rxd6+ taking Black's pawns but omits Rxc2 between them taking White's c2 pawn; that selected pawn-gain account loses its supplied countercapture.",
+          "evidence_line_ids": [
+            "move-review:eee33386e06c21d1148de60a48ad0fea01b97045a80a0361b8082dc1261183fa:58:d4g4:line:e66b3c4857da3842bac59762ed05102313f2dfd69c133873205a42ebe7fe08d8",
+            "move-review:eee33386e06c21d1148de60a48ad0fea01b97045a80a0361b8082dc1261183fa:58:d4g4:line:d91ea3ae76bbf76997d1324b0de5e886c821213be93b6bcd2a85b63630125066"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 60,
+          "label": "30... Rg8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rg8 defends g5 while f5 attacks the rook and frees a route for Rf5 to defend g5 later. Basic explicitly shows hxg5 despite the new defender, without claiming it holds the pawn; repeated rook chases and independent f7/e6 support changes dilute this comparison.",
+          "evidence_line_ids": [
+            "move-review:91f3484b400376b63038e185cadf1988d70f4d2a926f5019feb8270c45028f8d:59:f8g8:line:f4fc9500680ec27a21840baac5cb3b5d15ea15afe6518dfd0c69743dfe96bcfa",
+            "move-review:91f3484b400376b63038e185cadf1988d70f4d2a926f5019feb8270c45028f8d:59:f8g8:line:f31cfb81f004d95136bdd1eff204ed287d40d09882d4f1a59b77d4b6582035a4"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 61,
+          "label": "31. Rf5",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rf5 before h4 and h4 before Rf5 converge through Rc6/Rc5/Rxc5, with dxc5 closing the rook exchange in both. The actual convergence is a useful bounded answer; the branches' later different endings do not have to be merged into basic.",
+          "evidence_line_ids": [
+            "move-review:5bfa4c7e4771e0cf02fc190f8084785a59382152999ca822e9aaf15865ea19bb:60:f1f5:line:02a80ccd5ae4b3724b6ec59067a149d0d1e76b3e4b0e2bd3b123e10b7268dee3",
+            "move-review:5bfa4c7e4771e0cf02fc190f8084785a59382152999ca822e9aaf15865ea19bb:60:f1f5:line:cfd4a03a50ee2cd5ad08e2adc981e02a763611bc95f3100267887a4b48b4c9a9"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 62,
+          "label": "31... Rc6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rc6 is connected to later a7 support while Rg6 immediately defends g5/e6. The native checking pawn-and-rook exchange is closed and the alternative explicitly stops at c3+ without claiming a terminal result; repeated a7/g5 target histories dilute the defensive comparison.",
+          "evidence_line_ids": [
+            "move-review:bd0aa632e7d34048b35f621d69dd11321a3700b29c2d8a8fb976414178c4e67b:61:b6c6:line:48a47128e094535483618e08216a1c6d60d43c805f491499e434afd02a6d9fca",
+            "move-review:bd0aa632e7d34048b35f621d69dd11321a3700b29c2d8a8fb976414178c4e67b:61:b6c6:line:f8045d8c5ce92737698b29752e30aba26612ac94af470f31a6175ea3658cea04"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 63,
+          "label": "32. h4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "h4 adds a supported pawn attack and the rook trade is retained, but its hxg5 is followed by Kxg5 taking that pawn, absent from basic. In the Ra5 branch the selected Kxg5 rook loss also omits Rxa2 capturing Black's rook just beforehand, so both selected material accounts lack their closing price/compensation.",
+          "evidence_line_ids": [
+            "move-review:73901f2b4e68e97233af8d5c767f09545d5ce3102cf06428a2522046297b5823:62:h3h4:line:270e138203b68d3a7baee4e926c2e7bb81cb380460737a3676802ce6e9254dcb",
+            "move-review:73901f2b4e68e97233af8d5c767f09545d5ce3102cf06428a2522046297b5823:62:h3h4:line:e9ffb5b9b00727ed456095b7f64f68d6c556714e7c76817f96d7e480f4c8b3bf"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 64,
+          "label": "32... Rgc8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rgc8's support is actually used by the Rxc5 recapture and the native g6 pawn exchange is complete. In the Rc5 alternative basic selects Rxc2 taking White's c2 pawn but omits the immediately preceding Rxa7 taking Black's a7 pawn, making that selected cross-square exchange one-sided.",
+          "evidence_line_ids": [
+            "move-review:b52dda9d377396578d88d157b1f9f4d7e226e7642bfd0ae61802ef500819baf0:63:g8c8:line:71507a4b00575c2c0c44773a7fc19854045ccd2468ad24337055a76c6e6d9af8",
+            "move-review:b52dda9d377396578d88d157b1f9f4d7e226e7642bfd0ae61802ef500819baf0:63:g8c8:line:41ed871b75d05f025bf2151f8834d82f823b02261c5b11bb14743505d7dae8cb"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 65,
+          "label": "33. hxg5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "hxg5 uses the pawn while Rfxg5 sacrifices a rook to Nxg5 and recovers the knight with Rxg5; that price is explicit. The native rook trade, fxg6 pawn loss and Rxg6 recovery are also kept, but many remote defender and rook-route reports bury the coherent capturer/account comparison.",
+          "evidence_line_ids": [
+            "move-review:df7182274398c623df59a21e835ecccc01cf49b5a9931fceb3e3d0a15d6b0369:64:h4g5:line:baf5ee6cde912021836ec8a13a68c8f280cf1a634672fbd722075bb8046e47cd",
+            "move-review:df7182274398c623df59a21e835ecccc01cf49b5a9931fceb3e3d0a15d6b0369:64:h4g5:line:cf9d52dffa98dcc3fd696691aa1e3136b21f64024edabafd913a85664efe2cdf"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 66,
+          "label": "33... Rc5",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rc5 attacks Bc4 but White trades rooks and later saves the bishop; d5 instead loses a pawn and allows a bishop-for-knight trade. The selected target-response account states those different piece outcomes with their captures and recaptures, without claiming the attack wins a bishop.",
+          "evidence_line_ids": [
+            "move-review:5f9e1209cf7075b052baf04fca74f2e7f0c6a9d36438d95d4ec6f055edc2fd8f:65:c6c5:line:1a13dda58b76dad3dfe8b3fff96920e92719a563e5d452a79043aa7eccddc789",
+            "move-review:5f9e1209cf7075b052baf04fca74f2e7f0c6a9d36438d95d4ec6f055edc2fd8f:65:c6c5:line:031f5fd8ec53e0bed8c611b49dc215b9f5cc12183a4c0c411cb918e918ce5aa3"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 67,
+          "label": "34. Bxe6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Bxe6/fxe6 trades bishop for knight and creates an attack on Rf5, answered by Rxc5/Rxc5; the direct Rxc5 alternative exchanges only rooks. This complete exchange distinction is useful, but the same rook account is restated several times instead of keeping the minor-piece choice central.",
+          "evidence_line_ids": [
+            "move-review:5b8ac7a4a8983286470d0dd42fe96e51af2859d1cc14959172ce71609e438a24:66:c4e6:line:aeab83bc7f2b18b252bfc6036f72abdc484eae12de317a659d3aa34b8c0335cf",
+            "move-review:5b8ac7a4a8983286470d0dd42fe96e51af2859d1cc14959172ce71609e438a24:66:c4e6:line:e30ca57e3c4cff4354cf166208028a529f7560c421647d0e5fef2d49a35a7ca2"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 68,
+          "label": "34... fxe6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "fxe6 and Kxe6 are compared as recapturers attacking Rf5, with the native rook trade closed. The Kxe6 branch's displayed Rxf7+ pawn gain omits the preceding Rxg5 taking White's passed pawn, although the supplied line makes them a cross-square pawn exchange.",
+          "evidence_line_ids": [
+            "move-review:4dac7ffea7042d9d29d4124ebb64773db8a430ed068f24e4d53184e35790a6be:67:f7e6:line:032639684958a2f3b8169c30694a8b9c002ccade7f6b9de52a438736eb0b5c4e",
+            "move-review:4dac7ffea7042d9d29d4124ebb64773db8a430ed068f24e4d53184e35790a6be:67:f7e6:line:0d96954dcb6cac6258c0360c556e70ff6847de0f86194daaa6ed9913df684221"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 69,
+          "label": "35. Rxc5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rxc5/Rxc5 closes the native rook trade. The Rf1 alternative names Rxa7 capturing Black's rook but omits Black's earlier Rxa7 taking White's rook, along with the first White Rxa7 pawn capture; two occurrences on a7 are collapsed into an apparent isolated rook gain.",
+          "evidence_line_ids": [
+            "move-review:da3d743d5ea4106477a2ad2f3dd2c0f45fe0d0becda076a6c8d730eb7ef7a265:68:f5c5:line:fa94b7cf2b5d0f8ced5eda2bd19ac2f3714980f12959ca406d84da40319e30f1",
+            "move-review:da3d743d5ea4106477a2ad2f3dd2c0f45fe0d0becda076a6c8d730eb7ef7a265:68:f5c5:line:7343b22e96dfb7e3d5d426b7c2e7ea26089fe609d436ce82fa09f7fb7678271e"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 70,
+          "label": "35... Rxc5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rxc5 recaptures with the rook while dxc5 uses the d-pawn, and both complete the earlier rook trade. The native c2/g5/a2 pawn fates and later rook chases add independent histories to this clear recapturer choice; no selected loss is left without its recapture.",
+          "evidence_line_ids": [
+            "move-review:18cf6918c2b71964e7fe9b07a4495fdac4861504ef4c33524025b30b7809009d:69:c8c5:line:c01e27c35ebc3ece7bdf3c1541893d170e8b3f0691b3850c2ec4f0d5bc11238e",
+            "move-review:18cf6918c2b71964e7fe9b07a4495fdac4861504ef4c33524025b30b7809009d:69:c8c5:line:2486abd178c7ca14965757bae77d36d94ee450e4e9e2335135b674ea43921db8"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 71,
+          "label": "36. g6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "g6 escapes Rc5 and clears g5 for Rg5; c4 instead obtains pawn/rook support while leaving g5 to Kxg5. Its Rxa5 compensation is included, but remote a-pawn and rook-target histories obscure this concrete passer-versus-c-pawn comparison.",
+          "evidence_line_ids": [
+            "move-review:e8a02849192051cae57d8de6e2f2b60dd706ccf0abce8243fd556a46f4de8181:70:g5g6:line:c77fac5a533cb1bf02621e8c3a2311849bbc45da59629f66c4e3a79483c22ec2",
+            "move-review:e8a02849192051cae57d8de6e2f2b60dd706ccf0abce8243fd556a46f4de8181:70:g5g6:line:2cbb36718509b293ed030df8a61705b56181f1be01defb26adb259fcbb0a9655"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 72,
+          "label": "36... Kf8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "composition/delivery",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": false,
+          "reason": "Kf8 is connected to g7+/Kg8, but most of basic describes Rc8's g8 recaptures. It calls the captured piece a white knight without retaining g8=N, the promotion that creates it from the reviewed g6 pawn; the selected pawn's outcome cannot be understood from that body.",
+          "evidence_line_ids": [
+            "move-review:c4e145d368958368e7345f6ec47b26dbedc05cd8a7565a64d6bf564dcc490fd7:71:e7f8:line:37396673286b042e4f646ee2182cf0e766c249528fab57d70c66984c41bb0318",
+            "move-review:c4e145d368958368e7345f6ec47b26dbedc05cd8a7565a64d6bf564dcc490fd7:71:e7f8:line:33ddb3aba057822735a106afad6e3904dada3a890a140a9d58f979567570e45a"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 73,
+          "label": "37. Rc4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rc4 challenges the rook, Ra5 escapes and the later Kxg6 loss is explicit. Basic omits the immediately following Rxa7 taking Black's a7 pawn, so the selected native passer loss lacks its provided material compensation; the other branch's later Kxg7 is a separate outcome.",
+          "evidence_line_ids": [
+            "move-review:cf6d950efdc08727a87852ffed0dea7293a4005e5ebabe85de65c555b1fa9408:72:g4c4:line:c14696d74f7a3ab6f2b0e0c163a8ef8492ff2aa64958d3f8b1d4cc6b8f742a62",
+            "move-review:cf6d950efdc08727a87852ffed0dea7293a4005e5ebabe85de65c555b1fa9408:72:g4c4:line:32a57e62a7033b1f30633385a37b9fc71a3269487b0d14ce837c51dd5f68a89e"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 74,
+          "label": "37... Ra5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Ra5 escapes Rc4 and attacks a2, later switching to defend d6; those functions are present. Basic also selects the late Rxb6 capture of White's pawn but omits the immediate Rxd4 capture of Black's pawn, leaving that included two-square pawn exchange one-sided.",
+          "evidence_line_ids": [
+            "move-review:5f51b70e744b1f9a8601628374a0c5a531c6f6876832b61849941de642e63b05:73:c5a5:line:9c438ec70c2748d2fda77e6551d1f21c2f65be045622b23dd8b115d334cc1e66",
+            "move-review:5f51b70e744b1f9a8601628374a0c5a531c6f6876832b61849941de642e63b05:73:c5a5:line:cf985cead46a14f81815afcc5bff40a74637462b76f0734f40e126b2aa4354a8"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 75,
+          "label": "38. a4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "a4's b3/Rc4 support is explicit and both branches' g6 loss is shown. Only the native branch immediately answers Kxg6 with Rxa7, absent from basic; losing that compensation erases a supplied difference between the pawn advance and immediate rook check.",
+          "evidence_line_ids": [
+            "move-review:6cdf98a194f6f4aef2dccd5c728b184263515c2d537e94256fd65e34035b836a:74:a2a4:line:0f86385b0fa5857d7abdf136dd9d1f250d0881017d0ab1b5788d9804b16f7947",
+            "move-review:6cdf98a194f6f4aef2dccd5c728b184263515c2d537e94256fd65e34035b836a:74:a2a4:line:8c27a2a25a515eb468ff9a0c5404f7117b5704eff7db4988cb927c0b037ade48"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 76,
+          "label": "38... Kg7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Kg7 attacks g6 and Kxg6 both takes the pawn and escapes Rc7+. The very next Rxa7 takes Black's a7 pawn but is omitted, so the basic passer-capture account remains one-sided; an unrelated later cxd5/exd5 exchange does not close it.",
+          "evidence_line_ids": [
+            "move-review:2726fdd629cd3277162da760a9276982d4b198024bf7867e8cf07184f95c0bfb:75:f8g7:line:b6538767a8b6e0dbb96915ef8875395e99a06bceeb71e7de63191946ca7285e1",
+            "move-review:2726fdd629cd3277162da760a9276982d4b198024bf7867e8cf07184f95c0bfb:75:f8g7:line:8d05b3a37e8201fc4ff32737c0f464a98b3fff0c7c6fc7920d5b0b37e6fe56e9"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 77,
+          "label": "39. Rc6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rc6 attacks d6 and Rxd6 is described as taking that pawn. Its native preceding Kxg6 taking White's g6 pawn is omitted, while that loss is explicit only under Rc7+; the reviewed line's selected pawn gain lacks the price present in the same supplied continuation.",
+          "evidence_line_ids": [
+            "move-review:56f00df66aeaa933ca25cfa16dd1911ab0a4c741c282da436c9f59a3cdf0479d:76:c4c6:line:0466bb53502f27e63ec0a61fa8f95bbc503d809b4cae7a0f96f0aece2fc12a4f",
+            "move-review:56f00df66aeaa933ca25cfa16dd1911ab0a4c741c282da436c9f59a3cdf0479d:76:c4c6:line:5cf451273be36afd5ad3b69464f19eebe340e4d0c2216e61672a35d41ad8f43a"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 78,
+          "label": "39... Rd5",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rd5 defends d6 and then allows Rc7+/Kxg6/Rxa7, whereas immediate Kxg6 allows Rxd6 and Kf6 protects e6. Both observed pawn-loss/recovery accounts are kept, giving a coherent comparison of which pawn is conceded rather than an isolated gain.",
+          "evidence_line_ids": [
+            "move-review:327df68ca79d45fbbf442c97cd06f0e093c569c8c23e290edb6af4d265aef5b7:77:a5d5:line:abf9d471e8ca3e12c9944dd39582199ab58e69226a36e17d3c08309c5e3cbfd2",
+            "move-review:327df68ca79d45fbbf442c97cd06f0e093c569c8c23e290edb6af4d265aef5b7:77:a5d5:line:5df3d8b980aa624e10b822ee54583711fa986680cac1db958ff07be4905891f6"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 79,
+          "label": "40. Rc7+",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rc7+ and Ra6 converge after Kxg6/Rxa7; the body explicitly keeps both the passed-pawn loss and a7 compensation in each branch. This is a complete bounded move-order answer, not proof that Kxg6 is forced.",
+          "evidence_line_ids": [
+            "move-review:0bbfa5497207e86957c45e49643cbc156a5f5a3bd14d85612bd0571698ae4f6a:78:c6c7:line:a912dc883136ab66611bd52ee14f8d830b26c99fa9cd7a3b0ff54c590b553aae",
+            "move-review:0bbfa5497207e86957c45e49643cbc156a5f5a3bd14d85612bd0571698ae4f6a:78:c6c7:line:f82fe6a9b1f6adb83bf4717c5c5f711d710f2a7aa31e6049d92dc19af58ae01c"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 80,
+          "label": "40... Kxg6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Kxg6 captures the passer while Kh6 leaves it alive on g7. The native immediate Rxa7 loss of Black's a7 pawn is absent, making the displayed king capture look like a standalone pawn gain rather than the witnessed cross-square pawn exchange.",
+          "evidence_line_ids": [
+            "move-review:ea92bca2fe98cc71df492ed977bc13d4b5a3700ea0601296b9c10309e30b2838:79:g7g6:line:4c0e4e75145848add1d22ff8b606a8077d458cc73cfa4f41abcafda507ca6895",
+            "move-review:ea92bca2fe98cc71df492ed977bc13d4b5a3700ea0601296b9c10309e30b2838:79:g7g6:line:071175b81f53c2b4290f216507842ddad9b91e1b31d7db28495f55aa24990ec8"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 81,
+          "label": "41. Rxa7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rxa7's capture and the later cxd5/exd5 trade are retained. Native Rxd5 is then listed as a pawn gain but the immediately preceding Rxa4 taking White's pawn is omitted, leaving that selected late exchange unpriced amid unrelated target histories.",
+          "evidence_line_ids": [
+            "move-review:ac8c9c0ca3469b2e1f4607b6d51926a5e6bc044e1bf44007a6a81b9d939a6741:80:c7a7:line:8aafc538d797ab45b81af40c519f20aea30a3bbd4b2fd0fdd89361bcd553de43",
+            "move-review:ac8c9c0ca3469b2e1f4607b6d51926a5e6bc044e1bf44007a6a81b9d939a6741:80:c7a7:line:4303e38258f587902a8c4679551e9b3e1738c7edde1e59ffe5fe8e4e46713a47"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 82,
+          "label": "41... Rd1+",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rd1+/Kh2 before e5 and e5 before Rd1+/Kh2 converge after Kf6/a6. The observed move-order equality is useful and complete at that point; the alternative's much later rook promotion and trades are not obligations of this bounded answer.",
+          "evidence_line_ids": [
+            "move-review:dad28044470175a714c11539f514bbb0494a40e9275251f395b94b450b384310:81:d5d1:line:8695a0b8fca6978e017a0d8ee9b21b1c0548eff8629a1b20a5d3ff6d8164f714",
+            "move-review:dad28044470175a714c11539f514bbb0494a40e9275251f395b94b450b384310:81:d5d1:line:50d60f9a37213630cb982fa1bd4fff94d827e670cbea492d536477c068996cf8"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 83,
+          "label": "42. Kh2",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kh2 escapes the check, while Kf2 allows Rd2+ and its king chase permits Rxc2/Rxg2. Those concrete king responses and two pawn losses are preserved; repeated rook locations and target reports dilute the useful escape-square comparison.",
+          "evidence_line_ids": [
+            "move-review:3f5e30f620f9a19429f57398871f23f9a45619773dd1f220cd8a239cbedc804d:82:g1h2:line:14ba854f15b37c78c56aaff0201c9d6c0ff14f4ac4775158b7c7a0341ff492eb",
+            "move-review:3f5e30f620f9a19429f57398871f23f9a45619773dd1f220cd8a239cbedc804d:82:g1h2:line:50e033901d2b351e259de466dec3f72557f3597a52a3552e736f6895cc730742"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 84,
+          "label": "42... d5",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The body only says neither side captures or promotes within two short supplied continuations and names Rf7+. It does not answer what d5 changes or how it differs from Kf5; absence of material change is not a useful account of this quiet move.",
+          "evidence_line_ids": [
+            "move-review:5e043f99b1fc413da2ba539c8ce821ce1bec0f80cb59d87d1d7fe12b92086d8f:83:d6d5:line:40ed0ed98bd6ae711b5a5eacd7a929d5d4c3d2f555c7a79da4ecb8927b19e5ef",
+            "move-review:5e043f99b1fc413da2ba539c8ce821ce1bec0f80cb59d87d1d7fe12b92086d8f:83:d6d5:line:c38e68b5e0e3ad7040549703442bed9d9041e29485f8ea03d5af62bd59ee8b6a"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 85,
+          "label": "43. a5",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "a5 before Ra8 and Ra8 before a5 reach the same recorded position after e5/e4. This is a concrete bounded move-order comparison; the later capture of the passer in both lines need not be attached to a claim ending at the convergence.",
+          "evidence_line_ids": [
+            "move-review:20d59631f14a468adc10c423fd8e3181a33f94ba87cdb170dc593f4b5ae8c68a:84:a4a5:line:be811b842de3c831b44392b1651fd35b6ebe631dc9292827c4a7a79f1d48b293",
+            "move-review:20d59631f14a468adc10c423fd8e3181a33f94ba87cdb170dc593f4b5ae8c68a:84:a4a5:line:ad295245e957bfa5a5b8d7e639eea9b004a0b9fbb79ba1a80ebff29f674d683f"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 86,
+          "label": "43... Rc1",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "composition/delivery",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Rc1's c2 attack and Rxc2 capture are present, but the selected endpoint Qe4 uses a new white queen without a8=Q+ or the preceding Rg8+/Kxg8 rook sacrifice. The supplied consequence of that pawn capture is therefore lost; this is available product evidence, not an imposed actual-game future.",
+          "evidence_line_ids": [
+            "move-review:2065cfe5168219cd19f182de5d06d3ceac336ce8adf29833dc4df2ef02e4e036:85:d1c1:line:30de8b1b72adcfcd966d1b65955f85ad6b8de00c6069900f463bfd4050aa77bd",
+            "move-review:2065cfe5168219cd19f182de5d06d3ceac336ce8adf29833dc4df2ef02e4e036:85:d1c1:line:c9b04e4cf86102d72d656b8f946db0a3ee847a15fd68a1be3cc8f80fa464fc7d"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 87,
+          "label": "44. Rc7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rc7 defends c2 while leaving a5's rook support, then Ra7 restores it; Ra8 instead keeps a5 support and clears a7 later. Both promotions are explicit, including Rxa8/Rxa8 paying the new queen in the native line; repeated attack/fate statements dilute this complete support-and-promotion account.",
+          "evidence_line_ids": [
+            "move-review:6da16c84c7082d78a9c6fed0115c569d74d30958b57d9dd82dac244d36568213:86:a7c7:line:a370e3006667894353587dbc8def3f18cf6af55b5394a907e6598d50b5215a75",
+            "move-review:6da16c84c7082d78a9c6fed0115c569d74d30958b57d9dd82dac244d36568213:86:a7c7:line:76f39b199b2b38c988bc06593498824096f54cb47d9bb8bcb7f6efec559ec987"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 88,
+          "label": "44... Ra1",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "observed_move_order lists two different rook/pawn routes but states neither a shared position nor a functional difference. Rc1-to-a1 attacks the now-unsupported a5 pawn and Ra7 supplies defence in the native pair, but basic contains only origin/route lists; no useful root question is answered.",
+          "evidence_line_ids": [
+            "move-review:3dcd9d0ca8f83ef568ac552ee1fbdb340a0b6f23629162b9b23d0e09dd55c8ca:87:c1a1:line:03dd514c10518c517cd8f838e9645d52b2d13357fbc710e0b66b81caebe121d3",
+            "move-review:3dcd9d0ca8f83ef568ac552ee1fbdb340a0b6f23629162b9b23d0e09dd55c8ca:87:c1a1:line:82391755010764b8f64ec3e8020163a5e53a5ea78036988795ade8a0d990ae0d"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 89,
+          "label": "45. b4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "b4 supports a5 and the same b-pawn later promotes after Rxa6/Rxd6 cost White the a-pawn and rook. Those costs, the line-opening b7 and b8=Q are explicit, making the witnessed promotion account complete; repeated original-pawn and rook-target reports still dilute it.",
+          "evidence_line_ids": [
+            "move-review:e13e3e47583cd627c270832d143f42dbc05f23986407d0a5279dee7fe834b2a0:88:b3b4:line:426ff9d9e4b8567daec84ecc61185d08f6cd038a1376ebd9f4ec274bab421d49",
+            "move-review:e13e3e47583cd627c270832d143f42dbc05f23986407d0a5279dee7fe834b2a0:88:b3b4:line:1572342d6592659e8ca43bb12772b620bcc541a4a5f43211a6f3333c5b109244"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 90,
+          "label": "45... Ra4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Ra4 attacks b4/a5 while b5 escapes. In the d4 alternative basic selects Kxe5 and Kxd4 gaining Black's two pawns plus Rxa5 losing one white pawn, but omits preceding Rxb4 losing White's other pawn; the included two-for-two pawn exchange is therefore unbalanced in delivery.",
+          "evidence_line_ids": [
+            "move-review:dc021186e1fefe242437cfad0ebbc6d380a2b80ee5f5909571f64f0bae7cc711:89:a1a4:line:85a18a178a94d85369d1378cd74018bd0c010da8570c0ccaded26f8898b56637",
+            "move-review:dc021186e1fefe242437cfad0ebbc6d380a2b80ee5f5909571f64f0bae7cc711:89:a1a4:line:e2b0507a5629e226fca9ec5cf2ac3c97a3f1bba060de6b3009343a0411bf0b65"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 91,
+          "label": "46. c3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "c3 defends b4 and its later cxd4/Rxb4/dxe5/Kxe5 account is retained. The Rb7 alternative instead loses that same supported b-pawn to Kxb5 before Rxd3, but basic omits Kxb5 while keeping the pawn gain; the alternative defence's failure and price are missing.",
+          "evidence_line_ids": [
+            "move-review:fc6135589936a89c5cd624ce8224a0e0c04830117a63f8200e0c4634b82afc62:90:c2c3:line:e8239c890421a765e3e19efe72a0a7dce31524e9e486481fd132a1ffa848ac63",
+            "move-review:fc6135589936a89c5cd624ce8224a0e0c04830117a63f8200e0c4634b82afc62:90:c2c3:line:342bdac512f5ed4c41ff1cdd9e0f9c661b523988bdacc236218a3a383e8dbf01"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 92,
+          "label": "46... d4",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "d4 attacks c3, dxc3/Rxc3 closes the pawn exchange and the move's cleared d5 is later used by the king. The Kf6 alternative's e6 defence/escape is a separate history; the selected native pawn price is preserved without requiring the actual book's different continuation.",
+          "evidence_line_ids": [
+            "move-review:19be4143341b45b47915f0210e79d0d1ae7f313ff61fe192c11d5312c002c20e:91:d5d4:line:e2973fdbc3f87ccd65f84301a2120d7d7fb187008c1524b74adbaeb1727838a6",
+            "move-review:19be4143341b45b47915f0210e79d0d1ae7f313ff61fe192c11d5312c002c20e:91:d5d4:line:a7a78e7dc3504614445cb80e39292b7a76f673043f8c9b5601dccfcb8e432342"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 93,
+          "label": "47. Rc6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rc6 attacks e6 before Rc4 restores b4 support; direct Rc4 supplies that support immediately. Both dxc3/Rxc3 exchanges are explicitly closed, but the same rook attack/defence and recapture facts are repeated rather than stating the timing distinction once.",
+          "evidence_line_ids": [
+            "move-review:1bae79d8be94dd741cf214e009d301da29007b66cf8fe6918f759735d0f77f68:92:c7c6:line:9fec9b3509687782c319a91b53099395cac8c216cb8e0723e0364c0da11a9296",
+            "move-review:1bae79d8be94dd741cf214e009d301da29007b66cf8fe6918f759735d0f77f68:92:c7c6:line:0ff7256243602f0203c1fab33203c9cf7f49e97686793105ba4e5e70f2551075"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 94,
+          "label": "47... dxc3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Native dxc3/Rxc3 is closed and its supplied line does not contain the actual game's Rxb4. The Kf5 comparison does contain Rxb4 immediately after dxc3/Rxc3, absent from basic; repeating only the pawn trade misses that branch's extra b4 gain after removal of its c3 defender.",
+          "evidence_line_ids": [
+            "move-review:cd19ea837c60861ae88801df4cc0ac7592578d458effb579a552729d52543a51:93:d4c3:line:5896e0a73c935dca89d0f42bac5ffd09d3efaa2117f7c8c9b86e99bc421deb0d",
+            "move-review:cd19ea837c60861ae88801df4cc0ac7592578d458effb579a552729d52543a51:93:d4c3:line:889f362fd795b19b0716b485a768ced1d4e29124db7ea1739d29e5cd49fa3bfb"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 95,
+          "label": "48. Rxc3",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Rxc3 removes the pawn and later Rb3 defends b4, while Rc4 retains the attack and later Rxc2 escapes the king. The a5 pawn loss is included, so the chosen capture/escape accounts are closed; competing future rook targets obscure the root recapture-versus-deferral answer.",
+          "evidence_line_ids": [
+            "move-review:674e4fff517b66d374e52750d6c92899088649fbd381abb22f281dbaadab6b55:94:c6c3:line:a46bc2d15c1256c275ec94782906c500f80eaf37bf49534dbd85b1084bfc3141",
+            "move-review:674e4fff517b66d374e52750d6c92899088649fbd381abb22f281dbaadab6b55:94:c6c3:line:57d437b7790a5e623d7c03a1b21044312b496dfedd10084f1a23eaec20bbaede"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 96,
+          "label": "48... Rxb4",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The body reduces both choices to one white pawn lost without explaining which pawn or the resulting passer: Rxb4 removes b4 while the Kf5 line loses a5 and leaves b7. The stopped checking line is correctly bounded; the failure is the material-count-only answer, not a browser or verification error.",
+          "evidence_line_ids": [
+            "move-review:f8df0dfcb1e9319a1652fe4ac2c97514991644eeaf6f0bf8edbefdd142ad06cc:95:a4b4:line:bee6474098dd0a3f02a56551fc022df301a0b0760a397e7174844d982521a91f",
+            "move-review:f8df0dfcb1e9319a1652fe4ac2c97514991644eeaf6f0bf8edbefdd142ad06cc:95:a4b4:line:39c55406184d0c7b6f5e32bea8d19f62b714bd4eba00b8e43714f2f3ce3d3cce"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 97,
+          "label": "49. Ra3",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "Both branches contain only the identical Rh4+/Kg3 check response. Neither Ra3's support of the a-pawn from behind nor Rc5's lateral support is conveyed, so a correct shared future check is not a useful explanation of the reviewed rook placement.",
+          "evidence_line_ids": [
+            "move-review:70ed79c37c773fd2d51f24a715ae08d119cc7739186ac7f760f067a1f1ea6d72:96:c3a3:line:f0939022c2836a93e251b8f6bbc08397af37dd578bf97924a557383742c91c34",
+            "move-review:70ed79c37c773fd2d51f24a715ae08d119cc7739186ac7f760f067a1f1ea6d72:96:c3a3:line:6aba8f072a63864bb978985ea9a7d0c542599f0b258d25ba86b0317afa321030"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 98,
+          "label": "49... Rb7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Rb7 allows a6 to attack the rook and Ra7 escapes to stand in front of the passer; Rh4+ instead checks before reaching a7. The moves and pawn survival are retained, but the blockade function is left implicit among repeated rook/king-target histories.",
+          "evidence_line_ids": [
+            "move-review:72decdb552535084bba24b1b5a7ec39508aab7fd18b6b7ead4924d648da6d411:97:b4b7:line:07d323ceb19793f75d0b8523b4a25dc6a60b6402bfff852ba69bb038f54fa1de",
+            "move-review:72decdb552535084bba24b1b5a7ec39508aab7fd18b6b7ead4924d648da6d411:97:b4b7:line:df3cbafbf4f9c52c23653335e12987b3e9bf6f9f815a68406d6d6eee33180643"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 99,
+          "label": "50. a6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "a6 attacks Rb7 and clears a5 for Ra5, while Ra7 escapes and the a-pawn remains. The Kg3 branch reaches the same blockade through a different order, but repeated attacked-pawn survival reports obscure the advance-and-rook-route answer.",
+          "evidence_line_ids": [
+            "move-review:59418ec78ab62e7152637dea3d185a55dee20365c5fd5a5302d00c9f7694b4f9:98:a5a6:line:efd67022a6c581cbfc32dcc5310efbca8d89c7a25c7e91a36a611c0fdbfb26aa",
+            "move-review:59418ec78ab62e7152637dea3d185a55dee20365c5fd5a5302d00c9f7694b4f9:98:a5a6:line:f4717f6525e4e117bf957b8527c446c836f38380d16b96f89ab0fdff9a0dad7c"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 100,
+          "label": "50... Ra7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Ra7 escapes the a6 pawn and later Rxa6 captures it; Rxe5+ taking Black's e-pawn is also kept, preserving the selected pawn exchange. The rook alignment and checking alternative add separate histories, while the immediate blockade is not stated directly.",
+          "evidence_line_ids": [
+            "move-review:9003c4462611127d1bde56b867922e759197c0a481e74e93fcb67df92892ce81:99:b7a7:line:5c2f549b2c116abad13bb3a499c0d62a3f4e253cccfbdf12fa0b9bdc2a09e7a2",
+            "move-review:9003c4462611127d1bde56b867922e759197c0a481e74e93fcb67df92892ce81:99:b7a7:line:785c3897f95082da75241be8759e2739bf3f07ab6616e1c70186f278c23cfa24"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 101,
+          "label": "51. Ra5",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "Both rook choices are reduced to Black losing one pawn in long future sequences. The body does not explain Ra5's continuing support of a6, rank control or the choice against Ra4; correct equal pawn-loss counts do not establish the reviewed rook's function.",
+          "evidence_line_ids": [
+            "move-review:4b9442a89c737635c35ae3718c88f97faf18a9e75c94ee40d2bb36eee9b88e31:100:a3a5:line:b67771a3286126fb4cf0529d4ccd892575f7936175b4623d8fd4441c0ba716fb",
+            "move-review:4b9442a89c737635c35ae3718c88f97faf18a9e75c94ee40d2bb36eee9b88e31:100:a3a5:line:191334c2ea3f7bd2f358b57b721d031818568b59cb9627580315eceb64248ce0"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 102,
+          "label": "51... Kf6",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kf7 and Kf6 both reach Ke7 after Kg3, giving the same recorded position. This useful bounded move-order answer needs no claim about the branches' later different king routes or pawn captures.",
+          "evidence_line_ids": [
+            "move-review:5e15bfde3875179bb13b8a18d5b6b7a98983caafdede039c5f0f49a153684ba9:101:g6f6:line:cd700f57e6f328b8b618804fbbd83081d5289cfff75771494a00e88a47100f65",
+            "move-review:5e15bfde3875179bb13b8a18d5b6b7a98983caafdede039c5f0f49a153684ba9:101:g6f6:line:e57573a39ba6f702d04af97a1a1edd19b8aaed06b5940050bdf132acf6a351a8"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 103,
+          "label": "52. g4",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "g4 is represented only by a later Black pawn loss while Kg3 has no capture within its shorter line. The body explains neither the new g-passer nor e5/Rxe5+ that produces the displayed gain; a count and SAN endpoint do not answer the current pawn choice.",
+          "evidence_line_ids": [
+            "move-review:fbc57129b90ba3cab9d5c434d99da12632c3ecdb50fc9fa15d12f6a15fabd33f:102:g2g4:line:836fc85d782a3409a3d0980626319ca3507f4e01b07ae08328fb77ba89e7a667",
+            "move-review:fbc57129b90ba3cab9d5c434d99da12632c3ecdb50fc9fa15d12f6a15fabd33f:102:g2g4:line:64b365c532c912583921a66c7e21bc9437533ffca8e5d8fcb447c1f98bc1d893"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 104,
+          "label": "52... Ke7",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "question/discovery",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "Ke7 is reduced to a future one-pawn exchange versus no capture in Kf7. Kxe6/Kxg6 is a closed witnessed account, but no king purpose or response links that result to the reviewed choice, so it is not a useful current explanation.",
+          "evidence_line_ids": [
+            "move-review:1bfb6402962f09cc1be3a716134db4b4fc427ac9a292bf9a56f4eff225d2710d:103:f6e7:line:ff4bf5b69230fbee698ce1e3ba97a180b1b522f027c9c94bd978965dc2453c55",
+            "move-review:1bfb6402962f09cc1be3a716134db4b4fc427ac9a292bf9a56f4eff225d2710d:103:f6e7:line:2a0fc9ad2448fd9ee3b9b8cd1695df8bc685146147fb15c212576b4a6df136e4"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 105,
+          "label": "53. Kg3",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "Both routes lose Black's e-pawn and the native e5+ discovered rook check/Kxe5 escape is correctly identified. That later mechanism does not explain the choice of Kg3 versus Kh3; the shared g4 defence and king route are absent, while stopped checking lines are properly bounded.",
+          "evidence_line_ids": [
+            "move-review:8954a245383872d806c9c07359d8d1ed06606b1673a149ab3082683faba411e7:104:h2g3:line:289d5f4ba87f082e457db268c0d3bb5fec5fa5e94b46d3c975dca59b9c78be7c",
+            "move-review:8954a245383872d806c9c07359d8d1ed06606b1673a149ab3082683faba411e7:104:h2g3:line:5eabd7e63f8c658167be5965943e293164bd9c53f6503fa4d51a7ec751b07110"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 106,
+          "label": "53... Kd6",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kd6 clears e7 for the rook's Rf7+ and its return to a7, with Ke3 answering the check. The same cleared square is repeated, but its concrete checking use is preserved and gives a bounded root-move mechanism rather than a bare king route.",
+          "evidence_line_ids": [
+            "move-review:73c949206327a03d904beae4986f3665ca6e2b236d4310a887fb736e9415bf37:105:e7d6:line:e58412595bc0aaaae8c46b4d2163051815c099ab9c7b2941badfabb41ef207a7",
+            "move-review:73c949206327a03d904beae4986f3665ca6e2b236d4310a887fb736e9415bf37:105:e7d6:line:885541e124e751acdca18ec10b6de542b1e4c09fb1bd91bdfb27531e7779cff2"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 107,
+          "label": "54. Kf4",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kf4 is connected to the same king's Ke5 attack and later Kxe6 capture of the pawn. This is a bounded witnessed king-entry function, without claiming the opponent's departure from e5 control is forced or that g5 necessarily fails.",
+          "evidence_line_ids": [
+            "move-review:036d25f8f07e613ee814be4ed717e5354300c1e0368608f5b17af6854e0fe5ac:106:g3f4:line:d7b8de994c42cc45fecb5c59729805a5c7a55b6cf05a35ec3a8011021799d1ba",
+            "move-review:036d25f8f07e613ee814be4ed717e5354300c1e0368608f5b17af6854e0fe5ac:106:g3f4:line:dcf0c9d058da09ab18d78251659d26fe2a5a1c27acbbe77c67102a14e7d397bf"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 108,
+          "label": "54... Kc7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kc7 abandons e6 support, Kd7 restores it, and later Kxe6 is retained; e5+ keeps the pawn defended in its supplied line. The selected e-pawn support/fate answer is complete, but repeated attacks and king locations dilute it; the alternative's independent promotion story is a question-choice issue rather than an automatic capture obligation.",
+          "evidence_line_ids": [
+            "move-review:c56af578fbd1821556f2e125573986566ebbdae2138946ea1bb3982893bd0dec:107:d6c7:line:607bba80a38e9c0309061ae55cf7ed6ac90e59ad45a22f7e48574fe7357a68fc",
+            "move-review:c56af578fbd1821556f2e125573986566ebbdae2138946ea1bb3982893bd0dec:107:d6c7:line:83f2a8c27a92615676e9137254ac9b1b36fa6c509530a3c2566687931aada0d5"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 109,
+          "label": "55. Ke5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Ke5 attacks e6, while the Kg5 route later reaches f6 and Kxe5 after the pawn advances. Basic keeps the witnessed capture and native pawn survival without promising an immediate win, but long rook/king chases obscure this target-and-route comparison.",
+          "evidence_line_ids": [
+            "move-review:310750297b41c5647d799bec4fb3fca8243785d68502cb375c574763295f9f53:108:f4e5:line:0fc54bc874e40e812db459cf1d2f6f39746a7881d840b81eaca8b76180fa00a9",
+            "move-review:310750297b41c5647d799bec4fb3fca8243785d68502cb375c574763295f9f53:108:f4e5:line:9da7bbcd8bf767c7679f3ba799f55160930bece76f11717fae7f5324ef723e51"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 110,
+          "label": "55... Kd7",
+          "quality_label": "useful bounded answer",
+          "failure_boundary": null,
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Kd7's line loses the e-pawn, while Rxa6 pays its rook to Rxa6 and White later promotes g8=Q and reaches Re8#. The actual capture price, new queen and confirmed mate are preserved in a bounded line-result comparison; no all-response forced-win claim is needed.",
+          "evidence_line_ids": [
+            "move-review:5c5f9a495f771134fd2c49b7f81727dfb683de659e497ac5f8cdaa71d9b86e70:109:c7d7:line:075e7501d568dee00820878e7cdef410294c236317492cd0914a3333f9bcfdf2",
+            "move-review:5c5f9a495f771134fd2c49b7f81727dfb683de659e497ac5f8cdaa71d9b86e70:109:c7d7:line:2b520b57585f09042cb5bf023a54257483a9f6f4477cb8c32e97672f7bb39dcc"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 111,
+          "label": "56. g5",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The reviewed g5 is only a continuation label; almost all basic describes the Kf6 alternative's king/rook chases and a7 survival. Neither the advancing passer's function nor the native choice is established, so root SAN presence is not a useful answer.",
+          "evidence_line_ids": [
+            "move-review:81c70b76fe13d0a14b95080d88660798d5a43f474b365982ec8cfc028e838ed8:110:g4g5:line:d1f651b3aa90d4c1a430b3df704bc4a9b424e57862158820379fbd59d4f36efa",
+            "move-review:81c70b76fe13d0a14b95080d88660798d5a43f474b365982ec8cfc028e838ed8:110:g4g5:line:d53ddf24b396bcab7c3d227540031eba985a886d6facc3cd5b89daf0043a95bf"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 112,
+          "label": "56... Ke7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Ke7 keeps e6 support while Ke8 abandons it, and Kxe6 is retained. Native Ke7 then trades the e-pawn for White's g6 pawn via Kxg6, absent from basic; only the Ke8 branch's Rxg5 price is shown, leaving the selected native pawn-loss account unclosed.",
+          "evidence_line_ids": [
+            "move-review:a54d821d9d2d9938a895a209d1c0371090dcd35f2b37a31701b96ac06e9f05ca:111:d7e7:line:4868d8c10238f592fcb8c37f6aa6aa39111812ef7b6a1d04d9c025cba79fb6f4",
+            "move-review:a54d821d9d2d9938a895a209d1c0371090dcd35f2b37a31701b96ac06e9f05ca:111:d7e7:line:b10e577610714cc9941b8df25d058e421755fc8df65d10869af7fdc8cbae305e"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 113,
+          "label": "57. g6",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The g6 body follows the other a-pawn and rook checks, then names g6 as a continuation. It does not explain the reviewed g-pawn's advance or role; the actual book's Kf8 response is incompatible with native Ra8 and is not required as a missing answer.",
+          "evidence_line_ids": [
+            "move-review:7ea76ddf846bfcd1281238b78d165ba5f7e17db3877110ca6ac560006dcbb6c2:112:g5g6:line:42c304c8e3aab3533e16af58fb51d66851f2605597e814ecfc2dd9a1d702aca2",
+            "move-review:7ea76ddf846bfcd1281238b78d165ba5f7e17db3877110ca6ac560006dcbb6c2:112:g5g6:line:253b005dee17e160220c20272226e085bc85d2b01c112e752341ed7644d47e65"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 114,
+          "label": "57... Kf8",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": true,
+          "reason": "Kf8's line retains the e-pawn's attempted e5 escape and Kxe5 capture, while Ra8 keeps attacking the a-pawn through later rook checks. These witnessed functions are present, but the body concentrates on separate a7 survival histories rather than stating the defensive king-versus-rook choice clearly.",
+          "evidence_line_ids": [
+            "move-review:9b787e21e84bf0871dbc7f886b7992415d3bbdb755addf85e4f3121ed5021744:113:e7f8:line:0c003c54eaafdcbb249323686ae4d7e91241ee4a572b62b7268c41442f2c9f81",
+            "move-review:9b787e21e84bf0871dbc7f886b7992415d3bbdb755addf85e4f3121ed5021744:113:e7f8:line:a1db8823c0b780551866e5c739c26868c65f86faf1c3931c1cff8988e389d1ca"
+          ],
+          "representative_issue": false
+        },
+        {
+          "ply": 115,
+          "label": "58. Kxe6",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Native Kxe6 is correctly paired with Kxg6 losing White's passer. The Kf6 branch also ends in that same Kxg6 loss, but basic labels the price only under Kxe6 while retaining Kxe5 as the alternative's pawn gain; its selected account is not closed in both branches.",
+          "evidence_line_ids": [
+            "move-review:555d2f1ac51ae3a1647c6f69b3f831249c6ecb437c0db76f0b9c6cb22cc664ed:114:e5e6:line:9f8634f0cd3cc5e5b3c2ec2fbfcb441646819c3fe61d8930da435cffc60083bc",
+            "move-review:555d2f1ac51ae3a1647c6f69b3f831249c6ecb437c0db76f0b9c6cb22cc664ed:114:e5e6:line:3a2950bfa971e6a9e6c970af505fc9625132525475e06adf6e6960ff3c42189b"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 116,
+          "label": "58... Ke8",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": true,
+          "reason": "The body describes only Kg7 attacking and capturing g6, with Ke8 merely named as the continuation. The native king choice and its surviving passer are not explained; the alternative's lone pawn capture has no supplied countercapture that must be invented.",
+          "evidence_line_ids": [
+            "move-review:0f9a3c68e84539fcd2b2e59651c1c14848e56498c35398eb44ddb980c3b7b5b2:115:f8e8:line:7ed6895cae970ae8c6906f05e0f3c7fe7184958027225ecab20027d6fd13fa29",
+            "move-review:0f9a3c68e84539fcd2b2e59651c1c14848e56498c35398eb44ddb980c3b7b5b2:115:f8e8:line:414a188d7671f6c6b354c97862165512af32a56c0a306b983246e4f517b8b254"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 117,
+          "label": "59. g7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "g7's g6 clearance is actually used by Kg6, but basic omits Rxg7 losing the very pawn advanced and a7/a8=Q after the rook leaves a7. It instead jumps to Rxd8+ winning the rook. Those supplied price and promotion events are necessary to interpret this chosen outcome; both branches promote, so g7 is not claimed necessary or Rxg7 forced.",
+          "evidence_line_ids": [
+            "move-review:7b40c32a801e0862cf224e2ef3cabb905a5c00f3b119940fac0c624469cf1061:116:g6g7:line:990ccec22fea182c1133b62e8f9ceeb51b143bcb26e14411e4a8d7e02e86a1d0",
+            "move-review:7b40c32a801e0862cf224e2ef3cabb905a5c00f3b119940fac0c624469cf1061:116:g6g7:line:42594bab50e65790d9efd4c7a14c4b6d15bfa1dcf3d1905ff9e76b762234ff68"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 118,
+          "label": "59... Rxg7",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "composition/delivery",
+          "question_fit": "partial",
+          "required_reply_cost_preserved": false,
+          "reason": "Rxg7's pawn capture is stated, but its native a-pawn promotion is absent. In the Re7+ alternative the original g7 pawn is reported on g3 without g8=Q, and Kxf7's rook gain omits Kxe5 taking White's rook; the role change and whole selected rook exchange are both lost.",
+          "evidence_line_ids": [
+            "move-review:23da73c6e3b1ad6b1249bba05c2417d4f9b880b76ec6c4b23de59e15da9f344d:117:a7g7:line:0878e8beedc9bffba1e6d1a6f3dba879cf9236abfd9a17d772f4732c1382d1d0",
+            "move-review:23da73c6e3b1ad6b1249bba05c2417d4f9b880b76ec6c4b23de59e15da9f344d:117:a7g7:line:def609008dade8fdec3f3a60cab0e217ac455467f764f5433549d1dda6acdea0"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 119,
+          "label": "60. a7",
+          "quality_label": "unfocused answer",
+          "failure_boundary": "answer selection",
+          "question_fit": "poor",
+          "required_reply_cost_preserved": false,
+          "reason": "Basic mainly explains the Kf6 alternative, including the eventual a6 loss. The a7 branch retains only Rg6+/Kf5, omitting the supplied a8=Q result and the advanced pawn's protected promotion role; no function of the reviewed a7 is delivered beyond its line label.",
+          "evidence_line_ids": [
+            "move-review:a12c55f61f9b8c8034b6fca9f759a2ede95aac67090e1534781ac8da05555fa6:118:a6a7:line:353716d33fda3325f32396ea1ccc51257650ba195f88f531017cc8990b57b84f",
+            "move-review:a12c55f61f9b8c8034b6fca9f759a2ede95aac67090e1534781ac8da05555fa6:118:a6a7:line:c37b5dba682541dde4db808ab1c52178da5b47946b76e89da78444e3c82534ba"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 120,
+          "label": "60... Rg6+",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "answer selection",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": true,
+          "reason": "Both branches explicitly promote a8=Q, and Rg6+'s Rxf6+/Kxf6 trade is followed by confirmed Qf7# while Re7+'s Qxe6 captures the rook. The selected terminal result and prices are preserved; long unsynthesized check lists dilute an otherwise complete line-result comparison.",
+          "evidence_line_ids": [
+            "move-review:809ee6f8acf680fc253ff75370e734de3b918688878957ee999bc2a411333e83:119:g7g6:line:41919b4f74118d2d7dceef75554c56a0f71b4e18429e094fc9a9413b4a929bcf",
+            "move-review:809ee6f8acf680fc253ff75370e734de3b918688878957ee999bc2a411333e83:119:g7g6:line:6e53ab59332eaf165066d9e00bc2c17ff11c316e20d78ded1846371a027e51a3"
+          ],
+          "representative_issue": true
+        },
+        {
+          "ply": 121,
+          "label": "61. Kf5",
+          "quality_label": "useful but diluted",
+          "failure_boundary": "composition/delivery",
+          "question_fit": "direct",
+          "required_reply_cost_preserved": false,
+          "reason": "Kf5 escapes the check and attacks Rg6, but its later Kxc6 result omits the prior a8=Q context. The Kd5 branch loses the original rook to Rxa5 and creates a different rook with a8=R before Rg6+/Rg7+, both absent from basic; its apparent continuing rook route is therefore missing its price and identity-changing bridge.",
+          "evidence_line_ids": [
+            "move-review:deb4ea86cc18c31f7324bb219cdae0bf647034618fd1b2c077b9cda92e458758:120:e6f5:line:65e88e06ded70c1a83d78f8a0a17d0433cc67a53b67c6c74b63598077a511832",
+            "move-review:deb4ea86cc18c31f7324bb219cdae0bf647034618fd1b2c077b9cda92e458758:120:e6f5:line:6cbf061d2b7dfc11826243c0443db713a03764b2f7f713d10311f6f26bc14db0"
+          ],
+          "representative_issue": true
+        }
+      ]
+    }
+  ],
+  "recurring_findings": [
+    {
+      "finding": "Existing selected mechanisms can already deliver closed useful answers.",
+      "evidence_plies": [
+        11,
+        33,
+        37,
+        46,
+        61,
+        65,
+        66,
+        78,
+        79,
+        82,
+        85,
+        102,
+        106,
+        107,
+        110
+      ],
+      "observation": "Support followed by its actual recapture, observed escape or checking use, same-position continuations and confirmed line endings are sometimes retained together. For example, 11 keeps the full alternative knight and queen exchange; 46 closes Bxd4/Rxd4; 79 retains Kxg6/Rxa7 in both lines; 110 retains the alternative rook price, promotion and witnessed mate.",
+      "implication": "Preserve and reuse the existing selected question, mechanism and account ownership. These successes do not require a new graph or ranking framework."
+    },
+    {
+      "finding": "Independent histories and later counts frequently displace the root answer.",
+      "evidence_plies": [
+        84,
+        88,
+        96,
+        97,
+        101,
+        103,
+        104,
+        105,
+        111,
+        113,
+        116
+      ],
+      "observation": "A future move-order list, a common later defence, or a capture count can occupy the basic answer without explaining the selected root move. Equal pawn counts can also hide which pawn was lost. Root SAN presence does not itself communicate the root mechanism.",
+      "implication": "Keep independently closed histories in details unless they answer the selected question or change that answer. This research does not resolve a general importance ordering between two independent complete questions."
+    },
+    {
+      "finding": "A selected gain or protection can be misleading when related price or compensation on another square is dropped.",
+      "evidence_plies": [
+        12,
+        26,
+        38,
+        45,
+        63,
+        69,
+        73,
+        75,
+        76,
+        77,
+        79,
+        80,
+        81,
+        90,
+        91,
+        94
+      ],
+      "observation": "Examples in the same supplied pair include Rxd4 compensation before Rxc8 at 38; Bxa1/Rxa1 around Nxb8/Rxb8 at 45; and Kxg6/Rxa7 where the pawn loss is shown without the compensating pawn capture at 73, 75, 76 and 80. The complete treatment of that last account at 79 is a direct counterexample to treating the missing compensation as unavailable evidence. At 91 the alternative supported b-pawn later dies to Kxb5 before the displayed Rxd3 gain.",
+      "implication": "The narrow content boundary is ownership of the selected account: retain the witnessed reply, loss or compensation that changes its gain, support or trade meaning. Do not turn all later captures into mandatory basic content."
+    },
+    {
+      "finding": "Promotion and escape context may be necessary even when the capture interval alone is closed.",
+      "evidence_plies": [
+        57,
+        72,
+        86,
+        87,
+        89,
+        110,
+        117,
+        118,
+        119,
+        120,
+        121
+      ],
+      "observation": "The supplied alternative at 72 promotes with g8=N before the displayed Rxg8/Kxg8 exchange. At 117 the native line loses the g-pawn to Rxg7 and later promotes the a-pawn, while the alternative also promotes the a-pawn; the core instead centers clearance and a later rook capture. At 118 a pawn identity is rendered at g3 after promotion to a queen, and Kxf7 is shown without Kxe5. At 121 the alternative loses the original rook to Rxa5 and later creates a new rook by a8=R before the shown rook checks. Successful promotion and ending delivery at 87, 89, 110 and 120 shows that these contexts can already be represented.",
+      "implication": "Retain the role-changing context required by the selected trajectory or result before expression. Promotion is not an ordinary capture-loss count. No example here establishes that the native move or the observed response is forced or uniquely necessary."
+    },
+    {
+      "finding": "One unavailable core and research verification limits must remain distinct from content selection failures.",
+      "evidence_plies": [
+        41
+      ],
+      "observation": "At 41 Nxd4 the actual summary is unavailable and the basic text is hidden; legacy detail is not counted as an actual basic answer. Across the game, all 121 progress states are completed, with 105 verification states complete and 16 stopped. A completed executor state does not by itself establish semantic completeness.",
+      "implication": "Report the visible availability failure separately, and keep executor partial or stopped packets separate from browser behavior and from proven source causes."
+    }
+  ],
+  "judgement_summary": {
+    "game_id": "fundamentals-game-10",
+    "actual_move_events_reviewed": 121,
+    "coverage": "Every actual move event; individual manual content judgement before final aggregation.",
+    "quality_counts": {
+      "useful bounded answer": 17,
+      "useful but diluted": 90,
+      "unfocused answer": 13,
+      "incomplete/unavailable": 1,
+      "no answer": 0
+    },
+    "failure_boundary_counts": {
+      "answer selection": 92,
+      "none": 17,
+      "composition/delivery": 5,
+      "question/discovery": 7
+    },
+    "required_reply_cost_or_result_context_not_preserved": 34,
+    "required_reply_cost_or_result_context_not_preserved_plies": [
+      5,
+      12,
+      13,
+      22,
+      26,
+      38,
+      44,
+      45,
+      54,
+      55,
+      57,
+      59,
+      63,
+      64,
+      68,
+      69,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      80,
+      81,
+      86,
+      90,
+      91,
+      94,
+      112,
+      115,
+      117,
+      118,
+      119,
+      121
+    ],
+    "useful_bounded_answer_plies": [
+      9,
+      11,
+      33,
+      46,
+      48,
+      51,
+      53,
+      61,
+      66,
+      78,
+      79,
+      82,
+      85,
+      102,
+      106,
+      107,
+      110
+    ],
+    "unfocused_answer_plies": [
+      25,
+      84,
+      88,
+      96,
+      97,
+      101,
+      103,
+      104,
+      105,
+      111,
+      113,
+      116,
+      119
+    ],
+    "incomplete_unavailable_plies": [
+      41
+    ],
+    "interpretation_limit": "The 34 flags are manual judgements about the displayed selected claim, including price, escape and promotion or piece-role context. Some distant compensation flags are interpretive; this is not an automated requirement to include all PV captures."
+  },
+  "synthesis": {
+    "already_works": "Existing questions and mechanisms sometimes carry root purpose, actual use, reply, price and line result through to a useful basic answer. All 121 moves have explicit individual review rows; no subset was selected because it failed.",
+    "smallest_existing_boundary_to_improve": "Between the selected question or mechanism account and its basic core, preserve the reply or outcome context that changes that exact selected claim. Move independent histories to details without reinterpreting them in the formatter. The existing successful account paths are the reference; this review proposes no new generic framework, SAN-specific rule or global ranker.",
+    "unresolved": "General importance between independently closed explanations remains unresolved. Manual dilution and some distant price or compensation flags depend on reader judgement. This is an open research corpus and LLM reading, not an independent human evaluation, heldout generalization result or release certification.",
+    "information_and_execution_limits": "Actual-game or book futures absent from or incompatible with the supplied pair are not required content. Supplied continuations demonstrate witnessed behavior, not a forced response or proof over all alternatives. The reviewer did not use engines or a browser, edit product code, or modify frozen independent notes; research packet limitations do not establish actual browser failures."
+  }
+}

@@ -1,0 +1,511 @@
+{
+  "recorded_utc": "2026-10-04T15:45:04.837087+00:00",
+  "reason": "Four actual frontend decodes conflated position-only proof anchors with priced actions; existing public question enum values also absent in consumer/schema.",
+  "post_freeze": true,
+  "chess_selection_changed": false,
+  "english_realization_changed": false,
+  "original_fresh_run_overwritten": false,
+  "original_fresh_quality_evaluation_replaced": false,
+  "engine_executed": false,
+  "original_unavailable_TAT25_06_preserved_in_denominator18": true,
+  "changed_main_sources_since_v9": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "frozen_sha256": "9f4148d8ae26c6b1fe00f525571f3e14c43e6f6c5b00d28ba8656182f5b278dd",
+      "current_sha256": "be2b29978bce7cf0fc2882b66b04b0159b06da8a924208cf309bcc8c10c36e5a"
+    }
+  ],
+  "contract_files": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "be2b29978bce7cf0fc2882b66b04b0159b06da8a924208cf309bcc8c10c36e5a",
+    "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts": "75bfe33fb34653bb7bb6b22455d393734f8099b984a609ffaea483d6e87d4655",
+    "judgment-evaluation/schemas/public-v6/move-observations.schema.json": "c0a212666c9e76f886a7cf239f3751904a98714b834fe52c23fd2881164d9049"
+  },
+  "test_scope": "Existing319 tests, with retained-target endpoint test expanded to exercise a linked proof-only SAN.",
+  "comparison": [
+    {
+      "scope": "Opened18 exact stored reports; v9 versus v10",
+      "positions": 18,
+      "all_exact": true,
+      "positions_with_differences": [],
+      "controls": [
+        {
+          "id": "fresh-candidates2018-07-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-candidates2018-08-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-candidates2018-09-31",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-candidates2018-10-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-candidates2018-11-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-candidates2018-12-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-07-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-08-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-09-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-10-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-11-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2016-12-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-07-39",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-08-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-09-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-10-48",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-11-47",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "fresh-wch2024-12-40",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        }
+      ]
+    },
+    {
+      "scope": "Accepted17 from original fresh18; same73 stored reports, including all original failed reports",
+      "positions": 17,
+      "all_exact": true,
+      "positions_with_differences": [],
+      "controls": [
+        {
+          "id": "COR06-01",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-02",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-03",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-04",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-05",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-08",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-09",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-10",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "COR06-11",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-01",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-03",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-04",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-05",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-07",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-09",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-10",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        },
+        {
+          "id": "TAT25-11",
+          "exact_except_action_moves": {
+            "observations": true,
+            "verification": true,
+            "assessment": true,
+            "assessment_state": true,
+            "assessment_scope": true,
+            "progress": true,
+            "issued_engine_work": true,
+            "state": true
+          }
+        }
+      ]
+    }
+  ],
+  "artifact_sha256": {
+    "research/answer-selection-20261004/freeze-selectionv9.json": "541499a035cdaefe48463385010269b193e4b75e5751987ecd8654ab677f7580",
+    "research/answer-selection-20261004/frontend-failure-diagnosis.json": "d85ccce0ddcc86cf770c581c99e136c9b74a29e95cc3442c1a9207f1e4267a55",
+    "target/answer-selection-20261004/fresh-run/final-snapshots.jsonl.gz": "a5393800b0397891502e28c026cb713d1fc51a5a63ce5899820d0d87908d1d8c",
+    "target/relationship-delivery-20261004/replay-tools/runs/selectionv10-fresh-stored17/manifest.json": "67db761e643a7351bedd46dbe0dae88d3828b3d67def8975e8da5779ca729ccd",
+    "target/relationship-delivery-20261004/replay-tools/runs/selectionv10-fresh-stored17/issued-snapshots.jsonl.gz": "729153398d953500b55062bc46287e99871f3a89d7c48c37144a34a93827868b",
+    "target/relationship-delivery-20261004/replay-tools/runs/selectionv10-18/manifest.json": "4830d2666a993124d3746b026214f33b7e4ea992677ed7939022d8a068177508",
+    "target/relationship-delivery-20261004/test-run-selectionv10.json": "457930ae54f96dd0dd97e48045633a5e819e6c2f6f3a3f3756e86914bec6461f"
+  },
+  "limits": [
+    "Saved fixed-clock replay is not new live-engine success, wall-clock or fresh generalization.",
+    "Original four rejected-work engine_failure wrappers and four search-budget failures are still submitted unchanged.",
+    "Pure actual frontend decoder tests are recorded separately. No app, browser, mobile, independent human reader, Docker or production deployment was run."
+  ]
+}

@@ -1,0 +1,255 @@
+[
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReview.test.ts",
+    "before_sha256": "632d20ff658ec139b47d4a1c9ee74dde954c225f0a5e8f77399cf347268654ec",
+    "status": "archived",
+    "reason": "Contains old pgnImport/treeReconstruct host integration; full original retained."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewAnchoredChoiceScope.test.ts",
+    "before_sha256": "1fcf70288640ac1df1019e932462804134df5960afcc18dd63466c2e44df7b0b",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewAnchoredChoiceScope.test.ts",
+    "after_sha256": "4e2bed2b5fcb6b189b5c0890483dbf0eba97379f3cf228c18468095346b393d0"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewAnchoredFamilyRoot.test.ts",
+    "before_sha256": "0ef31aace0a20b8d334c027f22386986f96353ebfb2376394e55b027b129aaf1",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewAnchoredFamilyRoot.test.ts",
+    "after_sha256": "dbb0663e7492d68371a6b192eb9f8918e15f61a1760a3c15e1d9ef03c77ea95f"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewChoiceConflictDependency.test.ts",
+    "before_sha256": "47a3e52bdc6e6037e8bef61f86c959dc7c177a7157e2e19dfb2d67b40132f4f2",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewChoiceConflictDependency.test.ts",
+    "after_sha256": "e82ef890a066f70a1e9cbd1451947d73c5c55ec92a96402e6fc2c88bc4344ce3"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewComparisonText.test.ts",
+    "before_sha256": "c3bc25adba65fa2f994d1a8878ae306143c5ce02eefcdadad178bea1a81e7e97",
+    "status": "archived",
+    "reason": "Old jsdom fixture host; retained for later migration, not declared obsolete or passing."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewConditionalDetail.test.ts",
+    "before_sha256": "1ee1deca2b05215c19d3916cb2150caa821b7a79c8a1db70402d2937bfc1f3dd",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewConditionalDetail.test.ts",
+    "after_sha256": "446e0dac2a5f3db72d7df90d8daf54dd3699cd8a4ddaf197886e55fde5d6cb2e"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewCoordinator.test.ts",
+    "before_sha256": "335e2ac0e343d825fb33de3912489c73941ac10069045f4ca627bd9a33ec09ae",
+    "status": "archived",
+    "reason": "Contains old pgnImport/treeReconstruct host integration; full original retained."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewEngineAccounting.test.ts",
+    "before_sha256": "186be8b76ec9dbab3836591f9b421ce6b070fe094c1c64162623afe4c9383314",
+    "status": "archived",
+    "reason": "Exercises removed AnalyseCtrl and lib/tree host."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewExchangeActivity.test.ts",
+    "before_sha256": "7ffaf0daadf358d4feecd97eae850fa959eacb2bc51828db1e9adea6bbd879fe",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewExchangeActivity.test.ts",
+    "after_sha256": "f7f29cde9001c2bdae1fef3d571e5dcd8a9372c51b30882cf5d4539fbf34b87a"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFamilyReceiptCapacity.test.ts",
+    "before_sha256": "faf563a51a405aa3da30261584430af28309e878c2f3612ed182492f1ffdccb3",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFamilyReceiptCapacity.test.ts",
+    "after_sha256": "526d37b2bb2d33a09f4a366aaefe7d20270efe807239f2a37bcc5f1f629a7300"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFirstTarget.test.ts",
+    "before_sha256": "6043b87c465f5e12bf452ccbae1288c6f6a0318745eb51057d0bb08c28f8c6d7",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFirstTarget.test.ts",
+    "after_sha256": "bcf42dca1f02632552098686f169a36f3f6fde263e34133d3b7243261d9d8138"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFirstTargetAnswer.test.ts",
+    "before_sha256": "728eff6385a4f2de84f7a44d1235c4ce57a4dd3365f509b4ea6d597db8913a4c",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFirstTargetAnswer.test.ts",
+    "after_sha256": "8a6218c2c9fee17ea33e6893fcf5371c394b79482718c27364b65130bc1cdade"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFixturePreview.ts",
+    "before_sha256": "755e9cc5ab672d411945f4db9d98194100534a2473a05437d6026787ddf2a174",
+    "status": "archived",
+    "reason": "Old fixture preview host uses Lila view/util."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFunctionalChoiceAnswer.test.ts",
+    "before_sha256": "f23ad9138706647c7954d95c0dc3e4f8de32fe9b660b2823e58c177ded1e929a",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFunctionalChoiceAnswer.test.ts",
+    "after_sha256": "0f8a536657e13ea88d57deeaf3e95d4361b3f7725d283bd6820d6b868fbdc507"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFunctionalChoiceReceipt.test.ts",
+    "before_sha256": "4a1d81be060223d8f346cc5c7fdb6552dfa53506bc256151e1be8e3c3529c411",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFunctionalChoiceReceipt.test.ts",
+    "after_sha256": "f5b2cc664dbcbc7864b099e36e376ad5d77aa0cb8a6c64640c6530e89992a5db"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFunctionalChoiceResistance.test.ts",
+    "before_sha256": "e1d8b1f2b99da308905a356b434f82a7d21091e8eaf5a721baa87657e1c101fb",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFunctionalChoiceResistance.test.ts",
+    "after_sha256": "cf5d5f822dee44c391fb014146c8cc616702a86c9df2761b0b67ece40e3ced69"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFunctionalChoiceScope.test.ts",
+    "before_sha256": "6ffc3b3eb001f9534ef3d0f60035c7d950848250d035611d610df39a62641f13",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFunctionalChoiceScope.test.ts",
+    "after_sha256": "a8a6e83f0f5ea04379803d1053eb44e728ef7b497b7c18869d1241afbca94a28"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewFunctionPurpose.test.ts",
+    "before_sha256": "c240d024f87d2cedfbca0e3a3cd82f4c5e1862f6a4f3d0c433237f96201f36f9",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewFunctionPurpose.test.ts",
+    "after_sha256": "73a311e9b3210d765323d90f5bdd82276bc59f7f0ad0447580d5a566ed420bb7"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewLinkedHighlights.test.ts",
+    "before_sha256": "c3f8b3c1bdc5a3cd9bd59a788f7a80f53483c2ff525fefe8dd4f5286d56e70a4",
+    "status": "archived",
+    "reason": "Its historical research fixture is absent from the current curated tree; original retained without weakening assertions."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewNavigationHttp.ts",
+    "before_sha256": "7180d82da9b020b8b05151f505fa7df7ab840caae6c1829eb8bcc37c627269e7",
+    "status": "archived",
+    "reason": "Old HTTP/browser harness imports Lila controllers and global engine."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewPendingDepthBoundary.test.ts",
+    "before_sha256": "494dd1cb79e5e686a07c44bf58ed44791d5d21cbddbd9782d71427dd7602e749",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewPendingDepthBoundary.test.ts",
+    "after_sha256": "05e7c5374eec2e4bfe119ab6e8c42337013f10169c35b6a5a8185e82cef85b12"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewPurposeChoice.test.ts",
+    "before_sha256": "e7cf1d40b22378fab0c62a372001d40fd3eee9512688659df150a50a2b32af66",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewPurposeChoice.test.ts",
+    "after_sha256": "6f67c32ca6254b2ea3cbc2d3a37c7a14fcb5b6be7ed4fafaa6c218f7451eb05f"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewPurposeDelivery.test.ts",
+    "before_sha256": "bf5334a4c7161767e519bc947dc86fa8e6184c0f2296f304b34fae471fffa34f",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewPurposeDelivery.test.ts",
+    "after_sha256": "cbde1be30ec0d0a4d3a84041039e9c78661d2e1574e0538a86b799cee304ac31"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewQualifiedFactSources.test.ts",
+    "before_sha256": "7d4e076ff5457f24f7cee6d0e2c11046ee0571c1082dc156ff7a0bc056c2bc8f",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewQualifiedFactSources.test.ts",
+    "after_sha256": "983cdf3cd3a30bcd2e666ba5bec3e84ae11d1313abae261b2f56db2aa1960b18"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewRedeployment.test.ts",
+    "before_sha256": "7783a053740dff0f002b930c88479c25206b60f0795774d05e37394c5c8e9c3f",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewRedeployment.test.ts",
+    "after_sha256": "27e20890405366bb663b9c2c71c6e8af90f59bb566e0668e7c3ea722a1db7bce"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewReferencePurpose.test.ts",
+    "before_sha256": "792fa8f468e01faf3e55a50d7c411e62f4deabdc15525b3c877cc5cf906fa698",
+    "status": "archived",
+    "reason": "Already moved to tests/referencePurpose.test.ts in the preceding extraction."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewResponseScope.test.ts",
+    "before_sha256": "691c3bb79278d36f0889f2a37d9497626dbce9c874fe0243fb3be59ed6233167",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewResponseScope.test.ts",
+    "after_sha256": "831105a504bd7d33d2a3f860daee5bd741c8cfe7c41302825719e3b2f241caa9"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewSelection.test.ts",
+    "before_sha256": "bad9879fcac90489b99184cc0cd013faf4379ec6f00b9ca8178d84966c18ca09",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewSelection.test.ts",
+    "after_sha256": "a48b9918d059f533a383b60efab753818375a9b0c6d689efdd62e956c28a318f"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewStudy.test.ts",
+    "before_sha256": "4576cdd80da8fc1b7a9c3bb37781a10155e373a540eb16523ae95f26434828b2",
+    "status": "archived",
+    "reason": "Tests the removed Lila study integration."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewSupportPurpose.test.ts",
+    "before_sha256": "866a698f60f74f039c145e4e5373f9d8ff945efe2bf1f983aeade1470b010df0",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewSupportPurpose.test.ts",
+    "after_sha256": "97057bb6e6cc9bc869c6e635c56ce46a41e9ebb1f160b88539910540d490f388"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewTestSupport.ts",
+    "before_sha256": "ab84f111e30145c7a588582c82378f34a09f9b7cbf220dc70dd5a0160d8499de",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewTestSupport.ts",
+    "after_sha256": "6cd7aacf26459a86c54099f1ea289b9e92b7d9edaa60ec27bce57d8ad243b7ab"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewTextNavigation.test.ts",
+    "before_sha256": "a648548fa1549c2849638c28b6a61d0b4d35b942b77f6a33434e6d86445123ae",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewTextNavigation.test.ts",
+    "after_sha256": "481c7327f421667cadac7b2d7396299cafb9b647f56e5982eca626cd11b50231"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/analyse/tests/moveReviewView.test.ts",
+    "before_sha256": "f867af39c58b1a18d0bc7edea55a8d3d6aedb479ffff96f0cae158df32e8a0a7",
+    "status": "archived",
+    "reason": "Old fixture preview host; retained for later migration, not declared obsolete or passing."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/lib/tests/moveReviewCevalCtrl.test.ts",
+    "before_sha256": "714b5c5018ed95a3712bb9e972addde203e883f09962fa9d2edd5314ec1cc921",
+    "status": "archived",
+    "reason": "Tests the removed Lila CevalCtrl integration."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/lib/tests/moveReviewEngineCancellation.test.ts",
+    "before_sha256": "357d2979016b73bf7d3c0f767351fa752d152a81832d212ce4532e10d4be87dc",
+    "status": "archived",
+    "reason": "Tests the removed Lila stockfishWebEngine/storage integration."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/lib/tests/moveReviewEngineProfiles.test.ts",
+    "before_sha256": "09d5fa828a1afb460a2c4556de8c187c6ccddd3b5fe1e5ea4c3e9420b6f202ec",
+    "status": "archived",
+    "reason": "Mixed Lila capability catalog/dual-protocol host; original retained."
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/lib/tests/moveReviewProtocol.test.ts",
+    "before_sha256": "a7af362d6ddde60b4b92a9ad46855aa4eb95ef8dd59e7921e6382ab923bc51e2",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewProtocol.test.ts",
+    "after_sha256": "1222a57a3c313d531851c32b3590451d3f3d703824c584348a32f6d17225bb01"
+  },
+  {
+    "from": "lila-docker/repos/lila/ui/lib/tests/moveReviewProtocolBatches.test.ts",
+    "before_sha256": "18859cc75cd1475194d06f340552de0f7c59a30220d2c780949851e8e8fdbac1",
+    "status": "moved",
+    "to": "chesstory-web/tests/regression/moveReviewProtocolBatches.test.ts",
+    "after_sha256": "8addea8b436ac207dff23e176ebeebfcfd137772624de56c9f172a9e51b760c8"
+  }
+]

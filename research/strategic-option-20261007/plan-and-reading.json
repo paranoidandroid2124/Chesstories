@@ -1,0 +1,123 @@
+{
+  "created_utc": "2026-10-07T14:53:04.872041+00:00",
+  "goal_deadline_utc": "2026-10-08T05:02:00Z",
+  "scope": "Read new reference scenes, repair current option/counter verification, allocate completion dependencies, verify automatic default delivery.",
+  "references": [
+    {
+      "id": "supergm",
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "bytes": 60589424,
+      "modified_utc": "2026-10-06T16:54:48.661000+00:00",
+      "pages": 603,
+      "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+      "metadata": {
+        "format": "PDF 1.4",
+        "title": "Think Like a Super-GM · Personal Reading Edition",
+        "author": "Michael Adams and Philip Hurtado",
+        "subject": "(unspecified)",
+        "keywords": "",
+        "creator": "(unspecified)",
+        "producer": "ReportLab PDF Library - (opensource)",
+        "creationDate": "D:20261007015424+09'00'",
+        "modDate": "D:20261007015424+09'00'",
+        "trapped": "",
+        "encryption": null
+      }
+    },
+    {
+      "id": "swindler",
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\The Complete Chess Swindler - Reading Edition.pdf",
+      "bytes": 12165027,
+      "modified_utc": "2026-10-07T12:52:58.176000+00:00",
+      "pages": 446,
+      "sha256": "ce6e06704a6c4479d8e97fe0d30b088e9d63d6f35fab2694ee94a0d9b93def17",
+      "metadata": {
+        "format": "PDF 1.4",
+        "title": "The Complete Chess Swindler · Personal Reading Edition",
+        "author": "David Smerdon",
+        "subject": "(unspecified)",
+        "keywords": "",
+        "creator": "(unspecified)",
+        "producer": "ReportLab PDF Library - (opensource)",
+        "creationDate": "D:20261007214214+09'00'",
+        "modDate": "D:20261007214214+09'00'",
+        "trapped": "",
+        "encryption": null
+      }
+    }
+  ],
+  "predeclared_human_questions": "target/strategic-option-20261007/book-cases-frozen.json",
+  "premise": "Book variations are human assessment references, not product engine receipts. Only a diagram position and actual move enter fresh jobs.",
+  "differences_from_previous_attempts": [
+    "Independent matched value receipt for a king entry absent from the updated principal variation.",
+    "Whole legal pawn response class, including captures and promotions, before selecting a counter explanation.",
+    "Append a missing comparison to its existing physical question rather than copying all facts into another proposal.",
+    "A selected option value comparison may finish after the ordinary exploration count, within the same deadline."
+  ],
+  "observed_first_failures": [
+    {
+      "run": "optionh05r3prefix1",
+      "stage": "admission",
+      "finding": "595 of 600 requirement slots occupied; copied option proposal did not fit despite an available exact Kf5-v-e5 comparison. v2 appends only that comparison."
+    },
+    {
+      "run": "optionh05r2prefix3",
+      "stage": "meaning",
+      "finding": "Whole-class search returns bxa3 and bxc3 ahead of b3. Prior quiet-only reply model cannot silently stand for these captures."
+    },
+    {
+      "run": "optionbookbefore1",
+      "stage": "research_adapter",
+      "finding": "Wrong independent-query bridge was supplied to the public-job runner. Zero reports executed; retained separately. Corrected before2 uses rebuilt public bridge."
+    },
+    {
+      "run": "optionh05r2prefix1",
+      "stage": "research_replay",
+      "finding": "Fifth archived work is not identical after broadening its legal class. No identity altered; corrected controlled prefix stops after four reports."
+    },
+    {
+      "run": "optionh05r2prefix2",
+      "stage": "public_admission",
+      "finding": "Four-root pawn class rejected by UI which admitted only the prior whole-king class. Shared class admission extended and actual pending fixture retained."
+    }
+  ],
+  "human_lessons": [
+    {
+      "scene": "SG02",
+      "distinction": "Offering a rook is effective because the bishop remains; refusing with Qd2 changes the magnitude of the advantage. A winning acceptance line is insufficient."
+    },
+    {
+      "scene": "SG13",
+      "distinction": "The opponent has a perpetual-check resource before the natural improvement; the preparatory queen move must be understood through that response, including the stronger g5 counter."
+    },
+    {
+      "scene": "SW01",
+      "distinction": "Three moves stop the pawn, but only Re8 retains the win. Functional family membership does not certify interchangeable value."
+    },
+    {
+      "scene": "SW02",
+      "distinction": "A defensive resource must survive the strongest refusal Rc8 as well as tempting pawn pushes."
+    },
+    {
+      "scene": "SW03",
+      "distinction": "A tactical saving resource after the opponent blunders does not establish that the earlier move caused the blunder."
+    },
+    {
+      "scene": "SG01",
+      "distinction": "A rook activity principle explains the task; counting pawns alone does not explain why the opponent king must take over the blockade."
+    }
+  ],
+  "acceptance": [
+    "synthetic legal positive and negative receipt tests",
+    "actual stored H05 contexts completed with newly executed independent work",
+    "fresh predeclared10s/30s H05 and T20 jobs",
+    "old required prices preserved on unchanged histories",
+    "six book scenes qualitatively read separately from technical success",
+    "public decoder and actual SAN references validated"
+  ],
+  "limitations": [
+    "No claim of whole-book reading or independent novice user study.",
+    "Objective evaluation and practical difficulty remain separate; no assumed opponent mistake probabilities.",
+    "Failed target-depth searches remain failed; lower completed depths are not silently substituted."
+  ]
+}

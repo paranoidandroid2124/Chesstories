@@ -1,0 +1,1116 @@
+{
+  "schema_version": "chesstory.independent-source-review.v1",
+  "sealed_utc": "2026-10-08T06:37:38.774660+00:00",
+  "scope": "Short independent source judgment of already exposed tactical, positional and endgame scenes. This is not a novel blind cohort, whole-book reading, current main36 certification or new engine proof.",
+  "independence": {
+    "new_product_output_read": false,
+    "new_engine_executed": false,
+    "main_test_ui_changed": false,
+    "current_H05_read_boundary": "Only presealed plan inventory and human source criteria, not query results. Parent-reported requested-depth failures are unfinished computation, not chess refutations.",
+    "numerical_scores_not_used_to_fill_chess_explanation": true
+  },
+  "source_read": {
+    "original_recheck_record": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\final-independent-recheck\\source-read.json",
+      "sha256": "6a88dedbb1fd83e2b725d907b7f07be399b5e1095492849b38d577165a632d71"
+    },
+    "additional_context_record": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\final-independent-recheck\\source-read-extra.json",
+      "sha256": "ff9cebb32a73e9dea14c67dc00c3d0518258796f49e3bacf6d66bd133bf6b91c"
+    },
+    "supergm": {
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+      "pdf_pages_1based_read": [
+        410,
+        411,
+        412,
+        413,
+        414,
+        415,
+        416,
+        417,
+        418,
+        463,
+        466,
+        467,
+        468,
+        469
+      ],
+      "pages_visually_checked_this_phase": [
+        410,
+        463,
+        468
+      ]
+    },
+    "endgame": {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/100 Endgame Patterns.pdf",
+      "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3",
+      "pdf_pages_1based_read": [
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "pages_visually_checked_this_phase": [
+        60,
+        61
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "id": "SG48-tactical-same-legal-capture-different-forcing-consequence",
+      "type": "tactics",
+      "book": "Think Like a Super-GM",
+      "reading_pages": [
+        463,
+        466,
+        467,
+        468,
+        469
+      ],
+      "source_footer_pages": "557,559-565",
+      "initial_fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2P1N3/4P2B/qP5P/2KR3R w - - 0 1",
+      "history_scope": "Diagram piece placement/side/rights fixed; halfmove/fullmove counters normalized because prior game history is not printed. All supplied local prefixes are exact legal histories from this anchor.",
+      "exact_common_action": "White original Ne4-f6+; Black original Rf5xf6 in both states.",
+      "defender_change": "The original Bg7 moves to d4 after Rd4 Bxd4, but Bxf6 itself remains legal. The change is defensive function, not disappearance of every capture.",
+      "before_example": [
+        {
+          "san": "Nf6+",
+          "uci": "e4f6",
+          "before_fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2P1N3/4P2B/qP5P/2KR3R w - - 0 1",
+          "after_fen": "rn4k1/pp2p1b1/3p1NP1/5rpQ/2P5/4P2B/qP5P/2KR3R b - - 1 1",
+          "capture": false,
+          "check": true,
+          "checkmate": false
+        },
+        {
+          "san": "Rxf6",
+          "uci": "f5f6",
+          "before_fen": "rn4k1/pp2p1b1/3p1NP1/5rpQ/2P5/4P2B/qP5P/2KR3R b - - 1 1",
+          "after_fen": "rn4k1/pp2p1b1/3p1rP1/6pQ/2P5/4P2B/qP5P/2KR3R w - - 0 2",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Qh7+",
+          "uci": "h5h7",
+          "before_fen": "rn4k1/pp2p1b1/3p1rP1/6pQ/2P5/4P2B/qP5P/2KR3R w - - 0 2",
+          "after_fen": "rn4k1/pp2p1bQ/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R b - - 1 2",
+          "capture": false,
+          "check": true,
+          "checkmate": false
+        },
+        {
+          "san": "Kf8",
+          "uci": "g8f8",
+          "before_fen": "rn4k1/pp2p1bQ/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R b - - 1 2",
+          "after_fen": "rn3k2/pp2p1bQ/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R w - - 2 3",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Qh8+",
+          "uci": "h7h8",
+          "before_fen": "rn3k2/pp2p1bQ/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R w - - 2 3",
+          "after_fen": "rn3k1Q/pp2p1b1/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R b - - 3 3",
+          "capture": false,
+          "check": true,
+          "checkmate": false
+        },
+        {
+          "san": "Bxh8",
+          "uci": "g7h8",
+          "before_fen": "rn3k1Q/pp2p1b1/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R b - - 3 3",
+          "after_fen": "rn3k1b/pp2p3/3p1rP1/6p1/2P5/4P2B/qP5P/2KR3R w - - 0 4",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "after_prefix": [
+        {
+          "san": "Rd4",
+          "uci": "d1d4",
+          "before_fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2P1N3/4P2B/qP5P/2KR3R w - - 0 1",
+          "after_fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2PRN3/4P2B/qP5P/2K4R b - - 1 1",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Bxd4",
+          "uci": "g7d4",
+          "before_fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2PRN3/4P2B/qP5P/2K4R b - - 1 1",
+          "after_fen": "rn4k1/pp2p3/3p2P1/5rpQ/2PbN3/4P2B/qP5P/2K4R w - - 0 2",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Nf6+",
+          "uci": "e4f6",
+          "before_fen": "rn4k1/pp2p3/3p2P1/5rpQ/2PbN3/4P2B/qP5P/2K4R w - - 0 2",
+          "after_fen": "rn4k1/pp2p3/3p1NP1/5rpQ/2Pb4/4P2B/qP5P/2K4R b - - 1 2",
+          "capture": false,
+          "check": true,
+          "checkmate": false
+        }
+      ],
+      "immediate_recapture_inventories": [
+        {
+          "id": "before-defender-relocation",
+          "fen": "rn4k1/pp2p1b1/3p1rP1/6pQ/2P5/4P2B/qP5P/2KR3R w - - 0 2",
+          "legal_prefix_uci": [
+            "e4f6",
+            "f5f6"
+          ],
+          "all_immediate_legal_white_recaptures_of_Rf6": []
+        },
+        {
+          "id": "after-defender-relocation",
+          "fen": "rn4k1/pp2p3/3p1rP1/6pQ/2Pb4/4P2B/qP5P/2K4R w - - 0 3",
+          "legal_prefix_uci": [
+            "d1d4",
+            "g7d4",
+            "e4f6",
+            "f5f6"
+          ],
+          "all_immediate_legal_white_recaptures_of_Rf6": []
+        }
+      ],
+      "all_after_Nf6_legal_black_replies": [
+        {
+          "uci": "d4f6",
+          "san": "Bxf6",
+          "capture": true
+        },
+        {
+          "uci": "e7f6",
+          "san": "exf6",
+          "capture": true
+        },
+        {
+          "uci": "f5f6",
+          "san": "Rxf6",
+          "capture": true
+        },
+        {
+          "uci": "g8f8",
+          "san": "Kf8",
+          "capture": false
+        },
+        {
+          "uci": "g8g7",
+          "san": "Kg7",
+          "capture": false
+        }
+      ],
+      "local_mate_tree_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\priced-capture-admission-book-controls.json",
+        "sha256": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e",
+        "id": "PC-SG48-SAME-KNIGHT-CAPTURE-FORCING-REPLY"
+      },
+      "local_tree_legally_rechecked": true,
+      "essential_condition": "The forcing queen checks must defeat every current defense at the declared reached check position; the bishop/rook interference and king escape squares determine the result.",
+      "events_not_required_identically": "Black may choose Rxf6,Bxf6,exf6,Kf8 or Kg7. The mating route changes; no requirement that Black choose the printed rook capture or a specific final queen capture.",
+      "strongest_counter_scope": "At the already reached Nf6 check, every legal Black defense was enumerated and fixed terminal trees replayed. This is a finite conditional mate proof; it does not prove every first Black defense to Rd4 or Rd4 as unique best root move.",
+      "counterexample": "Both Rxf6 states have zero immediate legal White recaptures. Before Bg7 leaves, Qh7+ Kf8 Qh8+ Bxh8 is legal; after it leaves, the corresponding Qh8 is mate. Empty recapture inventory cannot mean safe or useful.",
+      "basic_comment_allowed": "Rd4 answers mate on b2 and covers c4. If Black takes it with the g7 bishop, Nf6+ interferes with the defenses; even Rxf6 is met by Qh7+ and Qh8 mate.",
+      "claim_not_allowed": "No immediate recapture means Rxf6 safely wins the knight; or the conditional mate proves Rd4 is the only winning root choice."
+    },
+    {
+      "id": "SG41-positional-already-legal-Nd5-and-cheap-denial",
+      "type": "position",
+      "book": "Think Like a Super-GM",
+      "reading_pages": [
+        410,
+        411,
+        412,
+        413,
+        414,
+        415,
+        416,
+        417,
+        418
+      ],
+      "source_footer_pages": "486-497",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "root_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "legal_history_san": [
+        "e4",
+        "c5",
+        "Nf3",
+        "Nc6",
+        "d4",
+        "cxd4",
+        "Nxd4",
+        "Nf6",
+        "Nc3",
+        "d6",
+        "Bg5",
+        "e6",
+        "f4",
+        "Be7",
+        "Qd2",
+        "a6",
+        "O-O-O",
+        "Bd7",
+        "Be2",
+        "b5",
+        "Bf3",
+        "Rc8",
+        "Kb1",
+        "Qb6",
+        "Rhe1",
+        "h6",
+        "Bxf6",
+        "gxf6",
+        "f5",
+        "Qxd4",
+        "Qxd4",
+        "Nxd4",
+        "Rxd4",
+        "h5",
+        "h4",
+        "Rc5",
+        "a3",
+        "Kd8"
+      ],
+      "legal_history_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "d7d6",
+        "c1g5",
+        "e7e6",
+        "f2f4",
+        "f8e7",
+        "d1d2",
+        "a7a6",
+        "e1c1",
+        "c8d7",
+        "f1e2",
+        "b7b5",
+        "e2f3",
+        "a8c8",
+        "c1b1",
+        "d8b6",
+        "h1e1",
+        "h7h6",
+        "g5f6",
+        "g7f6",
+        "f4f5",
+        "b6d4",
+        "d2d4",
+        "c6d4",
+        "d1d4",
+        "h6h5",
+        "h2h4",
+        "c8c5",
+        "a2a3",
+        "e8d8"
+      ],
+      "actor_identity_from_full_history": {
+        "white_knight": "original Nb1, now Nc3",
+        "lost_guard": "original Pe7, now Pe6",
+        "remaining_capturer": "original Ra8, now Rc5",
+        "waiting_rook": "original Rh1, now Re1, then Rd1",
+        "advanced_rook": "original Ra1, now Rd4"
+      },
+      "same_legal_move": "Nc3-d5 is legal after both Red1 a5 and Red1 exf5.",
+      "matched_resource_states": [
+        {
+          "id": "e6-held-after-Red1-a5-Nd5",
+          "prefix_san": [
+            "Red1",
+            "a5",
+            "Nd5"
+          ],
+          "prefix_uci": [
+            "e1d1",
+            "a6a5",
+            "c3d5"
+          ],
+          "fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "all_immediate_legal_black_captures_of_original_knight": [
+            {
+              "uci": "c5d5",
+              "san": "Rxd5",
+              "actor_square": "c5",
+              "actor_role": "rook"
+            },
+            {
+              "uci": "e6d5",
+              "san": "exd5",
+              "actor_square": "e6",
+              "actor_role": "pawn"
+            }
+          ],
+          "every_capture_immediate_recapture_inventory": [
+            {
+              "capture": {
+                "uci": "c5d5",
+                "san": "Rxd5",
+                "actor_square": "c5",
+                "actor_role": "rook"
+              },
+              "after_fen": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+              "all_immediate_legal_white_recaptures": [
+                {
+                  "uci": "d4d5",
+                  "san": "Rxd5",
+                  "actor_square": "d4",
+                  "actor_role": "rook"
+                },
+                {
+                  "uci": "e4d5",
+                  "san": "exd5",
+                  "actor_square": "e4",
+                  "actor_role": "pawn"
+                }
+              ],
+              "completeness": "Every currently legal capture on d5 enumerated; not a best-recapture/value proof."
+            },
+            {
+              "capture": {
+                "uci": "e6d5",
+                "san": "exd5",
+                "actor_square": "e6",
+                "actor_role": "pawn"
+              },
+              "after_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+              "all_immediate_legal_white_recaptures": [
+                {
+                  "uci": "d4d5",
+                  "san": "Rxd5",
+                  "actor_square": "d4",
+                  "actor_role": "rook"
+                },
+                {
+                  "uci": "e4d5",
+                  "san": "exd5",
+                  "actor_square": "e4",
+                  "actor_role": "pawn"
+                }
+              ],
+              "completeness": "Every currently legal capture on d5 enumerated; not a best-recapture/value proof."
+            }
+          ]
+        },
+        {
+          "id": "e6-moved-after-Red1-exf5-Nd5",
+          "prefix_san": [
+            "Red1",
+            "exf5",
+            "Nd5"
+          ],
+          "prefix_uci": [
+            "e1d1",
+            "e6f5",
+            "c3d5"
+          ],
+          "fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "all_immediate_legal_black_captures_of_original_knight": [
+            {
+              "uci": "c5d5",
+              "san": "Rxd5",
+              "actor_square": "c5",
+              "actor_role": "rook"
+            }
+          ],
+          "every_capture_immediate_recapture_inventory": [
+            {
+              "capture": {
+                "uci": "c5d5",
+                "san": "Rxd5",
+                "actor_square": "c5",
+                "actor_role": "rook"
+              },
+              "after_fen": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+              "all_immediate_legal_white_recaptures": [
+                {
+                  "uci": "d4d5",
+                  "san": "Rxd5",
+                  "actor_square": "d4",
+                  "actor_role": "rook"
+                },
+                {
+                  "uci": "e4d5",
+                  "san": "exd5",
+                  "actor_square": "e4",
+                  "actor_role": "pawn"
+                }
+              ],
+              "completeness": "Every currently legal capture on d5 enumerated; not a best-recapture/value proof."
+            }
+          ]
+        }
+      ],
+      "source_vs_derived_scope": "The source discusses exf5/Nd5/fxe4 in the reader analysis and explains Red1/tension/alternative knight routes in Adams analysis. The two matched Nd5 price controls are derived exact legal research states, not a printed root PV or author numerical proof.",
+      "held_capture_ledger": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "a5",
+          "uci": "a6a5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "exd5",
+          "uci": "e6d5",
+          "before_fen": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d4d5",
+          "before_fen": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pprR1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "before_fen": "3k3r/3bbp2/3p1p2/pprR1P1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1r1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Rxd5",
+          "uci": "d1d5",
+          "before_fen": "3k3r/3bbp2/3p1p2/pp1r1P1p/4P2P/P4B2/1PP3P1/1K1R4 w - - 0 23",
+          "after_fen": "3k3r/3bbp2/3p1p2/pp1R1P1p/4P2P/P4B2/1PP3P1/1K6 b - - 0 23",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "moved_optional_rook_capture_ledger": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Rxd5",
+          "uci": "c5d5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "exd5",
+          "uci": "e4d5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1p1P1p1p/3R3P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "relevant_strong_counter_legal_branch": [
+        {
+          "san": "Red1",
+          "uci": "e1d1",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+          "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "exf5",
+          "uci": "e6f5",
+          "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Nd5",
+          "uci": "c3d5",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "fxe4",
+          "uci": "f5e4",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN3p/3Rp2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Rxe4",
+          "uci": "d4e4",
+          "before_fen": "3k3r/3bbp2/p2p1p2/1prN3p/3Rp2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "after_fen": "3k3r/3bbp2/p2p1p2/1prN3p/4R2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "direct_white_defenders_of_Nd5_after_Rdxe4": [
+        {
+          "square": "d1",
+          "role": "rook"
+        }
+      ],
+      "strongest_counter_limit": "fxe4 removes a defender and must be checked before relying on cooperative Rxd5. Its objective strongest rank and best subsequent play require owned completed comparison; not established by this legal replay or a participant thought transcript.",
+      "essential_condition": "Losing the cheap Pe6xd5 changes the cost of denial. Rc5xd5 remains legal and requires every legal recapture/forcing reply to be assessed. If fxe4 removes Pe4, the defender and realization must be updated: after Rdxe4 the d-file rook can defend Nd5.",
+      "events_not_required_identically": "A useful White plan need not play Nd5 immediately or retain a pawn on e4 forever. Ne2/Ng3, Na2/Nc1/Nb3, queenside a4 and altered rook/knight activity can realize the retained flexibility.",
+      "counterexamples": [
+        "Remaining Rc5 does not make the lost pawn capture redundant; it gives up a rook if White can recapture. Conversely, a rook-for-knight offer can have compensation, so nominal cost alone does not prove ineffective defense.",
+        "Red1 a5 Ne2 exf5 Ng3 is a printed useful route: a5 need not stop every White plan to be sound.",
+        "The source explicitly gives Ne2 Rg8!? as a defense to Ng3. A fixed future Ng3 event is not a universal core condition.",
+        "After fxe6 fxe6, Black gains structure, bishop scope and f6-f5. The later game win includes missed alternatives and is not proof of a forced root chain."
+      ],
+      "source_legal_counter_paths": {
+        "fxe6": [
+          {
+            "san": "fxe6",
+            "uci": "f5e6",
+            "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+            "after_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20",
+            "capture": true,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "fxe6",
+            "uci": "f7e6",
+            "before_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20",
+            "after_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 0 21",
+            "capture": true,
+            "check": false,
+            "checkmate": false
+          }
+        ],
+        "kingside_route_after_a5": [
+          {
+            "san": "Red1",
+            "uci": "e1d1",
+            "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+            "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "a5",
+            "uci": "a6a5",
+            "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+            "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "Ne2",
+            "uci": "c3e2",
+            "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+            "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "exf5",
+            "uci": "e6f5",
+            "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21",
+            "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22",
+            "capture": true,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "Ng3",
+            "uci": "e2g3",
+            "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22",
+            "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4BN1/1PP3P1/1K1R4 b - - 1 22",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          }
+        ],
+        "Ng3_denial": [
+          {
+            "san": "Ne2",
+            "uci": "c3e2",
+            "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+            "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/1PP1N1P1/1K2R3 b - - 2 20",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "Rg8",
+            "uci": "h8g8",
+            "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/1PP1N1P1/1K2R3 b - - 2 20",
+            "after_fen": "3k2r1/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/1PP1N1P1/1K2R3 w - - 3 21",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          }
+        ]
+      },
+      "basic_purpose_allowed": "Red1 improves coordination while keeping the f5 tension and leaving the knight route or a4 decision open. This normal purpose can be enough when no precise ranking is claimed.",
+      "bounded_conditional_fact_allowed": "After exf5, the e6 pawn can no longer capture a knight arriving on d5; the c5 rook can still take it. A conditional recapture ledger may state its immediate material cost with the current defender identified.",
+      "actual_Nd5_mover_comment_requirement": "With Pe6 still present, explain the actual exd5 and best legal recapture/cost, rather than only listing attacks. With Pe6 moved, usefulness requires strongest fxe4 and the changed adequate defender to be investigated.",
+      "claim_not_allowed": "Nd5 newly becomes legal; all d5 captures disappear; one remaining capturer makes the lost pawn capture irrelevant; or this descendant alone proves Red1 best/Black exf5 a blunder."
+    },
+    {
+      "id": "H05-endgame-reserve-tempo-different-realizations",
+      "type": "endgame",
+      "book": "100 Endgame Patterns You Must Know",
+      "game": "Borja Zamarbide-Martin Benitez, La Roda2005",
+      "reading_pages": [
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "source_footer_pages": "90-99",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "original_early_g4_branch": [
+        {
+          "san": "g4",
+          "uci": "g3g4",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+          "after_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "f6",
+          "uci": "f7f6",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+          "after_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P2K2/1P6/8 w - - 0 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Ke3",
+          "uci": "f3e3",
+          "before_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P2K2/1P6/8 w - - 0 36",
+          "after_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P1K3/1P6/8 b - - 1 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Kd6",
+          "uci": "e5d6",
+          "before_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P1K3/1P6/8 b - - 1 36",
+          "after_fen": "8/8/3k1p2/2p5/ppp1P1P1/P1P1K3/1P6/8 w - - 2 37",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Kf4",
+          "uci": "e3f4",
+          "before_fen": "8/8/3k1p2/2p5/ppp1P1P1/P1P1K3/1P6/8 w - - 2 37",
+          "after_fen": "8/8/3k1p2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 3 37",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Ke6",
+          "uci": "d6e6",
+          "before_fen": "8/8/3k1p2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 3 37",
+          "after_fen": "8/8/4kp2/2p5/ppp1PKP1/P1P5/1P6/8 w - - 4 38",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "cheap_legal_g5_counter": [
+        {
+          "san": "g4",
+          "uci": "g3g4",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+          "after_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "f6",
+          "uci": "f7f6",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35",
+          "after_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P2K2/1P6/8 w - - 0 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "g5",
+          "uci": "g4g5",
+          "before_fen": "8/8/5p2/2p1k3/ppp1P1P1/P1P2K2/1P6/8 w - - 0 36",
+          "after_fen": "8/8/5p2/2p1k1P1/ppp1P3/P1P2K2/1P6/8 b - - 0 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "fxg5",
+          "uci": "f6g5",
+          "before_fen": "8/8/5p2/2p1k1P1/ppp1P3/P1P2K2/1P6/8 b - - 0 36",
+          "after_fen": "8/8/8/2p1k1p1/ppp1P3/P1P2K2/1P6/8 w - - 0 37",
+          "capture": true,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "premature_reserve_use_counter": [
+        {
+          "san": "Ke3",
+          "uci": "f3e3",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+          "after_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "f6",
+          "uci": "f7f6",
+          "before_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+          "after_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Kf3",
+          "uci": "e3f3",
+          "before_fen": "8/8/5p2/2p1k3/ppp1P3/P1P1K1P1/1P6/8 w - - 0 36",
+          "after_fen": "8/8/5p2/2p1k3/ppp1P3/P1P2KP1/1P6/8 b - - 1 36",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Kd6",
+          "uci": "e5d6",
+          "before_fen": "8/8/5p2/2p1k3/ppp1P3/P1P2KP1/1P6/8 b - - 1 36",
+          "after_fen": "8/8/3k1p2/2p5/ppp1P3/P1P2KP1/1P6/8 w - - 2 37",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Kf4",
+          "uci": "f3f4",
+          "before_fen": "8/8/3k1p2/2p5/ppp1P3/P1P2KP1/1P6/8 w - - 2 37",
+          "after_fen": "8/8/3k1p2/2p5/ppp1PK2/P1P3P1/1P6/8 b - - 3 37",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "Ke6",
+          "uci": "d6e6",
+          "before_fen": "8/8/3k1p2/2p5/ppp1PK2/P1P3P1/1P6/8 b - - 3 37",
+          "after_fen": "8/8/4kp2/2p5/ppp1PK2/P1P3P1/1P6/8 w - - 4 38",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "g4",
+          "uci": "g3g4",
+          "before_fen": "8/8/4kp2/2p5/ppp1PK2/P1P3P1/1P6/8 w - - 4 38",
+          "after_fen": "8/8/4kp2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 0 38",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        },
+        {
+          "san": "b3",
+          "uci": "b4b3",
+          "before_fen": "8/8/4kp2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 0 38",
+          "after_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 w - - 0 39",
+          "capture": false,
+          "check": false,
+          "checkmate": false
+        }
+      ],
+      "source_human_judgment": "The author labels early35.g4 an error and recommends35.Ke3. Hold g4 until Black cannot retain an adequate waiting/blockading resource; the point is to reverse the move obligation and gain useful activity.",
+      "book_late": {
+        "prefix_san": [
+          "Ke3",
+          "f6",
+          "Kf3",
+          "Kd6",
+          "Ke2",
+          "Ke5",
+          "Ke3",
+          "Kd6",
+          "Kd2",
+          "b3",
+          "Ke3",
+          "Ke5",
+          "Kf3",
+          "Kd6",
+          "Kf4",
+          "Ke6"
+        ],
+        "prefix_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "e5d6",
+          "e3d2",
+          "b4b3",
+          "d2e3",
+          "d6e5",
+          "e3f3",
+          "e5d6",
+          "f3f4",
+          "d6e6"
+        ],
+        "before43g4": "8/8/4kp2/2p5/p1p1PK2/PpP3P1/1P6/8 w - - 6 43",
+        "after43g4": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+        "all_legal_black_replies": [
+          {
+            "uci": "e6d6",
+            "san": "Kd6",
+            "capture": false
+          },
+          {
+            "uci": "e6d7",
+            "san": "Kd7",
+            "capture": false
+          },
+          {
+            "uci": "e6e7",
+            "san": "Ke7",
+            "capture": false
+          },
+          {
+            "uci": "e6f7",
+            "san": "Kf7",
+            "capture": false
+          },
+          {
+            "uci": "f6f5",
+            "san": "f5",
+            "capture": false
+          }
+        ],
+        "pawn_counter": [
+          {
+            "san": "g4",
+            "uci": "g3g4",
+            "before_fen": "8/8/4kp2/2p5/p1p1PK2/PpP3P1/1P6/8 w - - 6 43",
+            "after_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "f5",
+            "uci": "f6f5",
+            "before_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+            "after_fen": "8/8/4k3/2p2p2/p1p1PKP1/PpP5/1P6/8 w - - 0 44",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "exf5+",
+            "uci": "e4f5",
+            "before_fen": "8/8/4k3/2p2p2/p1p1PKP1/PpP5/1P6/8 w - - 0 44",
+            "after_fen": "8/8/4k3/2p2P2/p1p2KP1/PpP5/1P6/8 b - - 0 44",
+            "capture": true,
+            "check": true,
+            "checkmate": false
+          }
+        ]
+      },
+      "current_product_plan_input": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-current-all-defenses-plan.json",
+        "sha256": "7173eb75ca891bd6544cf317860d001d6f20cd7e12c71f0276e2afcfddee3b91",
+        "prefix_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3f2",
+          "d6c6",
+          "f2e3",
+          "c6c7",
+          "e3d2",
+          "b4c3",
+          "b2c3",
+          "c7c6",
+          "d2e3",
+          "c6d6",
+          "e3f4",
+          "d6e6",
+          "g3g4"
+        ],
+        "after_g4_fen": "8/8/4kp2/2p5/p1p1PKP1/P1P5/8/8 b - - 0 43",
+        "all_legal_black_replies": [
+          {
+            "uci": "e6d6",
+            "san": "Kd6",
+            "capture": false
+          },
+          {
+            "uci": "e6d7",
+            "san": "Kd7",
+            "capture": false
+          },
+          {
+            "uci": "e6e7",
+            "san": "Ke7",
+            "capture": false
+          },
+          {
+            "uci": "e6f7",
+            "san": "Kf7",
+            "capture": false
+          },
+          {
+            "uci": "f6f5",
+            "san": "f5",
+            "capture": false
+          }
+        ],
+        "pawn_counter": [
+          {
+            "san": "f5",
+            "uci": "f6f5",
+            "before_fen": "8/8/4kp2/2p5/p1p1PKP1/P1P5/8/8 b - - 0 43",
+            "after_fen": "8/8/4k3/2p2p2/p1p1PKP1/P1P5/8/8 w - - 0 44",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "exf5+",
+            "uci": "e4f5",
+            "before_fen": "8/8/4k3/2p2p2/p1p1PKP1/P1P5/8/8 w - - 0 44",
+            "after_fen": "8/8/4k3/2p2P2/p1p2KP1/P1P5/8/8 b - - 0 44",
+            "capture": true,
+            "check": true,
+            "checkmate": false
+          }
+        ],
+        "branch_difference": "Current b4xc3/b2xc3 replaced the book b4-b3. Same king and central/kingside setup does not make their full histories or values interchangeable."
+      },
+      "older_four_king_state": {
+        "criteria_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+        "criteria_sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+        "boundary": "The earlier18ply saved late had WhiteKf3/BlackKe5 and no legal pawn move. Its four-king/noPawnMoves condition does not apply to the current17ply Kf4/Ke6/f6-pawn state."
+      },
+      "essential_condition": "The preserved pawn move must retain the king role and produce valuable activation despite every adequate opponent response, including a remaining pawn break. A viable realization may be king entry, pawn liquidation/check or a supported passer; mere availability or exact king-square arrival is insufficient.",
+      "events_not_required_identically": "The book b3, current bxc3/bxc3, one fixed triangulation route, permanent Pe4, and direct Kf5 entry in every variation are not invariants of the broader idea.",
+      "counterexamples": [
+        "After earlyg4 f6, g5 is still legal, but fxg5 is legal and no immediate recapture exists in that reached state; the source word prevents denotes effective restraint, not illegality.",
+        "Ke3 f6 Kf3 Kd6 Kf4 Ke6 g4 b3 is the source too-early-use counterexample. A reserve exists but Black retains a useful answer.",
+        "After correct lateg4, f5 remains legal in both book and current states. exf5+ is legal and forces a king response, but White own pawn occupies f5; requiring the same direct Kf5 event would discard an alternative realization before its value is checked."
+      ],
+      "basic_comment_allowed": "Earlyg4 spends a spare move before Black has exhausted useful waiting resources; f6 restrains the break and the king blockade remains. Keep g4 while using the king to make Black commit first.",
+      "current_late_comment_boundary": "State the verified timing/position change and conditional available reply. A winning-activation or all-defense claim requires the current five-reply result, including f5 and the consequent changed pawn/king route. The book Ke7 illustration alone is insufficient.",
+      "claim_not_allowed": "Current late has no pawn moves; every reply grants the same Kf5 entry; the original PV is forced; or the local descendant alone explains the entire root score gap."
+    }
+  ],
+  "final_code_judgment": {
+    "sufficient_for_factual_admission": [
+      "Exact same original actor/action, canonical legal history/current turn, and the specific lost defender function.",
+      "A complete checked inventory of remaining current capturers, with unknown distinct from known empty.",
+      "Every legal immediate recapture if a price ledger is displayed; explicit bounds before any later compensation/forcing claim.",
+      "Conditional source/path ownership and a statement scope that survives a changed PV only when its required functional condition is independently still supported."
+    ],
+    "still_insufficient_for_utility_or_root_cause": [
+      "Legal availability, empty recapture inventory or nominal material price alone.",
+      "Only the named weak capture when a stronger pawn/forcing defense exists.",
+      "A fixed event list or final destination used as a universal invariant.",
+      "A completed local comparison borrowed to explain a different current mover or the whole root numerical assessment.",
+      "A timeout/node/depth failure treated as evidence the idea fails or as successfully omitted explanation.",
+      "A detailed factual statement counted as a delivered human assessment when the move judgment, relevant response or cost is still absent."
+    ],
+    "meaningful_success_boundary": "Separate correct bounded facts, completed conditional utility, preserved explanation across alternate realizations, and an actual root assessment reason. Improvement at one level is not automatic success at the others.",
+    "current_main36_implementation_certified": false,
+    "no_new_human_criteria_retrofit": "Earlier SG41/H05/product reading criteria remain unchanged. This source review adds explicitly labeled counterexamples and proof obligations, not new successful counts."
+  }
+}

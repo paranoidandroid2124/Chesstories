@@ -1,0 +1,174 @@
+{
+  "schema_version": "chesstory.choice-neutralization.v1",
+  "status": "completed-within-the-preregistered-scope",
+  "started_utc": "2026-10-12T06:46:04Z",
+  "deadline_utc": "2026-10-12T08:16:04Z",
+  "objective": "Connect original choices pursuing a shared positional task to actual neutralizing replies and remaining activity/cost; preserve the Bd5/Nd5 question.",
+  "limits": {
+    "depth_max": 18,
+    "request_ms": 10000,
+    "quality_cases": 2,
+    "development_minutes": 90,
+    "repeat_same_question_max": 1
+  },
+  "cases": [
+    {
+      "id": "existing",
+      "source": "Think Like a Super-GM, PDF 242–249",
+      "moves": [
+        "Bd5",
+        "Nd5"
+      ],
+      "minimum": [
+        "Retain the original Bd5/Nd5 comparison, including the Nd5 Bxd4 Nxd4 Nec5 neutralization question.",
+        "Explain remaining activity and Black deployment or defensive cost after actual exchanges/retreats under each original choice.",
+        "Do not equate legal Nc7 with a gain or force a book ranking unsupported by current evidence."
+      ]
+    },
+    {
+      "id": "new",
+      "source": "Gelfand, Positional Decision Making in Chess, PDF 285–293; Gelfand–Avrukh, Ramat Aviv 1999, after 14.b5",
+      "moves": [
+        "Bd5",
+        "Nd5"
+      ],
+      "fen": "r2q1rk1/1pp2pbp/1n4p1/pP2p1N1/P2n4/1bNPB1P1/4PPBP/RQ3RK1 b - - 0 14",
+      "minimum": [
+        "Explain which piece should occupy d5: Bd5 gets the bishop out of b3 and contests the diagonal; Nd5 occupies that route while leaving the bishop on b3.",
+        "Connect the actual Bxd4 recapture sequence and subsequent centralization to the surviving bishop routes/cost, rather than same-destination occupancy or score alone.",
+        "Keep exchanges and any ensuing loss, use actual returned replies and acknowledge unresolved evidence."
+      ],
+      "source_correction": "The reading edition prints exd6 in V77; that move is illegal. e5xd4 is the legal recapture after Bxd4. This is a source typo, not substituted engine evidence.",
+      "novelty": "No Avrukh reference found in retained research text; this position selected before any engine/product output."
+    }
+  ],
+  "completion": "Both basic screens must answer purpose, neutralizing reply and alternative difference; new common structure, no FEN/SAN fixtures in production. Missing original criterion remains unmet even if another pair is available.",
+  "finished_utc": "2026-10-12T07:40:59.994794+00:00",
+  "prior_history": {
+    "read": [
+      "research/README.md",
+      "research/strategic-function-20261012.json",
+      "research/meaning-conditions-20261008/final-theory-functional-synthesis.json"
+    ],
+    "repeated_failure": "Root-alternative comparison already existed in earlier work. The previous exchange-activity task explained Bd5 responses but compared Bd5/Nxe4, leaving the original Bd5/Nd5 neutralization criterion open.",
+    "this_delta": "The played purpose now owns a bounded cross-piece root alternative and its actual continuation. The same prepared-path owner links that comparison to opponent reorganization, lost/retained guards, retained-piece routes, response selection, prices and frontend acceptance."
+  },
+  "implementation": {
+    "question": "For an exchange-activity purpose, one other legal non-capturing piece move to its destination is a question, not proof of equivalent function. Existing root evidence is reused; otherwise one bounded comparison includes the played move, that alternative and the evaluation reference.",
+    "reading": "Track original piece identities at the first consolidation, closing selected capture/recapture chains. Compare removal of the guard of the opponent's actual new post with the retained guard in a played response. Separately read blocked routes, attacked destinations and the original retained piece's actual loss.",
+    "ownership": "Root comparison, purpose replies and conditional paths retain exact completed work IDs, execution keys, profile, depth, position and line ownership. Refreshed investigation PVs are now eligible purpose-response sources only with that completed prior root owner.",
+    "delivery": "Remove the duplicate played-root continuation and peripheral guard sentences when the explicit choice owns the contrast. Keep two played responses, the alternative continuation and every selected material/check obligation. Keep the 4000-character and existing proof bounds.",
+    "no_position_overrides": true,
+    "production_files": [
+      "PurposeChoice.scala",
+      "MovePurpose.scala",
+      "CommentaryJobReducer.scala",
+      "CommentaryAnswer.scala",
+      "CommentaryEnglish.scala",
+      "RootQuestionSummary.scala",
+      "MoveWorkProjection.scala",
+      "RuntimeProtocol.scala",
+      "moveReviewSelection.ts"
+    ]
+  },
+  "failures_found_and_fixed": [
+    "The client assumed same-destination alternatives used the same role; a bishop/knight comparison was rejected despite exact legal root evidence.",
+    "The client rejected a purpose-response pool whose refreshed source PV belonged to a completed investigation comparison. This removed the basic explanation while leaving numeric assessment.",
+    "Reading the whole alternative to a much later incidental retreat falsely made successful ...Nc5 neutralization look like the same back-rank deployment cost. The comparison now uses the first consolidation and selected exchange closure.",
+    "The initial completed explanation was 4334 characters, so the unchanged 4000-character delivery bound rejected it and a generic comparison appeared. Duplicate selected content was removed instead of increasing the bound or dropping prices.",
+    "The first new backend test compile used an unimported presentation extension for square names. Tests now use the underlying square.key; production behavior was unchanged."
+  ],
+  "quality_verdict": {
+    "existing": "met: the original Nd5 Bxd4 Nxd4 Nec5 neutralization is explicit; exchanging Bd4 removes c5 control, whereas the recorded Bd5 ...Nec5 Bxb7 Nxb7 response retains Bd4 control and leaves the same original e4 knight on b7. The other Bd5 exchange response retains a central Nd5 and contested open-c-file rook activity.",
+    "new": "met: Bd5 escapes the b1 queen attack and contests g2. Nd5 leaves the original b3 bishop, blocks its d5 route, and after Bxd4 exd4 Nce4 every available bishop destination is opposed; the recorded Bxa4 Rxa4 pays the bishop-for-pawn cost. Bd5 Nge4 c6 retains the bishop, while Be4 c6 bxc6 Bxc6 Bxc6 bxc6 exchanges it and preserves the pawn confrontation.",
+    "not_just_text_or_tests": "Both meanings were read on fresh actual product-component screens backed by live Stockfish and Java HTTP. The two cases use different board mechanisms and the same owner-bound choice/retained-function structure."
+  },
+  "verification": {
+    "quality_positions": 2,
+    "request_budget_ms": 10000,
+    "screen_environment": "Actual product coordinator, decoder, explanation view and Chessground; fresh Stockfish 18 browser worker per request, 2 threads/16 MB; Java HTTP. English component harness, not the full Docker Lila application.",
+    "existing_is_first_request_after_server_restart": true,
+    "runs": [
+      {
+        "id": "existing",
+        "elapsed_ms": 5843.860000014305,
+        "depths": [
+          12,
+          12,
+          12
+        ],
+        "work_count": 3,
+        "screenshot": "choice-neutralization-20261012/existing.png",
+        "summary": "Bd5 and Nd5 both occupy d5; the difference is what remains after the opponent exchanges or reorganizes. Bd5 challenges Black's bishop on b7 and Black's knight on e4 while allowing an exchange on d5. The point is to preserve active pieces after simplification; the successor and the opponent's remaining deployment decide whether that works. In the recorded Nd5 line, exchanging the d4 bishop removes the guard of c5: the opposing knight reaches it without any white piece controlling it. Against Bd5, the Nec5 continuation keeps White's bishop on d4 controlling c5; that opposing knight instead ends on b7 after the exchange. After Nd5, White's knight on d5 now targets Black's bishop on f6. Bxd4 moves the bishop out of the attack from White's knight on d5. The recorded continuation is Nd5 Bxd4 Nxd4 Nec5 Nf4. For Nd5: The original bishop remains on b3. The original knight remains in play. The original e4 knight has moved to c5; pressure on its former square is no longer the same attack. The opposing e4 knight reaches c5 and retains a central post in this line. Bxd4 captures the white bishop on d4. Nxd4 recaptures the black bishop on d4. In the Bd5 line: Nxd5 moves the knight out of the attack from Black's knight on e4. After Nxd5, White's knight on d5 now targets Black's bishop on f6. Bxd4 moves the bishop out of the attack from White's knight on d5. The recorded continuation is Bxd5 Nxd5 Rac8 Rac1 Bxd4 Nxd4. After Bxd5, at the end of this continuation: White's knight on d5 has taken over d5 after the bishop exchange. White's rook on c1 uses the open c-file to confront Black's rook on c8; the file is still contested. Bxd5 captures the white bishop on d5. Nxd5 recaptures the black bishop on d5. Bxd4 captures the white bishop on d4. Nxd4 recaptures the black bishop on d4. In the Bd5 line: After Nec5, White's bishop on d4 now targets Black's knight on c5. Nxb7 moves the knight out of the attack from White's bishop on d4. The recorded continuation is Nec5 Bxb7 Nxb7. After Nec5, at the end of this continuation: The original bishop has been exchanged; its old square is no longer occupied by a friendly piece. White's bishop on d4 is already active in the centre, while Black's knight on b7 has returned from e4 and needs another move to come forward, for example toward d6 or a5; White's bishop on d4 controls c5. This is the deployment cost left by this continuation. The original e4 knight has moved to b7; pressure on its former square is no longer the same attack. Bxb7 captures the black bishop on b7. Nxb7 recaptures the white bishop on b7. The compared root choices are Bd5 and Nd5."
+      },
+      {
+        "id": "new",
+        "elapsed_ms": 4840.194999933243,
+        "depths": [
+          12,
+          12,
+          12,
+          12
+        ],
+        "work_count": 4,
+        "screenshot": "choice-neutralization-20261012/new.png",
+        "summary": "Bd5 and Nd5 both occupy d5; the difference is what remains after the opponent exchanges or reorganizes. Bd5 also moves the bishop out of the attack from White's queen on b1. Bd5 challenges White's bishop on g2 while allowing an exchange on d5. The point is to preserve active pieces after simplification; the successor and the opponent's remaining deployment decide whether that works. After Nd5, Black's knight on d5 now targets White's bishop on e3. Bxd4 moves the bishop out of the attack from Black's knight on d5. Bxa4 moves the bishop out of the attack from White's queen on b1. The recorded continuation is Nd5 Bxd4 exd4 Nce4 Bxa4 Rxa4. For Nd5: Moving the knight there leaves the original bishop on b3 and occupies its route to d5. In this continuation that original bishop is subsequently captured. The original knight remains in play. Before Bxa4, its route to d5 is occupied by its own piece, and every available destination of that bishop is controlled by the opponent. The recorded continuation pays for this restricted deployment. Bxd4 captures the black knight on d4. exd4 recaptures the white bishop on d4. Bxa4 captures the white pawn on a4. Rxa4 recaptures the black bishop on a4. In the Bd5 line: The recorded continuation is Nge4 c6. After Nge4, at the end of this continuation: The original bishop remains in play. The pawn advance to c6 brings it into contact with White's pawn on b5, beginning the pawn confrontation. After Bd5, White's knight on c3 now targets Black's bishop on d5. Bxc6 moves the bishop out of the attack from White's knight on c3. The recorded continuation is Be4 c6 bxc6 Bxc6 Bxc6 bxc6. After Be4, at the end of this continuation: The original bishop has been exchanged; its old square is no longer occupied by a friendly piece. The pawn advance to c6 brings it into contact with White's pawn on b5, beginning the pawn confrontation. bxc6 captures the black pawn on c6. Bxc6 recaptures the white pawn on c6. Bxc6 recaptures the black bishop on c6. bxc6 recaptures the white bishop on c6. The compared root choices are c6 and Bd5."
+      }
+    ],
+    "backend": {
+      "suite": "PurposeChoiceTest",
+      "passed": 2,
+      "checks": [
+        "exact issued-work replay",
+        "completed comparison required",
+        "original guard identity and its loss/retention",
+        "early consolidation rather than incidental late retreat",
+        "bishop route closure and actual loss",
+        "foreign prepared owner rejected"
+      ]
+    },
+    "frontend": {
+      "suite": "moveReviewPurposeChoice.test.ts",
+      "passed": 3,
+      "checks": [
+        "actual pending/final snapshots accepted",
+        "refreshed investigation source retained",
+        "foreign comparison and swapped paths rejected",
+        "wrong destination rejected",
+        "missing selected exchange price rejected",
+        "depth 19 rejected"
+      ]
+    },
+    "compile": "Related runtime source group compiled after the Context signature change; final changed source groups and actual product browser bundle compiled successfully.",
+    "diff_check": "passed for touched production files",
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/choice-neutralization-browser.json.gz"
+  },
+  "limits_remaining": [
+    "The same destination supplies a bounded question seed, not a universal discovery rule for different strategic alternatives or functional equivalence.",
+    "The two positions were exposed during development. This is not held-out generalization or release-wide validation.",
+    "The returned continuations witness the described neutralization and costs; they do not prove every legal defense or a forced lasting advantage.",
+    "In the new case c6 is still the numeric evaluation reference and Bd5 remains an inaccuracy under the returned score. The Bd5/Nd5 functional account does not explain the entire c6/Bd5 evaluation difference.",
+    "The final existing Nd5 PV continued with Nf4, not the earlier Rxe8+ exchange. The screen therefore does not assert that the c7 double-attack targets disappeared in this final line; no legal-entry-as-gain claim is made.",
+    "The basic text still repeats some mandatory action and material facts. Arbitrary long accounts may still hit delivery limits.",
+    "Full regression, full Docker Lila integration, Korean prose, all machines and general 10-second guarantees were not tested."
+  ],
+  "preservation": {
+    "baseline_entries": 377,
+    "changed": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "research/README.md"
+    ],
+    "missing": [],
+    "restored": [],
+    "untouched_entries": 368,
+    "committed": false,
+    "backup": "target/research-runs/choice-neutralization-20261012/before"
+  }
+}

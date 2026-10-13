@@ -1,0 +1,31 @@
+{
+  "bounded_goal": {
+    "threadId": "01a0d95e-97a9-7561-8c71-62c16e8b6ed4",
+    "objective": "Chesstories 관계패턴 전체 지도와 현재 코드베이스를 면밀히 대조해 재현 가능한 결함·중복 판단·일반화 제약을 기록하고, 기존 그래프·질문·typed 답변 경로에서 선택한 답을 바꾸는 동적 관계와 필수 응수·대가의 귀속, 위협·예방의 주장 범위를 우선 개선한다. 제품 언어모델·Docker·전체 앱 실행 없이 현재 WIP를 보존한다. 새 그래프/범용 프레임워크나 SAN·좌표·고정 수 간격별 임시 규칙을 만들지 않는다. 기존 마스터 기보 저장 분석의 작동·불성립 사례로 수정 전후를 비교하고 내용/근거/참조에 관한 필요한 코드 검증을 수행한다. 관련 반례와 연구 결과로 채택할 최소 공통 수정을 구현한 후 소스·실행 결과 일치, 남은 질문 선택/구성/표현 실패, 기존 품질 기준의 충족 여부와 미검증 범위를 따로 정리한다. 최대 10시간(2026-10-04 16:55 UTC) 안에 구현·최종 검증·보고를 포함해 한 중기 단위를 끝낸다. 전체 체스 판단 정책과 출시 품질의 완성을 이 단위의 완료와 혼동하지 않는다.",
+    "status": "complete",
+    "tokensUsed": 3002083,
+    "timeUsedSeconds": 9354,
+    "createdAt": 1791096950,
+    "updatedAt": 1791106305
+  },
+  "recorded_status": "complete",
+  "phase1_release_quality_met": false,
+  "artifact_qa": "passed: 18 before/after sections, 10-domain overlay, report links, reviewer input hash, preserved starting sources and final compile source hashes",
+  "whitespace_check": "git diff --check passed",
+  "final_report": "report.html",
+  "structured_report": "report.json",
+  "same_saved_inputs": "same-input-ownershipv13-18.json",
+  "quality_review": "content-assessment-reviewed.json",
+  "starting_wip_diff": "starting-to-final.patch",
+  "changed_baseline_files": 4,
+  "other_baseline_files_preserved": 138,
+  "tests_passed": 305,
+  "runtime_sources_compiled": 71,
+  "saved_positions": 18,
+  "saved_engine_reports": 77,
+  "final_useful_and_complete": "4/18",
+  "final_important_price_omissions": 1,
+  "new_engine_or_docker_or_fullstack": false,
+  "new_blind_generalization_evaluation": false,
+  "independent_human_reader_evaluation": false
+}

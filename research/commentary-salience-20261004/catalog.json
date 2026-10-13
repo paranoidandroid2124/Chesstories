@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "research_date": "2026-10-04",
+  "title": "독립 해설을 생략하거나 묶을 수 있는 상황의 조사 지도",
+  "status": "research_candidates_not_an_implemented_classifier",
+  "product_changes": false,
+  "new_engine_runs": 0,
+  "claim": "체스 전체의 중요도 정답 목록이 아니다. 통상적인 행동이 이번 질문에서 독립적인 설명 가치를 가지는지 조사하는 편집 후보 지도다.",
+  "distinctions": [
+    "체크·포획이 없는 quiet move와 독립 해설이 불필요한 routine content는 다르다.",
+    "수 자체를 설명하지 않는 것과 앞의 주장에 필요한 실제 응수·대가를 생략하는 것은 다르다.",
+    "기하 관계가 있다는 사실, 엔진 최선수, 같은 평가, 주석 없음은 각각 본문 중요도의 충분조건이나 생략의 충분조건이 아니다.",
+    "관련 차이·가격이 없음과 자료가 부족해 아직 확인하지 못함을 구별한다.",
+    "본문 축약 뒤에도 출력 전에 정한 질문·필수 응수·대가·결과가 전달돼야 한다. 답을 비워 기존14/18품질 기준을 통과한 것으로 계산하지 않는다.",
+    "초보자용 기본 원리 설명과 제1단계의 선택 비교를 구별한다. 독자·현재 질문·이미 말한 내용에 따라 같은 수의 편집 중요도는 달라진다."
+  ],
+  "levels": [
+    {
+      "level": "no_standalone_comment",
+      "meaning": "독립적인 새 주장 없이 상세·기보·보드 연결에서 읽는다."
+    },
+    {
+      "level": "merged_required_content",
+      "meaning": "앞의 질문에 필요한 조건·응수·가격·결과로 짧게 함께 전달한다."
+    },
+    {
+      "level": "explain_choice",
+      "meaning": "실제 차이·오해하기 쉬운 작동·확인된 위협 대응·가격·결과를 설명한다."
+    },
+    {
+      "level": "undetermined",
+      "meaning": "이유를 아직 모르는 상태. 평범함이나 위협 부재로 판정하지 않는다."
+    }
+  ],
+  "families": [
+    {
+      "id": "routine-development",
+      "group": "전개·배치",
+      "name": "자연스러운 소기물 전개",
+      "candidate": "선택한 질문이 전개 차이를 묻지 않고, 전개 자체가 이미 보드와 SAN에서 이해되는 경우.",
+      "keep_if": "새 위협·방어 의무·통로 사용·템포 손실·대안과의 역할 차이가 확인되면 설명한다.",
+      "disposition": "omit_standalone",
+      "source_ids": [
+        "benoni",
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "fianchetto",
+      "group": "전개·배치",
+      "name": "통상적인 피앙케토 완성",
+      "candidate": "이미 설명한 배치 계획을 완료하며 새 선택·대가가 없는 중간 행동.",
+      "keep_if": "대각선 사용, 중앙 대응, 막힌 비숍, 실제 희생과 연결되면 독립 내용이 된다.",
+      "disposition": "merge_or_detail",
+      "source_ids": [
+        "benoni",
+        "nimzo"
+      ]
+    },
+    {
+      "id": "routine-castling",
+      "group": "전개·배치",
+      "name": "평범한 캐슬링",
+      "candidate": "캐슬링의 법적 효과와 일반적인 전개 완료만 다시 설명하는 경우.",
+      "keep_if": "킹의 실제 위험 차이, 캐슬링 지연의 기회, 룩의 실제 사용, 다른 쪽 캐슬링과의 차이는 남긴다.",
+      "disposition": "omit_standalone",
+      "source_ids": [
+        "fundamentals",
+        "benoni"
+      ]
+    },
+    {
+      "id": "ordinary-opening-pawn",
+      "group": "전개·배치",
+      "name": "통상적인 폰 준비수·전진",
+      "candidate": "일반적인 중앙 점유·비숍 길 열림이나 이미 설명한 예방 배치를 반복하며 선택 질문에 새 답을 보태지 않는 경우. 폰 수의 형태만으로 통상적이라 판정하지 않는다.",
+      "keep_if": "중앙 긴장 해소, 돌파, 전개 순서, 실제 위협의 방지, 킹 탈출칸, 잃는 폰·칸·템포가 답을 바꾸면 설명한다.",
+      "disposition": "merge_or_detail",
+      "source_ids": [
+        "fundamentals",
+        "sicilian",
+        "benoni",
+        "prophylaxis"
+      ]
+    },
+    {
+      "id": "routine-coordination",
+      "group": "전개·배치",
+      "name": "룩 연결·퀸 배치·통상적인 정렬",
+      "candidate": "기물들이 새 칸에 있고 서로 지원한다는 위치 정보만 반복하는 경우.",
+      "keep_if": "특정 파일 진입·방어 인계·이동 순서·다른 룩을 써야 하는 이유가 실제로 확인되면 남긴다.",
+      "disposition": "merge_or_detail",
+      "source_ids": [
+        "sicilian",
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "manoeuvre-middle",
+      "group": "전개·배치",
+      "name": "이미 설명한 기동의 중간 수",
+      "candidate": "목적지와 기능을 이미 설명한 동일 기동 안에서 각 도착 칸을 다시 소개하는 경우.",
+      "keep_if": "상대의 중간 반격, 기동 중 끊긴 지원, 강제 우회, 새로운 목적 전환은 생략하지 않는다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "game-changer",
+        "sicilian"
+      ]
+    },
+    {
+      "id": "ordinary-recapture",
+      "group": "교환·되잡기",
+      "name": "통상적인 즉시 되잡기",
+      "candidate": "기물 교환을 마무리하고 이미 말한 가격·결과를 복구하는 실제 응수.",
+      "keep_if": "앞의 획득을 제한하는 가격, 어떤 기물로 되잡는지의 선택, 구조·활동·킹 안전·템포·종결 차이는 남긴다.",
+      "disposition": "merge_into_price",
+      "source_ids": [
+        "chesstempo",
+        "fundamentals",
+        "nimzo"
+      ]
+    },
+    {
+      "id": "balanced-exchange",
+      "group": "교환·되잡기",
+      "name": "대칭적인 같은 역할의 교환",
+      "candidate": "같은 교환 결과가 양쪽에서 확인됐고 개별 포획 문장을 반복할 필요가 없는 경우.",
+      "keep_if": "같은 물질 가격이어도 기물 역할·폰 구조·체크 순서·남은 방어 기능이 다르면 설명한다.",
+      "disposition": "merge_into_price",
+      "source_ids": [
+        "fundamentals",
+        "sicilian"
+      ]
+    },
+    {
+      "id": "exchange-completion",
+      "group": "교환·되잡기",
+      "name": "이미 예고한 연속 교환의 마무리",
+      "candidate": "교환의 대상·가격·남는 결과를 하나의 답에서 이미 전달한 경우.",
+      "keep_if": "마지막 포획이 앞의 희생을 회복하거나 승격·메이트·무승부로 의미를 바꾸면 결과는 필수다.",
+      "disposition": "merge_into_price",
+      "source_ids": [
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "pawn-recapture",
+      "group": "교환·되잡기",
+      "name": "폰으로 통상적인 되잡기",
+      "candidate": "현재 질문에서 되잡기 주체의 차이가 중요하지 않고 실제 교환 가격에 포함되는 경우.",
+      "keep_if": "다른 폰으로 잡는 선택, 열린 파일·패서·약점·남은 비숍의 기능 차이를 평범하다고 간주하지 않는다.",
+      "disposition": "merge_or_detail",
+      "source_ids": [
+        "nimzo",
+        "sicilian"
+      ]
+    },
+    {
+      "id": "routine-trade-offer",
+      "group": "교환·되잡기",
+      "name": "이미 설명한 교환 제안·수락",
+      "candidate": "같은 교환 과정의 제안·응수·가격을 각각 독립 주제로 반복하는 경우.",
+      "keep_if": "교환 거부, 중간수, 잘못된 수락, 유일한 방어 제거는 선택의 답이 된다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "zwischenzug",
+        "sicilian"
+      ]
+    },
+    {
+      "id": "same-observed-price",
+      "group": "교환·되잡기",
+      "name": "양쪽 수순의 같은 관측 가격",
+      "candidate": "두 선택의 실제 가격이 같다는 내용은 한 번의 공통 비교로 충분한 경우.",
+      "keep_if": "가격이 같다는 사실로 수의 동등성·강제성·평가 원인을 단정하지 않는다.",
+      "disposition": "one_bounded_comparison",
+      "source_ids": [
+        "fundamentals",
+        "nimzo"
+      ]
+    },
+    {
+      "id": "forced-check-response",
+      "group": "응수·강제 수순",
+      "name": "이미 설명한 체크의 통상적인 응수",
+      "candidate": "앞의 체크 장면을 이해하는 데 필요한 응수를 별도의 새 사건처럼 소개하는 경우.",
+      "keep_if": "응수 선택이 손실·킹 진입·다음 체크·스테일메이트를 바꾸거나 단 하나의 수로 결과를 지키면 설명한다.",
+      "disposition": "merge_into_reply",
+      "source_ids": [
+        "fundamentals",
+        "fide-laws"
+      ]
+    },
+    {
+      "id": "straightforward-retreat",
+      "group": "응수·강제 수순",
+      "name": "평범한 공격 회피·후퇴",
+      "candidate": "공격받은 기물이 빠지는 장면이 이미 현재 설명에 포함된 경우.",
+      "keep_if": "다른 포크 대상의 손실, 지원 포기, 반격, 안전한 칸의 차이가 있으면 남긴다.",
+      "disposition": "merge_into_reply",
+      "source_ids": [
+        "chesstempo",
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "routine-interposition",
+      "group": "응수·강제 수순",
+      "name": "단순한 차단·수비 보충",
+      "candidate": "현재 답에서 앞의 공격에 대한 응수로 이미 기능을 말한 경우.",
+      "keep_if": "차단 기물의 희생, 핀, 유일수, 방어 의무 충돌, 되잡기 비용은 유지한다.",
+      "disposition": "merge_into_reply",
+      "source_ids": [
+        "fide-laws",
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "forced-chain-middle",
+      "group": "응수·강제 수순",
+      "name": "검증된 연속 응수의 중간 단계",
+      "candidate": "같은 장면의 목적과 최종 가격을 설명하면서 중간 수마다 독립 해설을 붙이는 경우.",
+      "keep_if": "강제성은 별도 근거가 있어야 하고 중요한 분기·실수·회복·결과는 생략하지 않는다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "fundamentals",
+        "zwischenzug"
+      ]
+    },
+    {
+      "id": "incidental-contact",
+      "group": "공격·지원·이력",
+      "name": "부수적인 공격 대상 증가",
+      "candidate": "기하 공격이 생겼지만 선택한 질문의 실제 사용·응수·결과와 연결되지 않는 경우.",
+      "keep_if": "공짜 포획·포크·메이트·예방·상대 선택 제한으로 검증되면 핵심이 될 수 있다.",
+      "disposition": "detail_or_omit",
+      "source_ids": [
+        "prophylaxis",
+        "chesstempo"
+      ]
+    },
+    {
+      "id": "incidental-support",
+      "group": "공격·지원·이력",
+      "name": "부수적인 지원 관계",
+      "candidate": "새 지원 또는 기존 지원이 있다는 사실만으로 독립 문장을 만드는 경우.",
+      "keep_if": "실제 되잡기, 기존 지원 인계, 방어 의무 충돌, 지원 중단의 손실은 유지한다.",
+      "disposition": "detail_or_omit",
+      "source_ids": [
+        "sicilian",
+        "nimzo"
+      ]
+    },
+    {
+      "id": "piece-presence",
+      "group": "공격·지원·이력",
+      "name": "기물의 잔존·다음 이동 이력",
+      "candidate": "기물이 이후에도 같은 칸에 있거나 다음 수에 다른 칸으로 간다는 추적 결과만 반복하는 경우.",
+      "keep_if": "공격 대상이 살아남았는지, 승격한 기물인지, 마지막 물질·종결 상태인지가 답을 바꾸면 남긴다.",
+      "disposition": "detail_or_omit",
+      "source_ids": [
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "unused-clearance",
+      "group": "공격·지원·이력",
+      "name": "사용되지 않은 비워진 칸·열린 선",
+      "candidate": "통로 변화가 있지만 선택한 설명과 연결된 실제 사용이나 검증된 가능성이 없는 경우.",
+      "keep_if": "같은 경로의 실제 진입·포획·지원·킹 탈출 조건을 성립시키면 보존한다.",
+      "disposition": "detail_or_omit",
+      "source_ids": [
+        "sicilian",
+        "game-changer"
+      ]
+    },
+    {
+      "id": "irrelevant-blockage",
+      "group": "공격·지원·이력",
+      "name": "무관한 레이 차단·유지",
+      "candidate": "먼 퀸·룩·킹과의 선을 막거나 유지한다는 기하 기록이 현재 선택에 답하지 않는 경우.",
+      "keep_if": "핀·킹 노출·실제 돌파·방어자 이동과 연결되면 설명한다.",
+      "disposition": "detail_or_omit",
+      "source_ids": [
+        "sicilian",
+        "fide-laws"
+      ]
+    },
+    {
+      "id": "ordinary-king-step",
+      "group": "종반·반복",
+      "name": "이미 설명한 킹 경로의 한 걸음",
+      "candidate": "킹의 목적과 경로를 이미 설명한 장면 안의 반복 이동.",
+      "keep_if": "오포지션·대응칸·삼각 기동·예비 템포·차례 차이를 단순 이동으로 버리지 않는다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "endgame",
+        "opposition",
+        "zugzwang"
+      ]
+    },
+    {
+      "id": "passer-progress",
+      "group": "종반·반복",
+      "name": "이미 설명한 통과폰의 반복 전진",
+      "candidate": "승격 목표와 현재 대응을 설명한 후 각 폰 전진을 별도 사건으로 반복하는 경우.",
+      "keep_if": "경주 차례·승격 선택·지원 포기·스테일메이트·되잡기·전진 전에 필요한 수는 남긴다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "endgame",
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "technical-mate-progress",
+      "group": "종반·반복",
+      "name": "기본 메이트 절차의 반복 단계",
+      "candidate": "킹을 몰고 제한하는 목표가 이미 설명됐고 중간 수가 같은 절차를 이어가는 경우.",
+      "keep_if": "스테일메이트 방지, 마지막 메이트, 절차를 깨는 실수·방어 자원은 유지한다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "fundamentals",
+        "fide-laws"
+      ]
+    },
+    {
+      "id": "repeated-defence",
+      "group": "종반·반복",
+      "name": "같은 수비·체크 장면의 반복",
+      "candidate": "같은 조건과 목적을 유지하는 반복을 매번 새 해설로 표현하는 경우.",
+      "keep_if": "반복에서 벗어나는 선택, 잃은 수비 자원, 실제 무승부 권리·확인된 종결은 따로 전달한다.",
+      "disposition": "merge_into_episode",
+      "source_ids": [
+        "endgame",
+        "fide-laws"
+      ]
+    },
+    {
+      "id": "equivalent-function",
+      "group": "공통점·전달",
+      "name": "같은 질문에 같은 기능으로 답하는 선택",
+      "candidate": "두 수순에서 같은 대상·행동·관측 결과가 확인돼 각 기능을 중복 소개할 필요가 없는 경우.",
+      "keep_if": "평가가 비슷하다는 이유만으로 기능이 같다고 판단하지 않는다. 남은 실제 차이는 별도로 말한다.",
+      "disposition": "one_bounded_comparison",
+      "source_ids": [
+        "fundamentals",
+        "chesstempo"
+      ]
+    },
+    {
+      "id": "already-explained",
+      "group": "공통점·전달",
+      "name": "앞에서 이미 전달한 내용의 재발화",
+      "candidate": "같은 질문과 주장 범위에서 조건·실제 사용·가격이 이미 포함된 경우.",
+      "keep_if": "다른 시점의 역할 변경·상대 반격·새 의무·새 결과는 내용이 다르므로 중복으로 지우지 않는다.",
+      "disposition": "merge_or_detail",
+      "source_ids": [
+        "fundamentals"
+      ]
+    },
+    {
+      "id": "board-obvious",
+      "group": "공통점·전달",
+      "name": "보드·SAN에서 바로 읽히는 이동 기록",
+      "candidate": "어느 기물이 어느 칸으로 갔는지 이상의 선택 이유를 전달하지 않는 문장.",
+      "keep_if": "정체성 혼동·두 나이트 구별·승격·수의 발생 위치가 설명에 필수라면 정확한 참조를 유지한다.",
+      "disposition": "omit_standalone",
+      "source_ids": [
+        "fundamentals"
+      ]
+    }
+  ],
+  "minimal_policy_hypothesis": [
+    "기존 선택 질문의 비교 대상과 주장 범위에서 내용이 어떤 역할을 하는지 먼저 확인한다.",
+    "앞의 주장을 성립시키거나 수정하는 실제 조건·응수·대가·결과는 수가 평범해도 남긴다.",
+    "그 밖의 단순 위치·존재·공격·지원 이력은 독립 본문 입구로 사용하지 않는다.",
+    "같은 대상을 양쪽에서 비교하고 실제 공통점은 한 번 말한다. 중요한 차이가 여러 개면 억지로 한 주제로 합치지 않는다.",
+    "새로운 전술 이름이나 소규모 예외표를 만들기보다 기존 QuestionFocus/typed Answer의 실제 사용·가격·결과를 재사용한다."
+  ],
+  "forbidden_shortcuts": [
+    "quiet → 중요하지 않다",
+    "capture/recapture → 무조건 지운다",
+    "only legal move → 독자가 설명할 필요 없다",
+    "best move → 특별히 해설할 가치가 있다",
+    "small evaluation difference → 두 수의 체스적 의미가 같다",
+    "equal net material → 되잡기와 구조·활동의 차이가 없다",
+    "author did not annotate → 불필요한 수의 정답이다",
+    "no detected threat → 위협이나 목적이 존재하지 않는다",
+    "all basic explanations removed → 14/18 유용성이 달성됐다"
+  ],
+  "validation_needed": [
+    "기존 실제 마스터 기보에서 독립 해설만 제거한 출력과 필요한 응수·가격을 함께 묶은 출력을 구분해 비교.",
+    "표현 수정 없이 typed 내용 선택만 바꾼 대조로 본문 과다 생성 입구의 효과 확인.",
+    "생략이 적절한 사례뿐 아니라 quiet threat/prophylaxis/recapture choice/pawn structure/only defence/promotion/terminal 반례 보존.",
+    "판정 규칙을 고정한 뒤 다른 기보에서 확인. 이번 저장 기보 집계는 회귀·탐색이며 새 일반화 평가가 아니다."
+  ]
+}

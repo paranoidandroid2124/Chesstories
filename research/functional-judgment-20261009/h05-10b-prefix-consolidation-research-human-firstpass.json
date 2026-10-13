@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T21:42:10.835930+00:00",
+  "phase": "Independent target-only10b prefix-consolidation research BASIC first reading, sealed before this experiment's native/Task/diagnostic audit",
+  "input": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-prefix-consolidation-research-basic.json",
+    "sha256": "b29e5adeab1869ebada5eaf1923aa13a3ebec6e59b73c309b6b3257c675e944d",
+    "exported_source_sha256": "1934786bf02fd27249bf30bd3b34a58bfbf1d36281b3bbfc50f686e71375d063",
+    "run": "h05-10b-prefix-consolidation-research-only",
+    "case_id": "H05",
+    "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "g3g4",
+      "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+    },
+    "verdict": {
+      "kind": "move_verdict",
+      "comparison_evidence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:candidate-comparison:59634c0d64ea1adc65ef89b82a04186236a375e759b2dd6a97a159227f590024",
+      "verdict_code": "blunder",
+      "verdict_confidence": "engine_backed",
+      "mover": "white",
+      "delta": {
+        "candidate_win_percent_delta_for_mover": -20.06847027264081,
+        "kind": "engine_evaluation"
+      }
+    },
+    "text": "g4 advances the pawn from g3; Ke3 defers that advance. After Ke3 f6, prefer Kf3 to an immediate g4. A leading tested reply to g4 is b3; after Kf3 it is Kd6. After b3, the white pawn originally on g3 is still present on g4.After Kd6, the white pawn originally on g3 is still present on g3. The compared root choices are Ke3 and g4. g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance.",
+    "text_sha256": "25ffa608cc1f29cf17da76d11921d1775261e3115c31bab0f435e6cbd20e4154",
+    "text_characters": 648,
+    "default_question": "functional_response"
+  },
+  "unchanged_criteria": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-functional-root-value-human-contract-supplement-20261009.json",
+      "sha256": "194934ce44a158d83356246d32be3257133f56bc032c3dbb83f86a62dde2ab30",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+      "changed": false
+    }
+  ],
+  "presealed_reasoning": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+    "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94",
+    "not_an_acceptance_revision": true
+  },
+  "preserved_prior_firstpasses": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-human-firstpass.json",
+      "sha256": "b1259299b8113581025be17d24f6bfbc3685fbfe539d0e01ed692686862afc82",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-resume180-human-firstpass.json",
+      "sha256": "7d4be23640cc5dbf58bb050a9749822dbe8b5d186e1e97994d101a2827f57717",
+      "changed": false
+    }
+  ],
+  "research_scope": "Peer identifies this as target-only prefix-proof consolidation, not a production10c success. Its native completion or number of reused reports is not used to score human utility.",
+  "human_status": {
+    "limited_retained_advance_purpose": "delivered",
+    "conditional_own_choice_after_f6": "delivered as direct preference for Kf3 over immediate g4",
+    "leading_tested_opponent_replies": "delivered: b3 after that g4 and Kd6 after Kf3, within the stated conditional context",
+    "original_pawn_identity_and_current_location": "delivered as factual persistence",
+    "recorded_turn_transfer": "delivered, recorded scope retained",
+    "value_after_adequate_counter": "partial: reply names/pawn presence are visible, their defensive task and useful resulting conversion are not",
+    "original_g4_vs_Ke3_judgment": "partial",
+    "whole_human_question": "partial",
+    "sole_root_numerical_cause": "not established and not explicitly claimed"
+  },
+  "recoverable": [
+    "g4 advances original Pg3 to g4; Ke3 defers that advance.",
+    "After Ke3 f6, prefer Kf3 to immediate g4.",
+    "A leading tested reply after that g4 is b3; after Kf3 it is Kd6.",
+    "The original g3 pawn remains on g4 in the b3 branch and on g3 in the Kd6 branch.",
+    "The recorded Kf3 Kd6 Ke2 Ke5 Ke3 manoeuvre passes the move while retaining Pg3."
+  ],
+  "actual_new_gain_vs_held10b": [
+    "The previous tested-value sentence now becomes a direct conditional recommendation.",
+    "The opponent's distinct leading tested reply is named in each own-choice arm instead of merely showing the old cycle.",
+    "The original pawn actor's post-reply locations are explicit; default question changes from investigated_mechanism to functional_response."
+  ],
+  "essential_connection_still_missing": [
+    {
+      "topic": "Meaning of adequate f6",
+      "missing": "Why f6 and the king’s blockade prevent useful g5/king progress, and the relevant cost of trying anyway."
+    },
+    {
+      "topic": "Effect of b3 versus Kd6",
+      "missing": "What b3 preserves or denies after the immediate pawn advance, and what useful preparation/pressure Kd6 allows after Kf3. Keeping the original pawn at a named square is not the resulting value."
+    },
+    {
+      "topic": "Why turn transfer matters",
+      "missing": "No concrete pressure makes Black change its adequate waiting posture, and no useful priced entry, exchange, supported passer or race is connected to that change."
+    },
+    {
+      "topic": "Different first defense",
+      "missing": "The Ke6 alternative and its appropriate king/queenside plan are not organised. This does not require all branches in basic, but the f6 construction must not stand in for every original adequate defense."
+    },
+    {
+      "topic": "Original judgment",
+      "missing": "The conditional recommendation after Ke3 f6 is not returned to an adequately resisted comparison of the original choices. The unchanged blunder label cannot fill that connection."
+    }
+  ],
+  "necessary_price_boundary": "No specific winning conversion is printed, so this pass does not demand every book pawn sacrifice. A meaningful conversion claim would require its actual capture/check/race price; merely listing survival on g4/g3 does not establish safety or utility.",
+  "unnecessary_or_unorganized_content_groups": [
+    "Advances/defers Pg3 and spends/keeps a pawn move repeat the same retention fact.",
+    "Prefer Kf3 and tested Kf3 evaluates above immediate g4 repeat the same local recommendation.",
+    "The compared-root declaration and inherited cycle repeat older content while the current reply consequences remain unexplained."
+  ],
+  "presentation_issue": "There is no space between g4.After Kd6, joining two sentences. This is minor readability; correcting it alone would not complete the human answer.",
+  "explicit_unsupported_causal_claim_count": 0,
+  "explicit_all_defense_forced_or_unique_win_claim_count": 0,
+  "interpretation_risks": [
+    "A leading tested reply is a properly finite statement, but its proximity to the root blunder verdict may imply it explains the complete original cause.",
+    "The still-present pawn facts can be mistaken for a proven useful reserve or safety claim if their actual subsequent task and price remain unstated.",
+    "The f6-conditioned b3 reply must not be confused with the original first Black reply to root g4 or the different late book b3 state."
+  ],
+  "visible_comparison": {
+    "prior_basic": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-resume180-basic.json",
+      "sha256": "883ce7e1907311a352a1402ae6a01e2ed6806c07999a069bba22ef7e7ae13992"
+    },
+    "verdict_exactly_unchanged": true,
+    "focus_root_exactly_unchanged": true,
+    "prior_text_characters": 317,
+    "new_text_characters": 648,
+    "prose_changed": true,
+    "new_basic_gain": "Bounded current conditional recommendation plus tested opponent replies; original timing/value chain remains partial."
+  },
+  "internal_evidence_boundary": "No hidden audit/diagnostic/Task/native source for this target-only experiment was read before the seal. The peer's six-report/no-new-query description is provenance only. Neither bounded completion nor internal typed admission supplies missing prose.",
+  "preserved_results": {
+    "old_four_full_utility": "0/4 unchanged",
+    "eight_source_full_utility": "0/8 unchanged",
+    "prior10a_10b": "First passes unchanged",
+    "current_research": "Exposed development demonstration with a genuine bounded reply/value delivery gain, not full original-root utility or production10c success"
+  },
+  "work_scope": "New research JSON only, no source/main/test/UI edit, runner/compiler/engine or new numerical calculation.",
+  "next_phase": "If requested, inspect current held native evidence separately to distinguish completed bounded value absent from prose from still-unproved original strongest-defense/root cause. Keep this first pass immutable."
+}

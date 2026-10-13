@@ -61,7 +61,8 @@ def paired_cluster_contrast(
     non-dotted key absent at the row top level is looked up in ``diagnostics``.
     """
 
-    _validate_contrast_arguments(
+    distribution = _paired_cluster_bootstrap_distribution(
+        rows,
         treatment_arm=treatment_arm,
         control_arm=control_arm,
         value_key=value_key,
@@ -70,72 +71,8 @@ def paired_cluster_contrast(
         confidence=confidence,
         alternative=alternative,
     )
-    treatment: dict[str, tuple[str, float]] = {}
-    control: dict[str, tuple[str, float]] = {}
-
-    for row_number, row in enumerate(rows, start=1):
-        if not isinstance(row, Mapping):
-            raise TypeError(f"row {row_number} must be a mapping")
-        arm_id = row.get("arm_id")
-        if arm_id not in {treatment_arm, control_arm}:
-            continue
-        sample_id = _required_text(row, "sample_id", row_number)
-        cluster_id = _required_text(row, "atomic_cluster_id", row_number)
-        value = _extract_numeric_value(row, value_key, row_number)
-        destination = treatment if arm_id == treatment_arm else control
-        if sample_id in destination:
-            raise ValueError(
-                f"duplicate row for sample {sample_id!r} and arm {arm_id!r}"
-            )
-        destination[sample_id] = (cluster_id, value)
-
-    if not treatment and not control:
-        raise ValueError("no rows matched either requested arm")
-    treatment_ids = set(treatment)
-    control_ids = set(control)
-    if treatment_ids != control_ids:
-        missing_treatment = sorted(control_ids - treatment_ids)
-        missing_control = sorted(treatment_ids - control_ids)
-        raise ValueError(
-            "paired arms contain different sample sets; "
-            f"missing treatment={missing_treatment}, missing control={missing_control}"
-        )
-    if not treatment_ids:
-        raise ValueError("paired contrast requires at least one sample")
-
-    cluster_differences: dict[str, list[float]] = {}
-    for sample_id in sorted(treatment_ids):
-        treatment_cluster, treatment_value = treatment[sample_id]
-        control_cluster, control_value = control[sample_id]
-        if treatment_cluster != control_cluster:
-            raise ValueError(
-                f"sample {sample_id!r} changes atomic cluster across paired arms: "
-                f"{treatment_cluster!r} != {control_cluster!r}"
-            )
-        cluster_differences.setdefault(treatment_cluster, []).append(
-            treatment_value - control_value
-        )
-
-    clusters = sorted(cluster_differences)
-    cluster_summaries = [
-        (sum(cluster_differences[cluster]), len(cluster_differences[cluster]))
-        for cluster in clusters
-    ]
-    observed = sum(total for total, _ in cluster_summaries) / sum(
-        count for _, count in cluster_summaries
-    )
-
-    generator = random.Random(seed)
-    bootstrap_estimates: list[float] = []
-    cluster_count = len(cluster_summaries)
-    for _ in range(iterations):
-        sampled_total = 0.0
-        sampled_count = 0
-        for _ in range(cluster_count):
-            total, count = cluster_summaries[generator.randrange(cluster_count)]
-            sampled_total += total
-            sampled_count += count
-        bootstrap_estimates.append(sampled_total / sampled_count)
+    observed = distribution["estimate"]
+    bootstrap_estimates = distribution["bootstrap_estimates"]
 
     ordered = sorted(bootstrap_estimates)
     alpha = 1.0 - confidence
@@ -179,8 +116,8 @@ def paired_cluster_contrast(
         "bootstrap_standard_error": bootstrap_standard_error,
         "iterations": iterations,
         "seed": seed,
-        "n_samples": len(treatment_ids),
-        "n_clusters": cluster_count,
+        "n_samples": distribution["n_samples"],
+        "n_clusters": distribution["n_clusters"],
     }
 
 
@@ -863,8 +800,10 @@ def _paired_cluster_bootstrap_distribution(
     value_key: str,
     iterations: int,
     seed: int,
+    confidence: float = 0.95,
+    alternative: str = "less",
 ) -> dict[str, Any]:
-    """Return the bootstrap draws needed for a threshold-equivalence test."""
+    """Pair samples and resample whole atomic clusters for both contrast tests."""
 
     _validate_contrast_arguments(
         treatment_arm=treatment_arm,
@@ -872,8 +811,8 @@ def _paired_cluster_bootstrap_distribution(
         value_key=value_key,
         iterations=iterations,
         seed=seed,
-        confidence=0.95,
-        alternative="less",
+        confidence=confidence,
+        alternative=alternative,
     )
     treatment: dict[str, tuple[str, float]] = {}
     control: dict[str, tuple[str, float]] = {}

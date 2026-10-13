@@ -38,16 +38,9 @@ private[runtime] object CommentaryChoiceValue:
       "ply_offset" -> comparison.anchor.plyOffset,
       "useful" -> useful, "refuted" -> refuted)
 
-  /** The current same-profile, sufficient-depth unrestricted pool owns
-    * selection. A named pair alone never certifies the strongest alternative.
-    */
-  private def completedDepth(search: Search): Option[Int] =
-    val depths = search.lines.flatMap(_.evaluation.engineLine.map(_.depth))
-    Option.when(depths.size == search.lines.size && depths.nonEmpty && depths.distinct.size == 1)(depths.head)
-
   def pairDepth(packet: EvidenceBackedJudgmentPacket, prefix: List[String],
       searches: List[Search], profile: String, minimumDepth: Int): Int =
-    latestPool(packet, prefix, searches, profile, minimumDepth).flatMap(completedDepth)
+    latestPool(packet, prefix, searches, profile, minimumDepth).flatMap(_.completedDepth)
       .getOrElse(minimumDepth)
 
   /** A pair that completed beyond the selection pool requires a new full
@@ -68,42 +61,27 @@ private[runtime] object CommentaryChoiceValue:
       search.anchor.prefixMoves == prefix && search.anchor.plyOffset == prefix.size &&
       search.work.rootRestriction == EngineRootRestriction.Unrestricted &&
       search.work.engineProfile.wireId == profile &&
-      completedDepth(search).exists(_ >= minimumDepth))
-      .sortBy(search => (-completedDepth(search).get, -search.work.requiredDepth)).headOption
+        search.completedDepth.exists(_ >= minimumDepth))
+      .sortBy(search => (-search.completedDepth.get, -search.work.requiredDepth)).headOption
 
   /** A later exact counter can retire this selection pool. Its owned pair
     * supplies the contradiction; values are never copied into the old pool.
     * Do not fall back to an older selection after the current one failed. */
-  private def contradicts(packet: EvidenceBackedJudgmentPacket, pool: Search, counter: Search): Boolean =
-    counter.belongsTo(packet) && counter.anchor.scopeKey == pool.anchor.scopeKey &&
-      counter.work.engineProfile == pool.work.engineProfile &&
-      completedDepth(counter) == completedDepth(pool) && pool.lines.headOption.exists { first =>
-        val leader = first.evaluation.moves.head
-        counter.lines.exists(line => line.evaluation.moves.head != leader &&
-          counter.pairAnswer(packet, leader, line.evaluation.moves.head).exists(answer =>
-            answer.qualityBand.contains(QualityBand.Separated) && answer.evaluationRelation == "better"))
-      }
-
-  private def retired(packet: EvidenceBackedJudgmentPacket, pool: Search, searches: List[Search]): Boolean =
-    searches.drop(searches.indexWhere(_ eq pool) + 1).exists(counter => contradicts(packet, pool, counter))
+  private def selection(packet: EvidenceBackedJudgmentPacket, prefix: List[String],
+      searches: List[Search], profile: String, minimumDepth: Int): Option[CommentaryComparisonConflict.Selection] =
+    latestPool(packet, prefix, searches, profile, minimumDepth)
+      .map(pool => new CommentaryComparisonConflict.Selection(packet, pool, searches)).filterNot(_.rankingReversed)
 
   def survey(packet: EvidenceBackedJudgmentPacket, prefix: List[String],
       searches: List[Search], profile: String, minimumDepth: Int): Option[Search] =
-    latestPool(packet, prefix, searches, profile, minimumDepth).filterNot(retired(packet, _, searches))
-
-  /** Normal depth alignment may reuse a matching named receipt. After a
-    * contradicted selection epoch, an omitted candidate needs a fresh pair;
-    * its pre-refresh counter cannot become the new pool's current value. */
-  private def inCurrentEpoch(packet: EvidenceBackedJudgmentPacket, pool: Search,
-      compared: Search, searches: List[Search]): Boolean =
-    searches.indexWhere(_ eq compared) >= CommentaryComparisonConflict.selectionEpochStart(packet, pool, searches)
+    selection(packet, prefix, searches, profile, minimumDepth).map(_.pool)
 
   def strongestOther(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       pool: Search, referenceMove: String): Option[String] =
     paths.requireOwner(packet)
     for
       _ <- Option.when(pool.belongsTo(packet) &&
-        pool.work.rootRestriction == EngineRootRestriction.Unrestricted && completedDepth(pool).nonEmpty)(())
+        pool.work.rootRestriction == EngineRootRestriction.Unrestricted && pool.completedDepth.nonEmpty)(())
       path <- pool.lines.headOption.flatMap(line => pool.pathsByMove.get(line.evaluation.moves.head))
       if paths.paths.exists(_ eq path)
       rows <- paths.positionView(path, pool.anchor.plyOffset).flatMap(_.legalRows)
@@ -118,7 +96,7 @@ private[runtime] object CommentaryChoiceValue:
     */
   def adequateReplies(packet: EvidenceBackedJudgmentPacket, pool: Search): List[String] =
     if !pool.belongsTo(packet) || pool.work.rootRestriction != EngineRootRestriction.Unrestricted ||
-        completedDepth(pool).isEmpty then Nil
+        pool.completedDepth.isEmpty then Nil
     else pool.lines.headOption.toList.flatMap { leader =>
       val move = leader.evaluation.moves.head
       move :: pool.lines.tail.flatMap { peer =>
@@ -131,35 +109,41 @@ private[runtime] object CommentaryChoiceValue:
   def read(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       question: CompareMoves, searches: List[Search], profile: String,
       minimumDepth: Int): Option[Checked] =
-    rawCandidate(packet, paths, question, searches, profile, minimumDepth)
-      .filter(value => CommentaryComparisonConflict.selectionConflict(packet, value.survey, searches,
-        Set(question.referenceMove, question.alternativeMove)).isEmpty)
+    resolve(packet, paths, question, searches, profile, minimumDepth).toOption.flatten
 
   /** The exact current selection/value conflict is a required local dependency.
     * Its child's answer cannot become this choice's owned numerical value. */
   def conflict(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       question: CompareMoves, searches: List[Search], profile: String,
       minimumDepth: Int): Option[CommentaryComparisonConflict.Conflict] =
-    rawCandidate(packet, paths, question, searches, profile, minimumDepth)
-      .flatMap(value => CommentaryComparisonConflict.selectionConflict(packet, value.survey, searches,
-        Set(question.referenceMove, question.alternativeMove)))
+    resolve(packet, paths, question, searches, profile, minimumDepth).left.toOption
+
+  def resolve(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      question: CompareMoves, searches: List[Search], profile: String,
+      minimumDepth: Int): Either[CommentaryComparisonConflict.Conflict, Option[Checked]] =
+    rawCandidate(packet, paths, question, searches, profile, minimumDepth) match
+      case None => Right(None)
+      case Some((value, current)) =>
+        current.valueConflict(Set(question.referenceMove, question.alternativeMove)).toLeft(Some(value))
 
   private def rawCandidate(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       question: CompareMoves, searches: List[Search], profile: String,
-      minimumDepth: Int): Option[Checked] =
+      minimumDepth: Int): Option[(Checked, CommentaryComparisonConflict.Selection)] =
     paths.requireOwner(packet)
     for
-      pool <- survey(packet, question.prefixMovesUci, searches, profile, minimumDepth)
+      current <- selection(packet, question.prefixMovesUci, searches, profile, minimumDepth)
+      pool = current.pool
       strongest <- strongestOther(packet, paths, pool, question.referenceMove)
       if strongest == question.alternativeMove
       selected <- pool.pathsByMove.get(strongest)
+      epochStart = current.epochStart
       compared <- searches.reverse.filter(search => search.belongsTo(packet) &&
         search.anchor.scopeKey == pool.anchor.scopeKey && search.work.engineProfile == pool.work.engineProfile &&
-        completedDepth(search).exists(_ >= minimumDepth))
+        search.completedDepth.exists(_ >= minimumDepth))
         .sortBy(search => -search.work.requiredDepth).find(search =>
-          inCurrentEpoch(packet, pool, search, searches) &&
+          searches.indexWhere(_ eq search) >= epochStart &&
           search.pairAnswer(packet, question.referenceMove, question.alternativeMove).exists(answer =>
-            answer.referenceDepth == completedDepth(pool) && answer.alternativeDepth == completedDepth(pool)))
+            answer.referenceDepth == pool.completedDepth && answer.alternativeDepth == pool.completedDepth))
       answer <- compared.pairAnswer(packet, question.referenceMove, question.alternativeMove)
       reference <- compared.pathsByMove.get(question.referenceMove)
       alternative <- compared.pathsByMove.get(question.alternativeMove)
@@ -172,4 +156,4 @@ private[runtime] object CommentaryChoiceValue:
         alternative.moves.take(count + 1) == selected.moves.take(count + 1) &&
         alternative.ids.take(count + 1) == selected.ids.take(count + 1) &&
         alternative.positions.take(count + 2) == selected.positions.take(count + 2)
-    yield new Checked(packet, paths, question, pool, compared, answer, reference, alternative)
+    yield (new Checked(packet, paths, question, pool, compared, answer, reference, alternative), current)

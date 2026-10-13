@@ -19,6 +19,19 @@ object RuntimeProtocol:
 
   final case class Result(httpStatus: Int, body: JsObject)
 
+  /** Initialize replay, relation and serialization machinery before timed
+    * requests. No engine score, search or retained user job is created. */
+  private[runtime] def initialize(): Unit =
+    val initial = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    val line = "e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7".split(" ").toList
+    val prepared = for
+      history <- lila.chessjudgment.model.line.CanonicalPositionHistory.from(initial, Nil, initial).toOption
+      input <- MoveReviewInputAdmission.admitIndependent(history, line.head,
+        suppliedLines = List(SuppliedCommentaryLine(CommentaryLineSource.Study, line)))
+      packet <- EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assembleOccurrences(input))
+    yield observationsJson(packet).toString
+    require(prepared.exists(_.nonEmpty), "commentary initialization failed")
+
   private[runtime] def acceptsRequestId(value: String): Boolean =
     InputLimits.validRequestId(value)
 
@@ -108,6 +121,61 @@ object RuntimeProtocol:
 
   private[runtime] def moveCommentaryJson(packet: EvidenceBackedJudgmentPacket): JsObject =
     MoveMeaningProjection.moveCommentaryJson(packet) ++ Json.obj("observations" -> observationsJson(packet))
+
+  private def observationPathsJson(packet: EvidenceBackedJudgmentPacket,
+      preparedPaths: ObservedLineProtocol.PreparedPaths,
+      conditionalByLine: Map[String, List[JsObject]], availablePositions: Option[Set[String]] = None): List[JsObject] =
+    val ctx = packet.assembly
+    val evaluationsByMoves = ctx.input.evaluationObservations.groupBy(_.evaluation.moves)
+    def resourceId(position: PositionNodeRef): Option[String] = preparedPaths.resourceId(position)
+      .filter(id => availablePositions.forall(_(id)))
+    preparedPaths.paths.map { path =>
+        val line = path.line
+        val ids = path.ids
+        val moves = path.moves
+        val sources = ctx.input.suppliedLines.filter(_.acceptedMoves.startsWith(moves))
+          .map(_.input.source.wireId).distinct.sorted
+        Json.obj(
+          "id" -> line.ref.id,
+          "kind" -> (if ids.size == 1 && moves.head == ctx.input.playedMoveUci then "played" else "analysis"),
+          "start_fen" -> ctx.input.positionHistory.currentFen,
+          "moves" -> moves,
+          "occurrence_ids" -> ids,
+          "position_ids" -> path.positions.map(resourceId)
+        ) ++ Option.when(sources.nonEmpty)(Json.obj("sources" -> sources)).getOrElse(Json.obj()) ++
+          ObservedLineProtocol.summaryJson(path).map(value => Json.obj("line_summary" -> value)).getOrElse(Json.obj()) ++
+          Option.when(evaluationsByMoves.contains(path.sourceMoves))(Json.obj("evaluations" ->
+            evaluationsByMoves(path.sourceMoves).map(value => ObservedLineProtocol.evaluationJson(value.evaluation, value.source))))
+            .getOrElse(Json.obj()) ++
+          conditionalByLine.get(line.ref.id).map(values => Json.obj("conditional_evaluations" -> values))
+            .getOrElse(Json.obj())
+    }
+
+  /** A pending first-response work needs its exact root/child inventories and
+    * receipts, not every future position catalogue or rendered explanation.
+    * Omitted future catalogues have explicit null resource references. Full
+    * paths, scores and material summaries retain their original identities. */
+  private[runtime] def responseWorkObservationsJson(packet: EvidenceBackedJudgmentPacket,
+      paths: ObservedLineProtocol.PreparedPaths, inquiries: List[CommentaryResponseInquiry],
+      searches: List[TargetResponseInvestigation.Search]): JsObject =
+    paths.requireOwner(packet)
+    require(searches.forall(_.belongsTo(packet)))
+    val positions = inquiries.flatMap(value => List(value.question.rootPositionId, value.question.childPositionId)).toSet ++
+      searches.map(_.anchor.positionId) ++ paths.movePurpose.toList.flatMap(_.resourcePositions)
+    val conditional = searches.flatMap(search => search.lines.map { line =>
+      search.pathsByMove(line.evaluation.moves.head).line.ref.id ->
+        Json.obj("search_position_id" -> search.anchor.positionId, "ply_offset" -> search.anchor.plyOffset,
+          "evaluation" -> ObservedLineProtocol.evaluationJson(line.evaluation, EvaluationSource.ResponseComparison))
+    }).groupMap(_._1)(_._2).view.mapValues(_.distinct).toMap
+    val selection = Json.obj("version" -> 2, "candidates" -> Json.arr(), "scenes" -> Json.arr(),
+      "response_searches" -> searches.map(_.json),
+      "response_inquiries" -> inquiries.map(inquiry => TargetResponseInvestigation.snapshot(inquiry.question,
+        inquiry.state, inquiry.answer.map(_.json), inquiry.stopReason))) ++
+      paths.movePurpose.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj())
+    Json.obj("statements" -> Json.arr(),
+      "paths" -> observationPathsJson(packet, paths, conditional, Some(positions)),
+      "positions" -> packet.resources.filter(view => view.position.id.exists(positions)).map(PositionResourceProtocol.json),
+      "selection" -> selection)
 
   private[runtime] def observationsJson(packet: EvidenceBackedJudgmentPacket,
       inquiries: List[CommentaryInquiry] = Nil,
@@ -241,27 +309,6 @@ object RuntimeProtocol:
       }
     }).groupMap(_._1)(_._2).view.mapValues(_.distinct).toMap
     def resourceId(position: PositionNodeRef): Option[String] = preparedPaths.resourceId(position)
-    val paths = preparedPaths.paths.map { path =>
-        val line = path.line
-        val ids = path.ids
-        val moves = path.moves
-        val sources = ctx.input.suppliedLines.filter(_.acceptedMoves.startsWith(moves))
-          .map(_.input.source.wireId).distinct.sorted
-        Json.obj(
-          "id" -> line.ref.id,
-          "kind" -> (if ids.size == 1 && moves.head == ctx.input.playedMoveUci then "played" else "analysis"),
-          "start_fen" -> ctx.input.positionHistory.currentFen,
-          "moves" -> moves,
-          "occurrence_ids" -> ids,
-          "position_ids" -> path.positions.map(resourceId)
-        ) ++ Option.when(sources.nonEmpty)(Json.obj("sources" -> sources)).getOrElse(Json.obj()) ++
-          ObservedLineProtocol.summaryJson(path).map(value => Json.obj("line_summary" -> value)).getOrElse(Json.obj()) ++
-          Option.when(evaluationsByMoves.contains(path.sourceMoves))(Json.obj("evaluations" ->
-            evaluationsByMoves(path.sourceMoves).map(value => ObservedLineProtocol.evaluationJson(value.evaluation, value.source))))
-            .getOrElse(Json.obj()) ++
-          conditionalByLine.get(line.ref.id).map(values => Json.obj("conditional_evaluations" -> values))
-            .getOrElse(Json.obj())
-    }
     val historyPath = ctx.input.positionHistory.segmentReplaySteps.lastOption.toList.flatMap { previous =>
       ctx.playedTransition.toList.filter(edge => eligible(edge.evidence.id)).map { played =>
         Json.obj(
@@ -274,7 +321,8 @@ object RuntimeProtocol:
         )
       }
     }
-    val statements = packet.observations.map { observation =>
+    def statementsFor(visible: Option[Set[String]]) = packet.observations.filter(observation =>
+      visible.forall(_(observation.transition.evidence.id))).map { observation =>
       val detail = observation.meaning match
         case MoveObservationMeaning.Capture(role, square, status) =>
           Json.obj(
@@ -340,9 +388,6 @@ object RuntimeProtocol:
       line.stop.map(stop => Json.obj("input_line_index" -> index,
         "accepted_ply_count" -> line.acceptedPlyCount, "reason" -> stop.wireId))
     }
-    val observations = Json.obj("statements" -> statements, "paths" -> (paths ++ historyPath),
-      "positions" -> preparedPaths.resourceJson) ++
-      Option.when(issues.nonEmpty)(Json.obj("input_issues" -> issues)).getOrElse(Json.obj())
     val projection = MoveWorkProjection.select(packet, preparedPaths)
     val trajectories = if continuationReadings.nonEmpty then continuationReadings
       else preparedPaths.continuationReadings
@@ -526,7 +571,9 @@ object RuntimeProtocol:
             roots, card.answer.engineProfile, depth)
             .map(value => MoveWorkProjection.Context("", anchoredChoice = Some(value))))
       yield context
-      val composed = projection.withSharedMoveEffects((candidate -> (rootContext ++ functional ++ anchored)) :: peers.map(other =>
+      val purpose = Option.when(preparedPaths.movePurpose.nonEmpty)(MoveWorkProjection.Context("", purposeSearches = responseSearches,
+        purposeRoots = rootSearches.filter(_.stopReason.isEmpty).flatMap(_.receipt)))
+      val composed = projection.withSharedMoveEffects((candidate -> (rootContext ++ functional ++ anchored ++ purpose)) :: peers.map(other =>
         other -> contexts((other \ "id").as[String])))
       composed.foreach(retainEffects)
       composed.tail.foreach(other => sharedQuestions((other \ "id").as[String]) = other)
@@ -541,7 +588,12 @@ object RuntimeProtocol:
         "occurrence_ids" -> (candidate \ "occurrence_ids").as[List[String]],
         "line_ids" -> (candidate \ "line_ids").as[List[String]],
         "candidate_ids" -> List((candidate \ "id").as[String])))
-    val additions = questionComparisons ++ (pvComparisons.map(value => withFreshEffects(value.candidateJson(packet))) ++
+    // The automatic first-reply account is already complete. Optional long-PV
+    // cards need not run their separate prose pipelines to deliver that core;
+    // full paths and material records remain in observations.
+    val directPurpose = (firstTargets.nonEmpty || preparedPaths.movePurpose.nonEmpty && responseSearches.nonEmpty) &&
+      proposalEntries.isEmpty && inquiries.isEmpty && continuationInquiries.isEmpty
+    val additions = if directPurpose then Nil else questionComparisons ++ (pvComparisons.map(value => withFreshEffects(value.candidateJson(packet))) ++
       targetReadings.map(_.candidateJson(packet))).map(withTrajectories) ++
       shownTrajectories.map(_.candidateJson(packet)) ++ continuationComparisons.map { reading =>
         val candidate = reading.candidateJson(packet)
@@ -563,7 +615,8 @@ object RuntimeProtocol:
     // A retained inquiry may outlive the PV comparison that originally ordered
     // it. Its lifecycle stays intact; public links must name current candidates.
     val orderingCandidates = pvComparisons.filter(_.eligibleQuietFocus).map(_.id).toSet
-    val selection = compared ++ Option.when(proposalEntries.nonEmpty || localExpansionsUsed > 0 || discovery.nonEmpty)(Json.obj(
+    val selection = compared ++ preparedPaths.movePurpose.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj()) ++
+      Option.when(proposalEntries.nonEmpty || localExpansionsUsed > 0 || discovery.nonEmpty)(Json.obj(
         "proposals" -> CommentaryProposal.snapshots(proposalEntries, _.explanation(packet, preparedPaths), preparedPaths.notation.line),
       "local_expansions_used" -> localExpansionsUsed)).getOrElse(Json.obj()) ++
       discovery.getOrElse(Json.obj()) ++
@@ -639,7 +692,45 @@ object RuntimeProtocol:
             .distinct.flatMap(trajectoryIds.get) ++
             continuationComparisons.filter(_.lineIds.forall(question.sourceLineIds.contains)).map(_.id)))
       })).getOrElse(Json.obj())
-    observations ++ Json.obj("highlights" -> projection.highlightsFor(selection), "selection" -> selection)
+    // Publish the positions used by this answer, its explicit detail, and the
+    // reply ownership certificate. Every complete PV and material event stays
+    // available; a missing optional position catalogue is explicitly null.
+    val deliveredPurpose = directPurpose && rootCandidates.exists(candidate =>
+      (candidate \ "detail" \ "summary_question" \ "question").asOpt[String]
+        .exists(Set("first_target_response", "exchange_function", "move_purpose")))
+    def referredPositions(value: JsValue): Set[String] = value match
+      case obj: JsObject =>
+        val move = for
+          line <- (obj \ "line_id").asOpt[String]
+          occurrence <- (obj \ "occurrence_id").asOpt[String]
+          path <- preparedPaths.paths.find(_.line.ref.id == line)
+          offset = path.ids.indexOf(occurrence) if offset >= 0
+        yield path.positions.slice(offset, offset + 2).flatMap(_.id)
+        (obj \ "position_id").asOpt[String].toSet ++
+          (obj \ "position_ids").asOpt[List[String]].toList.flatten ++ move.toList.flatten ++
+          obj.values.flatMap(referredPositions)
+      case JsArray(values) => values.flatMap(referredPositions).toSet
+      case _ => Set.empty
+    // Candidate catalogues name whole PVs, not just the delivered answer.
+    // Keep the answer's witnesses and trim only these optional catalogues.
+    val publishedPositions = Option.when(deliveredPurpose)(referredPositions(selection - "candidates") ++
+      (selection \ "candidates").as[List[JsObject]].flatMap(candidate =>
+        referredPositions((candidate \ "detail").get)) ++
+      preparedPaths.paths.flatMap(_.positions.take(4).flatMap(_.id)) ++
+      preparedPaths.movePurpose.toList.flatMap(_.resourcePositions))
+    val publishedSelection = publishedPositions.fold(selection)(ids => selection + ("candidates" ->
+      Json.toJson((selection \ "candidates").as[List[JsObject]].map(candidate =>
+        candidate + ("position_ids" -> Json.toJson((candidate \ "position_ids").as[List[String]].filter(ids)))))))
+    val publishedEdges = publishedPositions.map(ids => packet.assembly.transitions.filter(edge =>
+      edge.from.id.exists(ids) && edge.to.id.exists(ids)).map(_.evidence.id).toSet)
+    val positionJson = publishedPositions.fold(preparedPaths.resourceJson)(ids =>
+      packet.resources.filter(view => view.position.id.exists(ids)).map(PositionResourceProtocol.json))
+    val highlights = projection.highlightsFor(selection).filter(highlight => publishedPositions.forall(ids =>
+      (highlight \ "frames").as[List[JsObject]].forall(frame => (frame \ "position_id").asOpt[String].exists(ids))))
+    Json.obj("statements" -> statementsFor(publishedEdges),
+      "paths" -> (observationPathsJson(packet, preparedPaths, conditionalByLine, publishedPositions) ++ historyPath),
+      "positions" -> positionJson, "highlights" -> highlights, "selection" -> publishedSelection) ++
+      Option.when(issues.nonEmpty)(Json.obj("input_issues" -> issues)).getOrElse(Json.obj())
 
   private[runtime] def completedResultJson(completed: CompletedCommentaryJob): JsObject =
     completed.result match

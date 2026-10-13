@@ -1,0 +1,516 @@
+{
+  "scope": "Tests and legal replay; no product edit, engine execution, compiler or test runner used by this agent.",
+  "retry": {
+    "source": {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/ResponseCompletionRetryTest.scala",
+      "sha256": "fe1ec4f94e1fe453e1ae8b1b128da1ae817106467bcca0e04c6685e671df5552",
+      "bytes": 16169
+    },
+    "test_count": 9,
+    "new_actual_prefix_fixture": {
+      "path": "judgment-evaluation/fixtures/public-commentary-v6/response-first-target-prefix-sg14-produced.json.gz",
+      "sha256": "e673642d49dd2c554c8e327eb1d5b53d92748bcfd46fe666a2c2cee74c040823",
+      "bytes": 1008292
+    },
+    "provenance": {
+      "source_version": "meaningv24",
+      "source_reports": "target/decision-timing-20261006/mcFirst24/stored-reports.jsonl",
+      "source_reports_sha256": "cfaf0cf9f12d5df2a10df2fff80805e9e90afa15c4f69028e18ffa00a7d57d03",
+      "source_journal": "target/decision-timing-20261006/mcFirst24/journal.jsonl.gz",
+      "source_sha256": "86e0328a89505758c1d7be433e2e6babe249f52d246fa4b587a61fa06466df8c",
+      "request_row_zero_based": 0,
+      "completed_work_rows_zero_based": [
+        1,
+        3,
+        5
+      ],
+      "pending_snapshot_row_zero_based": 6,
+      "engine_reports_are_actual": true,
+      "pending_report_included": false,
+      "version_note": "The first opponent pool now precedes the independent deeper exposure continuation. Only the retry test setup changes; historical v16 prefix and eight-test source are sealed separately.",
+      "invented_followup_reports": "Constructed only inside the scheduling test; no chess strength, strongest-defense, or semantic-completion claim."
+    },
+    "pending_work": {
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "execution_key_sha256": "48f52181469bde4c9bf7150a986a851bf517021b9f218208c937fa61ac3239b4",
+      "variant": "standard",
+      "engine_position_initial_fen": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R3K2R w KQkq - 7 14",
+      "engine_position_moves_uci": [
+        "a4b3"
+      ],
+      "search_fen": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/3P4/BQP2N2/P4PPP/R3K2R b KQkq - 8 14",
+      "root_restriction": {
+        "kind": "unrestricted"
+      },
+      "search_limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "max_search_elapsed_ms": 3500,
+      "search_anchor": {
+        "root_move": "a4b3",
+        "root_occurrence_id": "move-review:4d95a4213bbe943eeedbce15fe82e0152986979b80803bc899230c3a990d51be:26:a4b3:evidence:transition:1585827685f3627f2e94fc52bd0852d55689ac39941b6c0d8000b9f64d8a6b48",
+        "position_id": "841fbb3fda727ff4647aa89e8ed0e84a41c4f2d9d64e59e6cf474950d3718a08",
+        "prefix_moves_uci": [
+          "a4b3"
+        ]
+      }
+    },
+    "historical_source": {
+      "path": "target/meaning-conditions-20261008/response-retry-before-first-target24/ResponseCompletionRetryTest.scala",
+      "sha256": "e7230e6a06e621f0c57a98060490686680d2c55a1b9a87ed088555a7eddcd420",
+      "bytes": 11527
+    },
+    "historical_fixture": {
+      "path": "target/meaning-conditions-20261008/response-retry-before-first-target24/response-continuation-prefix-sg14-produced.json.gz",
+      "sha256": "fbdd58f83735c87c053cd54cb6cff9373d83e48ffa04ef0468407e423342940a",
+      "bytes": 775187
+    },
+    "scheduling_change": "v24 first Black response precedes a deeper independent exposure continuation; test setup moves from work2 White after Qb3 Ne7 to actual work3 Black after Qb3.",
+    "substantive_invariants_preserved": [
+      "owned finite continuation/first-response only",
+      "same exact canonical position/history/root/anchor/restriction/depth/selected question",
+      "new work key and id; old key and unrelated root receipt rejected",
+      "BudgetExhausted only; >=12000ms remaining, exact 11999ms counter, old 10s boundary",
+      "one 20m nodes/5s/max6s completion attempt; no repeat loop",
+      "failure remains stopped unknown and provides no completed reply receipt"
+    ],
+    "eighth_test_scope_change": "The completed first pool now retains the independent deeper question without fabricating its receipt; a missing Nxd4 class is still unanswered. The ninth explicitly reaches the deeper selected inquiry from the old real first-two-root-report prefix, tests retry scope, then its own completed receipt while preserving the first pool receipt.",
+    "synthetic_reports": "All subsequent failure and close one-ply pool/continuation reports are invented scheduling evidence, including the ninth case. They do not identify best defense or certify the commentary's meaning.",
+    "parent_reported_result": {
+      "version": "meaningv24",
+      "label": "mcRetry24",
+      "passed": 9,
+      "elapsed_seconds": 38.178,
+      "execution_by": "parent agent",
+      "child_executed": false
+    }
+  },
+  "quiet_recapture": {
+    "source": {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/FunctionalQuietRecaptureTest.scala",
+      "sha256": "4e1bb33daeaac5194b7c5bab156f2fddf60ecca09b58a6969415f8d0155023ba",
+      "bytes": 10149
+    },
+    "test_count": 4,
+    "fixture_origin": "Composed minimal legal structural boards, not an engine-certified game or reference-book verdict.",
+    "existing_contract": "FunctionalReplyReading.Proof/RootOwner and CommentaryAnswer.LegalReplyOption; no new producer/type/engine utility claim.",
+    "tests": [
+      "Same original friendly Nf3 arrives d4, same original enemy Bg7 actually captures it without check; changed original Ra1 control permits Rxd4 only after Rd1. Existing C-reply-function generator/reader must accept the witnessed arrival.",
+      "Changed current Kf8/a5 PVs preserve the independently replayed local board proof; foreign PreparedPath remains unowned.",
+      "Be3 recapture in the Rb1 branch leaves the same-rook fact true but rejects it as the central answer.",
+      "Nd2 interruption followed by Nb3 reopening cannot be attributed to continuous root control; noncapture Bd4 cannot become a recapture-price witness; wrong original Bf8 rejected."
+    ],
+    "claims_prohibited": [
+      "forced continuation",
+      "best defense",
+      "free or safe material",
+      "sufficient compensation",
+      "complete root score cause"
+    ],
+    "why_legal_option_alone_is_insufficient": "A same-rook action may differ yet another recapturer may preserve the function. Opposing quiet entry without an actual friendly capture has no recapture cost. A restored endpoint does not certify continuous root-owned support.",
+    "legal_replays": {
+      "same_friendly_captured": {
+        "initial_fen": "6k1/p5b1/8/8/8/5N2/8/R6K w - - 0 1",
+        "arms": [
+          {
+            "root_move": "a1d1",
+            "steps": [
+              {
+                "move_uci": "a1d1",
+                "san": "Rd1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": true,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": false
+          },
+          {
+            "root_move": "a1b1",
+            "steps": [
+              {
+                "move_uci": "a1b1",
+                "san": "Rb1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": false,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": false
+          }
+        ]
+      },
+      "other_recapturer": {
+        "initial_fen": "6k1/p5b1/8/8/8/4BN2/8/R6K w - - 0 1",
+        "arms": [
+          {
+            "root_move": "a1d1",
+            "steps": [
+              {
+                "move_uci": "a1d1",
+                "san": "Rd1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": true,
+            "other_bishop_recapture_legal": true,
+            "knight_survives_h4": false
+          },
+          {
+            "root_move": "a1b1",
+            "steps": [
+              {
+                "move_uci": "a1b1",
+                "san": "Rb1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": false,
+            "other_bishop_recapture_legal": true,
+            "knight_survives_h4": false
+          }
+        ]
+      },
+      "restored_endpoint_ray": {
+        "initial_fen": "6k1/p5b1/8/8/8/5N2/8/R6K w - - 0 1",
+        "arms": [
+          {
+            "root_move": "a1d1",
+            "steps": [
+              {
+                "move_uci": "a1d1",
+                "san": "Rd1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d2",
+                "san": "Nd2",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7f6",
+                "san": "Bf6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "d2b3",
+                "san": "Nb3",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a6a5",
+                "san": "a5",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "b3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f6d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              true,
+              true,
+              false,
+              false,
+              true,
+              true,
+              true,
+              true
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": true,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": false
+          },
+          {
+            "root_move": "a1b1",
+            "steps": [
+              {
+                "move_uci": "a1b1",
+                "san": "Rb1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3d2",
+                "san": "Nd2",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7f6",
+                "san": "Bf6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "d2b3",
+                "san": "Nb3",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a6a5",
+                "san": "a5",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "b3d4",
+                "san": "Nd4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f6d4",
+                "san": "Bxd4",
+                "capture": true,
+                "victim_before": "N"
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": false,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": false
+          }
+        ]
+      },
+      "enemy_noncapture": {
+        "initial_fen": "6k1/p5b1/8/8/8/5N2/8/R6K w - - 0 1",
+        "arms": [
+          {
+            "root_move": "a1d1",
+            "steps": [
+              {
+                "move_uci": "a1d1",
+                "san": "Rd1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3h4",
+                "san": "Nh4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bd4",
+                "capture": false,
+                "victim_before": null
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": true,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": true
+          },
+          {
+            "root_move": "a1b1",
+            "steps": [
+              {
+                "move_uci": "a1b1",
+                "san": "Rb1",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "a7a6",
+                "san": "a6",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "f3h4",
+                "san": "Nh4",
+                "capture": false,
+                "victim_before": null
+              },
+              {
+                "move_uci": "g7d4",
+                "san": "Bd4",
+                "capture": false,
+                "victim_before": null
+              }
+            ],
+            "all_moves_legal": true,
+            "provider_d4_control_by_ply": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "white_in_check": false,
+            "original_rook_recapture_legal": false,
+            "other_bishop_recapture_legal": false,
+            "knight_survives_h4": true
+          }
+        ]
+      }
+    },
+    "product_validation": "Pending parent implementation and runner; this record makes no passing claim for the four tests."
+  }
+}

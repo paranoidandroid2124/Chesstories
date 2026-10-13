@@ -1,0 +1,579 @@
+{
+  "schema": "sg02-required-condition-withdrawal-contract.v1",
+  "recorded_utc": "2026-10-08T04:11:11Z",
+  "agent": "/root/deep_theory_scenes",
+  "scope": "Read-only audit of a historical cross-receipt withdrawal and the remaining distinction between an exact realization, a required condition, an unresolved path, and a separately proved replacement claim. Proposed tests only; no main/UI/test edits, engines, Scala builds, or test runners.",
+  "new_research_record_only": true,
+  "presealed_before_any_new_test_edits": true,
+  "new_engine_execution": false,
+  "new_product_execution": false,
+  "new_test_execution": false,
+  "legal_replay_check": "Python-chess push_uci/push_san was used solely to validate the exact fixture paths below. This is not a runtime test, an engine analysis, or proof of a move's value.",
+  "main_conclusion": "The reported SG02 same-reference/different-receipt pollution is historical and already corrected in the current generated C-sacrifice path. Do not repeat that fix or remove withdrawal. The unresolved general boundary is that a full copied root event list describes one material story; its failure does not by itself disprove a smaller functional claim, and a smaller surviving fact does not prove usefulness or the original root ranking.",
+  "historical_bug": {
+    "source_audit": "research/meaning-conditions-20261008/functional-condition-audit.json",
+    "trace": "SG02_exact_replayed_trace.steps, report_number=3",
+    "source_execution_version": "optionv3",
+    "replay_manifest": "target/decision-timing-20261006/optionbookdiagnostic1/manifest.json",
+    "first_candidate_id": "discovery:85eea0a482cd469e146e5fab70867a61be5a60b61e6d46cc616120a8e0412456",
+    "first_candidate_named_root_group_state": "supported",
+    "historical_member_current_event_count": 18,
+    "historical_false_withdrawal_facts": [
+      "returned_sacrifice_other_capture_sacrifice_gain_11_role",
+      "returned_sacrifice_other_capture_sacrifice_gain_11"
+    ],
+    "exact_failure": "sacrifice_value and sacrifice_other_capture both had prefix=[] and reference=f7f3. The old Member.current predicate treated both reference receipts as current-root realization owners. The second receipt lacked the original White Pb2 capture of original Black Rf7 during [11,12), so it withdrew the first candidate despite that candidate's own sacrifice_current group remaining supported. This was the first candidate's own contamination, not merely propagation from a stale sibling.",
+    "historical_rule_evidence": {
+      "commit": "5b6bc8c4d6",
+      "commit_date": "2026-10-01T06:27:40+09:00",
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "lines": [
+        35,
+        40
+      ],
+      "rule": "Every Comparison(id,reference) Event whose prefix/reference matched the Key entered current; any refuted/event_absent member withdrew it."
+    }
+  },
+  "current_owner_correction": {
+    "already_present": true,
+    "code": [
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+        "lines": [
+          390,
+          399
+        ],
+        "meaning": "For key.loss, the explicit sacrifice_current FactGroup bounds current membership. Current confirmation requires every owned fact supported; absence of an owned required fact still withdraws that exact realization. Membership includes explicitly required Ply facts rather than only Event facts."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+        "lines": [
+          504,
+          530
+        ],
+        "meaning": "A completed comparison explains a return only through its own supported sacrifice_current or sacrifice_reply_<id> group. An unanswered comparison can use its ready historical context to justify asking, without pretending to have a returned compensation witness."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+        "lines": [
+          120,
+          151
+        ],
+        "meaning": "comparisonContexts already preserves arm ownership and all/any choices. Facts read from the comparison's answer cannot be prerequisites for issuing that same query."
+      }
+    ],
+    "existing_exposed_regressions": [
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 65,
+        "contract": "A completed other root receipt cannot withdraw a still-supported root owner."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 84,
+        "contract": "A missing returned compensation cannot borrow the root receipt's gain, even at the same prefix and reference move."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 102,
+        "contract": "A stale sibling is removed from live synthesis while the supported sibling remains."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 114,
+        "contract": "A genuinely replaced root that lacks its named old events withdraws that exact story."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 123,
+        "contract": "Unanswered work stays investigable but cannot establish a returned compensation."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 137,
+        "contract": "An unfavorable owned comparison revises ranking without making still-observed events absent."
+      },
+      {
+        "test": "MeaningConditionScopeTest.scala",
+        "line": 147,
+        "contract": "An explicitly required Ply open-file consequence remains an observed positional return, without an adequate-compensation verdict."
+      }
+    ],
+    "execution_status": "These tests were read only by this agent in this audit. Their existence and assertions are evidence of the contract; no new pass claim is made.",
+    "remaining_owner_shape_caution": "Member.current still checks matching prefix/reference across comparison IDs after restricting to the named group. Discovery currently constructs the group correctly from sacrifice_value. A future malformed group containing a returned_sacrifice_other_capture fact would again be trusted as root-required. This is a proposed defensive invariant to test, not an observed current production failure."
+  },
+  "remaining_code_boundary": {
+    "all_event_story": {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "lines": [
+        1845,
+        1884,
+        1911,
+        1944
+      ],
+      "meaning": "The primary C-sacrifice question observes captures, promotions, checks, and opened files across the whole finite source line. Every observation is copied into its all-required sacrifice_current and returned reply groups. Thus the full historical material story remains exact, but changing an illustrative later event can also remove the question that owns that story."
+    },
+    "existing_bounded_required_unit": {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "lines": [
+        1945,
+        1981
+      ],
+      "meaning": "The sacrifice-counter path already declares only the first loss and the particular first return relevant to that counter, rather than every later exchange. This is an existing example of choosing requirements according to the specific claim. It is not proof that the first return is the entire root cause or adequate compensation."
+    },
+    "retirement_scope": {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "lines": [
+        554,
+        559,
+        900,
+        902
+      ],
+      "meaning": "If all tracking members are withdrawn, currentQuestions drops their entries. A supported sibling can keep the shared exact Key live, but it does not lend its compensation realization to a stale member."
+    },
+    "refresh_route_already_exists": {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "lines": [
+        1465,
+        1488,
+        1514,
+        1524
+      ],
+      "meaning": "Discovery consumes current root/response receipt paths and re-runs on a changed input inventory. Existing generated entries are replaced by the new candidate union. A refreshed, independently owned sibling or new claim is a possible route; keeping an old false event alive is not necessary."
+    },
+    "caller_scope": "pendingFactContinuations consults currentQuestions plus neededRequirementIds; ready comparison contexts and supported non-comparison heads still govern work. The mere presence of a stale entry when another sibling is live does not prove stale work is scheduled. No additional stale-sibling scheduling bug is asserted without a runner trace."
+  },
+  "minimal_existing_owner_required_rule": {
+    "claim_owner": [
+      "CanonicalPositionHistory and PreparedPaths packet owner",
+      "entry/question ID and the specific generated arm",
+      "exact comparison ID, prefix, oriented reference/alternative action, receipt work ID and line ID",
+      "original actor/target identities and the bounded condition points",
+      "explicit required FactGroup and its supported all/any arm"
+    ],
+    "root_rule": "For a C-sacrifice root realization, use the explicit all-required sacrifice_current group and the exact Comparison(sacrifice_value,reference) source. Matching prefix/reference alone is insufficient. The group must be nonempty and its members must exist and retain the same canonical root/history owner. A missing or malformed owner is unresolved/rejected, never known empty or silently replaced by all matching events.",
+    "reply_rule": "A completed comparison can claim a returned realization only using the explicit sacrifice_reply_<comparison.id> group bound to that comparison's exact answer path. A score receipt remains a score receipt when its realization is absent or incomplete. It must not lend evidence to another root/reply group.",
+    "required_rule": "A condition is required because the producer declares it necessary for the particular bounded claim. The reader may verify that declaration against its owned data; it cannot infer a functional purpose by counting captures/checks, by selecting whichever event survived, or by shrinking requirements after seeing output.",
+    "retirement_rule": "Retire the exact claim when its own closed, complete required condition is refuted or its required bounded event is known absent. Retain that absence as a real negative fact. Do not retire it because a different receipt's optional realization is absent; do not confirm it merely because another receipt supports a superficially similar result.",
+    "unknown_rule": "path_end, comparison_not_answered, comparison_path_unavailable, missing material/identity/destination, or incomplete/open scope remain unknown. Unknown prevents confirmation/adoption but is not a disproof. A root answer needs its own full required horizon; a complete child cannot repair a short root, nor vice versa.",
+    "replacement_rule": "A separately declared smaller claim may be admitted using new owned facts under the refreshed receipt. It leaves old absent facts and old-story withdrawal unchanged. Original identity and necessary functional conditions must be checked afresh. Admission of a fact does not grant usefulness, compensation, ranking, uniqueness, or causality.",
+    "all_any_rule": "Preserve the producer's arm grouping. Do not replace all with any to evade one missing requirement. An alternative complete realization is a separate supported arm; it cannot be assembled from supporting fragments belonging to different receipts.",
+    "implementation_size": "No new Proof graph or retained planner state is necessary for this ownership contract: existing Fact, Path(Comparison), FactGroup, generated arms, and comparisonContexts express it. The observed historical bug needs no further mutation. If a defensive change is made, make the root-source invariant explicit in a small owner resolver and keep existing withdrawal/realizedContext behavior. A functional-purpose producer is separate work and needs its own presealed chess conditions."
+  },
+  "four_distinct_states": [
+    {
+      "id": "true_invalidated_current_root_realization",
+      "evidence": "Own closed root receipt fully covers the relevant interval and lacks the required actor/victim/event, or explicitly contradicts the required predicate.",
+      "allowed": "Withdraw the old exact story and its dependent self-initiated work; preserve historical observations and the current independent numerical assessment.",
+      "forbidden": "Keep old compensation by removing withdrawal, copy a sibling's return, or call a disappeared example a still-proved root reason.",
+      "existing_control": "MeaningConditionScopeTest114; SacrificeQuestionTest186."
+    },
+    {
+      "id": "optional_other_comparison_realization_absent",
+      "evidence": "Other comparison's complete own return group has event_absent while the named root's current group is supported.",
+      "allowed": "Keep the root question/receipt; withhold compensation explanation and compensation-dependent priority for the other realization.",
+      "forbidden": "Withdraw the supported root merely because prefix/reference match, or let root gains repair that other receipt.",
+      "existing_control": "MeaningConditionScopeTest65 and84."
+    },
+    {
+      "id": "short_or_unknown_owned_path",
+      "evidence": "Own path does not cover the required horizon, or canonical source/material/identity is unavailable.",
+      "allowed": "Keep a candidate/unresolved question, state what remains unestablished, and request only necessary owned work when available.",
+      "forbidden": "Count unknown as absence, known empty, compensation, successful omission, or a proof that the idea failed.",
+      "existing_control": "SacrificeQuestionTest274 covers a short child; the analogous short root remains a useful new control."
+    },
+    {
+      "id": "different_realization_with_separate_minimum_proof",
+      "evidence": "The old exact event is absent, but an independently declared smaller claim has all of its own required facts under a different current receipt and exact identities.",
+      "allowed": "Retire the old story; deliver only the scope actually established by the new claim, and investigate usefulness through its own strong counter/value comparison.",
+      "forbidden": "Mark the old event supported, equate all material/check stories, combine receipt fragments, or treat retained geometry as sufficient value proof.",
+      "control_boundary": "The SG02 pawn-versus-queen recapture demonstrates a common factual result. It is not by itself evidence that the entire strategic idea or root ranking is preserved."
+    }
+  ],
+  "book_reading": {
+    "pdf": "G:/내 드라이브/GoodNotes Sync/Chess/Think Like a Super-GM - Reading Edition.pdf",
+    "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+    "direct_text_pages_read_one_based": [
+      47,
+      49,
+      50,
+      51,
+      54
+    ],
+    "diagram_pages_rechecked_one_based": [
+      49,
+      50,
+      51
+    ],
+    "source_pdf_pages_as_printed": "53–61; the detailed SG02 discussion used here is reading-edition49–51 / source55–59.",
+    "diagrams": [
+      "target/meaning-conditions-20261008/books/supergm-p049.png",
+      "target/meaning-conditions-20261008/books/supergm-p050.png",
+      "target/meaning-conditions-20261008/books/supergm-p051.png"
+    ],
+    "human_question": "Why take on f3 with the rook rather than surrender the unopposed bishop, and how much of the attack remains after White refuses the offered rook?",
+    "author_reason_paraphrase": "Black must use White's temporary lack of queen coordination. Keeping the strong bishop preserves light-square attacking resources. Immediate gxf3 is dangerous, but Qd2 returns the queen and aims at major-piece exchanges. The resulting play is limited pressure with accurate defense, not an unconditional forced win.",
+    "required_function_candidates": [
+      "The original Black Bd5 must survive with relevant light-square attacking participation. Literal survival alone is necessary evidence, not sufficient usefulness.",
+      "The attack must exploit the current coordination/king-shield state; after an accurate queen return its advertised scope must narrow.",
+      "Any claimed benefit of the sacrifice must be checked against refusing it, especially Qd2 and the exchange resources; accepted-branch success cannot answer this counter.",
+      "A move-order change must preserve the particular attacking or exchange resource being claimed, with owned actors and consequences, rather than the whole previous list of checks."
+    ],
+    "not_required_to_remain_identical": [
+      "The exact eventual mating square or sequence in the poor immediate gxf3 branch.",
+      "Every later capture in a different major-piece liquidation sequence.",
+      "The precise actor of a later rook recovery when the claim is explicitly only the recovery of that original rook; actor-specific event claims still require their own actor."
+    ],
+    "strongest_refutation_boundary": "Qd2 does not make every Qe3+ geometrically illegal. It gives defensive coordination and exchange resources, so the winning-attack story must be rejected or narrowed even while Black's bishop survives. The retained bishop cannot be declared the sole root numerical cause.",
+    "perspective_guard": "The stored C-sacrifice Key concerns White's original Pf3 loss at Black Rxf3. It does not represent Black's deliberate exchange sacrifice or establish the value of keeping original Bd5. Black Rf7 is not lost on every refusal path. Do not retitle that White-loss question as the book's Black-compensation proof.",
+    "no_overclaim": "Only the listed pages and paths were examined. The book's evaluations are author judgments, not synthetic receipt values or imported runtime evidence. No whole-book reading, independent engine proof, automatic product success, or general strategic invariance is claimed."
+  },
+  "fixtures": {
+    "SG02_root": {
+      "initial_fen": "2r3k1/1p3rp1/2p4p/1p1b2q1/1Q1P4/P4PB1/1P4PP/2RR2K1 b - - 0 1",
+      "move_prefix_uci": [],
+      "original_identities": {
+        "root_move_actor": {
+          "side": "black",
+          "role": "rook",
+          "original_square": "f7"
+        },
+        "material_loss_subject": {
+          "side": "white",
+          "role": "pawn",
+          "original_square": "f3"
+        },
+        "old_return_actor": {
+          "side": "white",
+          "role": "pawn",
+          "original_square": "b2"
+        },
+        "replacement_return_actor": {
+          "side": "white",
+          "role": "queen",
+          "original_square": "b4"
+        },
+        "return_target": {
+          "side": "black",
+          "role": "rook",
+          "original_square": "f7"
+        },
+        "author_preserved_resource": {
+          "side": "black",
+          "role": "bishop",
+          "original_square": "d5"
+        }
+      },
+      "stored_original": {
+        "moves_uci": [
+          "f7f3",
+          "b4d2",
+          "g5g4",
+          "d1f1",
+          "f3b3",
+          "g3e5",
+          "c8e8",
+          "f1f2",
+          "d5c4",
+          "c1c3",
+          "b3c3",
+          "b2c3",
+          "e8a8",
+          "d2c1",
+          "g4g6"
+        ],
+        "legal_replay": true,
+        "final_fen": "r5k1/1p4p1/2p3qp/1p2B3/2bP4/P1P5/5RPP/2Q3K1 w - - 3 9"
+      },
+      "stored_changed": {
+        "moves_uci": [
+          "f7f3",
+          "b4d2",
+          "g5g4",
+          "d1e1",
+          "c8f8",
+          "e1f1",
+          "f3b3",
+          "f1f8",
+          "g8f8",
+          "c1c3",
+          "b3c3",
+          "d2c3"
+        ],
+        "legal_replay": true,
+        "final_fen": "5k2/1p4p1/2p4p/1p1b4/3P2q1/P1Q3B1/1P4PP/6K1 b - - 0 7"
+      },
+      "short_root": {
+        "moves_uci": [
+          "f7f3",
+          "b4d2"
+        ],
+        "legal_replay": true,
+        "final_fen": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2"
+      },
+      "other_capture": {
+        "moves_uci": [
+          "d5f3"
+        ],
+        "legal_replay": true
+      },
+      "root_alternative": {
+        "moves_uci": [
+          "c8e8"
+        ],
+        "legal_replay": true
+      },
+      "receipt_protocol": "Use existing admitted Study paths and certified line IDs. All proposed Answers are explicitly synthetic and contain no book/engine score; choose relation/line ID solely to test ownership and state behavior, preserving side and exact root history."
+    },
+    "composed_true_loss_decline": {
+      "source": "Existing SacrificeQuestionTest12–14 and186–228, not a book position.",
+      "initial_fen": "6k1/5ppp/8/8/8/3B4/6PP/5RK1 w - - 0 1",
+      "accepted_uci": [
+        "f1f7",
+        "g8f7",
+        "d3h7",
+        "g7g6",
+        "h7g6"
+      ],
+      "declined_uci": [
+        "f1f7",
+        "g7g6"
+      ],
+      "declined_legal_replay": true,
+      "declined_final_fen": "6k1/5R1p/6p1/8/8/3B4/6PP/6K1 w - - 0 2",
+      "required_old_condition": "Original White Rf1 is captured by original Black Kg8 during [1,2). The declined line completely covers that interval without that capture, so this is actual absence rather than path_end."
+    },
+    "book_scope_controls": [
+      {
+        "id": "accepted_mate_realization",
+        "pages": [
+          49,
+          50
+        ],
+        "moves_uci": [
+          "f7f3",
+          "g2f3",
+          "g5e3",
+          "g1f1",
+          "e3f3",
+          "f1e1",
+          "c8e8",
+          "g3e5",
+          "f3e3",
+          "e1f1",
+          "d5e6",
+          "f1g2",
+          "e6h3",
+          "g2h1",
+          "e3f3",
+          "h1g1",
+          "f3g2"
+        ],
+        "legal_replay": true,
+        "purpose": "Conditional bad-acceptance attack; not a root forcing proof."
+      },
+      {
+        "id": "accepted_simpler_finish",
+        "pages": [
+          49,
+          50
+        ],
+        "moves_uci": [
+          "f7f3",
+          "g2f3",
+          "g5e3",
+          "g1f1",
+          "e3f3",
+          "f1e1",
+          "c8e8",
+          "g3e5",
+          "f3e3",
+          "e1f1",
+          "e8f8",
+          "b4f8",
+          "g8f8"
+        ],
+        "legal_replay": true,
+        "purpose": "Author's different winning finish preserves the attack's accepted-branch point while the previous mating-event list is absent. Winning value remains an author judgment, not a runtime proof."
+      },
+      {
+        "id": "declined_exchange_counter",
+        "pages": [
+          49,
+          50,
+          51
+        ],
+        "moves_uci": [
+          "f7f3",
+          "b4d2",
+          "f3e3",
+          "c1c3",
+          "c8e8",
+          "c3e3",
+          "g5e3",
+          "d2e3",
+          "e8e3",
+          "g1f2",
+          "e3b3",
+          "d1d2",
+          "b5b4",
+          "a3b4",
+          "b3b4"
+        ],
+        "legal_replay": true,
+        "purpose": "Bishop preservation does not establish an unconditional winning attack; the author's actual best defense seeks liquidation and a drawable position."
+      },
+      {
+        "id": "bishop_capture_loses_preserved_resource",
+        "pages": [
+          49
+        ],
+        "moves_uci": [
+          "d5f3",
+          "g2f3",
+          "g5e3",
+          "g3f2",
+          "e3f3",
+          "d1d2"
+        ],
+        "legal_replay": true,
+        "purpose": "Immediate original Bd5 survival really fails after gxf3, and White can coordinate. This differs from a changed illustrative mating sequence."
+      }
+    ]
+  },
+  "proposed_test_contract": {
+    "status": "Sealed proposal only; no tests edited or executed.",
+    "immutable_existing_suites": [
+      "MeaningConditionScopeTest.scala",
+      "SacrificeQuestionTest.scala"
+    ],
+    "synthetic_receipt_policy": "Every new receipt must be labeled synthetic. Canonical certified path/actor/history ownership must come from admitted legal fixture paths. No author assessment or standalone search is supplied as runtime evidence.",
+    "controls": [
+      {
+        "id": "W01_same_reference_different_receipt",
+        "coverage": "Existing MeaningConditionScopeTest65 and84; preserve unchanged.",
+        "setup": "Root sacrifice_value.reference=stored_original; other root sacrifice_other_capture.reference=stored_changed; alternatives Re8 and Bxf3 respectively.",
+        "expected": "Root sacrifice_current supported, other returned pawn-b2 gain absent; root remains current, other completed compensation explanation/priority absent."
+      },
+      {
+        "id": "W02_true_old_root_story_absent",
+        "coverage": "Existing MeaningConditionScopeTest114; proposed additional scope assertions only after a separate implementation decision.",
+        "setup": "The original entry's own sacrifice_value reference is replaced by stored_changed.",
+        "expected": "Old actor-specific gain_11 remains not_applicable/event_absent; the exact old story withdraws. First current_sacrifice_loss_0 remains supported, so withdrawal cannot be worded as disproof of the original f3 pawn loss or of the author's Black bishop purpose."
+      },
+      {
+        "id": "W03_true_required_initial_capture_absent",
+        "coverage": "Existing SacrificeQuestionTest186; preserve unchanged.",
+        "setup": "Composed fixture replaces accepted root realization with f1f7 g7g6.",
+        "expected": "Own closed [1,2) capture by original Kg8 of original Rf1 is absent. Historical acceptance observations remain historical; old explanation and its old accepted-prefix self-initiated work withdraw; current numerical verdict can refresh independently."
+      },
+      {
+        "id": "W04_short_root_is_unknown",
+        "coverage": "New proposed control, extending the existing short-child distinction to the governing root receipt.",
+        "setup": "Original SG02 entry receives its own synthetic sacrifice_value answer with referenceLineId=short_root. Keep a complete other receipt so it cannot repair the root.",
+        "expected": "First f3 loss supported; gain interval [11,12) and final file Ply15 are path_end/partial, not event_absent. currentConfirmed=false, no adoption or returned root compensation. The unresolved question is not withdrawn solely for shortness."
+      },
+      {
+        "id": "W05_missing_owned_path_or_answer",
+        "coverage": "New proposed control; unanswered other work is already covered at MeaningConditionScopeTest123.",
+        "setup": "Use a governing comparison with no answer, then a synthetic answer whose exact reference line ID is unavailable in the same packet, while a different complete same-prefix/reference line is admitted.",
+        "expected": "comparison_not_answered or comparison_path_unavailable remains partial and prevents confirmation; the other line cannot substitute. No root withdrawal from absence invented by lookup failure. No completion/compensation success."
+      },
+      {
+        "id": "W06_separate_smaller_factual_recovery",
+        "coverage": "New proposed FactReader/ownership control; not a new automatic functional producer or ranking test.",
+        "setup": "Create a separately declared all-required fact unit under each owned root receipt: original White Pf3 is removed at Ply1; original Black Rf7 is removed at Ply12. Use the exact same original subjects and certified root history. Preserve the old actor-specific Event(gain_11, WhitePb2, BlackRf7,[11,12)).",
+        "expected": "The two receipt-local smaller fact units can be supported on original and changed paths. On changed, the old pawn-specific Event remains absent and the old story stays withdrawn. Allowed language is only that White recovers that original rook in the two inspected realizations. No safe/useful/adequate/best/sole-cause promotion follows."
+      },
+      {
+        "id": "W07_no_fragments_across_receipts",
+        "coverage": "New proposed all-group ownership negative.",
+        "setup": "A supposed smaller recovery arm contains its loss fact from one comparison and return fact from another, even when both are individually supported and their prefix/reference moves match.",
+        "expected": "Do not admit it as one owned functional realization or an explanation of either comparison. Preserve individual facts separately; require a coherent complete arm."
+      },
+      {
+        "id": "W08_malformed_current_group_foreign_member",
+        "coverage": "New proposed defensive shape test, not an observed production failure.",
+        "setup": "Starting from the current generated SG02 entry, add returned_sacrifice_other_capture_sacrifice_gain_11 to sacrifice_current's members while that other receipt lacks the pawn recapture.",
+        "expected": "Detect/reject an invalid current-owner group or report ownership unresolved. Its foreign member cannot become a current-root withdrawal premise, and cannot make a current root confirmed. It must not simply be dropped to silently bless a malformed group. Current Discovery's valid groups remain unchanged."
+      },
+      {
+        "id": "W09_wrong_original_actor_target_history",
+        "coverage": "New proposed replacement-claim negatives using the same certified fixture packet.",
+        "setup": "For the new target-recovery fact, substitute original Black Rc8 for Rf7, preserve the old WhitePb2 actor on the changed line, or try a receipt/path belonging to another history packet.",
+        "expected": "A different original rook is not an equivalent target; absent pawn-specific action stays absent despite queen recapture; foreign packet ownership cannot be used. Unknown identity is unresolved rather than known absence. No salvaged functional claim."
+      },
+      {
+        "id": "W10_retained_resource_not_sufficient_value",
+        "coverage": "Book-based human contract; no new numerical fixture or engine proof proposed here.",
+        "setup": "Compare the accepted_mate_realization, accepted_simpler_finish and declined_exchange_counter, all after the same Rxf3 with original Bd5 surviving.",
+        "expected": "Different accepted finishes do not force the same event list. Qd2 narrows the attack despite bishop survival, so factual preservation is insufficient for a winning/adequate/unique root claim. Any automatic claim needs owned refusal/strongest-counter evidence."
+      },
+      {
+        "id": "W11_unfavorable_comparison_is_revision",
+        "coverage": "Existing MeaningConditionScopeTest137; preserve unchanged.",
+        "setup": "Own root observations remain supported while its synthetic tested alternative is stronger.",
+        "expected": "Revise or narrow the evaluation claim; do not turn true events into absent events or keep a favorable claim by borrowing another relation."
+      },
+      {
+        "id": "W12_position_fact_and_stale_sibling",
+        "coverage": "Existing MeaningConditionScopeTest102 and147; preserve unchanged.",
+        "setup": "Keep a supported original sibling beside a stale sibling; separately keep the composed open-file-only return under an explicitly required Ply fact.",
+        "expected": "A stale sibling lends neither compensation nor adoption; a correct explicit non-Event condition is not discarded by an Event-only filter. Both remain separate from proof of adequate compensation or a general strategic reason."
+      }
+    ],
+    "test_order_if_authorized": [
+      "Freeze and preserve the existing seven-test scope suite and current sources; first establish its baseline.",
+      "Add short-own-root and missing-own-line controls without changing existing assertions or book criteria.",
+      "Seal malformed-owner/coherent-arm tests before changing the owner resolver; show the exact red behavior if it exists.",
+      "Test separate smaller factual recovery through existing Facts/Groups without changing old story withdrawal or declaring usefulness.",
+      "Only then consider a separately declared strategic-purpose claim with independently fixed conditions and strong refusal/counter evidence."
+    ]
+  },
+  "source_hashes": [
+    {
+      "path": "research/meaning-conditions-20261008/functional-condition-audit.json",
+      "sha256": "0ddaa174abc3d9a56f1029c5fb4b5cd22739e5458a6ae90e92cee30d78bb888e"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/theory-scenes.json",
+      "sha256": "61c7fb1c27346445fc9cda5ec034a1643e5bf78c2d6dd848d89fdf64ec528fe3"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "2a34c73aa6dc0a6317e01912f49303cf627b017ed95495135520c0cf5f5e0ba4"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "sha256": "a86a29f03888ee3a780db47b2f145ea27163a377fa2f428a7a7a43e480bd908b"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+      "sha256": "82a0f1e4d9db7235d3851b123a10b8c111629b255a9c20a4da88e252085cb0d6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+      "sha256": "5754bdf78ec99baaa1f633c44f0308bf7216ca9f4154d2e2e1709c8261a1252a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "sha256": "e0d077a192a2dc875fcdcd91c96eab6cb80692374e9879679db3e723940a4765"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/MeaningConditionScopeTest.scala",
+      "sha256": "a6e8cd503734ff04dc75eb5bb7bcf56dc9970a684d41cc7c12c55915900c1cc6"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/SacrificeQuestionTest.scala",
+      "sha256": "808bc83c7e3cedb5ef9616313e59014aa96ab50246cc5c023f6a8929e081c197"
+    }
+  ],
+  "not_concluded": [
+    "No current production repeat of the historical SG02 cross-receipt bug was executed or established.",
+    "No generic choice of essential chess conditions can be derived from the old broad event list alone.",
+    "A surviving smaller recovery fact or bishop identity is not demonstrated usefulness, adequate compensation, best play, or the cause of a root score difference.",
+    "No new test success, product delivery, engine ranking, strongest-counter completion, or strategic generalization is claimed."
+  ],
+  "proposed_fixtures_sha256": "1cfd9939168a387524f521aafe7d0def3208ca67a994843675c9397cdf0ef015",
+  "proposed_contract_sha256": "2d0aeb4b5964850e64b7a7d4ba532813980d35a9f8ecbdc418c97199e11d7a5d"
+}

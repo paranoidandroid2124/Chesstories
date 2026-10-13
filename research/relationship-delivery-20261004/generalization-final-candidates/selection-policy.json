@@ -1,0 +1,37 @@
+{
+  "id": "relationship-delivery-final-new-games-v6",
+  "frozen_before": ["v6 candidate engine reports", "v6 candidate product output"],
+  "purpose": "One final fixed-code generalization check after the providerLoss persistence repair. Preserve all v5 data. Do not broaden this medium-term study after this cohort.",
+  "cached_sources": "Reuse the three exact original PGN byte files from generalization-candidates. No download, new source, source comments or variations.",
+  "game_rule": {
+    "source_order": ["wch2016", "candidates2018", "wch2024"],
+    "wch2016": "Actual cached file order, ranks 7 through 12 inclusive.",
+    "candidates2018": "Ascending (numeric integer part of Round, White, Black), unchanged from v5; ranks 7 through 12 inclusive.",
+    "wch2024": "Actual cached file order, ranks 7 through 12 inclusive.",
+    "count": 18,
+    "overlap": "No duplicate main-line games within these 18 or against the first-six v5 registry. Historic development exposure beyond those publicly compared registries is not established.",
+    "parity": "Within each new group of six, odd ordinal White and even ordinal Black. Source ranks 7 through 12 have the same parity."
+  },
+  "position_rule": {
+    "fullmove_priority": [24, 20, 16, 12],
+    "balance": "First available pre-choice position with a fully admitted unrestricted D16 non-mate score and abs(White centipawns) <= 100.",
+    "fallback": "Keep every unbalanced, uncertified or nonexistent slot in the attempt record, then try the next fixed slot. Do not replace any game or exclude it based on post-choice evaluation.",
+    "no_feature_filter": "No SAN, tactic, capture count, product question, generated text or desired explanation type selects a game or position."
+  },
+  "execution": {
+    "preview_depth": 8,
+    "balance_depth": 16,
+    "profile": "sf18-smallnet-t2-h16-v1",
+    "threads": 2,
+    "hash_mb": 16,
+    "job_budget_ms": 30000,
+    "automatic_threats": false,
+    "completed_report": "Actual frontend Protocol and exact-depth outcome guard. Entire requested multiPV at D and previous D-1 must be unbounded, legally replayable, unique at the root, and match actual bestmove; no partial-PV filtering.",
+    "start": "Only after the root announces v6 compile/test/source freeze and authorizes execution."
+  },
+  "reading": {
+    "before_prose": "Export all actual root_comparison pairs and legal source facts without summary availability, question type or prose. Root fixes conditional answer obligations before reading commentary.",
+    "quality_target": "Existing 14/18 useful complete answers and zero important price omissions remains unchanged; report structure/protocol completion separately.",
+    "human_reader": "Not performed by this preparer. Research LLM reasoning is not a product LLM or independent human assessment."
+  }
+}

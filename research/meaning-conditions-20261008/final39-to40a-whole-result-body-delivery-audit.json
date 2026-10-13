@@ -1,0 +1,619 @@
+{
+  "sealed_utc": "2026-10-08T09:42:51.270595+00:00",
+  "source_sha256": {
+    "target\\decision-timing-20261006\\mcFinalControlled39\\final-snapshots.jsonl.gz": "bd9d8c27dec6bdaf707d382971e06a4d05576b2a2075b8e2cea6ed25671d9d39",
+    "target\\decision-timing-20261006\\mcFinalControlled40a\\final-snapshots.jsonl.gz": "a2b84babe967cba9476b0b2aa9508041f2e2759c21fa8dba9d1a34f392f8e3f9",
+    "target\\decision-timing-20261006\\mcFinalControlled40a\\results.json": "5db7876b22b682f5cafe5d917ff7ceed1d29c910e99f9da10acecbf16fc6cd95",
+    "target\\decision-timing-20261006\\mcPrior35Final39\\final-snapshots.jsonl.gz": "5c0ff7b9009885fbf8c22547df0a204a66015dc5245b9ed32dec7fdb27fe2595",
+    "target\\decision-timing-20261006\\mcPrior35Final40a\\final-snapshots.jsonl.gz": "3843eb529e74044d7753677ca14964737755edc0855c755ee0a6e9d3f2917c88"
+  },
+  "runner_sha256": "d760eb88972935a0d73ec24a5b4680d63d5d75f95717d5c7bf23df5b90225a9c",
+  "groups": {
+    "controls": {
+      "cases": 7,
+      "whole_results_equal": 7,
+      "changed_basic": [],
+      "changed_numeric_results": [],
+      "rows": [
+        {
+          "id": "FC-SG41-ND5-HELD",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": false,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "FC-SG41-ND5-MOVED",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": false,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "FC-SG45-NC4",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "FC-SG45-NB1",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "FC-SG41-A5",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "FC-SG41-EXF5",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "H05",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        }
+      ]
+    },
+    "original35": {
+      "cases": 35,
+      "whole_results_equal": 34,
+      "changed_basic": [
+        "candidates2018-12",
+        "wch2024-08",
+        "TAT25-09",
+        "TAT25-10"
+      ],
+      "changed_numeric_results": [
+        "TAT25-09"
+      ],
+      "rows": [
+        {
+          "id": "wch2016-07",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2016-08",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2016-09",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2016-10",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2016-11",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2016-12",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-07",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-08",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-09",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-10",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-11",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "candidates2018-12",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": false,
+          "exact_core_units_identical": false,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": "After b4, Black's pawn on b4 now targets White's pawn on c3. After b4, Black's pawn on b4 is under attack from White's pawn on c3; it is supported by Black's bishop on d6. In the b4 line: After Rxd5, White's rook on d5 now targets Black's bishop on f5. The recorded continuation is Rxd5 Be6. Be6 moves the bishop out of the attack from White's rook on d5. The compared root choices are b4 and Rb8. b4 clears b5; later Rxd5 passes through that square in this line. In the b4 line: Rxd5 captures the black pawn on d5. Rxd5 captures the black rook on d5. Bxd5 recaptures the white rook on d5."
+        },
+        {
+          "id": "wch2024-07",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2024-08",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": false,
+          "exact_core_units_identical": false,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": "After cxb5, Black's pawn on b5 is under attack from White's rook on b1; it is supported by Black's queen on b6. In the cxb5 line: After Bh3, White's bishop on h3 now targets Black's knight on d7. The recorded continuation is Bh3 Ndc5. Ndc5 moves the knight out of the attack from White's bishop on h3. In the Qxb5 line: The recorded continuation is Rxb5. cxb5 captures the white pawn on b5. The compared root choices are cxb5 and Qxb5. In the cxb5 line: After Bd4, White's bishop on d4 now targets Black's queen on b6. Qb7 moves the queen out of the attack from White's bishop on d4. cxb5 clears c6; later Qb7 uses the cleared line to target White's knight on f3 in this line. After Qb7, Black's queen on b7 now targets White's knight on f3. cxb5 captures the white pawn on b5. Qxb5 captures the white pawn on b5. With Rxb5, the white rook originally on b1 recaptures the black queen originally on b6. In the Qxb5 line: cxb5 recaptures the white rook on b5. cxb5 clears c6; later Qb6 uses the cleared line to target Black's pawn on f6 in this line. After Qb6, Black's queen on b6 adds support to Black's pawn on a5, which is under attack from White's queen on a4, and adds support to Black's pawn on f6, which is under attack from White's bishop on b2."
+        },
+        {
+          "id": "wch2024-09",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2024-10",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2024-11",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "wch2024-12",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-01",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-02",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-03",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-04",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-05",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-08",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-09",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-10",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "COR06-11",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-01",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-03",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-04",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-05",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-07",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        },
+        {
+          "id": "TAT25-09",
+          "whole_request_equal": true,
+          "whole_result_equal": false,
+          "completed": true,
+          "basic_identical": false,
+          "exact_core_units_identical": false,
+          "exact_detail_units_identical": false,
+          "old_covered_refs_missing_from_core": [
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:95003ec1bf000d3d265f16d248319d918917ebdf387e8e8805261578feb43e80"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:ab65920bd0b45f9806fdb08595d104ce78cf32ae1539894abc117443bea8e214"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:b837df126e5e3a9d58c648fe86ed967b1499c85a40127f23c927c6b087d7461c"
+            }
+          ],
+          "old_covered_refs_missing_from_core_and_detail": [
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:48767867688af318961b0cf5b7f9f6be16b028c9960c31fe1ce6823b584a1473"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:4b66323b28b59088eb1c67e089565da239366821fb859a8bf80d0a4f43795e0d"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:584f3c120f4c632b1172b2f9e710bf2848f3e8477d5ec5d69a98309562de2e73"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:9b4c7aaa255db70b55d0badfac0c0b660c516467df652d738ca97e07b8176cb3"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:c5d3a8b3e644d19d6c95c1fddb192925c7d12dca213ac5b6a7f96f3e65a6e110"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:30b36da5ab784cd71c9e18d13d5ca4d90ed193253759d5e0ce91e03bd8b199b7",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:f98e6e4a2a5d441410a3a68b773b92af4a9b86b1db341b1c6e923b35e765af63"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:a7429e960f9cbf6c7bd047a863eeacbe422f2284c494cad803235680e1dc021a",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:134d68ef6062d16552590d8a60cbc449ec541edd6b667c10fa1f8bcf9735b294"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:a7429e960f9cbf6c7bd047a863eeacbe422f2284c494cad803235680e1dc021a",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:bd1813b8553e3cd69de903e3735bf5c505bc90cf6496968407d687b94fd818d3"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:a7429e960f9cbf6c7bd047a863eeacbe422f2284c494cad803235680e1dc021a",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:c93cd76bb8228de199d36b5c59bd2446f99b56dff81c847cb37d7c972ac8d707"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:a7429e960f9cbf6c7bd047a863eeacbe422f2284c494cad803235680e1dc021a",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:e7996545f468b325a881f8fa8c10d4c6c70a330389302ab55fab5568e5bd66dc"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:0f8cfdfb1b3cfcec2429e939bc1b868ab8ffe09b9b926d9607ebe61ae5a5cee0"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:8e6ed0f5e07d0e291b00c1a16dd55e65e4a96df8c0c26fae32b8a4c4b60c89cf"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:95003ec1bf000d3d265f16d248319d918917ebdf387e8e8805261578feb43e80"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:ab65920bd0b45f9806fdb08595d104ce78cf32ae1539894abc117443bea8e214"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:b837df126e5e3a9d58c648fe86ed967b1499c85a40127f23c927c6b087d7461c"
+            },
+            {
+              "line_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:line:cc344884cd844d8dac42ef07208144b2032af5fd77ba549b4fbe3ee4eb7974d3",
+              "occurrence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:transition:d209da8370d8e5a790fe767695d10fe7d098c7ad86e193fea674e3dffa10fdcf"
+            }
+          ],
+          "new_basic": "After d4, Black's pawn on d4 now targets White's pawn on c3. After d4, Black's pawn on d4 is under attack from White's pawn on c3 and White's knight on f3; it is supported by Black's knight on c6 and Black's queen on d8 and Black's knight on f5. In the d4 line: The recorded continuation is Nxc4 Na5. Nxc4 captures the black pawn on c4. After Na5, Black's knight on a5 does not support Black's pawn on d4. Black's queen on d8 and Black's knight on f5 still support Black's pawn on d4. The compared root choices are h6 and d4. d4 clears d5; later Qxd4 passes through that square in this line. After Qxd4, Black's queen on d4 now targets White's bishop on f4 and White's pawn on c4 and White's pawn on e5 and White's pawn on f2. In the d4 line: Nxd4 captures the black knight on d4. Qxd4 recaptures the white knight on d4."
+        },
+        {
+          "id": "TAT25-10",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": false,
+          "exact_core_units_identical": false,
+          "exact_detail_units_identical": false,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": "After e4, White's pawn on e4 is under attack from Black's bishop on b7 and Black's knight on d6; it is supported by White's pawn on d3. In the e4 line: After f6, Black's pawn on f6 now targets White's knight on e5. The recorded continuation is f6 Ng4. Ng4 moves the knight out of the attack from Black's pawn on f6. The compared root choices are Rae1 and e4. e4 clears e3; Ne3 later occupies that square in this line. In the Rae1 line, White's rook on e1 keeps supporting White's bishop on e2 after Qc1 ends the support from White's queen on c2. When Nxe2+ captures that bishop, Rxe2 recaptures its capturer with the supporting rook. With hxg6, the black pawn originally on h7 captures the white pawn originally on e3. In the Rae1 line: In the provided Nxe2+ line: Nxe2+ gives check to the White king on g1 with Black's knight on e2. Rxe2 captures the checking knight on e2."
+        },
+        {
+          "id": "TAT25-11",
+          "whole_request_equal": true,
+          "whole_result_equal": true,
+          "completed": true,
+          "basic_identical": true,
+          "exact_core_units_identical": true,
+          "exact_detail_units_identical": true,
+          "old_covered_refs_missing_from_core": [],
+          "old_covered_refs_missing_from_core_and_detail": [],
+          "new_basic": null
+        }
+      ]
+    }
+  },
+  "scope": "Exact original requests, whole result objects and public body/ref comparison. Covered refs include non-price actions and are not a universal material-price criterion. The prior34 history-bound prices and fixed0/4 human criteria remain unchanged; changed bodies need independent reading."
+}

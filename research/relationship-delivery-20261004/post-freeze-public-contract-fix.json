@@ -1,0 +1,220 @@
+{
+  "created_at_utc": "2026-10-04T04:57:33.689532+00:00",
+  "reason": "Existing advance_choice public contract reconstructed a one-square destination and traversal instead of using the certified original pawn advance. The same original White b2 pawn has an admitted b2-b4 advance; b5-b4 blocks it, while the alternative leaves the exact b2-b4 reply available.",
+  "scope": "One frontend decoder branch only. Backend question selection, costs, English realization, engine output, corpus, and position rules remain frozen v6.",
+  "original_freeze": {
+    "path": "research/relationship-delivery-20261004/freeze-v6.json",
+    "sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe"
+  },
+  "source": {
+    "repository": "lila-docker/repos/lila (nested Git repository)",
+    "path": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+    "before_sha256": "2231644b1ebfd745c807af99ceee8e506f90f5f61efaae5f2894d9df086ab2b0",
+    "after_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+    "added_lines": 9,
+    "removed_lines": 5,
+    "prior_uncommitted_changes_preserved": true,
+    "patch": "--- v6_before\n+++ post_contract_fix\n@@ -6630,12 +6630,16 @@\n                 !control(kept, index + 1, actor.original, after.square)) return;\n             } else if (effect.scope === 'advance_choice') {\n               const [blocked, usedAdvance] = used, blocker = target!;\n-              const destination = `${actor.current.square[0]}${Number(actor.current.square[1]) +\n-                (actor.current.side === 'white' ? 1 : -1)}` as Key;\n+              const destination = effect.square;\n+              const available = position(blocked, index)?.pawn_advances.paths.find(row =>\n+                located(row.piece, actor.current) && row.destination === destination &&\n+                effect.evidence_ids.includes(row.source_id));\n+              if (!available) return;\n+              const traversed = available.traversed_squares;\n               const blockingMove = legal(blocked, index)!, reply = legal(usedAdvance, index + 1);\n               const stopped = position(blocked, index + 1)!;\n               if (actor.current.role !== 'pawn' || blocker.current.role !== 'pawn' ||\n-                actor.current.side === blocker.current.side || effect.square !== destination ||\n+                actor.current.side === blocker.current.side ||\n                 effect.through_plies[0] !== index + 1 || effect.through_plies[1] !== index + 2 ||\n                 blockingMove.uci.slice(0, 2) !== blocker.current.square ||\n                 blockingMove.destination !== destination || blockingMove.captured_square !== undefined ||\n@@ -6643,10 +6647,10 @@\n                 !located(at(blocked, actor.original, index + 1), actor.current) ||\n                 !stopped.pawn_advances.complete || stopped.pawn_advances.paths.some(row =>\n                   located(row.piece, actor.current) && row.destination === destination) ||\n-                !advance(blocked, index, actor.original, destination, [destination]) ||\n+                !advance(blocked, index, actor.original, destination, traversed) ||\n                 !located(at(usedAdvance, actor.original, index + 1), actor.current) ||\n                 !located(at(usedAdvance, blocker.original, index + 2), blocker.current) ||\n-                !advance(usedAdvance, index + 1, actor.original, destination, [destination]) ||\n+                !advance(usedAdvance, index + 1, actor.original, destination, traversed) ||\n                 !reply || reply.uci !== actor.current.square + destination || reply.captured_square !== undefined ||\n                 at(usedAdvance, actor.original, index + 2)?.square !== destination) return;\n             } else if (effect.scope === 'relative_pin') {"
+  },
+  "preserved_guards": [
+    "same original pawn and blocker identities",
+    "exact common position and source path",
+    "owned pawn advance destination/traversal/source id on both arms",
+    "unchanged blocker move and no capture",
+    "exact root/reply phase",
+    "actual legal reply and final arrival",
+    "blocked advance unavailable after blocking move",
+    "all existing proof/cost/promotion/capture/check ownership guards"
+  ],
+  "baseline_v5": {
+    "request_id": "fresh-candidates2018-12-48",
+    "saved_reports_replayed": 2,
+    "new_engine_work_executed": false,
+    "exact_issued_work_match": true,
+    "classpath_sha256": "0e428b50c6292cc97deaa2433f88014fd0358447dbc1d86a5c3ad8aab2fe4532",
+    "main_manifest_sha256": "9d1da5b63394e866ce05f6ca9eecd1103e44906aa02c2216f687739ebe9be88d",
+    "verified_product_classes": 1699,
+    "baseline_pending_sha256": "68a34c5dc3cec7bd5d2e9e109cf7fe3534d7320fa4e14ef5e514188a4ea8cc5c",
+    "original_pending_sha256": "f18a3d8ee28ea17ed46ae3f47eed8728d662ac82766c47d017c38c0d65d5658f"
+  },
+  "before_public_work": {
+    "cases": [
+      {
+        "file": "rejected-issued-work.json",
+        "sha256": "f18a3d8ee28ea17ed46ae3f47eed8728d662ac82766c47d017c38c0d65d5658f",
+        "request_id": "fresh-candidates2018-12-48",
+        "public_decoded": false,
+        "selection_present": false,
+        "issued_work_present": false
+      },
+      {
+        "file": "baseline-v5-pending.json",
+        "sha256": "68a34c5dc3cec7bd5d2e9e109cf7fe3534d7320fa4e14ef5e514188a4ea8cc5c",
+        "request_id": "fresh-candidates2018-12-48",
+        "public_decoded": false,
+        "selection_present": false,
+        "issued_work_present": false
+      }
+    ],
+    "scope": "Uninstrumented actual public decoder; exact original v6 and stored-report v5 packets; no engine or product changes in the probe."
+  },
+  "after_public_work": {
+    "cases": [
+      {
+        "file": "rejected-issued-work.json",
+        "sha256": "f18a3d8ee28ea17ed46ae3f47eed8728d662ac82766c47d017c38c0d65d5658f",
+        "request_id": "fresh-candidates2018-12-48",
+        "public_decoded": true,
+        "selection_present": true,
+        "issued_work_present": true
+      },
+      {
+        "file": "baseline-v5-pending.json",
+        "sha256": "68a34c5dc3cec7bd5d2e9e109cf7fe3534d7320fa4e14ef5e514188a4ea8cc5c",
+        "request_id": "fresh-candidates2018-12-48",
+        "public_decoded": true,
+        "selection_present": true,
+        "issued_work_present": true
+      }
+    ],
+    "negatives": [
+      {
+        "kind": "different_destination",
+        "public_packet_rejected": true,
+        "selection_rejected": true
+      },
+      {
+        "kind": "different_original_pawn",
+        "public_packet_rejected": true,
+        "selection_rejected": true
+      },
+      {
+        "kind": "wrong_reply_phase",
+        "public_packet_rejected": true,
+        "selection_rejected": true
+      },
+      {
+        "kind": "missing_owned_advance_source",
+        "public_packet_rejected": true,
+        "selection_rejected": true
+      },
+      {
+        "kind": "unsupported_pawn_destination",
+        "public_packet_rejected": true,
+        "selection_rejected": true
+      }
+    ],
+    "scope": "Uninstrumented actual public decoder; exact original v6 and stored-report v5 packets; no engine or product changes in the probe."
+  },
+  "before_frontend": {
+    "cases": 33,
+    "regression_cases": 15,
+    "fresh_cases": 18,
+    "publicly_decoded": 33,
+    "summary_candidates": 33,
+    "preserved_summaries": 32,
+    "fully_checked_summaries": 32,
+    "unavailable_notices_checked": 0,
+    "exact_san_actions_checked": 2588,
+    "max_unit_proof_refs": 23,
+    "max_unit_required_refs": 23,
+    "max_unit_covered_refs": 13
+  },
+  "after_frontend": {
+    "cases": 33,
+    "regression_cases": 15,
+    "fresh_cases": 18,
+    "publicly_decoded": 33,
+    "summary_candidates": 33,
+    "preserved_summaries": 33,
+    "fully_checked_summaries": 33,
+    "unavailable_notices_checked": 0,
+    "exact_san_actions_checked": 2672,
+    "max_unit_proof_refs": 23,
+    "max_unit_required_refs": 23,
+    "max_unit_covered_refs": 13
+  },
+  "source_negative_guards": [
+    {
+      "kind": "foreign_actual_source_path_in_proof",
+      "snapshot_decoded": true,
+      "rejected": true
+    },
+    {
+      "kind": "hidden_covered_capture_missing_from_proof",
+      "snapshot_decoded": true,
+      "required_covered_source_and_words_unchanged": true,
+      "rejected": true
+    }
+  ],
+  "engine_run_reclassification": {
+    "none": true,
+    "original_issued_decoder_failure_stays_failure": true,
+    "post_fix_work_is_decodable_but_not_executed": true,
+    "whole_failures_unchanged": 7,
+    "cancelled_unchanged": 4,
+    "partial_completed_unchanged": 0
+  },
+  "machine_scope": "Actual public frontend decoder and production VNode renderer, exact stored requests; canonical legal SAN and proof refs, basic/detail parts, focus/click callbacks. JSDOM only. No browser, full UI, official build, HTTP, mobile, or new engine execution. Machine equality does not establish explanatory quality.",
+  "source_classes_after_fix": {
+    "main_sources": 71,
+    "main_classes": 1699
+  },
+  "primary_product_prose_read_before_root_obligations": false,
+  "artifacts": {
+    "v6-execution-audit.json": {
+      "path": "research/relationship-delivery-20261004/v6-execution-audit.json",
+      "sha256": "2b2f0173cf346436c4593660016a6187e74504ba6ca2ecdb6df231fdd05953cf"
+    },
+    "v6-frontend-before-contract-results.json": {
+      "path": "research/relationship-delivery-20261004/v6-frontend-before-contract-results.json",
+      "sha256": "11dcdacaf231dfb8d017f4b0cf6eacde173c287754da3bfc5211c517755c3283"
+    },
+    "v6-frontend-after-contract-results.json": {
+      "path": "research/relationship-delivery-20261004/v6-frontend-after-contract-results.json",
+      "sha256": "e5020434d059b60e10288e7a1bc45e24385359a782f5364db0911d1ab332141b"
+    },
+    "v6-frontend-after-contract-manifest.json": {
+      "path": "research/relationship-delivery-20261004/v6-frontend-after-contract-manifest.json",
+      "sha256": "86239f483896b651a28c05f9f308fe390a15d3d931b5ab63c0b2bcd248c50c5d"
+    },
+    "v6-public-work-before-contract-results.json": {
+      "path": "research/relationship-delivery-20261004/v6-public-work-before-contract-results.json",
+      "sha256": "92934d548338ec3a8c496bcbcd736f1c6dffa4c903f5b82ee332f090383ef7ea"
+    },
+    "v6-public-work-after-contract-results.json": {
+      "path": "research/relationship-delivery-20261004/v6-public-work-after-contract-results.json",
+      "sha256": "dc7f2f39c451ea9c7906f94a0ad53aa71357d306be50109570796238f75e25aa"
+    },
+    "v6-baseline-replay-manifest.json": {
+      "path": "research/relationship-delivery-20261004/v6-baseline-replay-manifest.json",
+      "sha256": "339d25f4928dfb2d0623c61633c2da4f63d53d9571251ae63038291ec2b0f0f9"
+    },
+    "v6-decoder-stage-results.json": {
+      "path": "research/relationship-delivery-20261004/v6-decoder-stage-results.json",
+      "sha256": "700d25438a36557c26e4b0bc8175dba100252277a0d155b1c0a9988250ccc22c"
+    }
+  },
+  "retained_engine_files": {
+    "manifest.json": {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/manifest.json",
+      "sha256": "83e718216303926ac54fe823cb03a5742f59cc2e1e060e9cca4c964fcfe56b70"
+    },
+    "results.json": {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/results.json",
+      "sha256": "ca217f6dff35e46b283b378ef9022099e6ab1cce7e735d12ba8950919d0ffd66"
+    },
+    "journal.jsonl.gz": {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/journal.jsonl.gz",
+      "sha256": "2a1ba2aa68d897645af7ae06973134c73f2d2dcd96c5c8d74df22f4e7d815b03"
+    },
+    "final-snapshots.jsonl.gz": {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/final-snapshots.jsonl.gz",
+      "sha256": "9774cfab35c8b7c2253eba62d5021f9a50c7bb7b6cbf8c5552271e1945cb85dc"
+    },
+    "execution-audit.json": {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/execution-audit.json",
+      "sha256": "2b2f0173cf346436c4593660016a6187e74504ba6ca2ecdb6df231fdd05953cf"
+    }
+  }
+}

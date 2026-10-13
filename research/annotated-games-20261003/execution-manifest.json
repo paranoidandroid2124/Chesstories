@@ -1,0 +1,70 @@
+{
+  "engine_id": {
+    "name": "Stockfish 18",
+    "author": "the Stockfish developers (see AUTHORS file)"
+  },
+  "profile": "sf18-smallnet-t2-h16-v1",
+  "assets_version": "0.4.2",
+  "threads": 2,
+  "hash_mb": 16,
+  "asset_hashes": {
+    "nn-4ca89e4b3abf.nnue": "4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94",
+    "sf_18_smallnet.js": "0eebbd7d5108348cbf51b868adf4af0d33a866ef68217b2d6d9259c7573d8287",
+    "sf_18_smallnet.wasm": "7a759da6e6a19b86853e107f3212b070298e9e1515ed6959783a89c65e88a195"
+  },
+  "execution": "Product WebAssembly engine under Node, public reducer and serializer in-process; no browser/HTTP.",
+  "root_depth": 16,
+  "preview_depth": 8,
+  "automatic_threat_probe": false,
+  "budget_ms_per_move": 30000,
+  "request_fen_convention": "Legal en-passant target, replayed from the full recorded move prefix; raw book conversion FEN retained in games.json.",
+  "whole_game_ui_deadline_applied": false,
+  "game_input_sha256": "c554cee074a8b3216c917536a8281878aa57ae66837436caaabea1bc17ab4892",
+  "completed_games": [
+    {
+      "id": "fundamentals-game-01",
+      "moves": 49
+    },
+    {
+      "id": "fundamentals-game-02",
+      "moves": 83
+    },
+    {
+      "id": "fundamentals-game-03",
+      "moves": 99
+    },
+    {
+      "id": "fundamentals-game-04",
+      "moves": 80
+    },
+    {
+      "id": "fundamentals-game-05",
+      "moves": 83
+    },
+    {
+      "id": "fundamentals-game-06",
+      "moves": 131
+    },
+    {
+      "id": "fundamentals-game-07",
+      "moves": 91
+    },
+    {
+      "id": "fundamentals-game-08",
+      "moves": 88
+    },
+    {
+      "id": "fundamentals-game-09",
+      "moves": 75
+    },
+    {
+      "id": "fundamentals-game-10",
+      "moves": 121
+    }
+  ],
+  "reader_version": 3,
+  "executor_difference": "Individual PV filtering in the research driver differs from the all-requested-PVs admission rule of the frontend. Affected work items/requests are flagged in execution-diagnostics.json.",
+  "raw_wire_location": "target/annotated-games-20261003/full-flow/*-wire.jsonl.gz",
+  "raw_wire_tracked_by_git": false,
+  "code_provenance": "runtime-provenance.json"
+}

@@ -1,8 +1,0 @@
-**/node_modules
-**/bg-jobs
-
-command/
-
-repos/lila/logs/
-repos/lila/target/
-repos/lila-db-seed/spamdb/venv/

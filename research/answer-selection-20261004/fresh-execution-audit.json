@@ -1,0 +1,974 @@
+{
+  "scope": "Stored work/report/depth and source identity audit only; no basic prose reading.",
+  "requests": 18,
+  "attempts_per_request": 1,
+  "begin_responses": 18,
+  "accepted_jobs": 17,
+  "states": {
+    "completed": 17,
+    "unavailable": 1
+  },
+  "issued_works": 73,
+  "submitted_reports": 73,
+  "completed_exact_depth_reports": 65,
+  "failure_reports": [
+    {
+      "game_id": "COR06-02",
+      "work_id": "work:2",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "engine_failure"
+      },
+      "adapter_generated": true
+    },
+    {
+      "game_id": "COR06-03",
+      "work_id": "work:4",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "search_budget_exhausted"
+      },
+      "adapter_generated": false
+    },
+    {
+      "game_id": "COR06-05",
+      "work_id": "work:2",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "engine_failure"
+      },
+      "adapter_generated": true
+    },
+    {
+      "game_id": "COR06-08",
+      "work_id": "work:3",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "search_budget_exhausted"
+      },
+      "adapter_generated": false
+    },
+    {
+      "game_id": "COR06-11",
+      "work_id": "work:3",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "search_budget_exhausted"
+      },
+      "adapter_generated": false
+    },
+    {
+      "game_id": "TAT25-04",
+      "work_id": "work:2",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "engine_failure"
+      },
+      "adapter_generated": true
+    },
+    {
+      "game_id": "TAT25-05",
+      "work_id": "work:3",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "search_budget_exhausted"
+      },
+      "adapter_generated": false
+    },
+    {
+      "game_id": "TAT25-10",
+      "work_id": "work:2",
+      "outcome": {
+        "kind": "executor_failed",
+        "failure_code": "engine_failure"
+      },
+      "adapter_generated": true
+    }
+  ],
+  "pending_work_preserved": [],
+  "adapter_errors": [
+    {
+      "game_id": "TAT25-06",
+      "request_id": "answer-selection-TAT25-06-31",
+      "elapsed_ms": 150,
+      "work_count": 0,
+      "issued_work_count": 0,
+      "bridge_execution_response_count": 0,
+      "report_submission_attempt_count": 0,
+      "reducer_report_response_count": 0,
+      "state": "unavailable",
+      "stop_condition": null,
+      "adapter_error": "RuntimeError: Public reducer rejected begin; exact response stored",
+      "pending_work_preserved": false,
+      "execution_group": "later_fixed_job",
+      "executor_failure_report_count": 0,
+      "adapter_generated_failure_report_count": 0,
+      "obligation_facts_sha256": "51539bf0de52058e4880fbb607d9296a8ff5339e0129933c66b8bcf24b425fe8"
+    }
+  ],
+  "issues": [],
+  "work_purposes": {
+    "root_search": 34,
+    "focus_comparison": 10,
+    "response_comparison": 21
+  },
+  "first_job_engine_ready_jvm_first_begin_ms": 25119,
+  "later_attempt_ms": {
+    "count": 17,
+    "min": 150,
+    "median": 8571,
+    "max": 20267
+  },
+  "later_completed_job_ms": {
+    "count": 16,
+    "min": 3169,
+    "median": 8612.0,
+    "max": 20267
+  },
+  "startups": [
+    {
+      "startup_index": 1,
+      "status": "ready",
+      "adapter_startup_ms": 15033,
+      "raw_ready": {
+        "ready": true,
+        "engine_name": "Stockfish 18",
+        "engine_startup_ms": 348,
+        "boot": [
+          {
+            "sent": "uci"
+          },
+          {
+            "received": "Stockfish 18 by the Stockfish developers (see AUTHORS file)"
+          },
+          {
+            "received": "id name Stockfish 18"
+          },
+          {
+            "received": "id author the Stockfish developers (see AUTHORS file)"
+          },
+          {
+            "received": ""
+          },
+          {
+            "received": "option name Debug Log File type string default <empty>"
+          },
+          {
+            "received": "option name NumaPolicy type string default auto"
+          },
+          {
+            "received": "option name Threads type spin default 1 min 1 max 1024"
+          },
+          {
+            "received": "option name Hash type spin default 16 min 1 max 2048"
+          },
+          {
+            "received": "option name Clear Hash type button"
+          },
+          {
+            "received": "option name Ponder type check default false"
+          },
+          {
+            "received": "option name MultiPV type spin default 1 min 1 max 256"
+          },
+          {
+            "received": "option name Skill Level type spin default 20 min 0 max 20"
+          },
+          {
+            "received": "option name Move Overhead type spin default 10 min 0 max 5000"
+          },
+          {
+            "received": "option name nodestime type spin default 0 min 0 max 10000"
+          },
+          {
+            "received": "option name UCI_Chess960 type check default false"
+          },
+          {
+            "received": "option name UCI_LimitStrength type check default false"
+          },
+          {
+            "received": "option name UCI_Elo type spin default 1320 min 1320 max 3190"
+          },
+          {
+            "received": "option name UCI_ShowWDL type check default false"
+          },
+          {
+            "received": "option name SyzygyPath type string default <empty>"
+          },
+          {
+            "received": "option name SyzygyProbeDepth type spin default 1 min 1 max 100"
+          },
+          {
+            "received": "option name Syzygy50MoveRule type check default true"
+          },
+          {
+            "received": "option name SyzygyProbeLimit type spin default 7 min 0 max 7"
+          },
+          {
+            "received": "option name EvalFile type string default nn-4ca89e4b3abf.nnue"
+          },
+          {
+            "received": "uciok"
+          },
+          {
+            "sent": "setoption name UCI_AnalyseMode value true"
+          },
+          {
+            "sent": "setoption name Analysis Contempt value Off"
+          },
+          {
+            "sent": "setoption name UCI_Chess960 value true"
+          },
+          {
+            "sent": "ucinewgame"
+          },
+          {
+            "sent": "isready"
+          },
+          {
+            "received": "No such option: UCI_AnalyseMode"
+          },
+          {
+            "received": "No such option: Analysis Contempt"
+          },
+          {
+            "received": "readyok"
+          }
+        ]
+      },
+      "engine_ready_before_job": true,
+      "jvm_first_begin_not_in_startup_measurement": true
+    },
+    {
+      "startup_index": 2,
+      "status": "ready",
+      "adapter_startup_ms": 1378,
+      "raw_ready": {
+        "ready": true,
+        "engine_name": "Stockfish 18",
+        "engine_startup_ms": 320,
+        "boot": [
+          {
+            "sent": "uci"
+          },
+          {
+            "received": "Stockfish 18 by the Stockfish developers (see AUTHORS file)"
+          },
+          {
+            "received": "id name Stockfish 18"
+          },
+          {
+            "received": "id author the Stockfish developers (see AUTHORS file)"
+          },
+          {
+            "received": ""
+          },
+          {
+            "received": "option name Debug Log File type string default <empty>"
+          },
+          {
+            "received": "option name NumaPolicy type string default auto"
+          },
+          {
+            "received": "option name Threads type spin default 1 min 1 max 1024"
+          },
+          {
+            "received": "option name Hash type spin default 16 min 1 max 2048"
+          },
+          {
+            "received": "option name Clear Hash type button"
+          },
+          {
+            "received": "option name Ponder type check default false"
+          },
+          {
+            "received": "option name MultiPV type spin default 1 min 1 max 256"
+          },
+          {
+            "received": "option name Skill Level type spin default 20 min 0 max 20"
+          },
+          {
+            "received": "option name Move Overhead type spin default 10 min 0 max 5000"
+          },
+          {
+            "received": "option name nodestime type spin default 0 min 0 max 10000"
+          },
+          {
+            "received": "option name UCI_Chess960 type check default false"
+          },
+          {
+            "received": "option name UCI_LimitStrength type check default false"
+          },
+          {
+            "received": "option name UCI_Elo type spin default 1320 min 1320 max 3190"
+          },
+          {
+            "received": "option name UCI_ShowWDL type check default false"
+          },
+          {
+            "received": "option name SyzygyPath type string default <empty>"
+          },
+          {
+            "received": "option name SyzygyProbeDepth type spin default 1 min 1 max 100"
+          },
+          {
+            "received": "option name Syzygy50MoveRule type check default true"
+          },
+          {
+            "received": "option name SyzygyProbeLimit type spin default 7 min 0 max 7"
+          },
+          {
+            "received": "option name EvalFile type string default nn-4ca89e4b3abf.nnue"
+          },
+          {
+            "received": "uciok"
+          },
+          {
+            "sent": "setoption name UCI_AnalyseMode value true"
+          },
+          {
+            "sent": "setoption name Analysis Contempt value Off"
+          },
+          {
+            "sent": "setoption name UCI_Chess960 value true"
+          },
+          {
+            "sent": "ucinewgame"
+          },
+          {
+            "sent": "isready"
+          },
+          {
+            "received": "No such option: UCI_AnalyseMode"
+          },
+          {
+            "received": "No such option: Analysis Contempt"
+          },
+          {
+            "received": "readyok"
+          }
+        ]
+      },
+      "engine_ready_before_job": true,
+      "jvm_first_begin_not_in_startup_measurement": true
+    }
+  ],
+  "shutdowns": [
+    {
+      "process": "node_bridge",
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    },
+    {
+      "process": "java_reducer",
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    },
+    {
+      "process": "node_bridge",
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    },
+    {
+      "process": "java_reducer",
+      "exit_code": 0,
+      "adapter_forced_kill": false
+    }
+  ],
+  "total_run_elapsed_ms": 203586,
+  "source_class_bridge_identity": "unchanged",
+  "manifest_sha256": "5cd365a75959790c0042385f303082aa22ad3808591f1e1f1bee99522131bad5",
+  "results_sha256": "8e7d577e63eb394fb933a11674057db90123784b2d22492beb89e6ae3a80377a",
+  "certificates": [
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "96668fc752b6c1ee19b5a4d025f38637d359abe0c17aea1b1eab9c4dc9bbebd6"
+    },
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "50f0e9cec710e97c2b1d65bbc785782eb4dd967e5dc4257fafa77baef4c979ab"
+    },
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "1b07282fe6b4fc09410a644030def27232cb00b43f7e17008716f45f7d1c8271"
+    },
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "8e375eeb1c17cb34ed3aa138da96c979d1dccbff2c9ed65ae2a5da8f7b2a89d7"
+    },
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "2dee2a573010572ce67020048409f56c0be38b4151e3cba5f4982efd0c5c2589"
+    },
+    {
+      "game_id": "COR06-01",
+      "work_id": "work:5",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "6798bbb5d95f1dcc80ee34b88b4c5785b40abc021a5a55b7ded1f9a140d559d8"
+    },
+    {
+      "game_id": "COR06-02",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "3f8c1c34be2672cc71285a25a1f3144c14fb99d67026aa10f95622640094804d"
+    },
+    {
+      "game_id": "COR06-02",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "f2cf034e9994e2ec8bd1399065753ee22ddd4afd76e5c5216283ea7551a45f33"
+    },
+    {
+      "game_id": "COR06-03",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "3af10e3657c117dce406bf6a1b3dae694587d4c5125bb5ab8c8479b7fffff649"
+    },
+    {
+      "game_id": "COR06-03",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "0e4eef27ffd969675f80a44bac4150a89bf1334d057bb6c84f4f51fca73b3f25"
+    },
+    {
+      "game_id": "COR06-03",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "6fca0dad4a726801101c751b9669f049ce3a6e9ff0b2e4f2543cef581fadba49"
+    },
+    {
+      "game_id": "COR06-03",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "fa2171d987991f179efd99c6ff1f9eab84b74c5e93437758405c59266b7ef299"
+    },
+    {
+      "game_id": "COR06-04",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "ff2baeb543c71feba3390dbb83b5b7a05a3f7b9535ec7ca2d5abb102f6e0f66b"
+    },
+    {
+      "game_id": "COR06-04",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "451dbe0bd1fc95f3bd9d70067d6ec790f7dc312c2c02f28092f14e1c668ec1ea"
+    },
+    {
+      "game_id": "COR06-04",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "a9c97934075ae245b0880bc9e0366db9879cde598be5f2c12038f0619f818bd4"
+    },
+    {
+      "game_id": "COR06-04",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "fd5a8b0fe07619cd7f3bb07bf17e08cd51ab93dd2908f5ccd2ff45c48f893433"
+    },
+    {
+      "game_id": "COR06-05",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "342c5400b9e1694152767fd44ea417bd15c4ce18cb7223b3fcc0a73975c1c568"
+    },
+    {
+      "game_id": "COR06-05",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "361c8ba278978e98acc9ae7c5c83147e608f88285a4d187b35431ee8922995a1"
+    },
+    {
+      "game_id": "COR06-08",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "0d8a4933ededf3dabca644440d45bde7569d1fee0ce10b28f1a55ebe5eaf223c"
+    },
+    {
+      "game_id": "COR06-08",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "c43306c3afdf1a8a077fe62cf2a4fe160af3c81a9f90905c56bca1ca03048e99"
+    },
+    {
+      "game_id": "COR06-08",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "c685eecf6d10159a4f68ce8effed1cb167cddf73d430fbe254ed733287dbd899"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "d849a72e1ad1a4938308002dac5345770e4ed0d935326ee96656613601924b2b"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "43e16d714c53880aba3d9e4c16e1d22b1cc8129a79f15c9a4717bfa823e6d99f"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "70b6711cf53e9a36068ebad9ceb816aae55471ec6014cdbc2cd0ebfecea30c20"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "17a021b3fb5f046bf47534b501c5ec0745b7d6699296e6382c43297b9c4f385b"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "15b521b95fc40ec305a36e71c6c59c3e74e1d4411f9f68482edfe17481a71669"
+    },
+    {
+      "game_id": "COR06-09",
+      "work_id": "work:5",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "865e3f8261a1f80b84aa7219b9b7fe9f35d0d59f203507943ceb0053817d2c3b"
+    },
+    {
+      "game_id": "COR06-10",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "3d62f6cb9c96eb453b99383674269f5021ede64f6ae78894e8a6ea236ea4a2cd"
+    },
+    {
+      "game_id": "COR06-10",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "a791fb4f0713e953b2f9bb82c2322a04e2e87ecad2853c62d41cbcfcad0dabef"
+    },
+    {
+      "game_id": "COR06-10",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "e443f00d215acd8782f92c4e8abe8a7118c8873d3542f17f4d25f25235f53a44"
+    },
+    {
+      "game_id": "COR06-10",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "4348c5af1ad27217a65fed82ed6694bf93df65ed0dde56c1c4dfb7b08813b8c0"
+    },
+    {
+      "game_id": "COR06-11",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "e04e316a4d81b74c3b42689c21b3e095ad24c16c7900baa1dafcc1f4b4006e78"
+    },
+    {
+      "game_id": "COR06-11",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "f6e7e0100a6a3f4b3377c2fffa6c3b5e019eb733e26741bcd52102f955d1db2e"
+    },
+    {
+      "game_id": "COR06-11",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "e33c16810f414f97bb20c9bde7bad5d0bb3cc4b9f743374ceff3252842b1fc9f"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "775c5626606903cb59c8b2820f893429aedd676c2d60890ac826b16948b63e45"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "8294e92b87caac2ea192c5f1ef0fb18a2a055aba6c66d99f62f0efac8aaee884"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "aa467efab096dad2a02ce5efd46b9cc87d5c016cc0b4ddc0af464d453ed282c1"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "c9108cb331d5d2ba39fc37001e53bc786cd4407bf35f2dea4f815a2c898e43fc"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "6a47f971b67692d72f46db1f6d317e7bd40785e56ddb4e4d7f4340d27d379763"
+    },
+    {
+      "game_id": "TAT25-01",
+      "work_id": "work:5",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "df98859aeeb14d7a4e594e81ec8dc330a379811bcde7818977cccbf31583f103"
+    },
+    {
+      "game_id": "TAT25-03",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "1a3ef06afb1881e37ab468f38524e76da1cf50f59505fed82134fb9cb7477910"
+    },
+    {
+      "game_id": "TAT25-03",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "67b452a65d6449d85cd789720824a4c72167b4996bcdc6dcaaaa48f9c8bd2f39"
+    },
+    {
+      "game_id": "TAT25-03",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "3de8f877c7a3978fa1a9fd4b74a44b3973903e1288fc33435599e9e0ee72b671"
+    },
+    {
+      "game_id": "TAT25-03",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "de75fc5380918f73ae5179e87b0ee6005be872dd3c87cc8c58c2d0552c2b8f9f"
+    },
+    {
+      "game_id": "TAT25-04",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "659f0e8c16f593274d76d21413554c54b643bf8feaa2cb98e90a6fd40faccb92"
+    },
+    {
+      "game_id": "TAT25-04",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "5bf20696d5bb3ae5420816224cebc1cc581232cdf220dc0009d6b28002a644cf"
+    },
+    {
+      "game_id": "TAT25-05",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "d009712d761710b87ed2f62cf91e386897109a615df622ebc77a40a4f02123a5"
+    },
+    {
+      "game_id": "TAT25-05",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "02780c2091fefa1365e0d8017449eb5f3a47dcd2b130160d42e6e0cb0aa9ae75"
+    },
+    {
+      "game_id": "TAT25-05",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "fd178314184d1b82edb3024b6c1818e2c673cac02833938dde1f54246ea2c09e"
+    },
+    {
+      "game_id": "TAT25-07",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "a0252b675038cc88577454f763170870cad2dcb71c11ebfc107075136045b391"
+    },
+    {
+      "game_id": "TAT25-07",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "b86f34fbdec68df58c112f6162178f7b30dda7f0060461f0acc0e80a342febea"
+    },
+    {
+      "game_id": "TAT25-07",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "73ab40e9a6305ee4f001a04a621451f088178494c59f19399e45534b73ba0f39"
+    },
+    {
+      "game_id": "TAT25-07",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "7074429992db885dc5c555fbf82e2b5c371d840e0ac658154d5d2d85e59311c7"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "20142e1ac98dd02f261779fef6cfb087eb9865c06f1b3c39f5cb57e848019670"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:1",
+      "purpose": "focus_comparison",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 2,
+      "exact_execution_key": "063cca65a45452fae757087b5c94e69cf46c84f948e24ab1fa640012e78ff06a"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:2",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "1a06d653521b3502a8d5db427bd7ddddec5ce56f53cd13ce1c4626217c267694"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "eb3725edc261bf0fbbcfedfd7bcfee7ce29566dad00fe0631ceb3162ece8e90e"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "f4a0c4f90e80cb659f075bb2dcb7c3099fffc4120e19b8bf905bc2db1b76d78a"
+    },
+    {
+      "game_id": "TAT25-09",
+      "work_id": "work:5",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "d0d66f3961c51d010980dee4e4d8950c2690c1aada472bdd8b1e62325bec0c02"
+    },
+    {
+      "game_id": "TAT25-10",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "5456b461a6c75b2986a087932b8c88f5ec55de254c4f00cfd17b64dc71ee5f73"
+    },
+    {
+      "game_id": "TAT25-10",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "6ec13447ffe9607dc7963fb247ffd676995f4723bd9f5f127215fa93ab101f19"
+    },
+    {
+      "game_id": "TAT25-11",
+      "work_id": "work:0",
+      "purpose": "root_search",
+      "depth": 8,
+      "previous_depth": 7,
+      "multi_pv": 3,
+      "exact_execution_key": "69b642a1c163b6d45f9f31d04292b0de28b1424bf4a7d85d3119a560fbf36af1"
+    },
+    {
+      "game_id": "TAT25-11",
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "ef3bef38a9abdaa7ba721bfdcaf061821f2d83d8363b5199706d7d2a8ec70fa4"
+    },
+    {
+      "game_id": "TAT25-11",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 3,
+      "exact_execution_key": "9525093c1a6eadc5070f224b326d407aa02b3a218dce081689c3e3511123c4a8"
+    },
+    {
+      "game_id": "TAT25-11",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "depth": 16,
+      "previous_depth": 15,
+      "multi_pv": 2,
+      "exact_execution_key": "f6449228f645e46f0722b2f158d5770a24d411a2e114d313f8a32c312fef30d8"
+    }
+  ],
+  "limits": [
+    "Warm standalone engine/reducer, not UI or mobile timing",
+    "No retry/cancellation UI simulation; original errors are preserved",
+    "Execution success and exact depth do not establish commentary quality"
+  ]
+}

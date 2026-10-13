@@ -1,0 +1,387 @@
+{
+  "artifact": "commentary-salience-external-review",
+  "research_date": "2026-10-04",
+  "scope": {
+    "task": "원 저자 및 공식 교육·annotation 자료에서 독립 해설을 생략할 후보와 예외를 조사한다.",
+    "product_source_read": false,
+    "product_output_read": false,
+    "engine_run": false,
+    "browser_or_ui_run": false,
+    "protected_corpus_read": false,
+    "independent_human_reader_evaluation": false,
+    "product_language_model": false,
+    "research_reasoning": "언어모델의 자료 독해와 연구 제안이며 제품 정책의 실험 결과가 아니다.",
+    "only_written_file": "research/commentary-salience-20261004/external-review.json"
+  },
+  "conclusion": {
+    "finding": "코멘트 불필요 후보는 수의 형태보다 이미 답한 내용과의 관계로 정의해야 한다. 강제수·되잡기·전개수는 독립 해설이 불필요할 수 있지만, 앞 주장의 응수·대가·결과를 닫는 내용으로는 필수일 수 있다.",
+    "proposal_status": "아래 경계는 외부 자료로부터 도출한 연구 제안이다. 저자의 annotation 기호 정책이나 공식 tagging 정책을 제품 본문 생략 규칙으로 그대로 옮기지 않는다.",
+    "three_states": [
+      {
+        "state": "mandatory_completion",
+        "question": "이 사건을 빼면 이미 선택한 설명의 이득·안전성·가격·확인된 결과가 달라지는가?",
+        "meaning": "그렇다면 수가 통상적이거나 강제적이어도 같은 답 안에 의미를 남긴다. 별도 칭찬이나 사건별 새 문단이 필수라는 뜻은 아니다.",
+        "guard": "실제로 확인한 같은 수순·기물·거래의 관계만 소유한다. 모든 후속 포획이나 표면 SAN을 새 핵심 내용으로 삼지 않는다."
+      },
+      {
+        "state": "standalone_salience",
+        "question": "이 선택이 다른 선택과 다르게 작동하는 이유 또는 독자가 아직 이해하지 못한 핵심을 새로 답하는가?",
+        "meaning": "조용한 후퇴·대기·전개·되잡기도 새로운 조건과 실제 사용을 설명하면 독립 해설 후보다.",
+        "guard": "새 사실이 있다는 이유만으로 후보를 본문에 올리지 않는다. 독자의 실제 질문과 선택 차이 또는 수의 작동 방식에 연결되어야 한다."
+      },
+      {
+        "state": "unknown",
+        "question": "현재 근거가 독립 설명의 필요성 또는 불필요성을 확인하는가?",
+        "meaning": "질문을 찾지 못함, 짧은 PV, 평가 동등, 주석 부재만으로 무의미한 수라고 단정하지 않는다.",
+        "guard": "근거 없는 새 설명은 만들지 않는다. 이미 소유한 필수 가격은 유지하고, 중요도 미확인을 불필요 판정이나 품질 개선 성공으로 집계하지 않는다."
+      }
+    ],
+    "priority": "먼저 선택한 주장에 필요한 completion을 보존한다. 그다음 독립 내용의 가치와 반복을 따진다. 부족한 근거는 unknown으로 분리한다."
+  },
+  "key_findings": [
+    {
+      "finding": "엔진 최선수에 매번 좋은 수 기호를 붙이면 통상적 되잡기나 공격받은 기물의 대응까지 과도하게 강조된다.",
+      "source_ids": ["S1"],
+      "source_url": "https://chesstempo.com/blog/9/good-move-annotations",
+      "interpretation": "좋은 수 표시의 희소성과 설명문 필요성은 다른 판단이다. 최선수 여부만으로 모든 수에 설명을 생성하지 말자는 근거로만 사용한다."
+    },
+    {
+      "finding": "선택한 전술의 작동에 중요한 미실행 위협은 관련 내용이지만, 우연히 존재하는 독립 위협은 같은 전술의 핵심으로 취급할 필요가 없다.",
+      "source_ids": ["S2"],
+      "source_url": "https://alpha.chesstempo.com/tagging-guidelines",
+      "interpretation": "기하 관계의 존재와 선택한 답에 대한 관련성을 분리해야 한다. Tagging 지침이 본문 삭제의 직접 규정인 것은 아니다."
+    },
+    {
+      "finding": "이미 설명된 내용을 반복하거나 모티프 이름만 추가하는 것은 새 답을 제공하지 않을 수 있다.",
+      "source_ids": ["S3"],
+      "source_url": "https://alpha.chesstempo.com/commenting-guidelines",
+      "interpretation": "같은 SAN·기물 여부가 아니라 이미 답한 질문, 달라진 조건, 실제 사용과 가격을 비교해야 한다."
+    },
+    {
+      "finding": "조용한 수는 전술의 핵심 조건이나 상대 의도의 대응일 수 있으므로 비포획·비체크라는 이유로 생략하면 안 된다.",
+      "source_ids": ["S4", "S6"],
+      "source_urls": ["https://en.chessbase.com/post/mark-dvoretsky-s-final-interview-part-iii", "https://www.newinchess.com/media/wysiwyg/product_pdf/9130.pdf"]
+    },
+    {
+      "finding": "같은 되잡기 칸이라도 누가 잡는지에 따라 구조·선의 사용·후속 대응이 달라질 수 있다.",
+      "source_ids": ["S5"],
+      "source_url": "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure"
+    },
+    {
+      "finding": "대기수와 opposition에서는 순서와 차례가 의미를 바꾸므로 즉시 물질 변화가 없다는 것이 설명 부재의 근거가 되지 않는다.",
+      "source_ids": ["S7", "S8", "S9"],
+      "source_urls": ["https://www.chess.com/terms/zugzwang-chess", "https://www.chess.com/terms/opposition-chess", "https://dev.gutenberg.org/cache/epub/33870/pg33870-images.html"]
+    },
+    {
+      "finding": "평가가 비슷한 두 선택은 같은 내용을 뜻하지 않는다. 좋은 수의 동등함과 수의 역할·가격·실용적 대응의 동등함을 구별해야 한다.",
+      "source_ids": ["S5"],
+      "source_url": "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure",
+      "limitation": "이번 조사에는 같은 cp를 낸 엔진 실험이 없다. 해당 예시는 저자가 비슷한 평가를 부여했지만 서로 다른 작동 수순을 설명한 사례이다. 이를 실제 Stockfish 동점 측정으로 표현하지 않는다."
+    },
+    {
+      "finding": "PGN의 주석 부재는 내보내기 설정이나 저자의 목적·독자층에 의존할 수 있다.",
+      "source_ids": ["S1", "S12"],
+      "source_url": "https://support.chess.com/en/articles/8705305-how-do-i-get-a-pgn-of-my-game",
+      "interpretation": "주석·NAG가 없는 수를 editorial importance의 음성 정답으로 사용하지 않는다. 이 결론은 데이터 이용의 제약이며 모든 무주석 수가 중요하다는 뜻은 아니다."
+    }
+  ],
+  "no_new_standalone_comment_candidates": [
+    {
+      "family": "routine_forced_response",
+      "candidate": "강제한 원인과 닫힌 결과를 이미 설명했고 그 응수가 새 선택 차이를 만들지 않는 경우.",
+      "observable_conditions": ["실제 합법성 자료가 정확한 위치에서 강제성을 확인한다. 단일 PV만으로 강제라고 하지 않는다.", "앞 설명의 손실·되잡기·종결 결과가 같은 답에서 의미로 전달된다.", "응수가 새로운 확인된 효과를 설명해야 하는 별도 질문이 아니다."],
+      "exceptions": ["강제 응수 자체가 앞의 이득을 뒤집거나 확인된 결과를 만든다.", "강제된 손실을 부른 이전 선택의 실수성을 설명해야 한다.", "유일 합법수와 유일 좋은 수를 혼동한 경우."],
+      "decision": "새 독립 코멘트만 생략할 후보다. mandatory_completion이면 기존 답 안에서 남긴다.",
+      "source_ids": ["S1", "S2"],
+      "source_urls": ["https://chesstempo.com/blog/9/good-move-annotations", "https://alpha.chesstempo.com/tagging-guidelines"],
+      "status": "외부 지침과 아래 반례를 합성한 제안이며 특정 공식 서비스의 생략 알고리즘이 아니다."
+    },
+    {
+      "family": "ordinary_recapture",
+      "candidate": "실제 교환의 되잡기가 이미 가격에 포함되고, 어느 기물이 잡는지에 관한 별도 선택 차이가 없는 경우.",
+      "observable_conditions": ["원래 포획자·피포획자와 실제 되잡기의 기물 추적이 같은 거래를 확인한다.", "잡은 기물의 회수와 추가 손실·승격·확인된 종결이 가격 설명에 남는다.", "조사한 대안에서 되잡기 기물·중간수·전술 사용의 차이가 없다."],
+      "exceptions": ["중간 체크·위협 때문에 바로 되잡기가 다른 기회를 잃는다.", "다른 기물로 되잡으면 선의 사용·지원·폰 구조가 달라진다.", "그 되잡기를 빼면 앞 획득을 무료 이득으로 오해한다."],
+      "decision": "새 칭찬 문단을 생략할 수 있지만 가격의 회복·손실 의미를 삭제하지 않는다.",
+      "source_ids": ["S1", "S5", "S6"],
+      "source_urls": ["https://chesstempo.com/blog/9/good-move-annotations", "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure", "https://www.newinchess.com/media/wysiwyg/product_pdf/9130.pdf"],
+      "unknown_boundary": "정해진 후속 수순에서 다른 효과가 안 보이는 것은 모든 대안에서 구조적 차이가 없다는 증명이 아니다."
+    },
+    {
+      "family": "routine_development",
+      "candidate": "독자가 이미 이해한 일반 전개 원칙만 반복하고, 확인된 선택 차이·사용·응수·가격을 더 답하지 않는 경우.",
+      "observable_conditions": ["본문이 답할 질문이 단순히 새 기물 도착을 기록하는 것인지 구분한다.", "선택한 답의 위협 대응이나 실제 후속 사용에 그 전개가 필요하지 않은지 확인한다.", "일반 전개 원칙을 아는 독자라는 가정이 명시되어 있다."],
+      "exceptions": ["조용한 전개가 실제 포획·선을 여는 행동·체크 대응의 조건이다.", "같은 전개수라도 기존 공격·지원·캐슬링 조건을 바꾼다.", "입문 독자에게 전개 목적 자체가 아직 새 답이다."],
+      "decision": "generic development 문구를 자동 생성하지 않을 후보다. quiet 속성만으로 불필요 판정하지 않는다.",
+      "source_ids": ["S9", "S10"],
+      "source_urls": ["https://dev.gutenberg.org/cache/epub/33870/pg33870-images.html", "https://www.chess.com/article/view/master-path-study-plan-strategy-1"],
+      "unknown_boundary": "장기적 활동성·중앙 계획에 대한 모든 효과를 유한 PV로 부정하지 않는다."
+    },
+    {
+      "family": "repeated_plan_step",
+      "candidate": "이미 답한 질문을 같은 조건·작동·가격으로 다시 말하는 수.",
+      "observable_conditions": ["반복의 기준은 같은 문구·SAN·기물이 아니라 같은 답과 관계다.", "앞 내용에서 실제 사용까지 전달되어 독자가 이번 수의 기능을 이미 이해할 수 있다.", "새 목표·선·상대 응수·가격이 기존 답을 바꾸지 않는다."],
+      "exceptions": ["기물이 같은 계획을 이어가도 마지막 배치가 새 사용을 가능하게 한다.", "상대의 선택으로 기존 계획을 수정해야 한다.", "예방수가 상대 아이디어에 대한 새 질문을 답한다."],
+      "decision": "독립 문단 반복을 생략하되 실제로 달라진 기능은 새 내용으로 보존한다.",
+      "source_ids": ["S3", "S4", "S11"],
+      "source_urls": ["https://alpha.chesstempo.com/commenting-guidelines", "https://en.chessbase.com/post/mark-dvoretsky-s-final-interview-part-iii", "https://www.chess.com/article/view/the-art-of-maneuvering?page=1"],
+      "unknown_boundary": "장기 계획의 동등성이 확인되지 않으면 단순한 같은 기물 이동을 반복으로 간주하지 않는다."
+    },
+    {
+      "family": "incidental_geometric_relation",
+      "candidate": "참인 공격·지원·위협이지만 선택한 답의 작동이나 그 설명을 바꾸는 응수·가격에 쓰이지 않는 경우.",
+      "observable_conditions": ["선택한 질문과 실제 행동·응수에 관계가 연결되어 있는지 본다.", "그 관계를 빼도 이미 전달하는 답이 바뀌지 않는지 확인한다.", "선택을 강제하거나 막는 미실행 위협을 독립 기하와 구분한다."],
+      "exceptions": ["미실행 위협 때문에 상대 대응이 바뀌거나 전술이 성립한다.", "그 관계가 주장한 안전성·포획·지원 사용의 조건이다."],
+      "decision": "기하 사실을 자동 headline으로 올리지 않을 후보다. 필수 증명 참조가 별도로 필요하면 보존한다.",
+      "source_ids": ["S2", "S3"],
+      "source_urls": ["https://alpha.chesstempo.com/tagging-guidelines", "https://alpha.chesstempo.com/commenting-guidelines"],
+      "unknown_boundary": "실제 중요도가 미확인인 위협을 위협 부재로 바꾸지 않는다."
+    }
+  ],
+  "counterexamples": [
+    {
+      "case_id": "quiet_retreat_keeps_attack",
+      "source_id": "S4",
+      "source_url": "https://en.chessbase.com/post/mark-dvoretsky-s-final-interview-part-iii",
+      "game": "Inarkiev–Bakre, Gibraltar 2004",
+      "occurrence": "21...Nd5 뒤 저자의 대안 22.Bh4; 실제 대국에서는 이 대안을 두지 않았다.",
+      "published_mechanism": "Dvoretsky의 대안에서 22...Bxh4 23.Qxh4 뒤 공격을 계속한다. 조용한 비숍 후퇴가 공격의 조건을 보존한다.",
+      "refuted_rule": "비포획·비체크 후퇴는 통상적이므로 설명을 생략한다.",
+      "must_preserve_if_selected": "후퇴가 허용하는 상대 포획과 퀸의 회수·공격 사용의 연결. 제공 변형의 장점과 실제 대국을 구별한다.",
+      "phase_boundary": "조사된 변형의 작동은 phase 1의 한정 설명 후보다. 모든 흑 응수에 대한 최선·강제 우세는 저자의 평가를 인용할 수는 있으나 새로 증명하지 않았다."
+    },
+    {
+      "case_id": "recapture_can_wait",
+      "source_id": "S6",
+      "source_url": "https://www.newinchess.com/media/wysiwyg/product_pdf/9130.pdf",
+      "game": "Smirin–Gawain Jones, Wijk aan Zee 2017, round 3",
+      "occurrence": "31...Rxd1+ 뒤 32.Kh2, 즉시 되잡기를 미룬다.",
+      "published_mechanism": "Erwich의 예시에서는 킹 이동 뒤 공격을 이어가고, 32...Rd7 33.Qf7+ Kh8 34.Rxd7 이후 메이트 수순이 제시된다.",
+      "refuted_rule": "통상적 되잡기만 하면 되는 장면이므로 별도 질문이 없다.",
+      "must_preserve_if_selected": "현재 체크 응수와 되잡기보다 우선하는 공격의 연결, 확인된 수순 범위의 결과.",
+      "phase_boundary": "공식 출판사에 색인된 저자 변형을 읽었다. PDF 전체·도식은 확인하지 않았고 엔진으로 모든 방어를 재검증하지 않았다. 저자는 앞 수의 더 정확한 대안도 명시하므로 모든 인용 수를 최선이라 하지 않는다."
+    },
+    {
+      "case_id": "same_capture_square_different_actor",
+      "source_id": "S5",
+      "source_url": "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure",
+      "game": "Ivanchuk–Anand; 본문에서 대국 날짜는 확인하지 않았다.",
+      "occurrence": "17...Bxf6과 실제 17...gxf6의 비교.",
+      "published_mechanism": "Naroditsky는 폰 구조를 망가뜨려 보이는 폰 되잡기가 ...h5 등의 대응과 연결되는 이유를 설명한다. 같은 f6 포획도 역할·구조·후속 대응이 다르다.",
+      "refuted_rule": "같은 칸에서 같은 것을 되잡으므로 어느 기물이 잡든 추가 설명이 불필요하다.",
+      "must_preserve_if_selected": "되잡는 원래 기물, 바뀌는 선·폰 조건, 실제로 비교한 후속 대응과 범위.",
+      "phase_boundary": "주어진 대응 관계는 한정된 phase 1 후보다. 장기적 폰 구조 보상을 유한 수순 하나로 보편적으로 증명하지 않는다."
+    },
+    {
+      "case_id": "similar_evaluation_different_meaning",
+      "source_id": "S5",
+      "source_url": "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure",
+      "game": "같은 Ivanchuk–Anand 예시의 17...Bxf6 가정 변형",
+      "occurrence": "18.Rxd2와 18.Bxd2의 서로 다른 변형.",
+      "published_mechanism": "저자는 두 변형을 대체로 비슷한 평가로 설명하지만, 킹사이드 전개·룩 사용·f4 준비의 경로가 다르다.",
+      "refuted_rule": "평가가 동등하면 선택의 의미도 동등하고 비교 설명이 불필요하다.",
+      "must_preserve_if_selected": "두 실제 선택의 기능 차이와 각 제공 변형의 대응. 대략적 평가와 구체적인 작동 관계를 대체하지 않는다.",
+      "phase_boundary": "저자의 유사 평가에 대한 사례다. 정확한 엔진 동점의 실증 사례는 이번 조사에서 생산하지 않았다."
+    },
+    {
+      "case_id": "quiet_waiting_zugzwang",
+      "source_id": "S7",
+      "source_url": "https://www.chess.com/terms/zugzwang-chess",
+      "game": "Botvinnik–Bronstein, World Championship 1951",
+      "occurrence": "57.Bg5",
+      "published_mechanism": "공식 교육 글은 이 조용한 수를 zugzwang과 물질 손실의 예시로 설명한다.",
+      "refuted_rule": "당장 포획·체크가 없고 다음 수를 기다리므로 새 내용이 없다.",
+      "must_preserve_if_selected": "상대 차례의 선택 제약과 확인된 가격. 한 응수만 관측했다면 그 응수의 가격으로 범위를 좁힌다.",
+      "phase_boundary": "진짜 zugzwang·모든 수의 악화는 한 PV나 패스 가정만으로 성립하지 않는다. 글의 광범위 결과는 저자 측 설명이며 이번에 전 응수 검증을 시행하지 않았다."
+    },
+    {
+      "case_id": "opposition_timing_before_capture",
+      "source_id": "S9",
+      "source_url": "https://dev.gutenberg.org/cache/epub/33870/pg33870-images.html",
+      "book": "J. R. Capablanca, Chess Fundamentals, section 13, example 28",
+      "locator": "printed pages 48–49; HTML section 13",
+      "published_mechanism": "저자의 opposition 예제는 바로 폰을 잡기보다 킹의 대기·차례를 먼저 맞추는 순서를 설명한다.",
+      "refuted_rule": "포획을 미루는 조용한 킹 수와 대기수는 통상적 기록이다.",
+      "must_preserve_if_selected": "현재 차례, 킹의 실제 도달·차단 관계, 그 순서가 바꾸는 제공 결과.",
+      "phase_boundary": "원문의 descriptive notation을 임의 SAN으로 변환하지 않았다. 도식·모든 대안의 독립 재계산 없이 저자의 종합 결과를 새 제품 증명으로 인정하지 않는다."
+    },
+    {
+      "case_id": "same_opening_category_different_answer",
+      "source_id": "S9",
+      "source_url": "https://dev.gutenberg.org/cache/epub/33870/pg33870-images.html",
+      "book": "J. R. Capablanca, Chess Fundamentals, section 6, example 17",
+      "locator": "printed pages 26–28; HTML section 6",
+      "published_mechanism": "저자는 3.Nc3 Nf6을 일반 전개로 묶어 설명하는 한편, 이후 캐슬링과 비숍 전개에는 방어·실제 후속 사용의 이유를 덧붙인다.",
+      "refuted_rule": "모든 조용한 오프닝 전개수는 같은 중요도이며 같은 코멘트만 필요하다.",
+      "must_preserve_if_selected": "일반 전개 이상의 실제 기능이 선택한 질문에 필요한 경우 그 사용을 남긴다.",
+      "phase_boundary": "저자는 입문자를 가르치므로 일반 전개 설명도 사용한다. 저자가 한 묶음으로 썼다는 사실은 고급 독자용 본문을 생략할 후보 근거이며 불필요함의 정답이 아니다."
+    }
+  ],
+  "minimal_observable_decision": {
+    "status": "실행하지 않은 내용 선택 연구 제안; 새로운 범용 선택 프레임워크나 패턴 점수표가 아니다.",
+    "sequence": [
+      "이미 선택한 답이 주장하는 차이·이득·안전성·가격·결과의 범위를 고정한다.",
+      "생략 후보가 그 답의 실제 조건·사용·응수·회복·종결을 바꾸는지 같은 근거에서 확인한다. 그렇다면 mandatory_completion으로 남긴다.",
+      "그 후보가 이미 답한 내용을 넘어 새 선택 차이나 실제 사용을 답하는지 확인한다. 그렇다면 standalone_salience 후보로 평가한다.",
+      "현재 조건에서 이미 답한 내용의 반복만 확인되는 경우 새 독립 문단을 생략할 수 있다.",
+      "중요성 부재가 확인되지 않았으면 unknown으로 기록하고 일반적인 문구로 빈칸을 채우지 않는다."
+    ],
+    "deletion_question": "이 내용을 뺀 뒤 독자가 두 선택의 작동과 해당 설명의 가격·확인된 결과에 다르게 답하게 되는가?",
+    "not_valid_substitutes": ["quiet/capture/check 분류만으로 중요도를 결정", "엔진 최선수 또는 평가 차이만으로 본문 필요성 결정", "같은 기물·SAN이므로 같은 계획이라고 처리", "모든 후속 포획을 같은 답의 필수 가격으로 처리", "보이는 SAN 수를 답변 완결성으로 처리", "큰 물질 사건을 언제나 핵심으로 처리", "무주석·무NAG를 불필요 정답으로 처리"],
+    "proof_and_message": "가격을 닫는 의미와 그 가격을 입증하는 모든 중간 수의 표면 나열은 다르다. 실제 거래의 손실·회복·확인된 결과는 남기되, 반복 기하·중간 재배치는 정확한 증명 참조와 상세에서 보존할 수 있다는 가설이다. 이 조사는 현재 제품 전달 여부를 판독하지 않았다.",
+    "research_next_step": "이미 공개된 실제 저자 사례에서 삭제 전후 독자가 답할 질문의 변화만 소수 비교한다. 생략된 주석 개수나 새 패턴 수를 성공으로 계산하지 않는다. 독립 인간 판독을 하지 않으면 그 부재를 별도로 보고한다."
+  },
+  "source_ledger": [
+    {
+      "id": "S1",
+      "title": "Good move annotations",
+      "author": "Richard, ChessTempo",
+      "url": "https://chesstempo.com/blog/9/good-move-annotations",
+      "primary_status": "서비스 개발자의 공식 설명",
+      "access_mode": "search_index_full_article_text",
+      "access_provenance": "web.open은 메뉴·공통 영역 약 150줄만 반환했다. 원문 URL을 제한한 검색 site:chesstempo.com/blog/9/good-move-annotations 및 query terms We, moves에서 제목·작성자부터 최종 PGN viewer 안내까지 색인된 전체 기사 본문을 읽었다. 라이브 페이지 본문 직접 확보로 표시하지 않는다. old host 및 trailing slash도 본문 확보에 실패했다.",
+      "publication_date": "본문 상대 표시 8 years ago; 정확한 발행일 미확인",
+      "read_locator": "전체 색인 본문; obvious recaptures, evaluation-depth annotation, positional limits, reader-level limits 문단",
+      "source_claim": "최선수 일치만으로 !를 붙이면 통상 대응을 과대 표시한다. 개발자는 분석 깊이에 따른 평가 변화로 전술적 좋은 수를 찾으며, 인간 평가의 불일치·포지셔널 누락·독자 수준의 한계를 밝힌다.",
+      "transfer_limit": "!/!! 판정은 설명문 생략의 기준이 아니다. ! 없음이나 인간 주석 부재를 음성 정답으로 쓰지 않는다. 과거 속도·서비스 기능을 현재 제품 상태로 확대하지 않는다."
+    },
+    {
+      "id": "S2",
+      "title": "ChessTempo Tagging Guidelines",
+      "author": "ChessTempo official",
+      "url": "https://alpha.chesstempo.com/tagging-guidelines",
+      "primary_status": "공식 전술 tagging 지침",
+      "access_mode": "live_html_body",
+      "read_locator": "unplayed threat 및 main-line relevance, needs-more-moves 지침; 반환 본문 lines 180–192",
+      "source_claim": "전술을 성립시키는 미실행 위협과 무관한 위협을 구분하고, 요점이 아직 보이지 않는 해결 수순의 보완을 다룬다.",
+      "transfer_limit": "모티프 tag와 설명문은 다른 산출물이다. 관련 내용과 completion 구별의 근거로 사용한다."
+    },
+    {
+      "id": "S3",
+      "title": "ChessTempo Commenting Guidelines",
+      "author": "ChessTempo official",
+      "url": "https://alpha.chesstempo.com/commenting-guidelines",
+      "primary_status": "공식 사용자 해설 지침",
+      "access_mode": "live_html_body",
+      "read_locator": "능력 수준·왜 설명·motif-only comment·중복 관련 지침; lines 152–197",
+      "source_claim": "읽는 사람의 수준을 존중하고 분석을 확인하며, 모티프 이름만 적거나 이미 있는 답을 반복하는 코멘트는 피하도록 한다.",
+      "transfer_limit": "자동 해설 알고리즘이 아니므로 독자의 이해 변화에 대한 연구 제안과 구별한다."
+    },
+    {
+      "id": "S4",
+      "title": "Mark Dvoretsky's final interview - Part III",
+      "author": "Sagar Shah / Amruta Mokal interview; Mark Dvoretsky direct responses and named annotations",
+      "url": "https://en.chessbase.com/post/mark-dvoretsky-s-final-interview-part-iii",
+      "primary_status": "직접 인터뷰와 원 저자 명시 PGN 해설; 원 ChessCafe article 58 출처가 페이지에 명시됨",
+      "access_mode": "live_html_body_with_embedded_annotation_text",
+      "publication_date": "2016-11-10",
+      "read_locator": "prophylactic thinking interview 및 Inarkiev–Bakre annotation, lines 135–164",
+      "source_claim": "Dvoretsky는 예방 사고를 상대가 원하는 행동을 묻는 과정으로 설명하며, 실제 대국과 조용한 후퇴의 분석 대안을 구분한다.",
+      "transfer_limit": "기사 편집자의 일반 평가를 Dvoretsky의 말로 돌리지 않는다. 대안 변형을 실제 기보의 연속 수순으로 쓰지 않는다."
+    },
+    {
+      "id": "S5",
+      "title": "How to Ruin Your Pawn Structure",
+      "author": "GM Daniel Naroditsky",
+      "url": "https://www.chess.com/article/view/how-to-ruin-your-pawn-structure",
+      "primary_status": "원 저자의 교육·대국 분석",
+      "access_mode": "live_html_body",
+      "publication_date": "updated 2014-03-07",
+      "read_locator": "Ivanchuk–Anand 및 Bxf6/gxf6, Rxd2/Bxd2 변형 설명; lines 51–66",
+      "source_claim": "폰 구조의 외형적 약점보다 구체적인 대응이 중요할 수 있으며, 되잡는 기물에 따라 수순과 기능이 달라짐을 예제로 설명한다.",
+      "transfer_limit": "기보의 날짜나 정확한 엔진 점수를 추가하지 않는다. 모든 구조적 효과를 현재 제한된 분석에서 증명한 것으로 취급하지 않는다."
+    },
+    {
+      "id": "S6",
+      "title": "1001 Chess Exercises for Advanced Club Players, Chapter 3: Automatic moves",
+      "author": "FM Frank Erwich",
+      "url": "https://www.newinchess.com/media/wysiwyg/product_pdf/9130.pdf",
+      "publisher_metadata_url": "https://www.newinchess.com/1001-chess-exercises-for-advanced-club-players",
+      "primary_status": "공식 출판사 저자 sample chapter",
+      "access_mode": "official_pdf_search_index_chapter_excerpt",
+      "access_provenance": "공식 PDF open은 timeout; find도 본문을 열지 못했다. 검색 색인에서 Chapter 3의 실제 저자 본문과 Smirin–Jones 변형을 읽었다. 마지막 확인에서는 newinchess.com으로 제한한 query Chapter 3, Automatic moves, Smirin이 같은 chapter excerpt와 printed page 37을 반환했다. PDF 렌더·도식·전체 책을 읽었다고 표시하지 않는다.",
+      "printed_page": 37,
+      "pdf_page_index": null,
+      "read_locator": "Capturing is not mandatory 및 Smirin–Jones 예시",
+      "source_claim": "자동적으로 잡기 전에 더 강한 행동을 확인해야 함을 조용한 체크 응수·공격 예제로 보여준다.",
+      "transfer_limit": "색인 발췌의 자료 한계를 유지한다. 인용 수순을 독립 엔진 검증 또는 전체 최선수 증명으로 사용하지 않는다."
+    },
+    {
+      "id": "S7",
+      "title": "Zugzwang",
+      "author": "Chess.com official education",
+      "url": "https://www.chess.com/terms/zugzwang-chess",
+      "primary_status": "공식 개념 교육 자료",
+      "access_mode": "live_html_body",
+      "read_locator": "정의와 Botvinnik–Bronstein 57.Bg5 예시; lines 51–77",
+      "source_claim": "차례 때문에 불리해지는 개념과 조용한 대국 예시를 설명한다.",
+      "transfer_limit": "단일 수순·패스 가정을 전 응수 악화의 증명으로 쓰지 않는다. 페이지의 대국 단계 명칭을 검증 없이 옮기지 않는다."
+    },
+    {
+      "id": "S8",
+      "title": "Opposition",
+      "author": "Chess.com official education",
+      "url": "https://www.chess.com/terms/opposition-chess",
+      "primary_status": "공식 개념 교육 자료",
+      "access_mode": "live_html_body",
+      "read_locator": "opposition의 킹 접근·차례 효과 설명; lines 49–69",
+      "source_claim": "킹의 배치와 차례가 key-square 접근과 결과에 영향을 주는 개념을 설명한다.",
+      "transfer_limit": "확인하지 않은 도식의 정확한 FEN·SAN·전체 강제 결과를 추가하지 않는다."
+    },
+    {
+      "id": "S9",
+      "title": "Chess Fundamentals",
+      "author": "J. R. Capablanca",
+      "url": "https://dev.gutenberg.org/cache/epub/33870/pg33870-images.html",
+      "primary_status": "원 저자 공개 영역 텍스트의 HTML 전사",
+      "access_mode": "live_html_original_text",
+      "read_locator": "section 6 example 17, printed pp. 26–28; section 13 example 28, printed pp. 48–49",
+      "source_claim": "초기 전개를 묶어 설명하되 개별 기능이 필요한 수에는 이유를 부여한다. 별도 opposition 예제는 단순 포획보다 순서와 차례를 다룬다.",
+      "transfer_limit": "Gutenberg 자동 책 소개가 아니라 해당 원문을 읽었다. 전체 책 읽기·도식 검사·원 notation의 검증되지 않은 SAN 변환을 주장하지 않는다."
+    },
+    {
+      "id": "S10",
+      "title": "Master-Path Study Plan: Strategy",
+      "author": "Chess.com official study plan",
+      "url": "https://www.chess.com/article/view/master-path-study-plan-strategy-1",
+      "primary_status": "공식 교육 curriculum",
+      "access_mode": "live_html_body",
+      "publication_date": "updated 2020-12-06",
+      "read_locator": "계획·기물 maneuver·critical decision 설명; lines 57–58, 92–108, 141–144",
+      "source_claim": "2000–2199 독자를 대상으로 계획의 재사용과 구체적 조건, 교환·구조 변화 등 주요 결정을 다룬다.",
+      "transfer_limit": "그 독자 수준을 모든 사용자에게 가정하지 않는다. critical decision 설명을 다른 수의 일괄 생략으로 옮기지 않는다."
+    },
+    {
+      "id": "S11",
+      "title": "The Art Of Maneuvering",
+      "author": "GM Daniel Naroditsky",
+      "url": "https://www.chess.com/article/view/the-art-of-maneuvering?page=1",
+      "primary_status": "원 저자의 교육 자료",
+      "access_mode": "live_html_body",
+      "publication_date": "updated 2015-09-18",
+      "read_locator": "기물 개선·약점 압박·경로의 의미; lines 54–61, 73",
+      "source_claim": "반복 이동처럼 보여도 기물의 배치와 활동을 개선하는 과정이 의미를 가질 수 있다.",
+      "transfer_limit": "동적 보드에서 노출되지 않은 전체 게임·정확한 수를 읽었다고 하지 않는다. 장기 효과를 한 PV로 증명하지 않는다."
+    },
+    {
+      "id": "S12",
+      "title": "How do I get a PGN of my game?",
+      "author": "Chess.com official support",
+      "url": "https://support.chess.com/en/articles/8705305-how-do-i-get-a-pgn-of-my-game",
+      "primary_status": "공식 export 설명",
+      "access_mode": "live_html_body",
+      "publication_date": "updated 2026-02-10",
+      "read_locator": "annotations/comments/computer analysis 포함 선택; lines 14, 30–38",
+      "source_claim": "PGN 내보내기에서 분석·코멘트 포함 여부를 선택할 수 있다.",
+      "transfer_limit": "이 옵션은 무주석 데이터가 곧 중요도 음성 정답이 아님을 뒷받침한다. 모든 무주석 수의 실제 편집 이유를 확인한 것은 아니다."
+    }
+  ],
+  "limitations": [
+    "출처는 1차 저자·공식 지침으로 제한했다. 제안과 원문 주장을 각 항목에서 구별했다.",
+    "라이브 HTML, 검색 색인의 전체 본문, 검색 색인 chapter 발췌를 같은 접근 방식으로 처리하지 않았다.",
+    "기존 제품의 선택·가격 소유·문장 전달 상태를 이번 작업에서 읽지 않았으므로 구현 결함이나 성능 개선을 확인한 보고가 아니다.",
+    "현재 정책의 일반적 중요도 선택을 해결했다는 결론이 아니다. 국소적인 completion 의무와 독립 설명 후보·미확인 경계를 제안한다.",
+    "독자 수준과 이미 알고 있는 내용이 달라지면 같은 수의 독립 해설 가치도 달라질 수 있다. 실제 독자 검증은 시행하지 않았다.",
+    "SGF·PGN·NAG 또는 원저자의 무주석을 중요도 gold label로 사용하지 않았다.",
+    "정확한 engine equal-cp 반례나 새 분석 수순을 생산하지 않았다. 주어진 저자 평가·변형과 논리적 경계의 연구다."
+  ]
+}

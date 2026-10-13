@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "written_utc": "2026-10-04T08:01:14.549856+00:00",
+  "task": "W16-11 최초 공격 사용/선택 대안의 실제 포획, C18-09 선택 지원 종료/같은 대상 손실의 과도한 가격 귀속 경계",
+  "method": {
+    "read_only_product_review": true,
+    "product_source_modified": false,
+    "product_execution": false,
+    "engine_execution": false,
+    "new_corpus_read": false,
+    "new_pattern_samples_executed": false,
+    "new_framework_proposed": false,
+    "source_audit": "research/relation-ownership-20261004/temporal-audit.json",
+    "source_audit_sha256": "10dda1a8ef8ea618468cafc93b8c88a3e6ab824778ff636fc5800093e05d59bb",
+    "negative_cases": "아래 negative는 기존 코드와 두 기존 저장 사례를 대조한 조건 설계다. 새로운 가상 국면을 제품에서 실행하거나 독립 일반화 검증으로 계산하지 않았다."
+  },
+  "existing_v2_boundary": {
+    "observed_source": "MoveWorkProjection.completeSelectedPrices / RootQuestionSummary.Arm.continuousRecovery",
+    "existing_behaviour": "originally selected.covered capture → continuous physical removal; selected clearance → actual CaptureExposure use → continuous removal; global Arm.account는 기존 확장 정책을 유지한다.",
+    "not_credited": "v2의 코드 존재를 두 추가 후보의 검증 성공이나 새 일반화 품질 향상으로 세지 않는다."
+  },
+  "candidate_root_attack_first_use": {
+    "decision": "Arm.account를 새 범용 입구로 열기보다 existing completeSelectedPrices의 작은 관계 interval로 합치는 제안에 동의한다.",
+    "positive_evidence": {
+      "game_id": "wch2016-11",
+      "path_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff",
+      "selected_original_claim": "root Re1이 원래 e4 흑 폰을 공격하고 같은 원래 f1 백 룩이 실제 Rxe4로 사용한다. 비교 대안은 cxd4이다.",
+      "references": [
+        {
+          "offset": 0,
+          "san": "Re1",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:726ed3b718d5e59b3b84c803064b694d43fa0f72a9972c73a2fb5221aa829750",
+          "original_actor": "True:rook:f1",
+          "original_victim": null
+        },
+        {
+          "offset": 1,
+          "san": "dxc3",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:07a5af332284673b888125f93e889ce4ddcccbc21ca32e0db51048a542b5dda8",
+          "original_actor": "False:pawn:d4",
+          "original_victim": "True:pawn:c3"
+        },
+        {
+          "offset": 2,
+          "san": "Rxe4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:e18a9c47e4f80f63eabf51f2300de24f073586208662e6d9565fbf2455e99863",
+          "original_actor": "True:rook:f1",
+          "original_victim": "False:pawn:e4"
+        },
+        {
+          "offset": 3,
+          "san": "Qb6+",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:6dc04f2d1afd70617059582282fc3ba185bd1e333877043d1f94698f0537b5ab",
+          "original_actor": "False:queen:e6",
+          "original_victim": null
+        },
+        {
+          "offset": 4,
+          "san": "Kh1",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:0d59bd9b09a10a10ad9202accdd746813f22306d306daf1a22b582f80d1c24c2",
+          "original_actor": "True:king:g1",
+          "original_victim": null
+        },
+        {
+          "offset": 5,
+          "san": "Rxe4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:124d11f88009c71487d5db42e4aab62098f146ffd043c96ce164bc79153a0da6",
+          "original_actor": "False:rook:e8",
+          "original_victim": "True:rook:f1"
+        },
+        {
+          "offset": 6,
+          "san": "dxe4",
+          "occurrence_id": "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:transition:c6af882432f5218ce7ddd524574f907a2d711de9aa21ef1acadc9861b0bfcd73",
+          "original_actor": "True:pawn:d3",
+          "original_victim": "False:rook:e8"
+        }
+      ],
+      "ownership": "대안 cxd4의 원래 actor(c3 백 폰)/victim(d4 흑 폰)이 실제 첫 상대 포획 dxc3의 victim/actor와 역전된다. 따라서 첫 상대 포획은 선택 비교의 동일 대상 거래이며 별도 나중 손실을 임의로 붙인 것이 아니다.",
+      "price_interval": [
+        1,
+        6
+      ],
+      "price_capture_offsets": [
+        1,
+        2,
+        5,
+        6
+      ],
+      "price_net_cp_white": 0,
+      "outside_price": "다른 a3 백 폰을 잡는 Qxa3(9)는 이 최초 중앙 교환의 가격으로 귀속하지 않는다."
+    },
+    "required_witnesses": [
+      "원래 selected Action(root, Detail.Attack(actor,target,_))와 실제 selected.covered capture use가 동일 PreparedPath, 동일 exact occurrence에 속해야 한다. proof/continuation ref에만 나온 포획은 이 선택 사용으로 승격하지 않는다.",
+      "root actor와 target을 원래 identity로 고정한다. root actor가 use의 실제 originalActor이고 target이 use의 실제 originalVictim이어야 한다. 좌표, 기물 종류 또는 SAN 동일성만으로 같다고 하지 않는다.",
+      "공격은 root 이후부터 실제 use 직전까지 covers가 알려진 true로 지속돼야 한다. 최초 선택 target이 이미 이동·제거되어 다른 물체를 잡은 경우, 공격이 사라졌다 새로 생긴 경우는 같은 최초 사용으로 합치지 않는다.",
+      "reply는 root 다음 실제 상대 행동의 포획이고 use는 그 실제 응수에 이어 선택된 공격 target을 사용하는 행동이어야 한다. 저장 offset1/2를 임의의 더 큰 숫자로 확대하지 않는다. 후속 자기 행동을 건너뛰어 나중 포획을 최초 응수 거래로 삼지 않는다.",
+      "same initial position/turn을 가진 비교의 counterpart root 실제 포획 actor/victim이 reply victim/actor와 정확히 역전됨을 확인한다. root Attack+두 반대 부호의 포획만으로 독립 상대 포획까지 가격에 넣지 않는다.",
+      "제안 interval은 reply와 use에서 시작한다. use의 continuousRecovery가 있다면 그 물리적 제거까지, 그 제거 포획의 continuousRecovery가 있으면 한 번의 실제 회복까지 읽는다. 추가로 발견한 가격을 새 seed로 재귀 확장하지 않는다.",
+      "continuousRecovery가 없으면 reply..use의 관측 가격만 전달한다. 같은 capturer의 남은 생애/line_end까지 늘리지 않는다. RecordedEnd를 강제 수순, 무응답 체크의 해결 또는 최종 게임 결과로 바꾸지 않는다.",
+      "계산 구간의 실제 체크와 그 응수 refs는 보존한다. 중간 체크가 조사 수순 끝에서 해결되지 않았거나 actual price closure가 검증되지 않으면 기존 completeness 제한을 유지한다."
+    ],
+    "negative_boundaries": [
+      {
+        "predicate": "root Attack은 선택됐으나 target 포획은 상세/증명 ref에만 존재",
+        "reject_reason": "조사 발견을 현재 선택한 핵심 사용으로 승격하면 새 가격이 다시 다른 episode를 낳는다."
+      },
+      {
+        "predicate": "실제 첫 reply가 포획이나 counterpart root와 원 actor/victim 역전 관계 없음",
+        "reject_reason": "같은 수순의 첫 포획이라는 이유만으로 별개의 거래를 root attack 가격에 귀속할 수 없다."
+      },
+      {
+        "predicate": "같은 root actor가 나중 다른 original target을 잡음 또는 중간에 선택된 첫 사용이 이미 있었음",
+        "reject_reason": "root actor 정체성은 모든 미래 거래의 소유권이 아니다."
+      },
+      {
+        "predicate": "target tracking/control 미확인, target 변경, attack 중단/재개, role change를 해당 원가식이 설명하지 못함",
+        "reject_reason": "unknown을 부재로 처리하거나 승격/새 역할을 순수 포획 가격으로 계산하지 않는다."
+      },
+      {
+        "predicate": "Arm.account(seed,rootActor)를 그대로 호출하고 recovery 없음",
+        "reject_reason": "기존 span(followsFocus=true)는 path 끝까지 같은 actor의 모든 포획을 읽는다. 최초 사용 관계는 이 actor-lifetime 확대를 정당화하지 않는다."
+      },
+      {
+        "predicate": "physical CaptureLink가 존재하지만 recovering actor의 동일 capturer 공격이 구간 전체에서 지속하지 않음",
+        "reject_reason": "물리적 나중 제거만으로 현재 선택 가격의 bounded recovery라고 인정하지 않는다."
+      },
+      {
+        "predicate": "reply/use 사이 또는 기존 가격과 병합한 hull에 별도의 unowned 거래가 끼어듦",
+        "reject_reason": "최소/최대 offset의 연속 구간은 소유의 증명이 아니다. 현재 선택과 실제 응수로 연결되지 않은 거래를 모두 기본 가격에 넣지 않는다."
+      }
+    ],
+    "safe_observation_language": "제공 Re1 수순에서는 먼저 dxc3로 폰을 내주고 Rxe4로 폰을 얻으며, 이후 룩도 서로 교환한다.",
+    "forbidden_inferences": [
+      "Re1이 반드시 나쁘다",
+      "dxc3가 유일한 응수다",
+      "cxd4가 모든 응수에서 폰 손실을 막는다",
+      "이 물질 교환만으로 평가차 원인이 증명됐다"
+    ]
+  },
+  "candidate_support_capture_departure": {
+    "decision": "정확한 originally selected support anchor와 selected same-provider capture departure를 재사용할 수 있다. 지원 기능의 시작과 가격 원장 시작은 구분한다.",
+    "positive_evidence": {
+      "game_id": "candidates2018-09",
+      "path_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+      "selected_original_claim": "Qa3의 같은 원래 b2 폰 지원과 Qxa7의 폰 획득",
+      "references": [
+        {
+          "offset": 16,
+          "san": "Qa3",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:ff8f63ccca9c2d3ac4fba715b6979a778a2a6b4a6e5cc1ecb59b6a61d8350441",
+          "original_actor": "True:queen:d4",
+          "original_victim": null
+        },
+        {
+          "offset": 17,
+          "san": "Rxd5",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:cc7f21644a17f5e86709278bd288224d122d4eb51ee3e4bf829d03e5b85225f5",
+          "original_actor": "False:rook:a8",
+          "original_victim": "True:pawn:c3"
+        },
+        {
+          "offset": 18,
+          "san": "Qxa7",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:f5d2bcce302fdd0c96bffcd851f398ab91544eddafc62949df3acb1cf57f6689",
+          "original_actor": "True:queen:d4",
+          "original_victim": "False:pawn:a7"
+        },
+        {
+          "offset": 19,
+          "san": "Qxb2",
+          "occurrence_id": "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:transition:a4f4c4927ab189ffbb2de9b90c143c03092b5dd9e3d0b2accb0e851aa90d7a1e",
+          "original_actor": "False:queen:e7",
+          "original_victim": "True:pawn:b2"
+        }
+      ],
+      "support_anchor_offset": 16,
+      "proof_anchor_is_not_price_event": true,
+      "price_start_offset": 18,
+      "price_end_offset": 19,
+      "price_capture_offsets": [
+        18,
+        19
+      ],
+      "price_net_cp_white": 0,
+      "excluded_offset": 17,
+      "excluded_reason": "Rxd5(17)는 원래 c3 백 폰을 잡으며, 원래 b2 지원 대상과 다르다. 지원 증명16을 interval 시작으로 넣으면 이 독립 손실을 잘못 흡수한다.",
+      "actual_response_boundary": "Qxb2(19)는 Qxa7(18) 뒤 실제 첫 상대 행동이다. 이 사례에는 지원 종료 뒤 긴 지연·별도 거래를 가격 hull에 붙일 필요가 없다."
+    },
+    "required_witnesses": [
+      "원래 selected Action(move,Detail.Support(provider,target,opposition,_))의 exact path/offset와 그 직후 provider,target를 원래 identity로 매핑한다. 동적 anchor는 가능하나 뒤에 추가한 conditions에서 발견된 새 지원은 원래 핵심 seed로 삼지 않는다.",
+      "departure는 원래 selected.covered 실제 capture이거나 그 capture를 직접 담은 originally selected statement이어야 한다. 그 원래 actor가 support provider이고, 그 실제 이동이 지원 전 known true에서 지원 후 certified false로 바뀌어야 한다.",
+      "지원은 선택 anchor 이후 departure 직전까지 같은 original target에 알려진 true로 이어져야 한다. departure 이전에 이미 지원이 끊겼다면 그 capture를 지원 종료 원인으로 부르지 않는다.",
+      "원래 selected opposition에 속한 동일 original enemy가 같은 target을 실제로 잡아야 한다. target의 원래 신원·역할·칸은 anchor부터 손실 직전까지 유지되고, enemy의 covers도 알려진 true로 지속돼야 한다.",
+      "departure 후 target 손실 전까지 provider가 해당 지원을 재개하지 않아야 한다. 지원이 재개된 뒤의 손실, target 이동, 다른 attacker의 새로운 공격은 이 departure 가격으로 자동 합치지 않는다.",
+      "가격 interval은 departure capture부터 target 실제 loss까지이며 support anchor는 증명/보드 이동 reference로 남긴다. C18-09에서는18–19에만 원장 가격을 계산하여17을 제외한다.",
+      "손실이 departure 뒤 실제 첫 상대 응수인 경우 bounded 관측 가격이 명확하다. 지연 손실까지 일반화하려면 독립 중간 거래/새 duty를 흡수하지 않는 소유 근거가 필요하다. 현재 interval 경로에서는 그러한 지연을 임의의 큰 offset 제한으로 해결하지 않는다.",
+      "같은 provider의 포획 대가/실제 제거는 이미 마련한 selected capture→continuousRecovery 경계를 재사용한다. 이 support 분기가 provider의 이후 생애 또는 모든 지원 대상의 미래 손실을 새로 소유하지 않는다.",
+      "support16과 departure18/loss19의 관계 증명, 실제 가격 events, 표현할 내용은 구분한다. 모든 증명 SAN의 본문 등장을 완결성 대용으로 요구하지 않는다."
+    ],
+    "negative_boundaries": [
+      {
+        "predicate": "지원 anchor는 선택됐지만 provider departure 포획은 증명/상세 전용",
+        "reject_reason": "현재 질문에 택하지 않은 다른 행동의 가격을 본문에 만들지 않는다."
+      },
+      {
+        "predicate": "provider가 이동한 뒤에도 다른 기하로 같은 target을 계속 지원",
+        "reject_reason": "칸 이동은 지원 종료의 증명이 아니다. 기존 작동 W24-09의 Qb5→Qxc5 이후 b6 지원 지속을 손실 인과로 재해석하면 안 된다."
+      },
+      {
+        "predicate": "departure 전부터 support가 false/unknown 또는 departure 후 support가 다시 true",
+        "reject_reason": "선택 departure가 해당 지원 역할을 끝냈다는 범위가 성립하지 않는다."
+      },
+      {
+        "predicate": "enemy가 anchor 때 선택된 opposition이 아님, 공격 중단/재개, target 이동·승격 또는 다른 enemy가 target을 제거",
+        "reject_reason": "새 위협/새 상태 변화는 이 지원 종료 질문의 동일 대상 가격과 구분해야 한다."
+      },
+      {
+        "predicate": "지연 loss 사이에 별도 포획·새 교환 또는 새 의무가 생김",
+        "reject_reason": "동일 target 공격이 유지됐다는 사실만으로 그 사이 모든 물질 변화의 소유는 증명되지 않는다. 보수적으로 닫거나 미확정으로 남기고 향후 별도 귀속 증거를 요구한다."
+      },
+      {
+        "predicate": "가격 offset에 지원16을 넣어16–19 hull을 계산",
+        "reject_reason": "증명 시작과 price start를 혼동해 unrelated17을 추가하는 오류다."
+      },
+      {
+        "predicate": "provider 제거를 unknown과 같은 값으로 처리하거나 available enemy capture를 실제 loss로 대체",
+        "reject_reason": "알려진 제거/미확인/미실행 가능성은 각각 다르다. 실제 target capture event와 exact originalVictim이 필요하다."
+      }
+    ],
+    "safe_observation_language": "제공 수순에서는 Qxa7로 a7 폰을 얻는 동안 퀸의 b2 지원이 끝나며, 실제 다음 Qxb2로 b2 폰을 내준다.",
+    "forbidden_inferences": [
+      "지원이 없으면 반드시 폰을 잃는다",
+      "Qa3가 b2 방어에 유일하거나 필요한 수였다",
+      "Qxa7이 Qxb2를 새로 합법적으로 만들었다",
+      "상대가 그 포획을 강제로 해야 한다",
+      "관측된 폰 교환으로 Qd3/Qc4 평가차 원인이 증명됐다"
+    ]
+  },
+  "common_delivery_notes": [
+    "현재 선택 statement의 exact covered use와 shared actual material event만 기존 가격에 합치는 경계를 유지한다. price에서 새 원인을 발견해 재seed하거나 질문을 바꾸지 않는다.",
+    "첫 응수/지원 종료의 관측 교환이라는 주장 범위와 강제성/필요성이라는 반사실 주장 범위를 분리한다.",
+    "같은 원래 기물의 관계 조합은 SAN/좌표 특수 문구보다 일반적이지만, 두 기존 사례가 통과한다고 일반화 정책의 완성을 선언하지 않는다.",
+    "본 자료는 구현 입구와 negative 경계를 정리한 정적 연구다. parent의 최종 코드·제품 재생 결과와 별도 판정해야 한다."
+  ],
+  "source_version_note": "소스는 parent v2 병행 작업 중 읽었다. 이 JSON은 새 구현의 실행 성공을 확인하지 않는다.",
+  "source_files_at_write": [
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "fb337e17a7fa0b6e8326a1aae26a216a8befd959e60240aa0f02f1e2f9046393"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "d6ce8d508cdd13b526c771bba9590c363f0e00b769d39f46d119de0f7b66ea65"
+    }
+  ],
+  "completion": "추가 두 관계 후보의 기존 witness 활용안과 과도 귀속 negative 경계 작성 완료. 소스 수정/제품 실행/새 기보 검증 없음.",
+  "saved_identity_checks": {
+    "wch2016-11": {
+      "same_initial_fen": true,
+      "same_root_actor_first_use": true,
+      "counterpart_actor_is_reply_victim": true,
+      "counterpart_victim_is_reply_actor": true
+    },
+    "candidates2018-09": {
+      "same_support_provider_departure": true,
+      "actual_target_loss19": true,
+      "price_18_19_net0": true
+    },
+    "method": "이미 공개된 두 obligation-facts의 원래 기물 신원과 저장값만 비교했다. 제품/엔진 실행 검사가 아니다."
+  }
+}

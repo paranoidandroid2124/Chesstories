@@ -1,0 +1,208 @@
+{
+  "scope": "Exactly three fresh H05/T20 pairs at 30000ms under the final rule set. Every outcome retained. Distinct from the six 10000ms normal-budget trials.",
+  "cases": [
+    {
+      "id": "H05R1",
+      "category": "supplemental_quiet_important",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [],
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "mainline_san": "",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f3e3"
+      ],
+      "alternatives_san": [
+        "Ke3"
+      ],
+      "source": "100 Endgame Patterns, personal reading PDF page60, Zamarbide-Benitez La Roda2005, White35g4? versus35Ke3!, diagram visually checked.",
+      "history_limit": "The diagram fixes the board and side. Earlier history and halfmove clock are unavailable; use zero for this research start, no repetition or fifty-move inference.",
+      "human_task": "Test whether immediately spending g3-g4 allows ...f6 and a king blockade, while Ke3 preserves g4 as a later waiting move to gain f5. The move order must matter against the opponent best replies, not only the book line.",
+      "falsifiers": [
+        "If g4 still wins, reject the lost-win hypothesis.",
+        "If Ke3 does not win in bounded searches, do not assume the book judgment is proven.",
+        "Do not call one PV forced or equate a pawn-count difference with the waiting-move mechanism."
+      ],
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "H05",
+      "trial": 1
+    },
+    {
+      "id": "T20R1",
+      "category": "new_reference_under_v33",
+      "initial_fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "move_prefix_uci": [],
+      "fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "mainline_san": "",
+      "played_san": "g5",
+      "lines": [
+        [
+          "g6g5"
+        ]
+      ],
+      "alternatives_san": [
+        "Kd6",
+        "Ke6",
+        "Kf5"
+      ],
+      "source": "100 Endgame Patterns personal reading edition, PDF page 51, Kharlov-Ernst, Haninge 1992, 47...g5? versus drawing king moves. Diagram visually checked.",
+      "human_task": "The immediate opposing g4 counterbreak creates separated passed pawns. Explain that response if verified. Keeping a pawn move is not itself a complete account of this error.",
+      "falsifiers": [
+        "If no important difference is established between g5 and legal king choices, do not import the book loss into the product result.",
+        "Do not replace the actual g4 counterbreak with an unrelated king waiting route.",
+        "The later passed-pawn captures and promotions must remain attached to their actual branches."
+      ],
+      "history_limit": "The recorded prefix is replayed. Earlier game history is unavailable; initial zero halfmove clock cannot establish repetition or fifty-move claims.",
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "T20",
+      "trial": 1
+    },
+    {
+      "id": "H05R2",
+      "category": "supplemental_quiet_important",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [],
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "mainline_san": "",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f3e3"
+      ],
+      "alternatives_san": [
+        "Ke3"
+      ],
+      "source": "100 Endgame Patterns, personal reading PDF page60, Zamarbide-Benitez La Roda2005, White35g4? versus35Ke3!, diagram visually checked.",
+      "history_limit": "The diagram fixes the board and side. Earlier history and halfmove clock are unavailable; use zero for this research start, no repetition or fifty-move inference.",
+      "human_task": "Test whether immediately spending g3-g4 allows ...f6 and a king blockade, while Ke3 preserves g4 as a later waiting move to gain f5. The move order must matter against the opponent best replies, not only the book line.",
+      "falsifiers": [
+        "If g4 still wins, reject the lost-win hypothesis.",
+        "If Ke3 does not win in bounded searches, do not assume the book judgment is proven.",
+        "Do not call one PV forced or equate a pawn-count difference with the waiting-move mechanism."
+      ],
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "H05",
+      "trial": 2
+    },
+    {
+      "id": "T20R2",
+      "category": "new_reference_under_v33",
+      "initial_fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "move_prefix_uci": [],
+      "fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "mainline_san": "",
+      "played_san": "g5",
+      "lines": [
+        [
+          "g6g5"
+        ]
+      ],
+      "alternatives_san": [
+        "Kd6",
+        "Ke6",
+        "Kf5"
+      ],
+      "source": "100 Endgame Patterns personal reading edition, PDF page 51, Kharlov-Ernst, Haninge 1992, 47...g5? versus drawing king moves. Diagram visually checked.",
+      "human_task": "The immediate opposing g4 counterbreak creates separated passed pawns. Explain that response if verified. Keeping a pawn move is not itself a complete account of this error.",
+      "falsifiers": [
+        "If no important difference is established between g5 and legal king choices, do not import the book loss into the product result.",
+        "Do not replace the actual g4 counterbreak with an unrelated king waiting route.",
+        "The later passed-pawn captures and promotions must remain attached to their actual branches."
+      ],
+      "history_limit": "The recorded prefix is replayed. Earlier game history is unavailable; initial zero halfmove clock cannot establish repetition or fifty-move claims.",
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "T20",
+      "trial": 2
+    },
+    {
+      "id": "H05R3",
+      "category": "supplemental_quiet_important",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [],
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "mainline_san": "",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f3e3"
+      ],
+      "alternatives_san": [
+        "Ke3"
+      ],
+      "source": "100 Endgame Patterns, personal reading PDF page60, Zamarbide-Benitez La Roda2005, White35g4? versus35Ke3!, diagram visually checked.",
+      "history_limit": "The diagram fixes the board and side. Earlier history and halfmove clock are unavailable; use zero for this research start, no repetition or fifty-move inference.",
+      "human_task": "Test whether immediately spending g3-g4 allows ...f6 and a king blockade, while Ke3 preserves g4 as a later waiting move to gain f5. The move order must matter against the opponent best replies, not only the book line.",
+      "falsifiers": [
+        "If g4 still wins, reject the lost-win hypothesis.",
+        "If Ke3 does not win in bounded searches, do not assume the book judgment is proven.",
+        "Do not call one PV forced or equate a pawn-count difference with the waiting-move mechanism."
+      ],
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "H05",
+      "trial": 3
+    },
+    {
+      "id": "T20R3",
+      "category": "new_reference_under_v33",
+      "initial_fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "move_prefix_uci": [],
+      "fen": "8/8/5pp1/4k2p/2P4P/4K1P1/8/8 b - - 0 47",
+      "mainline_san": "",
+      "played_san": "g5",
+      "lines": [
+        [
+          "g6g5"
+        ]
+      ],
+      "alternatives_san": [
+        "Kd6",
+        "Ke6",
+        "Kf5"
+      ],
+      "source": "100 Endgame Patterns personal reading edition, PDF page 51, Kharlov-Ernst, Haninge 1992, 47...g5? versus drawing king moves. Diagram visually checked.",
+      "human_task": "The immediate opposing g4 counterbreak creates separated passed pawns. Explain that response if verified. Keeping a pawn move is not itself a complete account of this error.",
+      "falsifiers": [
+        "If no important difference is established between g5 and legal king choices, do not import the book loss into the product result.",
+        "Do not replace the actual g4 counterbreak with an unrelated king waiting route.",
+        "The later passed-pawn captures and promotions must remain attached to their actual branches."
+      ],
+      "history_limit": "The recorded prefix is replayed. Earlier game history is unavailable; initial zero halfmove clock cannot establish repetition or fifty-move claims.",
+      "engine_output_previously_read": true,
+      "provided_future_lines": false,
+      "provided_scores": false,
+      "already_open_development": true,
+      "base_case": "T20",
+      "trial": 3
+    }
+  ],
+  "rule_freeze_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\critical-comparison-20261007\\final-rule-freeze-v11.json",
+  "rule_freeze_sha256": "266fbfdb9e75d13d6be7892b89c528ca39f8e62301bdc27470bcdeaba3db80a6"
+}

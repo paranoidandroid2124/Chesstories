@@ -1,0 +1,117 @@
+{
+  "sealed_utc": "2026-10-08T21:41:51.195080+00:00",
+  "scope": "Research-only observational source override of held10b; six actual native reports re-submitted through exact whole public descriptors; zero engine queries. This is not a production10c run.",
+  "original_anchor_source_sha256": "444ada37bbb2fbb44281f5c904ec597b6807243ebf3b59a7d8fa9526ab992b41",
+  "research_override_sha256": "94fc31b3bf9dac1cba3e2e63ca7b2eb812c0061ec2e7a1ebd9d83ae7255f9a6f",
+  "exact_two_edit_patch": "Prefix display references advance response path; both response paths must share full moves/ids/position prefix with task.stage.anchor. Stage anchor remains in private ownership/evidence.",
+  "whole_issued_work_checks": [
+    {
+      "index": 0,
+      "work_id": "work:0",
+      "whole_descriptor_equal": true
+    },
+    {
+      "index": 1,
+      "work_id": "work:1",
+      "whole_descriptor_equal": true
+    },
+    {
+      "index": 2,
+      "work_id": "work:2",
+      "whole_descriptor_equal": true
+    },
+    {
+      "index": 3,
+      "work_id": "work:3",
+      "whole_descriptor_equal": true
+    },
+    {
+      "index": 4,
+      "work_id": "work:4",
+      "whole_descriptor_equal": true
+    },
+    {
+      "index": 5,
+      "work_id": "work:5",
+      "whole_descriptor_equal": true
+    }
+  ],
+  "new_engine_queries": 0,
+  "new_engine_processes": 0,
+  "whole_played_primary_equals_ordinary_held10b": true,
+  "oldReserveTempo_statement_and_refs_unchanged": true,
+  "old_material_detail_sections_required_focus_refs_unchanged": true,
+  "core_statement_types": [
+    "AnchoredDecision",
+    "Continuation",
+    "ReserveTempo"
+  ],
+  "detail_statement_types": [
+    "Material",
+    "Material",
+    "MaterialEvents",
+    "MaterialEvents",
+    "Material",
+    "MaterialEvents",
+    "Material",
+    "MaterialEvents"
+  ],
+  "all_complete_content_required_canonical_account_and_ref_gates_pass": true,
+  "from_units_gates": {
+    "core_units": 3,
+    "detail_units": 3,
+    "core_witness_line_ids": [
+      "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:36cfbe306776ea550066109d55c69d57c9bf653ee325f4498d34438990445490",
+      "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:1bd62a69b1beaa24fd6d022d1d2d21d3f85624c28cf340b6fa277074b7e55fdf",
+      "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:55469d72f986869921f2022d7b0a568e934b34434fc8384ec7beeb821480b2b5",
+      "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:f88a2df62ea482dd9e2651b155a8acd6ea34e03f86acc64aa5e2971cea4fba74",
+      "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:76d43aeb629ef02dd82b4417d6d4bf8fee33da5b9238713c82171e0b696e7afb"
+    ],
+    "detail_witness_line_ids": [],
+    "core_witness_bound": true,
+    "detail_witness_bound": true,
+    "pair_size": 2,
+    "roots_mentioned": true,
+    "all_refs_valid": true,
+    "core_visible_account": true,
+    "detail_visible_account": true,
+    "witness_root_history": true,
+    "unit_english_sizes": [
+      24,
+      5,
+      22,
+      17,
+      9,
+      5
+    ],
+    "unit_korean_sizes": [
+      24,
+      5,
+      22,
+      17,
+      9,
+      5
+    ]
+  },
+  "completePairAnswer_present": true,
+  "realize_present": true,
+  "source_witness_before": 6,
+  "source_witness_after": 5,
+  "caps_or_prices_ownership_change": false,
+  "first_Basic_export_before_hidden_trace_read": true,
+  "independent_firstpass_pending_at_seal": "DeepTheory triggered with BASIC-only file; no human utility conclusion borrowed from realization.",
+  "public_final_decoder_validation": "Not claimed by this target diagnostic; parent to verify separately.",
+  "original_root_cause_limit": "Current owner source is named Ke3 f6 path; no unrestricted original first Black inventory after both root moves. New paragraph is a response-sensitive local timing recommendation, not a sole score cause or forced cycle.",
+  "artifact_sha256": {
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-override/provenance.json": "cff323c279dcb4011f84473a595099fbbd91f43a7f76b44b52e6f5d80d579bc1",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-override/AnchoredChoiceAnswer.scala": "94fc31b3bf9dac1cba3e2e63ca7b2eb812c0061ec2e7a1ebd9d83ae7255f9a6f",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-override/held10b-to-prefix-consolidation.diff": "43b4d2562325e8dfb914895772547571457e9f8310d34711077dca91bc70ccd8",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-diagnostic2-manifest.json": "53401469bd449169e238c2f0d837d4c731719d1000458352af944f5f9b1918e9",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-diagnostic2-result.json": "c34f27a75e1737225608d356a8e3a5bf7f47f27a613e272d27917bfb3f095f8e",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-diagnostic2.log": "17a566e3f2ba22f3553d68dd52f2189f16445af940f601570404e65b9aac3fce",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-final-snapshot.jsonl.gz": "1934786bf02fd27249bf30bd3b34a58bfbf1d36281b3bbfc50f686e71375d063",
+    "target/functional-judgment-20261009/h05-10b-resume180/prefix-consolidation-preparation-failure1/provenance.json": "b20a2d0a101e64bc4e070fbd586c1ed71c34490f4b7248c05acacdf9577f951d",
+    "research/functional-judgment-20261009/h05-10b-prefix-consolidation-research-basic.json": "b29e5adeab1869ebada5eaf1923aa13a3ebec6e59b73c309b6b3257c675e944d"
+  },
+  "production_test_criteria_mutations": false
+}

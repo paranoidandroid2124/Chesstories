@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T21:16:08.440034+00:00",
+  "phase": "Independent held10a fresh180 first reading, BASIC ONLY; sealed before opening any held10a native snapshot, execution audit or source",
+  "input": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10a-fresh180-basic.json",
+    "sha256": "342687a5a837b76bf85ad3a6ffd3a8d0ec74b74c10571519839ece3dd89bfe29",
+    "exported_source_sha256": "5d3e27bffdfe51769be93222893c6d4d830cebe1db055b5cd9ac73c5317f59c7",
+    "case_id": "H05",
+    "exported_current_fen": null,
+    "focus": {
+      "kind": "played_move",
+      "played_move_uci": "g3g4",
+      "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+    },
+    "verdict": {},
+    "default_question": "investigated_mechanism",
+    "text": "g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance.",
+    "text_sha256": "a7fe2259e61ba87cfc467683e233aec1f62115933cf6091c826893ef9a59c6a9",
+    "text_characters": 317
+  },
+  "unchanged_frozen_criteria": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json",
+      "sha256": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-functional-root-value-human-contract-supplement-20261009.json",
+      "sha256": "194934ce44a158d83356246d32be3257133f56bc032c3dbb83f86a62dde2ab30",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+      "sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+      "changed": false
+    }
+  ],
+  "preserved_prior_firstpass": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-choicev9-fresh180-human-firstpass.json",
+    "sha256": "967986b8479ff8dc614caeb09a4d7f2ce3508ebaf8b22360943b60e1bb577238",
+    "changed": false
+  },
+  "fixed_human_question": "Why does preparing the king while retaining g4 preserve useful winning chances against adequate Black resistance, while immediate g4 misses that function? A legal king entry, retained pawn or a recorded cycle alone is insufficient.",
+  "basic_export_limits": {
+    "current_fen": "The export contains null rather than a current FEN. The supplied resulting position and played g3g4 agree with the fixed H05 setup, but this prose pass does not validate the hidden full request/history.",
+    "numerical_verdict": "The export contains an empty verdict object. No root numerical verdict or full judgment is visible in this body.",
+    "prior_peer_messages": "Peer messages supplied internal status summaries before this reading. No audit or native result file was opened, and those summaries do not fill any missing sentence or determine the human verdict. This is a prose-only pass, not a claim of complete experimental blindness."
+  },
+  "human_status": {
+    "pawn_move_purpose_and_timing": "delivered as a limited retained-tempo comparison",
+    "conditional_tested_own_choice": "delivered: after Ke3 f6, tested Kf3 above immediate g4",
+    "recorded_cycle_and_turn_transfer": "delivered with recorded scope",
+    "function_under_adequate_counter": "partial: f6 is named but its defensive task and meaningful forced change are unexplained",
+    "useful_progress_or_conversion": "not_delivered",
+    "response_sensitive_plan_change": "not_delivered",
+    "original_g4_Ke3_judgment": "partial",
+    "sole_root_numerical_cause": "unestablished and not claimed"
+  },
+  "recoverable": [
+    {
+      "topic": "Actual move spends a resource",
+      "visible": "g4 spends a pawn move that Ke3 keeps available.",
+      "scope": "A concrete timing/retention purpose; it does not yet explain the value of retaining it."
+    },
+    {
+      "topic": "Useful local choice under a named response",
+      "visible": "After Ke3 f6, the tested Kf3 evaluates above an immediate g4.",
+      "scope": "A scoped tested own-choice comparison. The text does not say every White king move is good, every defense loses or that Kf3 is unique."
+    },
+    {
+      "topic": "Passing the move without the pawn advance",
+      "visible": "The recorded Kf3 Kd6 Ke2 Ke5 Ke3 manoeuvre restores the same placement with Black to move while Pg3 remains.",
+      "scope": "A readable recorded tempo mechanism, not a forced cycle or proof that the opponent must exhaust its useful defense."
+    }
+  ],
+  "minimum_human_connection_still_missing": [
+    {
+      "topic": "Why f6 matters",
+      "missing": "The text names f6 but does not explain its blockade of the g5 break and relevant king approach, nor the consequence/price if White advances anyway."
+    },
+    {
+      "topic": "Why Black must change a useful waiting defense",
+      "missing": "There is no king preparation or queenside pressure task, such as preparing a useful b4 exchange while avoiding an unprepared c3 counter. A recorded placement cycle alone does not show the opponent's adequate reserve is compelled to disappear."
+    },
+    {
+      "topic": "What the preserved turn-transfer accomplishes",
+      "missing": "The answer does not connect the held king role to a valuable entry, exchange, supported passer or king race after an adequate reply."
+    },
+    {
+      "topic": "Different defense, different good plan",
+      "missing": "No Ke6-defense/Kd2 route is described, and no boundary prevents the displayed f6/Kf3 cycle from being read as the fixed required realization against every defense."
+    },
+    {
+      "topic": "Necessary price",
+      "missing": "No breakthrough/conversion is actually claimed in the basic, so a fixed book sacrifice is not required as a checklist item. If a useful winning transition is the intended explanation, its consequential capture/check/race price must be connected before promoting the turn-transfer to that conclusion."
+    },
+    {
+      "topic": "Return to the original judgment",
+      "missing": "The body does not explain why each original choice's adequate resistance preserves or removes a sufficiently important function. A local after-Ke3-f6 own-choice advantage is not the whole original-root comparison."
+    }
+  ],
+  "unnecessary_explanation": {
+    "broad_relation_excess": false,
+    "comment": "The recorded manoeuvre is relevant and scoped; its five moves are not themselves proof of useful pressure. More repetitions or longer PVs would not fill the missing connection."
+  },
+  "explicit_unsupported_causal_claim_count": 0,
+  "explicit_forced_or_unique_win_claim_count": 0,
+  "interpretation_risks": [
+    "A reader might infer that handing over the move proves winning zugzwang or forces Black to exhaust resources; the text only describes a recorded return.",
+    "The named f6/Kf3 branch may be generalized to a different Ke6 defense even though the useful White plan and pawn conditions can change.",
+    "Keeping the pawn on g3 may be treated as the success condition itself rather than a resource whose later use still needs a meaningful resulting task."
+  ],
+  "visible_comparison_with_prior_fresh180": {
+    "prior_basic": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-choicev9-fresh180-basic.json",
+      "sha256": "f54ffb7f3459fd827d29a132ec4e30648dee87ddf0f63e5b30e10fd5697cc6a9"
+    },
+    "prior_firstpass": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-choicev9-fresh180-human-firstpass.json",
+      "sha256": "967986b8479ff8dc614caeb09a4d7f2ce3508ebaf8b22360943b60e1bb577238"
+    },
+    "old_text_characters": 137,
+    "new_text_characters": 317,
+    "old_body": "Only two finite no-loss/no-promotion summaries.",
+    "actual_gain": "The new body explains a retained pawn tempo, names f6 and a tested own-choice timing comparison, and describes the recorded king manoeuvre's turn-transfer.",
+    "still_not_full_success": "This is a human-readable mechanism/limited value gain, but the actual useful response/pressure/conversion and original root judgment remain unfinished."
+  },
+  "facts_vs_evidence_boundary": "No current native depth, receipt ownership, complete resistance pool or Task state was read for this first pass. Its empty verdict object is not filled from the peer's root-score summary. A subsequent evidence supplement may distinguish proved-but-absent facts from still-unproved useful progress.",
+  "preserved_results": {
+    "old_four_full_utility": "0/4 unchanged; H05 remains supplemental, not an added fifth old control",
+    "eight_source_full_utility": "0/8 unchanged",
+    "earlier_H05_firstpasses_and_criteria": "Unchanged byte-for-byte",
+    "new_held10a": "Separate exposed development result, bounded mechanism and tested timing comparison delivered; full original human judgment partial"
+  },
+  "work_scope": "New research JSON only. No new engine, runner, compiler, product/main/test/UI edit or current source read.",
+  "next_phase": "Only after this seal, read explicitly supplied current audits and the frozen book/position criteria to propose a minimum response-sensitive function/value chain. Keep this first pass immutable and distinguish the desired chain from existing product delivery."
+}

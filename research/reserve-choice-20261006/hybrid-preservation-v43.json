@@ -1,0 +1,235 @@
+{
+  "scope": "Separate completed archive gaps; original47/49 exact replay count is unchanged.",
+  "limitation": "One new root comparison replaces Kg2 with Qd3 and the Qb5 continuation. Five old references belong to retired selected branches; they are recorded, not counted as unchanged preservation.",
+  "baseline": "target\\answer-boundaries-20261005\\dutyv4\\run-False.jsonl",
+  "baseline_sha256": "b4c1b2fe3f58d8be71e00a918a5d1819adb5b655feb67359d8bc1b98dce92f5f",
+  "findings": [
+    {
+      "case": "wch2016-09",
+      "source": "target\\decision-timing-20261006\\reg2016replay43\\final-snapshots.jsonl.gz",
+      "source_sha256": "50eda5bb5e055d060aa88a34d36c5d318e0d8a24f95bf1b130dddb21cbb521dd",
+      "pending": false,
+      "lost_delivery": false,
+      "raw_removed_refs": [],
+      "prices_moved": [],
+      "retired_branch_refs": [],
+      "unexplained_missing_current_refs": [],
+      "before_pair": [
+        [
+          "f1g1",
+          "d6d7",
+          "g1g5",
+          "g7g6",
+          "h1g2",
+          "b6d4",
+          "g5d5",
+          "d7d5",
+          "b3d5",
+          "d8d5",
+          "e3h6",
+          "b8d8",
+          "h2h4",
+          "d4g7",
+          "d1d5",
+          "h5f4",
+          "h6f4",
+          "d8d5",
+          "a6a8",
+          "g7f8",
+          "a8e8"
+        ],
+        [
+          "d1d3",
+          "d6d7",
+          "f1b1",
+          "b6c7",
+          "h1g2",
+          "h5f4",
+          "e3f4",
+          "c7f4",
+          "b1e1",
+          "d7b5",
+          "d3b5",
+          "b8b5",
+          "b3c4",
+          "b5g5",
+          "g2f1",
+          "f4d6",
+          "a6a7"
+        ]
+      ],
+      "after_pair": [
+        [
+          "f1g1",
+          "d6d7",
+          "g1g5",
+          "g7g6",
+          "h1g2",
+          "b6d4",
+          "g5d5",
+          "d7d5",
+          "b3d5",
+          "d8d5",
+          "e3h6",
+          "b8d8",
+          "h2h4",
+          "d4g7",
+          "d1d5",
+          "h5f4",
+          "h6f4",
+          "d8d5",
+          "a6a8",
+          "g7f8",
+          "a8e8"
+        ],
+        [
+          "d1d3",
+          "d6d7",
+          "f1b1",
+          "b6c7",
+          "h1g2",
+          "h5f4",
+          "e3f4",
+          "c7f4",
+          "b1e1",
+          "d7b5",
+          "d3b5",
+          "b8b5",
+          "b3c4",
+          "b5g5",
+          "g2f1",
+          "f4d6",
+          "a6a7"
+        ]
+      ],
+      "before": "In the provided Rg1 line, the same rook next moves with Rg5 to g5. After Rg5, White's rook on g5 now targets Black's knight on h5. Bg7 clears d4; later Qxd5 passes through that square in this line. After Qxd5, White's queen on d5 now targets Black's knight on h5. Nf4+ moves the knight out of the attack from White's queen on d5. After Qxd5, the black knight originally on h5 is still present on h5. After Rg1, White's rook on g1 now targets Black's pawn on g7. After Rd5, White's rook on a6 attacks Black's pawn on g6. Rd5 moves the rook from g5 to d5, ending its attack on Black's pawn on g6. After g6, White's rook on g5 attacks Black's pawn on g6. After Re8, the black pawn originally on g7 is still present on g6. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qd3, White's queen on d3 now targets Black's pawn on h7, and keeps supporting White's pawn on d4, which is under attack from Black's bishop on b6 and Black's queen on d6. Qxb5 moves the queen from d3 to b5, ending its attack on Black's pawn on h7. After Ra7, the black pawn originally on h7 is still present on h7. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qb5, Black's rook on d8 attacks White's pawn on d4. Qb5 moves the queen from d7 to b5, ending its attack on White's pawn on d4. After Ra7, the white pawn originally on d4 is still present on d4. Qd3 clears d1; later Rb1 passes through that square in this line. In the provided Qd3 line, the same queen next moves with Qxb5 to b5. After Qxb5, White's queen on b5 now targets Black's rook on b8. After Bc4, White's bishop on c4 now targets Black's rook on b5. Rg5+ moves the rook out of the attack from White's bishop on c4. After Rxb5, the black rook originally on b8 is still present on b5. After Ra7, the black rook originally on b8 is still present on g5. In the Rg1 line: Bxd4 moves the bishop out of the attack from White's rook on a6. Qxd5 captures the white rook on d5. After Bxd4, Black's rook on b8 now targets White's bishop on b3. Bxd5 moves the bishop out of the attack from Black's rook on b8. Bxd5 recaptures the black queen on d5. After Bg7, Black's bishop on g7 now targets White's bishop on h6. Bxf4 moves the bishop out of the attack from Black's bishop on g7. In the Rg1 line: In the provided Nf4+ line: Nf4+ gives check to the White king on g2 with Black's knight on f4; Bxf4 captures the checking knight on f4. In the Qd3 line: Qxb5 captures the black queen on b5. Rxb5 recaptures the white queen on b5. In the Rg1 line, White loses one pawn. In the Rg1 line, White gives up one bishop and one queen for one knight and one rook. In the Qd3 line: The recorded continuation is Kf1.",
+      "after": "Rg1 places the rook on the semi-open g-file. In the provided Rg1 line, the same rook next moves with Rg5 to g5. After Rg5, White's rook on g5 now targets Black's knight on h5. Bg7 clears d4; later Qxd5 passes through that square in this line. After Qxd5, White's queen on d5 now targets Black's knight on h5. Nf4+ moves the knight out of the attack from White's queen on d5. After Qxd5, the black knight originally on h5 is still present on h5. After Rg1, White's rook on g1 now targets Black's pawn on g7. After Rd5, White's rook on a6 attacks Black's pawn on g6. Rd5 moves the rook from g5 to d5, ending its attack on Black's pawn on g6. After g6, White's rook on g5 attacks Black's pawn on g6. After Re8, the black pawn originally on g7 is still present on g6. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qd3, White's queen on d3 now targets Black's pawn on h7, and keeps supporting White's pawn on d4, which is under attack from Black's bishop on b6 and Black's queen on d6. Qxb5 moves the queen from d3 to b5, ending its attack on Black's pawn on h7. After Ra7, the black pawn originally on h7 is still present on h7. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qb5, Black's rook on d8 attacks White's pawn on d4. Qb5 moves the queen from d7 to b5, ending its attack on White's pawn on d4. After Ra7, the white pawn originally on d4 is still present on d4. Qd3 clears d1; later Rb1 passes through that square in this line. In the provided Qd3 line, the same queen next moves with Qxb5 to b5. After Qxb5, White's queen on b5 now targets Black's rook on b8. After Bc4, White's bishop on c4 now targets Black's rook on b5. Rg5+ moves the rook out of the attack from White's bishop on c4. After Rxb5, the black rook originally on b8 is still present on b5. After Ra7, the black rook originally on b8 is still present on g5. In the Rg1 line: Bxd4 moves the bishop out of the attack from White's rook on a6. Qxd5 captures the white rook on d5. After Bxd4, Black's rook on b8 now targets White's bishop on b3. Bxd5 moves the bishop out of the attack from Black's rook on b8. Bxd5 recaptures the black queen on d5. After Bg7, Black's bishop on g7 now targets White's bishop on h6. Bxf4 moves the bishop out of the attack from Black's bishop on g7. In the Rg1 line: In the provided Nf4+ line: Nf4+ gives check to the White king on g2 with Black's knight on f4; Bxf4 captures the checking knight on f4. In the Qd3 line: Qxb5 captures the black queen on b5. Rxb5 recaptures the white queen on b5. In the Rg1 line, White loses one pawn. In the Rg1 line, White gives up one bishop and one queen for one knight and one rook. In the Qd3 line: The recorded continuation is Kf1."
+    },
+    {
+      "case": "wch2024-09",
+      "source": "target\\decision-timing-20261006\\reg2024replay43\\final-snapshots.jsonl.gz",
+      "source_sha256": "fe7d14c140fa66ceba03090b5fbd0c4cd970c4d618e4535c8ce45cf3d8d72b5d",
+      "pending": false,
+      "lost_delivery": false,
+      "raw_removed_refs": [
+        [
+          "b1b5",
+          1,
+          "e7c5"
+        ],
+        [
+          "b1b5",
+          2,
+          "b5c5"
+        ],
+        [
+          "b1b5",
+          3,
+          "a7b6"
+        ],
+        [
+          "g1g2",
+          1,
+          "e7c5"
+        ],
+        [
+          "g1g2",
+          2,
+          "c1c5"
+        ]
+      ],
+      "prices_moved": [],
+      "retired_branch_refs": [
+        [
+          "b1b5",
+          1,
+          "e7c5"
+        ],
+        [
+          "b1b5",
+          2,
+          "b5c5"
+        ],
+        [
+          "b1b5",
+          3,
+          "a7b6"
+        ],
+        [
+          "g1g2",
+          1,
+          "e7c5"
+        ],
+        [
+          "g1g2",
+          2,
+          "c1c5"
+        ]
+      ],
+      "unexplained_missing_current_refs": [],
+      "before_pair": [
+        [
+          "g1g2",
+          "e7c5",
+          "c1c5",
+          "a7b6",
+          "b1c1",
+          "g7g6",
+          "c5c6",
+          "b6b5"
+        ],
+        [
+          "b1b5",
+          "e7c5",
+          "b5c5",
+          "a7b6",
+          "c5e5",
+          "f6e8"
+        ]
+      ],
+      "after_pair": [
+        [
+          "b1d3",
+          "e7c5",
+          "c1c5",
+          "a6b6",
+          "d3c3",
+          "b8f8",
+          "d1a1",
+          "b6a6",
+          "a1c1",
+          "a6a3",
+          "c3b2",
+          "a3a2",
+          "b2b4",
+          "a2a1",
+          "c1a1",
+          "a7a1",
+          "g1g2",
+          "a1d1",
+          "e2e4",
+          "d1d8",
+          "c5c6"
+        ],
+        [
+          "b1b5",
+          "g7g6",
+          "b5b4",
+          "a6a5",
+          "b4f4",
+          "a5c5",
+          "c1c5",
+          "e7c5",
+          "f4f6",
+          "c5b6",
+          "f3g2",
+          "b8e8",
+          "d1d3",
+          "b6a5"
+        ]
+      ],
+      "before": "Compare what happens to the white pawn originally on c5 in the recorded Kg2 and Qb5 lines. The recorded continuation is Kg2. With Bxc5, the black bishop originally on e7 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that bishop. After Qb5, White's queen on b5 adds support to White's pawn on c5, which is under attack from Black's bishop on e7. In the Qb5 line, White's queen on b5 keeps supporting White's pawn on c5 until Bxc5 captures the supported pawn; Qxc5 recaptures its capturer with the supporting queen. With Qxb6, the black queen originally on a7 captures the white knight originally on b6.",
+      "after": "Compare what happens to the white pawn originally on c5 in the recorded Qd3 and Qb5 lines. The recorded continuation is Qd3. With Bxc5, the black bishop originally on e7 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that bishop. After Rc6, the white rook originally on c1 is still present on c6. After Qb5, White's queen on b5 adds support to White's pawn on c5, which is under attack from Black's bishop on e7. The recorded continuation is g6. With Rxc5, the black rook originally on a6 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that rook; with Bxc5, the black bishop originally on e7 recaptures that rook. With Bxb6, the black bishop originally on e7 captures the white knight originally on b6. After Ba5, the black bishop originally on e7 is still present on a5. In the Qd3 line: After Ra6, Black's rook on a6 now targets White's rook on a1. Rxc5 clears c1; Rc1 later occupies that square in this line. Rc1 moves the rook out of the attack from Black's rook on a6. Qd3 clears b1; later Rc1 passes through that square in this line. After Qd3, White's queen on d3 does not support White's knight on b6; after Qb5, White's queen on b5 supports White's knight on b6. After Qd3, White's queen on d3 now targets Black's rook on a6. Raxb6 moves the rook out of the attack from White's queen on d3. With Raxb6, the black rook originally on a6 captures the white knight originally on b6; with Rxa1, the white rook originally on d1 captures that rook; with Qxa1+, the black queen originally on a7 recaptures that rook. The recorded continuation is Kg2. Qd3 clears b1; later Rxa1 passes through that square in this line. After Rxa1, White's rook on a1 now targets Black's queen on a7. After e4, White's bishop on f3 now targets Black's queen on d1. Qd8 moves the queen out of the attack from White's bishop on f3. After Qxa1+, the black queen originally on a7 is still present on a1. In the provided Rxa1 line: Qxa1+ gives check to the White king on g1 with Black's queen on a1; Kg2 moves the king to g2. After Rc6, the black queen originally on a7 is still present on d8."
+    }
+  ]
+}

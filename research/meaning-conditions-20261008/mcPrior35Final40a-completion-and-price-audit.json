@@ -1,0 +1,4014 @@
+{
+  "counts": {
+    "attempted": 35,
+    "completed": 35,
+    "basic_delivered": 35,
+    "price_requirements": 34,
+    "price_status": {
+      "different_forecast_no_retention_success": 22,
+      "same_history_represented_but_price_omitted": 9,
+      "same_history_price_in_core": 3
+    }
+  },
+  "rows": [
+    {
+      "id": "wch2016-07",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-07",
+        "elapsed_ms": 13921,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 2736.303
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.705
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.344
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1453.852
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 27.542
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.427
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3890.165
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 211.186
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.184
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2552.009
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 363.225
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.255
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2181.127
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 483.663
+          }
+        ]
+      },
+      "default_question": "observed_route_use",
+      "basic": "In the provided Rc2 line, the same rook next moves with Rc8 to c8. After Rc2 Kg7, Rc8 attacks the f8-rook. Rxc8 moves that rook out of the attack. In the Rc2 line, both sides exchange one rook. Rxc8 captures the white rook on c8. The same white rook originally on c1 follows Rc8 in the recorded line. Rc8 attacks the f8-rook. Rxc8 moves that rook out of the attack. In the Rc8 line, both sides exchange one rook. Rxc8 captures the white rook on c8.",
+      "words": 86,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 4,
+      "current_path_count": 70,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2016-08",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-08",
+        "elapsed_ms": 10090,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 57.558
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.416
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.355
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 654.594
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 94.756
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.351
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1984.916
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 468.269
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.275
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1260.948
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 565.004
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.275
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2352.397
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 699.398
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.405
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1126.434
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 767.74
+          }
+        ]
+      },
+      "default_question": "contested_pair_response",
+      "basic": "The recorded continuation is Nf6 … Rb8. Rb8 moves the rook out of the attack from White's rook on d4. After Nd6, the black rook originally on d8 is still present on b8. In the N6e5 line: In the provided Rxd8+ line: Rxd8+ gives check to the Black king on g8 with White's rook on d8; Qxd8 captures the checking rook on d8. In the N6e5 line, both sides exchange one rook. With Rxd8+, the white rook originally on d4 captures the black rook originally on d8; with Qxd8, the black queen originally on e7 recaptures that rook.",
+      "words": 98,
+      "core_covered_histories": 2,
+      "detail_covered_histories": 2,
+      "current_path_count": 58,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2016-09",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-09",
+        "elapsed_ms": 23698,
+        "works": 7,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 45.14
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.983
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.347
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 301.74
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 92.054
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.156
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 258.906
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 107.662
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.197
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1887.368
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 499.101
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 2469.391
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 2.28
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 207.754
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 484.869
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 3683.188
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.553
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1661.726
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 631.572
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 2603.604
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.208
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 344.951
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 628.113
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 3451.231
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.889
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3356.36
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 902.986
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Rg1 places the rook on the semi-open g-file. In the provided Rg1 line, the same rook next moves with Rg4 to g4. After Rg4, White's rook on g4 adds support to White's pawn on d4, which is under attack from Black's bishop on b6, Black's queen on d7. After Rg1, White's rook on g1 now targets Black's pawn on g7. Rh4 moves the rook from g4 to h4, ending its attack on Black's pawn on g7. After Qd3, the black pawn originally on g7 is still present on g7. In the Rg1 line: After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qb5, Black's bishop on b6 attacks White's pawn on d4. After Qb5, Black's rook on d8 attacks White's pawn on d4. Qb5 moves the queen from d7 to b5, ending its attack on White's pawn on d4. Qb5 moves the queen from d5 to b5, ending its attack on White's pawn on d4. After Qd3, the white pawn originally on d4 is still present on d4. After Qd3, White's queen on d3 now targets Black's pawn on h7. Qxb5 moves the queen from d3 to b5, ending its attack on Black's pawn on h7. After Rf5, the black pawn originally on h7 is still present on h7. After Qd3, White's queen on d3 keeps supporting White's pawn on d4, which is under attack from Black's bishop on b6, Black's queen on d6. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qb5, Black's rook on d8 attacks White's pawn on d4. Qb5 moves the queen from d7 to b5, ending its attack on White's pawn on d4. After Rf5, the white pawn originally on d4 is still present on d4. Qd3 clears d1; later Rb1 passes through that square in this line. In the provided Qd3 line, the same queen next moves with Qxb5 to b5. After Qxb5, White's queen on b5 now targets Black's rook on b8. After Rxb5, the black rook originally on b8 is still present on b5. After Rf5, the black rook originally on b8 is still present on f5. Qxb5 captures the black queen on b5. Rxb5 recaptures the white queen on b5.",
+      "words": 368,
+      "core_covered_histories": 2,
+      "detail_covered_histories": 4,
+      "current_path_count": 76,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2016-10",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-10",
+        "elapsed_ms": 6379,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 47.327
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.155
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.227
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 283.048
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 56.893
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.197
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1396.271
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 382.737
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.214
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1583.074
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 601.633
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.283
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1378.531
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 600.652
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black pawn originally on d5 and the white queen originally on f3 and the black rook originally on f8 in the recorded Rxf3 and d4 lines. After Rxf3, Black's rook on f3 now targets White's knight on e3. Rxf3 moves the rook out of the attack from White's queen on f3. After Kg2, White's king on g2 now targets Black's rook on f3. Rf7 moves the rook out of the attack from White's king on g2. After Ng4, White's knight on g4 now targets Black's pawn on e5. exd4 moves the pawn out of the attack from White's knight on g4. With cxd4, the white pawn originally on c3 captures the black pawn originally on d5; with exd4, the black pawn originally on e5 recaptures that pawn. After f4, the white knight originally on e3 is still present on g4. After f4, the black rook originally on f8 is still present on f7. After d4, Black's pawn on d4 now targets White's knight on e3. d4 moves the pawn out of the attacks from White's knight on e3 and White's pawn on e4. The recorded continuation is Qe2. After d4, White's pawn on c3 now targets Black's pawn on d4. dxe3 moves the pawn out of the attack from White's pawn on c3. With dxe3, the black pawn originally on d5 captures the white knight originally on e3; with Qxe3, the white queen originally on f3 recaptures that pawn. After cxb4, the white queen originally on f3 is still present on h3. After cxb4, the black rook originally on f8 is still present on f4. The compared root choices are Rxf3 and d4. In the Rxf3 line: After h5, White's pawn on h5 now targets Black's knight on g6. Rxf3 clears f8; Nf8 later occupies that square in this line. Nf8 moves the knight out of the attack from White's pawn on h5. Rxf3 recaptures the white queen on f3.",
+      "words": 325,
+      "core_covered_histories": 5,
+      "detail_covered_histories": 10,
+      "current_path_count": 24,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2016-11",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-11",
+        "elapsed_ms": 9572,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 39.649
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.644
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.175
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 152.519
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 34.674
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.198
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1274.93
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 341.134
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.224
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 891.167
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 417.525
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.374
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1057.015
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 532.732
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.287
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3542.416
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1240.776
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white pawn originally on c3 and the black pawn originally on d4 and the black pawn originally on e4 in the recorded cxd4 and Re1 lines. In the cxd4 line: With cxd4, the white pawn originally on c3 captures the attacking black pawn originally on d4. The recorded continuation is e3. After Kg8, the white pawn originally on c3 is still present on d4. After Kg8, the black pawn originally on e4 is still present on e3. After Re1, White's rook on e1 now targets Black's pawn on e4. With dxc3, the black pawn originally on d4 captures the white pawn originally on c3. With Rxe4, the white rook originally on f1 captures the black pawn originally on e4. With Qxc3, the white queen originally on g5 captures the black pawn originally on d4.",
+      "words": 139,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 8,
+      "current_path_count": 182,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2016-12",
+      "completed": true,
+      "result": {
+        "game_id": "wch2016-12",
+        "elapsed_ms": 3159,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 22.199
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 5.13
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.181
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 191.568
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 60.946
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.181
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 548.854
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 164.787
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.208
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 624.655
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 262.971
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.236
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 847.972
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 403.013
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "a6 h3 Kf7 f3 and Kf7 h3 a6 f3 reach the same recorded position.",
+      "words": 14,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 5,
+      "current_path_count": 13,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-07",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-07",
+        "elapsed_ms": 6465,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 21.839
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 5.036
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.176
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 263.497
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 88.74
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.201
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1364.706
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 404.092
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.22
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1446.838
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 562.517
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.295
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1641.234
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 643.391
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white pawn originally on c4 in the recorded Ne3 and Nd2 lines. After Ne3, White's knight on e3 adds support to White's pawn on c4, which is under attack from Black's knight on b6, Black's bishop on e6. After Nd2, White's knight on d2 adds support to White's pawn on c4, which is under attack from Black's knight on b6, Black's bishop on e6. The recorded continuation is Re8. With Bxc4, the black bishop originally on e6 captures the white pawn originally on c4. After Kg3, the black knight originally on b6 is still present on d7. After Kg3, the black bishop originally on e6 is still present on c6. With hxg4, the white pawn originally on h3 recaptures the black pawn originally on h5. The compared root choices are Ne3 and Nd2. In the Ne3 line, White's knight on e3 keeps supporting White's pawn on c4 until Nxc4 captures the supported pawn; Nxc4 recaptures its capturer with the supporting knight. exf6 clears e5; later Rxe6 passes through that square in this line. With Bxc4, the black bishop originally on e6 recaptures the white knight originally on f1. With exf6, the white pawn originally on e5 captures the black pawn originally on f7; with gxf6, the black pawn originally on g7 recaptures that pawn. With Rxe6, the white rook originally on e1 captures the black bishop originally on e6. With fxg5, the black pawn originally on g7 captures the white bishop originally on g5. With exf6, the white pawn originally on e5 captures the black pawn originally on f7; with gxf6, the black pawn originally on g7 recaptures that pawn. With fxg5, the black pawn originally on g7 captures the white bishop originally on g5. In the Nd2 line: hxg4 captures the white pawn on g4.",
+      "words": 301,
+      "core_covered_histories": 10,
+      "detail_covered_histories": 14,
+      "current_path_count": 47,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-08",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-08",
+        "elapsed_ms": 17465,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 22.471
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 9.706
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.297
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 314.287
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 117.203
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.282
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2903.329
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 828.865
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.24
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3240.786
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1006.203
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.338
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3556.13
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1312.591
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.501
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2714.789
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1362.719
+          }
+        ]
+      },
+      "default_question": "functional_response",
+      "basic": "Rab8 moves the rook away from the later capture. In the legal variation Rab8 Qc6 Nf8 Rxf7 Kxf7, that rook cannot be captured by the same queen. After Rdb8 Qc6 Nf8 Rxf7 Kxf7, that same central capture is legal, but White can take the rook with Qxa8. This is a conditional difference; the central capture need not be chosen. The recorded line stops after Rab8; no following reply is recorded. The recorded continuation is Nf8.",
+      "words": 75,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 5,
+      "current_path_count": 160,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-09",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-09",
+        "elapsed_ms": 14700,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 34.176
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.897
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.29
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 360.122
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 103.149
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.334
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 855.65
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 281.677
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.237
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1805.789
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 601.393
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.29
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2522.06
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 785.997
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.267
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1924.645
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 918.913
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.263
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3242.521
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1169.372
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white queen originally on d4 and the white pawn originally on g3 in the recorded Qd3 and Qc4 lines. After Qd3, White's queen on d3 adds support to White's pawn on g3, which is under attack from Black's knight on h5. Qd3 moves the queen out of the attack from Black's pawn on c5. The recorded continuation is Bd7. After fxe4, Black's pawn on e4 now targets White's queen on d3. Qb3 moves the queen out of the attack from Black's pawn on e4. With Qxb3, the black queen originally on e7 captures the white queen originally on d4; with axb3, the white pawn originally on a2 recaptures that queen. After Bxd5, the white pawn originally on g3 is still present on g3. Qc4 moves the queen out of the attack from Black's pawn on c5. After Be6, Black's bishop on e6 now targets White's queen on c4. Qd3 moves the queen out of the attack from Black's bishop on e6. After Rd8, Black's rook on d8 now targets White's queen on d3. Qc2 moves the queen out of the attack from Black's rook on d8. After Bd3, Black's bishop on d3 now targets White's queen on c2. Qb3 moves the queen out of the attack from Black's bishop on d3. Nd5 clears c3; later Qxd3 passes through that square in this line. After Qxd3, White's queen on d3 now targets Black's pawn on g3. gxf2+ moves the pawn out of the attack from White's queen on d3. After gxf2+, Black's rook on g8 now targets White's king on g1. Kxf2 moves the king out of the attack from Black's rook on g8. In the provided gxf2+ line: gxf2+ opens Black's rook on g8's line, giving check to the White king on g1; Black's pawn on f2 also gives check; Kxf2 moves the king to f2 and captures the checking pawn on f2. With Nxg3, the black knight originally on h5 captures the white pawn originally on g3. With Qxd3, the white queen originally on d4 captures the black bishop originally on c8. With gxf2+, the black pawn originally on g4 captures the white pawn originally on f2; with Kxf2, the white king originally on h1 recaptures that pawn. After Kxf2, the white queen originally on d4 is still present on d3. In the Qd3 line: fxe4 captures the white pawn on e4.",
+      "words": 398,
+      "core_covered_histories": 7,
+      "detail_covered_histories": 9,
+      "current_path_count": 37,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-10",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-10",
+        "elapsed_ms": 8479,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 35.835
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 11.647
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.208
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 322.085
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 93.484
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.176
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2060.276
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 743.493
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.215
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1537.654
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 876.848
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.283
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1702.259
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1040.499
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black pawn originally on e5 and the black bishop originally on h6 in the recorded Bxf4 and exf4 lines. In the Bxf4 line: With Bxf4, the black bishop originally on h6 recaptures the attacking white bishop originally on f4. After Bxf4, Black's bishop on f4 adds support to Black's pawn on e5, which is under attack from White's knight on c6. The recorded continuation is Qa5. After Qa3, the black pawn originally on e5 is still present on e5. After Qa3, the black bishop originally on h6 is still present on b6. In the exf4 line: With exf4, the black pawn originally on e5 recaptures the attacking white bishop originally on f4. exf4 moves the pawn out of the attack from White's knight on c6. The recorded continuation is a5. After Bg7, the black pawn originally on e5 is still present on f4. After Bg7, the black bishop originally on h6 is still present on g7.",
+      "words": 161,
+      "core_covered_histories": 2,
+      "detail_covered_histories": 5,
+      "current_path_count": 124,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-11",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-11",
+        "elapsed_ms": 7917,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 28.829
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 5.06
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.176
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 140.093
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 50.484
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.19
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1177.908
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 378.829
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.334
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1437.262
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 792.159
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.448
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2812.674
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1036.664
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black rook originally on a4 and the white pawn originally on b4 in the recorded Qxa4 and Qb1 lines. In the Qxa4 line: With Qxa4, the white queen originally on c2 recaptures the black rook originally on a4. After Qxa4, White's queen on a4 adds support to White's pawn on b4, which is under attack from Black's knight on d5. The recorded continuation is Ne5. With Nxd2, the black knight originally on g6 captures the white bishop originally on d2; with Qxd2, the white queen originally on c2 recaptures that knight. After Qc4, the white pawn originally on b4 is still present on b4. After Qb1, White's queen on b1 adds support to White's pawn on b4, which is under attack from Black's rook on a4, Black's knight on d5. The recorded continuation is b5. After bxc4, the black rook originally on a4 is still present on a4. After bxc4, the white pawn originally on b4 is still present on b4.",
+      "words": 166,
+      "core_covered_histories": 3,
+      "detail_covered_histories": 4,
+      "current_path_count": 43,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "candidates2018-12",
+      "completed": true,
+      "result": {
+        "game_id": "candidates2018-12",
+        "elapsed_ms": 26083,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 40.538
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 16.816
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.312
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 415.707
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 419.378
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.465
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3298.085
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1481.016
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.449
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2571.014
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1425.246
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.77
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3680.602
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1349.614
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.48
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3962.047
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1384.056
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.525
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4045.42
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1860.796
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After b4, Black's pawn on b4 now targets White's pawn on c3. After b4, Black's pawn on b4 is under attack from White's pawn on c3; it is supported by Black's bishop on d6. In the b4 line: After Rxd5, White's rook on d5 now targets Black's bishop on f5. The recorded continuation is Rxd5 Be6. Be6 moves the bishop out of the attack from White's rook on d5. The compared root choices are b4 and Rb8. b4 clears b5; later Rxd5 passes through that square in this line. In the b4 line: Rxd5 captures the black pawn on d5. Rxd5 captures the black rook on d5. Bxd5 recaptures the white rook on d5.",
+      "words": 114,
+      "core_covered_histories": 3,
+      "detail_covered_histories": 9,
+      "current_path_count": 58,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-07",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-07",
+        "elapsed_ms": 47011,
+        "works": 9,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 103.241
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 217.718
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.137
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 853.291
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 296.596
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.282
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 776.841
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 365.698
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.441
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2996.726
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1051.456
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.387
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 5276.593
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1582.874
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.634
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2859.229
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1735.503
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.406
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4073.392
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1919.233
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.523
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4655.249
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 2115.259
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.466
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4881.837
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 2177.244
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.736
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 6565.748
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 2108.11
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white rook originally on e1 and the black rook originally on e8 in the recorded Rxe8 and Be3 lines. Rxe8 moves the rook out of the attack from Black's rook on e8. The recorded continuation is Be3 Qb8. Bd4 clears e3; later Rxe8+ passes through that square in this line. In the provided Rxe8+ line: Rxe8+ gives check to the Black king on g8 with White's rook on e8; Rxe8 captures the checking rook on e8. With Rxe8+, the white rook originally on e1 captures the black rook originally on e8; with Rxe8, the black rook originally on d8 recaptures that rook. The compared root choices are Rxe8 and Be3. Be3 clears f4; Qf4 later occupies that square in this line. After Qf4, White's queen on f4 now targets Black's queen on b8. Rxe8 captures the black rook on e8. With Nxe8, the black knight originally on f6 recaptures the white rook originally on e1. In the Rxe8 line: Re1 moves the rook out of the attack from Black's bishop on g7. In the Rxe8 line: After Nxe8, Black's bishop on g7 now targets White's rook on a1. Rxe8 clears e1; Re1 later occupies that square in this line. After Re1, White's rook on e1 now targets Black's knight on e8.",
+      "words": 216,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 10,
+      "current_path_count": 39,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-08",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-08",
+        "elapsed_ms": 15417,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 73.243
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 12.095
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.364
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 449.548
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 128.494
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.33
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2868.858
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 775.199
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.466
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2927.452
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 935.848
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.931
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2724.333
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 965.275
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.579
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2509.86
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 920.025
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After cxb5, Black's pawn on b5 is under attack from White's rook on b1; it is supported by Black's queen on b6. In the cxb5 line: After Bh3, White's bishop on h3 now targets Black's knight on d7. The recorded continuation is Bh3 Ndc5. Ndc5 moves the knight out of the attack from White's bishop on h3. In the Qxb5 line: The recorded continuation is Rxb5. cxb5 captures the white pawn on b5. The compared root choices are cxb5 and Qxb5. In the cxb5 line: After Bd4, White's bishop on d4 now targets Black's queen on b6. Qb7 moves the queen out of the attack from White's bishop on d4. cxb5 clears c6; later Qb7 uses the cleared line to target White's knight on f3 in this line. After Qb7, Black's queen on b7 now targets White's knight on f3. cxb5 captures the white pawn on b5. Qxb5 captures the white pawn on b5. With Rxb5, the white rook originally on b1 recaptures the black queen originally on b6. In the Qxb5 line: cxb5 recaptures the white rook on b5. cxb5 clears c6; later Qb6 uses the cleared line to target Black's pawn on f6 in this line. After Qb6, Black's queen on b6 adds support to Black's pawn on a5, which is under attack from White's queen on a4, and adds support to Black's pawn on f6, which is under attack from White's bishop on b2.",
+      "words": 237,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 8,
+      "current_path_count": 63,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-09",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-09",
+        "elapsed_ms": 29210,
+        "works": 8,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 30.51
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.015
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.186
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 314.106
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 117.187
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.196
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 294.818
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 165.329
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.439
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 681.701
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 295.553
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.392
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1877.272
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 637.386
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.439
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2397.439
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 893.323
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.426
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3663.535
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1168.739
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.361
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4105.513
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1348.469
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.263
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 9481.405
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1626.117
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white pawn originally on c5 in the recorded Qb4 and Qb5 lines. After Qb4, White's queen on b4 adds support to White's pawn on c5, which is under attack from Black's bishop on e7. After Qc2, Black's rook on b3 now targets White's bishop on f3. Bxd5 moves the bishop out of the attack from Black's rook on b3. With Bxc5, the black bishop originally on e7 captures the white pawn originally on c5; with Rxc5, the white rook originally on c1 recaptures that bishop. With Bxd5, the white bishop originally on f3 captures the black knight originally on f6; with exd5, the black pawn originally on e6 recaptures that bishop; with Rcxd5, the white rook originally on c1 recaptures that pawn; with Rxd5, the black rook originally on a6 captures that rook; with Rxd5, the white rook originally on d1 recaptures that rook. After Qb5, White's queen on b5 adds support to White's pawn on c5, which is under attack from Black's bishop on e7. The recorded continuation is h6. After Rc8, the white rook originally on c1 is still present on c1. The compared root choices are Qb4 and Qb5. In the Qb5 line, White's queen on b5 keeps supporting White's pawn on c5 until Bxc5 captures the supported pawn; Qxc5 recaptures its capturer with the supporting queen. With Qxb6, the black queen originally on a7 captures the white knight originally on b6.",
+      "words": 240,
+      "core_covered_histories": 10,
+      "detail_covered_histories": 11,
+      "current_path_count": 175,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-10",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-10",
+        "elapsed_ms": 5026,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 27.926
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 4.369
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.193
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 154.679
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 46.14
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.23
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 826.171
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 247.724
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.285
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1167.996
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 451.688
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.338
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1486.595
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 567.1
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white rook originally on c8 in the recorded Nxc8 and Bc6 lines. In the Nxc8 line: With Nxc8, the black knight originally on e7 recaptures the white rook originally on c8. The recorded continuation is Nd4. The recorded continuation is Bc6. After Rc7, White's rook on c7 now targets Black's knight on e7. After Ra7, the white rook originally on c8 is still present on a7.",
+      "words": 71,
+      "core_covered_histories": 1,
+      "detail_covered_histories": 4,
+      "current_path_count": 40,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-11",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-11",
+        "elapsed_ms": 10843,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 29.711
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 9.946
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.274
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 287.14
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 98.07
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.293
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2295.902
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 694.613
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.415
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2433.944
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 961.922
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.277
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2738.273
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1249.802
+          }
+        ]
+      },
+      "default_question": "functional_response",
+      "basic": "Rb5 adds rook control of c5. In the legal variation Rb5 O-O Rdb1 Rb8 Qe2 Nd8 Na3 Rd6 c5 Qxc5, White can recapture with Rxc5. After Rb3 O-O Rdb1 Rb8 Qe2 Nd8 Na3 Rd6 c5 Qxc5, that capture with the same rook is unavailable. The recorded continuation is Rb5. The recorded continuation is h4. The compared root choices are Rb5 and h4. Rb5 clears b1; Rdb1 later occupies that square in this line.",
+      "words": 73,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 6,
+      "current_path_count": 55,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "wch2024-12",
+      "completed": true,
+      "result": {
+        "game_id": "wch2024-12",
+        "elapsed_ms": 18167,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 36.89
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 9.186
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.447
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 457.243
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 148.595
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.216
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1958.731
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 624.299
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.377
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1506.743
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 699.703
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.335
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4214.648
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1264.621
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.391
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 5498.919
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1660.725
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black pawn originally on e4 in the recorded f5 and Bf6 lines. After f5, Black's pawn on f5 adds support to Black's pawn on e4, which is under attack from White's bishop on g2. After f3, White's pawn on f3 now targets Black's pawn on e4. After Bf6, the white bishop originally on g2 is still present on g2. The recorded continuation is Bf6 Ne2. After Qc2, White's queen on c2 now targets Black's pawn on e4. In the provided Nf3+ line: Nf3+ gives check to the White king on h2 with Black's knight on f3; Bxf3 captures the checking knight on f3. With Nxc3, the black knight originally on b6 captures the white knight originally on g1; with bxc3, the white pawn originally on b2 recaptures that knight. With Bxf3, the white bishop originally on g2 captures the black knight originally on c6. After Bxf3, White's bishop on f3 now targets Black's pawn on e4. With exf3, the black pawn originally on e4 recaptures the attacking white bishop originally on g2. exf3 moves the pawn out of the attack from White's queen on c2. After a4, the black pawn originally on e4 is still present on f3. The compared root choices are f5 and Bf6. In the f5 line, Black's pawn on f5 keeps supporting Black's pawn on e4 until fxe4 captures the supported pawn; fxe4 recaptures its capturer with the supporting pawn. f5 clears f7; Bf7 later occupies that square in this line. After Bf7, Black's bishop on f7 now targets White's pawn on c4. In the f5 line: Rxe4 captures the black pawn on e4.",
+      "words": 273,
+      "core_covered_histories": 7,
+      "detail_covered_histories": 9,
+      "current_path_count": 80,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-01",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-01",
+        "elapsed_ms": 18652,
+        "works": 8,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 34.817
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.666
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.302
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 273.331
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 98.367
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.204
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 343.072
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 157.336
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.31
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 703.157
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 372.291
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.346
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1848.961
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 666.148
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.262
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1093.098
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 756.653
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.305
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2872.825
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 923.106
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.466
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3335.981
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1086.016
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.291
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2719.055
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1242.21
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After g4, White's pawn on g4 is under attack from Black's bishop on d7; it is supported by White's pawn on h3. In the g4 line: The recorded continuation is c5 e5. The compared root choices are e5 and g4. In the e5 line: After f6, Black's pawn on f6 now targets White's knight on g5. e5 clears e4; Ne4 later occupies that square in this line. Ne4 moves the knight out of the attack from Black's pawn on f6.",
+      "words": 80,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 17,
+      "current_path_count": 57,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-02",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-02",
+        "elapsed_ms": 10910,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 32.022
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.127
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.331
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 330.405
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 122.849
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.266
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1292.044
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 470.992
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.248
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1492.408
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 690.656
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.365
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2171.259
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 892.847
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.391
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2285.337
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1060.179
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black knight originally on b4 in the recorded Bc6 and Nbd5 lines. After Bc6, Black's bishop on c6 now targets White's queen on a4. Qd1 moves the queen out of the attack from Black's bishop on c6. After cxd4, Black's pawn on d4 now targets White's bishop on c3. Bxb4 moves the bishop out of the attack from Black's pawn on d4. After Nbd5, Black's knight on d5 now targets White's bishop on c3. Nbd5 moves the knight out of the attacks from White's bishop on c3 and White's queen on a4. Ba5 moves the bishop out of the attack from Black's knight on d5. After e4, the black knight originally on b4 is still present on d5. After e4, the white bishop originally on c3 is still present on a5. In the Bc6 line: cxd4 captures the white pawn on d4. The compared root choices are Bc6 and Nbd5. In the Nbd5 line: After Ne5, White's knight on e5 now targets Black's queen on d7. Qb5 moves the queen out of the attack from White's knight on e5. Nbd5 clears b4; later Qb5 uses the cleared line to target White's queen on b3 in this line. After Qb5, Black's queen on b5 now targets White's queen on b3 and White's bishop on a5 and White's pawn on e2, and adds support to Black's pawn on c5, which is under attack from White's pawn on d4. In the Nbd5 line: Qxb5 captures the black queen on b5. axb5 recaptures the white queen on b5. Bc6 clears b7; later Rb8 uses the cleared line to target Black's knight on b4 in this line. After Rb8, Black's rook on b8 adds support to Black's knight on b4, which is under attack from White's bishop on c3. Bc6 clears b7; later Rxb4 passes through that square in this line. After Rxb4, Black's rook on b4 now targets White's pawn on b2. In the Bc6 line: Bxb4 captures the black knight on b4. Rxb4 recaptures the white bishop on b4.",
+      "words": 341,
+      "core_covered_histories": 5,
+      "detail_covered_histories": 11,
+      "current_path_count": 48,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-03",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-03",
+        "elapsed_ms": 10928,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 31.275
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.489
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.159
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 336.549
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 123.282
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.16
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 270.272
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 144.14
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.29
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1392.29
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 464.68
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.323
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1285.038
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 625.043
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.271
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1670.369
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 767.856
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.287
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2728.169
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1023.158
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After Nbd4, White's knight on d4 now targets Black's bishop on e6. After Nbd4, White's knight on d4 is under attack from Black's pawn on e5; it is supported by White's queen on d2 and White's knight on e2 and White's bishop on e3. In the Nbd4 line: The recorded continuation is exd4 Nxd4. exd4 captures the white knight on d4. Nxd4 recaptures the black pawn on d4. In the fxe6 line: The recorded continuation is axb3. The compared root choices are Nbd4 and fxe6. In the fxe6 line: axb3 clears a4; later Rxa2 passes through that square in this line. fxe6 captures the black bishop on e6. In the fxe6 line: Rxa2 captures the white pawn on a2. Rxd1 captures the white rook on d1. Qxd1 recaptures the black rook on d1. In the fxe6 line: axb3 captures the white knight on b3. cxb3 recaptures the black pawn on b3. fxe6 clears f5; later Bxe6+ passes through that square in this line. After Bxe6+, White's bishop on e6 now targets Black's knight on d7. After fxe6, Black's rook on f8 now targets White's bishop on f1. Bh3 moves the bishop out of the attack from Black's rook on f8. fxe6 clears f5; later Bh3 uses the cleared line to target Black's pawn on e6 in this line. After Bh3, White's bishop on h3 now targets Black's pawn on e6. In the fxe6 line: fxe6 captures the white pawn on e6. Bxe6+ captures the black pawn on e6. In the provided Bxe6+ line: Bxe6+ gives check to the Black king on g8 with White's bishop on e6. Kh8 moves the king to h8.",
+      "words": 273,
+      "core_covered_histories": 10,
+      "detail_covered_histories": 16,
+      "current_path_count": 34,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-04",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-04",
+        "elapsed_ms": 6901,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 27.533
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.14
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.166
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 240.883
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 96.686
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.204
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1270.202
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 420.427
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.25
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1692.347
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 656.119
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.298
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1666.029
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 790.088
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black knight originally on a5 and the black knight originally on b6 and the black pawn originally on e7 in the recorded Nac4 and Nc6 lines. After Nac4, Black's knight on c4 adds support to Black's knight on b6, which is under attack from White's queen on b4. The recorded continuation is Bf4. After Bxc7, White's bishop on c7 now targets Black's knight on b6. Nd5 moves the knight out of the attack from White's bishop on c7. After b3, White's pawn on b3 now targets Black's knight on c4. Bf4 clears e3; Nce3 later occupies that square in this line. Nce3 moves the knight out of the attack from White's pawn on b3. With Nxd5, the white knight originally on c3 captures the black knight originally on b6. After Nxd5, White's knight on d5 now targets Black's knight on e3. With Nxd5, the black knight originally on a5 recaptures the attacking white knight originally on c3. After axb3, the black knight originally on a5 is still present on d5. After axb3, the black pawn originally on e7 is still present on e7. After Nc6, Black's knight on c6 adds support to Black's pawn on e7, which is under attack from White's queen on b4, and now targets White's queen on b4. Nc6 moves the knight out of the attack from White's queen on b4. Qb3 moves the queen out of the attack from Black's knight on c6. After Rad1, the black knight originally on a5 is still present on c6. After Rad1, the white queen originally on b4 is still present on b3. After Rad1, the black knight originally on b6 is still present on d5. After Rad1, the black queen originally on d7 is still present on d7. After Rad1, the black pawn originally on e7 is still present on e7. In the Nac4 line: Bxc7 captures the black pawn on c7. In the Nac4 line: After a5, Black's pawn on a5 now targets White's queen on b4. Nac4 clears a5; a5 later occupies that square in this line. Qb5 moves the queen out of the attack from Black's pawn on a5. Qxb5 captures the white queen on b5. Nxb5 recaptures the black queen on b5.",
+      "words": 373,
+      "core_covered_histories": 5,
+      "detail_covered_histories": 7,
+      "current_path_count": 39,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-05",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-05",
+        "elapsed_ms": 10641,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 25.149
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.207
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.185
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 272.303
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 105.759
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.183
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1590.634
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 531.619
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.228
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1802.698
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 784.371
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.461
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4192.044
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1291.869
+          }
+        ]
+      },
+      "default_question": "selected_target_response",
+      "basic": "Be4 attacks the h7-pawn. With Bxe4, the black bishop originally on b7 captures the white bishop originally on c2. In the Be4 line, both sides exchange one bishop. After Bxe5, the targeted black pawn is still present on h7. In the Bd3 line: In the provided Qxg6+ line: Qxg6+ gives check to the Black king on g8 with White's queen on g6; Kh8 moves the king to h8. Bd3 attacks the h7-pawn. With hxg6, the black pawn originally on h7 recaptures the white bishop originally on c2. With Qxg6+, the white queen originally on e2 recaptures the black pawn originally on h7. In the Bd3 line, White gives up one bishop for two pawns.",
+      "words": 114,
+      "core_covered_histories": 5,
+      "detail_covered_histories": 0,
+      "current_path_count": 120,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-08",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-08",
+        "elapsed_ms": 21148,
+        "works": 7,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 29.851
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.853
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.177
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 292.218
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 124.866
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.223
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1820.879
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 590.528
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.4
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1417.54
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 652.938
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.296
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1550.65
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 758.603
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.273
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1171.971
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 898.357
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.444
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3987.913
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1174.12
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.267
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 5048.107
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1516.063
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black knight originally on c6 in the recorded Bd7 and Nd7 lines. After Bd7, Black's bishop on d7 adds support to Black's knight on c6, which is under attack from White's knight on d4. The recorded continuation is Nde2. After Rdc8, the black knight originally on c6 is still present on e5. After Rdc8, the white knight originally on d4 is still present on e2. The recorded continuation is Nd7 Be2. With Nxd4, the black knight originally on c6 captures the white knight originally on d4; with Qxd4, the white queen originally on d2 recaptures that knight. The compared root choices are Bd7 and Nd7. In the Bd7 line: After Qxg5, White's queen on g5 now targets Black's rook on d8. Bd7 clears c8; Rdc8 later occupies that square in this line. Rdc8 moves the rook out of the attack from White's queen on g5. In the Bd7 line: hxg5 captures the white pawn on g5. Bxg5 recaptures the black pawn on g5. Bxg5 recaptures the white bishop on g5. Qxg5 recaptures the black bishop on g5.",
+      "words": 182,
+      "core_covered_histories": 6,
+      "detail_covered_histories": 11,
+      "current_path_count": 97,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-09",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-09",
+        "elapsed_ms": 17585,
+        "works": 7,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 25.815
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.245
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.176
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 265.112
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 109.849
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.183
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 263.388
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 183.601
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.279
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 591.187
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 303.46
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.208
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2780.165
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 912.666
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.267
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2843.36
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1141.047
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.251
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3035.386
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1258.714
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.261
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2374.538
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1388.353
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white bishop originally on d5 in the recorded c3 and Bb3 lines. The recorded continuation is c3. With Nxd5, the black knight originally on f6 captures the white bishop originally on d5. After Nxd5, Black's knight on d5 now targets White's knight on e3. After Be6, Black's bishop on e6 now targets White's knight on d5. Nxe7+ moves the knight out of the attack from Black's bishop on e6. In the provided Nxe7+ line: Nxe7+ gives check to the Black king on g8 with White's knight on e7; Qxe7 captures the checking knight on e7. With Nxd5, the white knight originally on e3 recaptures the black knight originally on f6. With Nxe7+, the white knight originally on e3 captures the black bishop originally on e7; with Qxe7, the black queen originally on d8 recaptures that knight. Bb3 moves the bishop out of the attack from Black's knight on f6. After Nd4, Black's knight on d4 now targets White's bishop on b3. Ba2 moves the bishop out of the attack from Black's knight on d4. With Bxa2, the black bishop originally on d7 captures the white bishop originally on d5; with Rxa2, the white rook originally on a1 recaptures that bishop. After bxc4, the white knight originally on e3 is still present on d5. After bxc4, the black knight originally on f6 is still present on f6. The compared root choices are c3 and Bb3. Bb3 clears d5; Nd5 later occupies that square in this line. In the c3 line: After b4, Black's pawn on b4 now targets White's pawn on c3. In the c3 line, White's pawn on c3 controls the empty d4 square; d4 brings White's pawn on d4 there under its support. After exd4 captures the supported pawn, cxd4 recaptures its capturer with the supporting pawn. After cxd4, White's pawn on d4 now targets Black's pawn on c5. cxd4 moves the pawn out of the attack from Black's pawn on b4. With cxd4, the black pawn originally on c5 recaptures the white pawn originally on c2. In the c3 line: Nxd4 recaptures the black pawn on d4. Nxd4 recaptures the white knight on d4. Qxd4 recaptures the black knight on d4.",
+      "words": 368,
+      "core_covered_histories": 12,
+      "detail_covered_histories": 13,
+      "current_path_count": 127,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-10",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-10",
+        "elapsed_ms": 5760,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 24.68
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 9.123
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.289
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 241.918
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 90.272
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.195
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1131.373
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 389.764
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.216
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1192.559
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 559.753
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.334
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1384.247
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 686.54
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Bxd5 exd5 Qd7 b5 and Qd7 b5 Bxd5 exd5 reach the same recorded position. Bxd5 captures the white knight on d5. exd5 recaptures the black bishop on d5. In the Qd7 line: Bxd5 captures the white knight on d5. exd5 recaptures the black bishop on d5.",
+      "words": 46,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 10,
+      "current_path_count": 33,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "COR06-11",
+      "completed": true,
+      "result": {
+        "game_id": "COR06-11",
+        "elapsed_ms": 10242,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 25.824
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.419
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.187
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 108.912
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 57.724
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.282
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 199.488
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 119.34
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.2
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1092.773
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 439.108
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.263
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1065.958
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 592.437
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.411
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1204.483
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 738.325
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.28
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3438.56
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1102.815
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After a6, White's pawn on a6 now targets Black's pawn on b7. After a6, White's pawn on a6 is under attack from Black's pawn on b7; it is supported by White's rook on a1. In the a6 line: The recorded continuation is Bc4 Nd5. The compared root choices are a6 and Ne4.",
+      "words": 52,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 9,
+      "current_path_count": 92,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-01",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-01",
+        "elapsed_ms": 6101,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 21.89
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.891
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.164
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 133.846
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 59.328
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.157
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 122.696
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 85.203
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.231
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 538.662
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 235.121
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.249
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1106.092
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 504.301
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.509
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1054.365
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 566.875
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.294
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 992.855
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 625.832
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white knight originally on c3 in the recorded Bxc3 and Rc8 lines. In the Bxc3 line: With Bxc3, the black bishop originally on g7 captures the white knight originally on c3; with bxc3, the white pawn originally on b2 recaptures that bishop. After Rc8, Black's rook on c8 now targets White's knight on c3. Nd5 moves the knight out of the attacks from Black's bishop on g7 and Black's rook on c8. After Bd4, White's bishop on d4 now targets Black's bishop on g7. With Bxd4, the black bishop originally on g7 captures the attacking white bishop originally on e3. With Rxd4, the white rook originally on d2 recaptures the black bishop originally on g7. After Qe6, Black's queen on e6 now targets White's knight on d5. Bd4 clears e3; Ne3 later occupies that square in this line. Ne3 moves the knight out of the attack from Black's queen on e6. After Ng4, the white knight originally on c3 is still present on g4.",
+      "words": 169,
+      "core_covered_histories": 4,
+      "detail_covered_histories": 13,
+      "current_path_count": 33,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-03",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-03",
+        "elapsed_ms": 4890,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 17.404
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.161
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.251
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 240.858
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 92.857
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.245
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 777.023
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 290.879
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.245
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 964.724
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 489.573
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.306
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1327.55
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 653.005
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the black bishop originally on c6 and the white knight originally on e5 in the recorded Re8 and Qc7 lines. After Re8, Black's rook on e8 now targets White's knight on e5. The recorded continuation is f4. With Bxe5, the black bishop originally on d6 captures the white knight originally on e5; with fxe5, the white pawn originally on f2 recaptures that bishop. After Rxb1, the black bishop originally on c6 is still present on c6. After Qc7, Black's queen on c7 adds support to Black's bishop on c6, which is under attack from White's knight on e5. The recorded continuation is f4. With Bxb4, the black bishop originally on d6 captures the white pawn originally on b4. After a3, White's pawn on a3 now targets Black's bishop on b4. Ba5 moves the bishop out of the attack from White's pawn on a3. With Bxc2, the black bishop originally on c6 captures the white pawn originally on c2. With Bxd4, the black bishop originally on d6 captures the white bishop originally on b2; with Qxd4, the white queen originally on d1 recaptures that bishop. After Rfc1, the black bishop originally on c6 is still present on c2. After Rfc1, the white knight originally on e5 is still present on e5.",
+      "words": 214,
+      "core_covered_histories": 6,
+      "detail_covered_histories": 10,
+      "current_path_count": 23,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-04",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-04",
+        "elapsed_ms": 11404,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 28.337
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.113
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.169
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 177.452
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 79.467
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.189
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1804.201
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 666.939
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.211
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1752.905
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 888.145
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 2948.874
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.429
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1924.616
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1086.511
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Compare what happens to the white pawn originally on e4 and the black pawn originally on g5 and the white bishop originally on h4 in the recorded Bxg5 and e5 lines. After Bxg5, White's bishop on g5 now targets Black's knight on f6. Bxg5 moves the bishop out of the attack from Black's pawn on g5. The recorded continuation is e5. After Kh7, Black's king on h7 now targets White's bishop on h6. With Bxf8, the white bishop originally on h4 captures the black rook originally on f8. Bxf8 moves the bishop out of the attack from Black's king on h7. With Qxf8, the black queen originally on d8 recaptures the white bishop originally on h4. After Nd5, White's knight on d5 now targets Black's knight on f6. With Nxd5, the black knight originally on f6 captures the attacking white knight originally on c3. With exd5, the white pawn originally on e4 recaptures the black knight originally on f6. After h4, the white pawn originally on e4 is still present on d5. After e5, White's pawn on e5 now targets Black's knight on f6. e5 moves the pawn out of the attack from Black's knight on f6. The recorded continuation is Nd4. After Qd2, White's queen on d2 now targets Black's pawn on g5. Nh7 moves the knight out of the attack from White's pawn on e5. gxh4 moves the pawn out of the attack from White's queen on d2. After Nf6+, Black's queen on d8 now targets White's knight on f6. Nxh7 moves the knight out of the attack from Black's queen on d8. With Nxh7, the white knight originally on c3 captures the black knight originally on f6; with Kxh7, the black king originally on g8 recaptures that knight. After Rxc5, the white pawn originally on e4 is still present on e5. The compared root choices are Bxg5 and e5. Bxg5 clears h4; h4 later occupies that square in this line. Bxg5 recaptures the black pawn on g5. e5 clears e4; Ne4 later occupies that square in this line. After Ne4, White's knight on e4 now targets Black's bishop on c5 and Black's pawn on g5. gxh4 moves the pawn out of the attack from White's knight on e4. Nf6+ moves the knight from e4 to f6, ending its attack on Black's bishop on c5. After Rxc5, the black pawn originally on g5 is still present on h4. gxh4 captures the white bishop on h4. Rxc5 captures the black bishop on c5. In the e5 line: The recorded continuation is Kg7.",
+      "words": 423,
+      "core_covered_histories": 9,
+      "detail_covered_histories": 13,
+      "current_path_count": 108,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-05",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-05",
+        "elapsed_ms": 7520,
+        "works": 4,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 22.114
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 6.085
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.168
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 207.091
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 79.459
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.19
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1072.534
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 410.663
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.236
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1612.738
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 612.762
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.492
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2575.792
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 876.208
+          }
+        ]
+      },
+      "default_question": "observed_route_use",
+      "basic": "In the Ng7 line: The same black bishop originally on c8 follows Bf5 in the recorded line. In the Ng7 line, both sides exchange one bishop. Bxf5 captures the black bishop on f5. In the provided Bd7 line, the same bishop next moves with Bf5 to f5. In the Bd7 line, Bf5 attacks the d3-knight. Ne5 moves that knight out of the attack. The recorded continuation is Bd7 … Bf5 Ne5.",
+      "words": 71,
+      "core_covered_histories": 2,
+      "detail_covered_histories": 2,
+      "current_path_count": 44,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-07",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-07",
+        "elapsed_ms": 15412,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 24.373
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 7.428
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.173
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 154.251
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 66.122
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.185
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 982.86
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 356.918
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.22
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1577.886
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 618.063
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.291
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2049.829
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 728.266
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.286
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3614.499
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1079.163
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.286
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2974.942
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1110.118
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After g6, Black's pawn on g6 now targets White's knight on f5. After g6, Black's pawn on g6 is under attack from White's knight on h4; it is supported by Black's pawn on f7 and Black's pawn on h7. In the g6 line: The recorded continuation is Ne3 Bd4. The compared root choices are g6 and a5.",
+      "words": 57,
+      "core_covered_histories": 0,
+      "detail_covered_histories": 14,
+      "current_path_count": 54,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-09",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-09",
+        "elapsed_ms": 51432,
+        "works": 10,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 27.515
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.012
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.184
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 315.452
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 110.49
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.236
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 264.026
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 149.608
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.222
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 600.625
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 296.093
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.207
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1675.158
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 627.174
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.271
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1261.824
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 860.968
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.353
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1570.057
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1266.368
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 3385.313
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.396
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 4290.024
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1276.701
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 3112.044
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.319
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3779.244
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1733.136
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 4556.58
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 2.752
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 6281.402
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1835.046
+          },
+          {
+            "stage": "engine_rpc",
+            "elapsed_ms": 3583.775
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.991
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 6015.101
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 2329.64
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After d4, Black's pawn on d4 now targets White's pawn on c3. After d4, Black's pawn on d4 is under attack from White's pawn on c3 and White's knight on f3; it is supported by Black's knight on c6 and Black's queen on d8 and Black's knight on f5. In the d4 line: The recorded continuation is Nxc4 Na5. Nxc4 captures the black pawn on c4. After Na5, Black's knight on a5 does not support Black's pawn on d4. Black's queen on d8 and Black's knight on f5 still support Black's pawn on d4. The compared root choices are h6 and d4. d4 clears d5; later Qxd4 passes through that square in this line. After Qxd4, Black's queen on d4 now targets White's bishop on f4 and White's pawn on c4 and White's pawn on e5 and White's pawn on f2. In the d4 line: Nxd4 captures the black knight on d4. Qxd4 recaptures the white knight on d4.",
+      "words": 159,
+      "core_covered_histories": 3,
+      "detail_covered_histories": 18,
+      "current_path_count": 124,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-10",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-10",
+        "elapsed_ms": 21449,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 41.762
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 10.175
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.216
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 406.93
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 153.299
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.424
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2022.887
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 528.886
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.293
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2039.858
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 866.743
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.327
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2010.066
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1132.108
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.286
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 3484.533
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1459.928
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.324
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 5312.378
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1824.479
+          }
+        ]
+      },
+      "default_question": "first_target_response",
+      "basic": "After e4, White's pawn on e4 is under attack from Black's bishop on b7 and Black's knight on d6; it is supported by White's pawn on d3. In the e4 line: After f6, Black's pawn on f6 now targets White's knight on e5. The recorded continuation is f6 Ng4. Ng4 moves the knight out of the attack from Black's pawn on f6. The compared root choices are Rae1 and e4. e4 clears e3; Ne3 later occupies that square in this line. In the Rae1 line, White's rook on e1 keeps supporting White's bishop on e2 after Qc1 ends the support from White's queen on c2. When Nxe2+ captures that bishop, Rxe2 recaptures its capturer with the supporting rook. With hxg6, the black pawn originally on h7 captures the white pawn originally on e3. In the Rae1 line: In the provided Nxe2+ line: Nxe2+ gives check to the White king on g1 with Black's knight on e2. Rxe2 captures the checking knight on e2.",
+      "words": 163,
+      "core_covered_histories": 3,
+      "detail_covered_histories": 10,
+      "current_path_count": 55,
+      "request_history_and_focus_exact": true
+    },
+    {
+      "id": "TAT25-11",
+      "completed": true,
+      "result": {
+        "game_id": "TAT25-11",
+        "elapsed_ms": 11138,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false,
+        "research_timings": [
+          {
+            "stage": "begin_rpc",
+            "elapsed_ms": 36.117
+          },
+          {
+            "stage": "begin_journal",
+            "elapsed_ms": 8.467
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.323
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 281.948
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 109.457
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.453
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 1261.04
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 455.667
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 1.02
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 963.278
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 627.266
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.316
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2572.339
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 991.555
+          },
+          {
+            "stage": "engine_journal",
+            "elapsed_ms": 0.38
+          },
+          {
+            "stage": "report_rpc",
+            "elapsed_ms": 2683.697
+          },
+          {
+            "stage": "report_journal",
+            "elapsed_ms": 1052.191
+          }
+        ]
+      },
+      "default_question": "selected_comparison",
+      "basic": "Rb8 places the rook on the open b-file. Compare what happens to the black pawn originally on h7 in the recorded Rb8 and O-O lines. The recorded continuation is Rb8 Ne4. After gxf5, the black pawn originally on h7 is still present on h7. After O-O, Black's king on g8 adds support to Black's pawn on h7, which is under attack from White's bishop on d3. The recorded continuation is Ne4. Nd6 clears e4; later Bxh7+ passes through that square in this line. In the provided Bxh7+ line: Bxh7+ gives check to the Black king on g8 with White's bishop on h7; Kh8 moves the king to h8. With Bxh7+, the white bishop originally on d3 captures the black pawn originally on h7. With fxe4, the black pawn originally on f7 captures the white pawn originally on e3. After fxe4, Black's pawn on e4 now targets White's bishop on d3. With Bxe4, the white bishop originally on d3 recaptures the attacking black pawn originally on f7. In the O-O line: The recorded continuation is Kh8.",
+      "words": 175,
+      "core_covered_histories": 3,
+      "detail_covered_histories": 14,
+      "current_path_count": 25,
+      "request_history_and_focus_exact": true
+    }
+  ],
+  "prices": [
+    {
+      "id": "candidates2018-10",
+      "root": "e5f4",
+      "original_offset": 11,
+      "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+      "moves_uci": [
+        "e5f4",
+        "g1e1",
+        "e2c4",
+        "b4a5",
+        "b5a4",
+        "a5c7",
+        "d7e5",
+        "e1h1",
+        "a8f8",
+        "c7e7",
+        "e5g6",
+        "e4g6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "candidates2018-10",
+      "root": "e5f4",
+      "original_offset": 12,
+      "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+      "moves_uci": [
+        "e5f4",
+        "g1e1",
+        "e2c4",
+        "b4a5",
+        "b5a4",
+        "a5c7",
+        "d7e5",
+        "e1h1",
+        "a8f8",
+        "c7e7",
+        "e5g6",
+        "e4g6",
+        "h7g6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "candidates2018-10",
+      "root": "h6f4",
+      "original_offset": 14,
+      "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+      "moves_uci": [
+        "h6f4",
+        "b4a5",
+        "f4e3",
+        "g1e1",
+        "e2f2",
+        "a5c7",
+        "d7c5",
+        "e1g1",
+        "e3h6",
+        "d1f1",
+        "f2e2",
+        "c6b8",
+        "f6f8",
+        "c7d6",
+        "a8b8"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "candidates2018-10",
+      "root": "h6f4",
+      "original_offset": 15,
+      "start_fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+      "moves_uci": [
+        "h6f4",
+        "b4a5",
+        "f4e3",
+        "g1e1",
+        "e2f2",
+        "a5c7",
+        "d7c5",
+        "e1g1",
+        "e3h6",
+        "d1f1",
+        "f2e2",
+        "c6b8",
+        "f6f8",
+        "c7d6",
+        "a8b8",
+        "d6c5"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-02",
+      "root": "b4d5",
+      "original_offset": 13,
+      "start_fen": "2rq1rk1/1bp1bppp/p3pn2/8/Qn1P4/2B2NP1/1P1NPPBP/R4RK1 b - - 1 16",
+      "moves_uci": [
+        "b4d5",
+        "c3a5",
+        "d8d7",
+        "a4c4",
+        "c7c5",
+        "f3e5",
+        "d7d6",
+        "c4b3",
+        "d6b8",
+        "e2e4",
+        "d5b4",
+        "d4c5",
+        "e7c5",
+        "a5b4"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-03",
+      "root": "f5e6",
+      "original_offset": 5,
+      "start_fen": "r2qnrk1/3nbppp/3pb3/4pPP1/pp2P3/1N2B3/PPPQN2P/2KR1B1R w - - 0 16",
+      "moves_uci": [
+        "f5e6",
+        "a4b3",
+        "c2b3",
+        "f7e6",
+        "f1h3",
+        "a8a2"
+      ],
+      "status": "same_history_price_in_core"
+    },
+    {
+      "id": "COR06-08",
+      "root": "c8d7",
+      "original_offset": 17,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "c8d7",
+        "d4e2",
+        "e8d8",
+        "g2g4",
+        "b7b5",
+        "f2h4",
+        "f8e7",
+        "g4g5",
+        "f6e8",
+        "f4f5",
+        "c6e5",
+        "f3g2",
+        "b8c8",
+        "a4b5",
+        "a6b5",
+        "h4f2",
+        "b5b4",
+        "f5e6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "c8d7",
+      "original_offset": 18,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "c8d7",
+        "d4e2",
+        "e8d8",
+        "g2g4",
+        "b7b5",
+        "f2h4",
+        "f8e7",
+        "g4g5",
+        "f6e8",
+        "f4f5",
+        "c6e5",
+        "f3g2",
+        "b8c8",
+        "a4b5",
+        "a6b5",
+        "h4f2",
+        "b5b4",
+        "f5e6",
+        "f7e6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "c8d7",
+      "original_offset": 20,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "c8d7",
+        "d4e2",
+        "e8d8",
+        "g2g4",
+        "b7b5",
+        "f2h4",
+        "f8e7",
+        "g4g5",
+        "f6e8",
+        "f4f5",
+        "c6e5",
+        "f3g2",
+        "b8c8",
+        "a4b5",
+        "a6b5",
+        "h4f2",
+        "b5b4",
+        "f5e6",
+        "f7e6",
+        "c3a2",
+        "c7c2"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 2,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 3,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 7,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4",
+        "b7b5",
+        "e4e5",
+        "b5a4",
+        "e5d6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 8,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4",
+        "b7b5",
+        "e4e5",
+        "b5a4",
+        "e5d6",
+        "f8d6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 9,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4",
+        "b7b5",
+        "e4e5",
+        "b5a4",
+        "e5d6",
+        "f8d6",
+        "d4d6"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-08",
+      "root": "f6d7",
+      "original_offset": 10,
+      "start_fen": "1rb1rbk1/1pq2ppp/p1nppn2/8/P2NPP2/1PN2B2/2PQ1BPP/3R1R1K b - - 4 16",
+      "moves_uci": [
+        "f6d7",
+        "f2g3",
+        "c6d4",
+        "d2d4",
+        "b7b5",
+        "e4e5",
+        "b5a4",
+        "e5d6",
+        "f8d6",
+        "d4d6",
+        "c7c3"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 1,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5"
+      ],
+      "status": "same_history_price_in_core"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 2,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5"
+      ],
+      "status": "same_history_price_in_core"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 5,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 6,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 7,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7",
+        "c6e7"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-09",
+      "root": "c2c3",
+      "original_offset": 8,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "c2c3",
+        "f6d5",
+        "e3d5",
+        "d7e6",
+        "d3d4",
+        "c5d4",
+        "d5e7",
+        "c6e7",
+        "c3d4"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 2,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4"
+      ],
+      "status": "same_history_represented_but_price_omitted"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 3,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4",
+        "e5d4"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 6,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4",
+        "e5d4",
+        "e3d5",
+        "d7e6",
+        "d5e7"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 7,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4",
+        "e5d4",
+        "e3d5",
+        "d7e6",
+        "d5e7",
+        "d8e7"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 11,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4",
+        "e5d4",
+        "e3d5",
+        "d7e6",
+        "d5e7",
+        "d8e7",
+        "c1g5",
+        "h7h6",
+        "g5h4",
+        "e6b3"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "COR06-09",
+      "root": "d5b3",
+      "original_offset": 12,
+      "start_fen": "r2q1rk1/3bbppp/p1np1n2/1ppBp3/4P3/P2PNN1P/1PP2PP1/R1BQR1K1 w - - 8 16",
+      "moves_uci": [
+        "d5b3",
+        "c6d4",
+        "f3d4",
+        "e5d4",
+        "e3d5",
+        "d7e6",
+        "d5e7",
+        "d8e7",
+        "c1g5",
+        "h7h6",
+        "g5h4",
+        "e6b3",
+        "c2b3"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-01",
+      "root": "a8c8",
+      "original_offset": 13,
+      "start_fen": "r3qrk1/pp3pbp/3Q2p1/8/4p1b1/2N1B3/PPPR1PPP/2K4R b - - 3 16",
+      "moves_uci": [
+        "a8c8",
+        "c3d5",
+        "c8d8",
+        "d5f6",
+        "g7f6",
+        "d6f6",
+        "e8e6",
+        "f6e6",
+        "g4e6",
+        "h1d1",
+        "d8d2",
+        "d1d2",
+        "f7f6",
+        "e3a7"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-04",
+      "root": "e4e5",
+      "original_offset": 13,
+      "start_fen": "2rq1rk1/pp1b1p2/2n1pn2/2b3p1/4P2B/2N3P1/PP2QPBP/R4RK1 w - - 0 16",
+      "moves_uci": [
+        "e4e5",
+        "c6d4",
+        "e2d1",
+        "g5h4",
+        "e5f6",
+        "d8f6",
+        "c3e4",
+        "f6g7",
+        "g3h4",
+        "d7c6",
+        "g1h1",
+        "f7f5",
+        "a1c1",
+        "f5e4"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-11",
+      "root": "e8g8",
+      "original_offset": 3,
+      "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "moves_uci": [
+        "e8g8",
+        "c3e4",
+        "c6c5",
+        "e4c5"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-11",
+      "root": "e8g8",
+      "original_offset": 4,
+      "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "moves_uci": [
+        "e8g8",
+        "c3e4",
+        "c6c5",
+        "e4c5",
+        "e7c5"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-11",
+      "root": "e8g8",
+      "original_offset": 5,
+      "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "moves_uci": [
+        "e8g8",
+        "c3e4",
+        "c6c5",
+        "e4c5",
+        "e7c5",
+        "d4c5"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-11",
+      "root": "e8g8",
+      "original_offset": 11,
+      "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "moves_uci": [
+        "e8g8",
+        "c3e4",
+        "c6c5",
+        "e4c5",
+        "e7c5",
+        "d4c5",
+        "b7f3",
+        "f1f3",
+        "b6d7",
+        "a1d1",
+        "d8c7",
+        "d3h7"
+      ],
+      "status": "different_forecast_no_retention_success"
+    },
+    {
+      "id": "TAT25-11",
+      "root": "e8g8",
+      "original_offset": 12,
+      "start_fen": "r2qk2r/pb2bppp/1np1p3/4P3/3P4/1QNBPN2/P5PP/R4RK1 b kq - 0 16",
+      "moves_uci": [
+        "e8g8",
+        "c3e4",
+        "c6c5",
+        "e4c5",
+        "e7c5",
+        "d4c5",
+        "b7f3",
+        "f1f3",
+        "b6d7",
+        "a1d1",
+        "d8c7",
+        "d3h7",
+        "g8h7"
+      ],
+      "status": "different_forecast_no_retention_success"
+    }
+  ],
+  "provenance_sha256": "e9aa0329e1e70c458bbe34d28ad84c0b9db795c8d3ebefaf177d7abe4e1c1d1b",
+  "manifest_sha256": "c2fb473009fb5fc2e080b96787c8d9f529b173bceac7ea2bb03aba20fc5cf7ec",
+  "snapshots_sha256": "3843eb529e74044d7753677ca14964737755edc0855c755ee0a6e9d3f2917c88",
+  "runner_sha256": "cd92a2a077055dbf47eac85cacc482c11624058c462de64e55c1d35304a53b01",
+  "run_kind": "actual_completed_prefix_then_new_execution",
+  "replayed_actual_source": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcPrior35Final39\\stored-reports.jsonl",
+  "replayed_actual_source_sha256": "d484bfd440b1edf8e9fc6bf6cefb42a4b8596b33917f6e7ad3056180b2b226e3",
+  "scope": "Current execution on exactly the original35 histories and focuses; run_kind states whether original exact completed prefixes were reused before remaining real engine work. The earlier 34 fixed price criteria are unchanged and bound to full root histories. A changed forecast or unfinished job does not count as retained price success. These are targeted exposed-case regression criteria, not35 independent human utility judgments."
+}

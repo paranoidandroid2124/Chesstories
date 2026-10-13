@@ -1,0 +1,24 @@
+{
+  "recorded_utc": "2026-10-07T15:40:17.330434+00:00",
+  "objective_scope": "Selected-book study, code implementation, validation, independent-case observations, and reproducible evidence completed. General chess judgment explanation is still unresolved.",
+  "reading": "Selected scenes from two added G-drive books; not a full reading of either book.",
+  "source_freeze_verified": true,
+  "post_freeze_change": {
+    "change": "Set<string> explicit type only; emitted JavaScript is byte-identical to the frozen bridge.",
+    "bridge_before_sha256": "f6c955674ec4879ea93b0ea3a8d6f4e2daf88a1d0e5ff1e01d1a7d4ff130e8f3",
+    "bridge_after_sha256": "f6c955674ec4879ea93b0ea3a8d6f4e2daf88a1d0e5ff1e01d1a7d4ff130e8f3",
+    "typescript_analyse_build_exit": 0,
+    "command": "node node_modules/typescript/bin/tsc -b ui/analyse/tsconfig.json --force",
+    "source": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+    "source_sha256": "194d256941b7a322e4e6b5a4e8acc4641b497fd20371fd28ba32e577d9c59df1"
+  },
+  "report": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\strategic-option-20261007\\report\\report.html",
+  "validation_record": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\strategic-option-20261007\\findings.json",
+  "remaining": [
+    "H05 central answer unstable at 30 seconds and absent in all three 10-second final trials",
+    "Six new book cases did not reach complete central answers",
+    "Sacrifice identity still depends too strongly on the first observed event list",
+    "Critical counter comparison in SG13 stopped at an internal investigation limit",
+    "Existing runtime and UI-selection test failures remain; no new failure names in recorded comparisons"
+  ]
+}

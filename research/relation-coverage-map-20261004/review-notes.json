@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-04",
+  "review_mode": "Read-only synthesis review by the current-source and external-primary-source agents.",
+  "reviews": [
+    {
+      "reviewer": "/root/relationship_generalization",
+      "finding": "No theory-to-product-success expansion found. Two minimum-evidence fields were narrower than the general claim they described.",
+      "changes": [
+        "A checking-time comparison no longer requires a specifically check-removing alternative; rule obligations and comparative effects are separated.",
+        "The en-passant opportunity is separated from promotion-race result claims. Promotion role choice is represented separately.",
+        "A claim-scope evidence policy states that the listed witnesses are not a universal detector checklist."
+      ]
+    },
+    {
+      "reviewer": "/root/content_selection_flow",
+      "finding": "One leaf overstated current English delivery, and the JSON lacked the HTML's explicit unknown-status meaning.",
+      "changes": [
+        "Mate-net.current now records actual check-response and terminal entry only; general mating-net explanation remains unconfirmed.",
+        "scope_limits now defines unconfirmed as a limitation of this relevant-source audit, not wholesale absence of input facts or impossibility."
+      ],
+      "source_anchors": [
+        {"file":"C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala","line":162,"purpose":"actual check-response detail"},
+        {"file":"C:/Users/양자/.codex/worktrees/8f44/Chesstories/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala","line":382,"purpose":"confirmed terminal expression"}
+      ]
+    }
+  ],
+  "result": "Corrections applied to the research specification and regenerated outputs, not to product code.",
+  "independent_human_reader_evaluation": false,
+  "new_engine_or_product_runs": 0
+}

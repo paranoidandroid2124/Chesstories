@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-04",
+  "reviewer": "concise_answer_review",
+  "method": "Read-only inspection of the latest price-ownership and proof-delivery delta; no execution or corpus inspection.",
+  "previous_review": {
+    "path": "research/relation-ownership-20261004/final-safety-review.json",
+    "sha256": "f4d5950cf3d4b37d7e4a08a3595a11912fdd43a21ca0eed21d5803ae0517186b"
+  },
+  "source_fingerprints": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "25dbad81ec20f0d9a8566c2524ff40b4e1c4748f520e75a3aec71e75708e0fc5",
+      "parent_reported_compile": "ownershipv10",
+      "reviewed_superseded_sha256": "7bc4fd9501e98cfac664b50954e77e1927f60d37f001dd1c7d2135d8ff95d0f7"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "803e79b9e011092041b6bac95d6c1f5cb698a70efb980bacf1839f0eae6e02fa"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+      "sha256": "ea76a816672c746f2c08657491060fd26cf33b271d6e5604947ea269bfcff5b3",
+      "role": "Unchanged capture-interval and promotion guard read for interpretation."
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala",
+      "sha256": "79d391c53c22009193d927fdc9c326bb729405ed347ed5679436ed046d23bb22",
+      "role": "Relevant assertions read; no tests run by this reviewer."
+    }
+  ],
+  "assessment": {
+    "new_concrete_safety_or_regression_findings": [],
+    "conclusion": "검토한 최신 변경에서 새 안전성 차단 사유를 찾지 못했다. 실제 수순의 가격 소유와 증명 전달에 관한 정적 검토이며, 실행 성공이나 해설 품질의 일반화를 대신하지 않는다.",
+    "executions_by_reviewer": [],
+    "product_edits_by_reviewer": []
+  },
+  "reviewed_delta": [
+    {
+      "id": "original_selection",
+      "anchors": [
+        "MoveWorkProjection.scala:3095",
+        "MoveWorkProjection.scala:3245",
+        "MoveWorkProjection.scala:3247",
+        "MoveWorkProjection.scala:3356"
+      ],
+      "result": "가격 시작점은 answer.core의 원래 statements다. selected.covered와 namedPrices가 그 원래 선택에서 유도되고, 새로 붙인 가격이나 역할 맥락을 다시 selected로 넘기는 재귀 호출은 없다. pending의 병합은 실제 동일 material event의 겹침을 요구한다.",
+      "boundary": "원래 선택한 답이 넓었던 경우까지 좁은 핵심 선택으로 바꾸는 정책은 아니다."
+    },
+    {
+      "id": "actual_current_roles_before_exchange_receipt",
+      "anchors": [
+        "RootQuestionSummary.scala:562",
+        "MoveWorkProjection.scala:3345",
+        "MoveWorkProjection.scala:3392",
+        "MoveWorkProjection.scala:3395"
+      ],
+      "result": "identityRoles는 해당 Arm의 occurrence와 path UCI에 맞는 실제 material capture를 찾고, 원래 actor/victim의 역할과 실제 포획 당시 attackerRole/capturedRole을 맞춘다. 승격한 원래 폰을 퀸으로 잡은 경우에는 원래 폰 역할을 쓰는 PieceExchange 대신 실제 capturedRole을 가진 MaterialEvents를 보존한다. 전체 가격 receipt 재사용도 같은 path, 전체 event offset 집합, 역할 일치를 요구한다.",
+      "boundary": "새 가격 관계의 생성·재사용 경계다. Arm.pieceExchange 자체나 realize의 모든 기존 caller에 역할 검증을 새로 강제한 것으로 확대하지 않는다."
+    },
+    {
+      "id": "promotion_context_without_new_price_interval",
+      "anchors": [
+        "MoveWorkProjection.scala:3052",
+        "MoveWorkProjection.scala:3060",
+        "MoveWorkProjection.scala:3073",
+        "MoveWorkProjection.scala:3099",
+        "MoveWorkProjection.scala:3248",
+        "MoveWorkProjection.scala:3380",
+        "CommentaryMaterialAccount.scala:35"
+      ],
+      "result": "같은 함수가 기존 선택의 사전 정규화와 가격 처리 후의 최종 보완에 쓰인다. 최종 보완은 한 번 수행하고 이후 가격 처리를 다시 호출하지 않는다. 맥락은 같은 path의 실제 포획 victim과 앞선 promotion actor의 원래 정체성이 같고, 승격 직후와 포획 직전의 현재 역할이 실제 capturedRole과 맞는 경우에만 추가한다. 사전에 보완된 identityPromotions는 구간 시작을 앞당겨 독립 거래를 끌어오지 못한다. 승격 event가 있는 자료는 일반 Cost 계산으로 바꾸지 않는다.",
+      "boundary": "‘promotionContexts가 전체 경로에서 한 번만 호출된다’는 설명은 정확하지 않다. 승격의 승패 효과나 강제성을 판정하는 변경도 아니다."
+    },
+    {
+      "id": "specific_actual_reply_survives_larger_price",
+      "anchors": [
+        "MoveWorkProjection.scala:3352",
+        "MoveWorkProjection.scala:3397",
+        "MoveWorkProjection.scala:3419",
+        "MoveWorkProjection.scala:3429",
+        "CommentaryDependencyTest.scala:812"
+      ],
+      "result": "원래 선택에서 유도된 실제 관계의 MaterialEvents는 identityPrices로 보존된다. 그 receipt가 전체 가격과 정확히 같으면 aggregate를 대신하지만, 더 큰 가격에 다른 손실·회복이 있으면 특정 실제 응수와 전체 가격을 함께 남긴다. 작은 receipt를 이유로 전체 가격을 생략하지 않으며, 승격 맥락 추가가 특정 victim 손실을 잃는 일도 막는다.",
+      "boundary": "부분 관계 receipt와 전체 가격의 같은 포획이 함께 남을 수 있다. 이는 이번 안전성 보존 경계이며, 자연스러운 기본 해설의 중복이 모든 경우 해결됐다는 결과는 아니다."
+    },
+    {
+      "id": "quiet_proof_metadata_transfer",
+      "anchors": [
+        "MoveWorkProjection.scala:3416",
+        "MoveWorkProjection.scala:3436",
+        "MoveWorkProjection.scala:3443",
+        "MoveWorkProjection.scala:3456",
+        "RootQuestionSummary.scala:99",
+        "RootQuestionSummary.scala:106",
+        "RootQuestionSummary.scala:422",
+        "RootQuestionSummary.scala:444"
+      ],
+      "result": "가격 교체 후 retained statements의 실제 참조를 먼저 계산한다. 제거된 참조의 required/focus는 같은 MoveRef를 가진 남은 section으로 옮기며, 다른 소유자가 없으면 새 owner의 Continuation으로 유지한다. 최종 unit은 required를 실제 expressed receipt 참조에서 확인하고, focus는 같은 path/occurrence/transition의 proof와 맞춘다. 전체 answer.required도 container 분할 전에 검사하므로, 조용한 응수의 증명을 metadata만 남긴 채 성공 처리할 수 없다.",
+      "checks_read_not_run": [
+        "CommentaryDependencyTest.scala:741 — 교체된 account만 소유했던 quiet proof를 보존한다.",
+        "CommentaryDependencyTest.scala:752 — 기존 sibling proof의 owner로 metadata를 옮기고 Continuation을 복제하지 않는다."
+      ]
+    }
+  ],
+  "claim_scope": {
+    "supported": "소유권·합법성이 확인된 실제 제공 수순에서, 선택된 사용과 지속된 관계에 연결되는 실제 포획·손실·회복 및 그 증명 범위를 보존한다.",
+    "not_proven": [
+      "모든 중간 위치에서 가상의 포획이 합법적이라는 주장: Arm.covers는 알려진 기하 제어와 절대 핀 부재이며, 매 위치의 legal_capture 전수를 검사하지 않는다(RootQuestionSummary.scala:493,508,517).",
+      "해당 응수가 강제이거나 다른 선택이 위협을 완전히 예방한다는 주장: 관측한 두 실제 수순의 차이만으로 모든 대안의 효과를 증명하지 않는다.",
+      "RecordedEnd를 체스적 종결로 취급하는 주장: 원래 선택이 소유한 정확한 마지막 범위와 automaticTerminal의 구분을 유지한다(MoveWorkProjection.scala:3133; RootQuestionSummary.scala:362).",
+      "모든 직접 realize/readSelected 또는 RootThreatSummary caller가 이 가격 처리 변경을 거친다는 주장: 기존 직접 전달 경로에 대한 이전 감사의 한계는 그대로다.",
+      "이번 정적 검토가 새 엔진 실행·자동 위협의 효용·기본 해설 유용성·인간 독자 평가의 성공을 입증한다는 주장."
+    ],
+    "hypothesis_and_unknown": "변경한 가격 경로는 소유된 실제 path/material/continuation reading을 사용한다. 패스 가정 평가나 후보 수순을 실제 price receipt로 새로 받아들이는 분기는 없다. covers/control이 unknown이면 true/false로 간주하지 않는다."
+  },
+  "recommendation": "최신 소스를 위 범위의 안전성 개선으로 판단한다. 추가 제품 변경 없이 루트의 해당 고정 클래스·테스트 결과와 별도로 보고하며, 표현의 짧음이나 최적 질문 선택이 완료됐다는 판정으로 확대하지 않는다."
+}

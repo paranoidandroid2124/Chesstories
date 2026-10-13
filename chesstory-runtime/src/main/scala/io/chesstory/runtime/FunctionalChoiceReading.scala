@@ -35,10 +35,11 @@ private[runtime] object FunctionalChoiceReading:
       val use: CommentaryChoiceValue.Checked, val resistance: CommentaryChoiceValue.Checked,
       val path: PreparedPath, val other: Option[RootQuestionSummary.MoveRef],
       val conditions: List[CommentaryAnswer.Statement], val replyRoles: List[CommentaryAnswer.Statement],
-      val replyEvidence: List[String]):
+      val replyEvidence: List[String], val useRoles: List[CommentaryAnswer.Statement]):
     def sequence = (0 to 3).toList.map(RootQuestionSummary.MoveRef(path, _))
 
-  private[runtime] case class ReplyRoleReading(statements: List[CommentaryAnswer.Statement], evidence: List[String])
+  private[runtime] case class ReplyRoleReading(statements: List[CommentaryAnswer.Statement], evidence: List[String],
+      useRoles: List[CommentaryAnswer.Statement] = Nil)
 
   /** Read the same admitted control transition as the local note projection,
     * restricted to the tested reply and the original resource it answers.
@@ -105,9 +106,17 @@ private[runtime] object FunctionalChoiceReading:
       val controlSources = before.sourceRefs(before.sources(userBefore, List(replyBefore.at)) ++
         before.sources(replyBefore, List(userBefore.at))) ++
         after.sourceRefs(after.sources(userAfter, List(replyAfter.at)) ++ after.sources(replyAfter, List(userAfter.at)))
+      // An admitted evasion already proves the attack at the end of the
+      // resource move. State that purpose before its answer; do not infer
+      // a new attack or a won piece from the move's evaluation.
+      val useRoles = Option.when(selected.exists {
+        case (Action(_, _: Detail.Evades), _) => true
+        case _ => false
+      })(ControlState(RootQuestionSummary.MoveRef(path, 2), userBefore, Some(replyBefore),
+        replyBefore.at, present = true)).toList
       ReplyRoleReading(selected.map(_._1).distinct,
         Option.when(selected.nonEmpty)(List(edge.evidence.id, before.view.occurrence.id, after.view.occurrence.id) ++
-          selected.flatMap(_._2.premises.map(_.id)) ++ controlSources).getOrElse(Nil).distinct)
+          selected.flatMap(_._2.premises.map(_.id)) ++ controlSources).getOrElse(Nil).distinct, useRoles)
     reading.getOrElse(empty)
 
   private def decision(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
@@ -133,7 +142,7 @@ private[runtime] object FunctionalChoiceReading:
       current.fold(List[CommentaryAnswer.Statement](CommentaryAnswer.PieceAbsence(
         RootQuestionSummary.MoveRef(path, 1), provider.witness)))(actor =>
         List(CommentaryAnswer.ControlState(RootQuestionSummary.MoveRef(path, 1), actor, None,
-          resource.square, state == "present"))), roles.statements, roles.evidence)
+          resource.square, state == "present"))), roles.statements, roles.evidence, roles.useRoles)
 
   def withAnswer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       pair: List[PreparedPath], tasks: List[Task], previous: CommentaryAnswer.Answer,
@@ -206,7 +215,23 @@ private[runtime] object FunctionalChoiceReading:
     val evidence = resource.evidence ++ decisions.flatten.flatMap(_.replyEvidence) ++
       task.branches.flatMap(branch => branch.use.toList ++ branch.response.toList).flatMap(value =>
         value.reference.ids ++ value.alternative.ids)
-    val narrow = Option.when(differentValue && matched.map(_.firstReply).distinct.size == 1)(matched)
+    // Read both roots against their own leading defence, then one defence
+    // which changes the value of the same plan. A shared reply alone can make
+    // a conditional resource sound like an unconditional purpose of the move.
+    val changedReply = selected.iterator.flatMap { leader =>
+      task.branches.find(branch => branch.rootMove == leader.rootMove && branch.firstReply != leader.firstReply &&
+        CommentaryChoiceValue.adequateReplies(packet, branch.firstPool).contains(branch.firstReply) &&
+        branch.use.exists(use => leader.use.exists(_.useful != use.useful)))
+    }.nextOption()
+    val additional = changedReply.orElse(Option.when(differentValue)(matched.find(branch => !selected.contains(branch))).flatten)
+    val responseBranches = selected.flatMap(leader => leader :: additional.filter(_.rootMove == leader.rootMove).toList)
+    val responseDecisions = responseBranches.map(branch => decision(packet, paths, resource, branch,
+      showOther = false, positions))
+    val responseAnswer = Option.when(responseDecisions.forall(_.nonEmpty))(()).flatMap { _ =>
+      boundedAnswer(packet, paths, pair, rootSection, responseDecisions.flatten, previous,
+        evidence ++ responseDecisions.flatten.flatMap(_.replyEvidence))
+    }
+    lazy val narrow = Option.when(differentValue && matched.map(_.firstReply).distinct.size == 1)(matched)
       .flatMap { primary =>
         val center = primary.map(branch => decision(packet, paths, resource, branch, showUsefulOther, positions))
         val other = decisions.flatten.filterNot(value => primary.contains(value.branch))
@@ -216,7 +241,41 @@ private[runtime] object FunctionalChoiceReading:
       }
     // A mechanical prefix or delivery bound may reject the smaller question.
     // Keep the already supported wider value answer as the fallback.
-    narrow.orElse(completeAnswer(packet, paths, pair, lead, previous, evidence, protect)).getOrElse(previous)
+    responseAnswer.orElse(narrow)
+      .orElse(completeAnswer(packet, paths, pair, lead, previous, evidence, protect)).getOrElse(previous)
+
+  /** Replace the selected explanation as a whole. Its displayed decisions
+    * keep their immediate capture/check prices; the old explanation keeps
+    * its own uses and prices together in detail, without reseeding them into
+    * this smaller question. This is a local plan comparison, not a new root
+    * assessment or an account of every surveyed defence.
+    */
+  private def boundedAnswer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      pair: List[PreparedPath], root: CommentaryAnswer.Section, decisions: List[Decision],
+      previous: CommentaryAnswer.Answer, evidence: List[String]): Option[CommentaryAnswer.Answer] =
+    import CommentaryAnswer.*
+    val completed = decisions.map { value =>
+      RootQuestionSummary.completePairAnswer(packet, paths, pair, "functional_response",
+        List(root, Section(List(ResourceDecision(value))))).map(answer => grouped(answer.core.filterNot(_ == root)))
+    }
+    if completed.exists(_.isEmpty) then None else
+      val lead = root :: completed.flatten
+      // Keep the old selected episodes and the root ledger. Independent
+      // detail-only examples stay in their existing proposal cards; copying
+      // every such witness here can exceed the detail layer's path bound.
+      val recordedPaths = (pair ++ previous.core.flatMap(_.references.map(_.path))).distinct
+      val history = previous.core ++ previous.details.flatMap { section =>
+        val statements = section.statements.filter(_.references.forall(ref => recordedPaths.exists(_ eq ref.path)))
+        val refs = statements.flatMap(_.references).toSet
+        Option.when(statements.nonEmpty)(section.copy(statements = statements,
+          required = section.required.filter(refs), focus = section.focus.filter(f => refs(f.move))))
+      }
+      val recorded = grouped(history)
+      RootQuestionSummary.completePairAnswer(packet, paths, pair, "functional_response", lead, List(recorded))
+        .map(answer => answer.copy(details = List(recorded),
+          evidence = (previous.evidence ++ evidence ++ answer.evidence).distinct,
+          completionSources = Some(root.statements ++ decisions.map(ResourceDecision(_)))))
+        .filter(answer => RootQuestionSummary.realize(paths, pair, answer).nonEmpty)
 
   private def matchedAnswer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       pair: List[PreparedPath], resource: Resource, branches: List[Branch],
@@ -488,16 +547,7 @@ private[runtime] object FunctionalChoiceReading:
       entries.map { entry =>
         if entry.request.id != task.resource.owner.proposalId then entry
         else
-          var current = entry.copy(readings = entry.readings.map { reading =>
-            if reading.requirementId.startsWith(ValuePrefix) && !currentIds(reading.requirementId) &&
-                entry.request.requirements.exists(value => value.id == reading.requirementId && value.isInstanceOf[CompareMoves]) &&
-                Set("deferred", "awaiting_engine")(reading.state) then
-              reading.copy(state = "stopped", stopReason = Some("not_required_for_decision"), answer = None, workId = None)
-            else if currentIds(reading.requirementId) && reading.state == "stopped" &&
-                reading.stopReason.contains("not_required_for_decision") then
-              reading.copy(state = "deferred", stopReason = None, answer = None, workId = None)
-            else reading
-          })
+          var current = entry.withCurrentDecisions(ValuePrefix, currentIds)
           task.obligations.sortBy(value => (value.phase, value.comparison.prefixMovesUci.mkString(" ")))
             .foreach { obligation =>
               val requirements = obligation.facts :+ obligation.comparison

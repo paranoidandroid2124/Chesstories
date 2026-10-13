@@ -1,0 +1,345 @@
+{
+  "goal": "Redeployment purpose and functional identity beyond a fixed arrival square",
+  "registered_before_new_product_output": true,
+  "limits": {
+    "quality_cases": 2,
+    "depth_max": 18,
+    "wall_clock_budget_ms": 10000,
+    "real_browser": true
+  },
+  "existing": {
+    "id": "FJ-SG35-ROOT-NG8",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "redeployment-existing",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "g2g3",
+        "d7d5",
+        "g1f3",
+        "f8b4",
+        "c1d2",
+        "b4e7",
+        "f1g2",
+        "c7c6",
+        "d1c2",
+        "b8d7",
+        "e1g1",
+        "b7b6",
+        "f1d1",
+        "e8g8",
+        "d2f4",
+        "c8b7",
+        "f3e5",
+        "f6h5",
+        "f4d2",
+        "h5f6",
+        "c4d5",
+        "c6d5",
+        "e5c6",
+        "b7c6",
+        "c2c6",
+        "a8c8",
+        "c6b5",
+        "f6e8",
+        "b5d3",
+        "e8d6",
+        "b2b3",
+        "f7f5",
+        "f2f3",
+        "d7b8",
+        "b1c3",
+        "b8c6",
+        "e2e3",
+        "e7f6",
+        "c3e2",
+        "d8d7",
+        "a1c1",
+        "c8c7",
+        "d2e1",
+        "f8c8",
+        "g3g4",
+        "a7a5",
+        "a2a3",
+        "a5a4",
+        "b3a4",
+        "d6c4",
+        "g4f5",
+        "e6f5",
+        "c1b1",
+        "c6e7",
+        "e1b4",
+        "g8h8",
+        "f3f4",
+        "d7e6",
+        "b4d2",
+        "f6h4",
+        "b1b5",
+        "c7c6",
+        "d1b1",
+        "h7h6",
+        "g1h1",
+        "h4f2",
+        "b5b3"
+      ],
+      "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e7g8",
+        "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "criteria_source": "functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json",
+    "minimum": [
+      "Explain the improvement of the underemployed e7 knight through g8/f6 and its central/kingside options; a route or restored d5 guard alone is insufficient.",
+      "Explain why the c4 knight and its current duties can remain while the other knight improves; retain consequential support loss and replacement guard.",
+      "Show actual reply-conditioned preservation or alteration of the improving function, with actual piece/path witnesses. Do not claim the root score cause or forced bestness."
+    ]
+  },
+  "fresh": {
+    "id": "GF-JANOWSKI-RUBINSTEIN-1907-24-NE7",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "redeployment-new",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "b1c3",
+        "g8f6",
+        "f1b5",
+        "f8b4",
+        "e1g1",
+        "e8g8",
+        "d2d3",
+        "b4c3",
+        "b2c3",
+        "d7d6",
+        "c1g5",
+        "d8e7",
+        "d1d2",
+        "c6d8",
+        "b5c4",
+        "c8e6",
+        "c4b3",
+        "e6b3",
+        "a2b3",
+        "d8e6",
+        "g5h4",
+        "h7h6",
+        "f1e1",
+        "a7a6",
+        "h4g3",
+        "f6h5",
+        "d3d4",
+        "e6f4",
+        "g3f4",
+        "h5f4",
+        "g2g3",
+        "f4g6",
+        "d2d3",
+        "e7e6",
+        "f3d2",
+        "f7f5",
+        "d4d5",
+        "e6d7",
+        "e4f5",
+        "f8f5",
+        "d2e4",
+        "a8f8",
+        "e1e3"
+      ],
+      "current_fen": "5rk1/1ppq2p1/p2p2np/3Ppr2/4N3/1PPQR1P1/2P2P1P/R5K1 b - - 3 24",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "g6e7",
+        "resulting_fen": "5rk1/1ppqn1p1/p2p3p/3Ppr2/4N3/1PPQR1P1/2P2P1P/R5K1 w - - 4 25"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+    "pages": [
+      100,
+      101,
+      102,
+      103,
+      104
+    ],
+    "minimum": [
+      "Explain Ne7 as the start of regrouping to challenge or exchange the e4 knight, rather than retreat, a pawn push or rook entry.",
+      "Link the longer preparation to Black keeping f-file pressure; accept another actual route that serves that task without asserting the book line is forced.",
+      "Compare actual replies under which the e4 task is continued, changes realization, or becomes unnecessary when the target moves; keep target identity distinct from a fixed square.",
+      "Preserve selected exchanges and checks. A useful regrouping is not a forced win or proof of the exact root evaluation."
+    ]
+  },
+  "completion": "Both preregistered purposes and reply differences must reach actual basic screens within fresh ten-second jobs; no case expansion or completion from tests alone.",
+  "development_findings": [
+    "Baseline Ng8 repeated the historical route/guard-only failure; baseline Ne7 explained a transposition rather than the purpose of regrouping.",
+    "Reading a longer route only from returned PVs still lost Ne7 whenever the shallow root line changed. A bounded geometric knight route must be a distinct conditional plan, not an observed line.",
+    "A possible plan, observed pressure, a relocated target, and an unfinished plan must remain different states. Functional identity follows original targets and pressure, not destination equality.",
+    "The original target must remain continuously on its post; leaving and returning to e4 cannot revive the old task.",
+    "Queen pressure on e4 does not have the mutual legal knight-capture affordance of the planned knight exchange.",
+    "A retained companion must be checked after selected captures and immediate recaptures, not before the recapture.",
+    "Cold first requests repeatedly exceeded ten seconds before the final changes; complete answers constructed after the deadline did not count as delivered.",
+    "Profiling found repeated full-PV interpretation, occurrence assembly, and terminal publication costs. A selected-purpose answer still inherited all candidate position_ids, making the optional catalogue defeat delivery pruning.",
+    "Short jobs now use two root candidates, read the current purpose replies first, and initially compare the root-PV reply against its opposing function class. This is a restricted contrast, not a claim of global best defense."
+  ],
+  "novelty_check": "Older Janowski name hits were Janowski–Capablanca, Havana 1913. The selected Janowski–Rubinstein 1907 position and exact FEN were not found among the prior research cases.",
+  "sources_read": [
+    {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Think Like a Super-GM - Reading Edition.pdf",
+      "pages": [
+        354,
+        355,
+        356
+      ]
+    },
+    {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+      "pages": [
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105
+      ],
+      "visually_checked_page": 103
+    }
+  ],
+  "baseline": {
+    "existing": {
+      "elapsed_ms": 9435.230000019073,
+      "kind": "completed",
+      "meaning_pass": false,
+      "missing": "positive improvement and retained companion function"
+    },
+    "new": {
+      "elapsed_ms": 2953.2599999904633,
+      "kind": "completed",
+      "meaning_pass": false,
+      "missing": "e4 exchange purpose of regrouping"
+    }
+  },
+  "final_results": [
+    {
+      "case": "existing",
+      "job_id": "YubwxTlx7Sy2LicVSg5Z8el2dXqRAf6Z",
+      "elapsed_ms": 6523.405000030994,
+      "depths": [
+        12,
+        12
+      ],
+      "root_multi_pv": 2,
+      "physical_works": 2,
+      "first_user_request_after_server_restart": true,
+      "published_positions": 22,
+      "meaning_pass": true,
+      "human_reading": [
+        "Ng8 prepares g8-f6-g4 pressure on e3 and h2 while the c4 knight keeps its present attacks and b6 guard at the root.",
+        "The queen still guards d5/f5; a knight on f6 could restore d5 support.",
+        "Rf1 branch actually reaches Ng4, including Nxd2/Qxd2 and Bxg4/fxg4. Bh3 controls the g4 approach; Nxd2/Qxd2 removes the other c4 knight while the g8 knight remains."
+      ],
+      "summary": "Ng8 opens a regrouping idea for the knight from e7 to create pressure on White's pawn on e3 and White's pawn on h2. This leaves Black's knight on c4 attacking White's pawn on a3 and White's bishop on d2 and White's pawn on e3, while guarding Black's pawn on b6. This leaves Black's queen on e6 attacking White's pawn on e3, while guarding Black's pawn on d5 and Black's pawn on f5. A possible regrouping route is g8–f6–g4; this is a plan whose execution depends on the replies. The rearrangement gives up the original knight's guard of Black's pawn on d5; Black's queen on e6 still provides support. The rearrangement gives up the original knight's guard of Black's pawn on f5; Black's queen on e6 still provides support. A knight on f6 would restore the guard of Black's pawn on d5. In the Ng8 line: The recorded continuation is Rf1 Bh4 Bh3 g6 Ng1 Nxd2 Qxd2 Nf6 Rb2 Ng4 Bxg4 fxg4. After Rf1, Ng4 carries out the pressure on White's pawn on e3 and White's pawn on h2 with Black's knight on g4. Nxd2 captures the white bishop on d2. Qxd2 recaptures the black knight on d2. Bxg4 captures the black knight on g4. fxg4 recaptures the white bishop on g4. In the Ng8 line: The recorded continuation is Bh3 Nxd2 Qxd2. After Bh3, Nxd2 instead continues with Black's knight on d2, targeting White's rook on b1 and White's rook on b3. The regrouping task remains pending in this continuation. The approach through g4 is now controlled by White's bishop on h3. The other knight from c4 has been captured in this line, giving up that extra piece's activity while the redeployed piece continues. Nxd2 captures the white bishop on d2. Qxd2 recaptures the black knight on d2. The compared root choices are Ng8 and R8c7.",
+      "screenshot": "redeployment-purpose-20261012/ng8.png"
+    },
+    {
+      "case": "new",
+      "job_id": "suFxaSHalYqMPkcz5CB12EoAgIUU-jte",
+      "elapsed_ms": 6609.010000050068,
+      "depths": [
+        12,
+        12
+      ],
+      "root_multi_pv": 2,
+      "physical_works": 2,
+      "first_user_request_after_server_restart": false,
+      "published_positions": 13,
+      "meaning_pass": true,
+      "human_reading": [
+        "Ne7 prepares the conditional e7-g8-f6 regrouping to contest/exchange the e4 knight, requiring the king to leave g8. The rook continues f-file pressure.",
+        "Rf1/R5f7 leaves that regrouping pending; it is not asserted to be realized.",
+        "Nd2 relocates the original target and changes the task. The actual e4/Nxe4/Rxd5 material events remain in the basic answer."
+      ],
+      "summary": "Ne7 opens a regrouping idea for the knight from g6 to create pressure on White's knight on e4. This leaves Black's rook on f5 attacking White's pawn on f2 along the f-file. A possible regrouping route is e7–g8–f6; this is a plan whose execution depends on the replies. This requires Black's king on g8 to leave g8 first. From f6, the knights would attack one another, offering an exchange. In the Ne7 line: The recorded continuation is Rf1 R5f7. After Rf1, R5f7 instead continues with Black's rook on f7, targeting White's pawn on f2. The regrouping task remains pending in this continuation. In the Ne7 line: The recorded continuation is Nd2 e4 Nxe4. After Nd2, e4 instead continues with Black's pawn on e4, targeting White's queen on d3. The target's departure changes the task; this is not the same attack merely moved to another square. The original e4 knight has left e4 for d2, so contesting its old post is no longer the same task. With Nxe4, the white knight originally on e4 captures the black pawn originally on e5. With Rxd5, the black rook originally on f5 captures the white pawn originally on d5. The recorded continuation is Ne7. The compared root choices are Ne7 and R5f7.",
+      "screenshot": "redeployment-purpose-20261012/ne7.png"
+    }
+  ],
+  "verification": {
+    "backend_tests": {
+      "suite": "RedeploymentPurposeTest",
+      "passed": 2
+    },
+    "frontend_tests": {
+      "suite": "moveReviewRedeployment.test.ts",
+      "passed": 3
+    },
+    "runtime_source_bundle_compiled": true,
+    "actual_product_browser_build_passed": true,
+    "depth_limit": 18,
+    "quality_positions": 2,
+    "full_regression": false,
+    "full_docker_lila": false,
+    "korean_ui": false,
+    "source_case_replay_used_for_latency": false
+  },
+  "limits_remaining": [
+    "Conditional geometric discovery is bounded to a two-hop knight regrouping; observed quiet redeployments of other non-pawn/non-king pieces can be read from existing paths.",
+    "Only one functional question is prioritized in a short job. Arbitrary long strategic plans and full strategic equivalence are not solved.",
+    "Conditional plans are neither legal multi-move forecasts nor proof of bestness or the whole root evaluation.",
+    "The fresh position was used during development; it is not a held-out performance or generalization benchmark.",
+    "Final times are measurements on this machine, not an all-position/all-load ten-second guarantee."
+  ],
+  "status": "completed_for_the_preregistered_bounded_goal",
+  "artifacts": {
+    "fixture": {
+      "path": "judgment-evaluation/fixtures/public-commentary-v6/redeployment-purpose-browser.json.gz",
+      "sha256": "cbd18215b77e16cff7f3a0b57aad3ca2c15d6a1b95aca972a32288b7b7b5b343"
+    },
+    "temporary_runs": "target/research-runs/redeployment-purpose-20261012/",
+    "existing_failure_criteria_preserved": true,
+    "committed": false
+  },
+  "preservation": {
+    "baseline_dirty_entries": 358,
+    "changed_existing_paths": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ChesstoryRuntime.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceResources.scala",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "research/README.md"
+    ],
+    "unexpected_changes": [],
+    "missing_existing_files": [],
+    "restored_previous_deletions": [],
+    "previous_readme_tail_byte_identical": true
+  },
+  "source_hashes": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ChesstoryRuntime.scala": "1123b15fd105a69ddbb3f61604c64bbdf4cb7f1d464b004dcae52682f76ddf9d",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "b15e994b0d073719fa821ec810e87cd3c19d8a23180c33bd1181d55e5c0e5951",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": "ec19645c6fabaace0dac1e895599f8d1dba86a52b9c3af69263a6f8be034862b",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala": "85f732e1906cc83fbc21bb0e6d28e649cf8fc44a20a95ca9190d6cdeff30a3ef",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala": "8917793529c2fcd164cce2cf8d6889f9f94caf493d919ecb1cf857e61f850998",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala": "1f369a7153a086256f4b29b51df3793931d4259fa6c7d83d1f4a95f20639cd8d",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala": "4ddc2e45269edcb143a77aebb19dc974d2297a97eb9a2c3a8485f67a82cfbf17",
+    "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceResources.scala": "58592f3d092357d316ef99f84ddeac9b806af4adb94f0eede0e78372a5a80ea5",
+    "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts": "050b49591bf592e2e4b45c01c5c4286608f19e76ab0662abd28d7167cb14530c"
+  }
+}

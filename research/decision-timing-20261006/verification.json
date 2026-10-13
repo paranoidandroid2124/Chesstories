@@ -1,0 +1,247 @@
+{
+  "status": "verification_complete",
+  "version": "timingv15",
+  "recorded_utc": "2026-10-06T02:03:37.396300+00:00",
+  "started_utc": "2026-10-05T22:57:59+00:00",
+  "elapsed_seconds": 11138,
+  "maximum_hours": 15,
+  "acceptance": {
+    "six_development_premises_investigated": true,
+    "manual_hypotheses_checked_with_existing_fact_and_comparison_paths": true,
+    "non_tactical_automatic_mechanism": "C-reply-space; development C03",
+    "production_has_case_id_or_san_specific_branch": false,
+    "frozen_four_read_before_tuning": true,
+    "supplemental_fifth_separate": true,
+    "required_prior_prices_preserved": true,
+    "actual_ui_delivery_checked": true
+  },
+  "scala_tests": {
+    "tests": 519,
+    "passed": 514,
+    "existing_failures": [
+      "one observed king constraint discovers the recapture choice and supplements every omitted recapturer(io.chesstory.runtime.LineContinuationJobTest)",
+      "the remaining slot surveys an unobserved support use at the exact recapture peer frontier(io.chesstory.runtime.LineContinuationJobTest)",
+      "a supplied cooperative support use cannot outrank current replies and a child survey supersedes the old short prefix(io.chesstory.runtime.LineContinuationJobTest)",
+      "a weak legal recovery proposal on the bad move does not starve the reference response and its actual recapture(io.chesstory.runtime.LineContinuationJobTest)",
+      "a supplied support extension is investigated when current premises are absent without washing its provenance(io.chesstory.runtime.LineContinuationJobTest)"
+    ],
+    "new_failures_vs_goal_baseline": [],
+    "log_sha256": "afdc7a90b4b9a88edc79a77e8dda6f86286ed54179bc7907ee89edb07e74ccb7"
+  },
+  "test_summary_ko": "수정본의 관련 Scala 검사 519개 중 514개 통과. 나머지 5개는 작업 전 코드와 같은 실패이며 새 실패는 없다. 화면 표현 검사 45개, 기본 작업 계약 검사 29개, 추가 탐색 승인 조건 검사 1개도 통과했다. 전체 기존 검사 모음이 모두 통과했다고 주장하지 않는다.",
+  "regression_counts": {
+    "opened35": {
+      "positions": 35,
+      "fully_replayed": 34,
+      "pending": 1,
+      "text_changed": 3,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 4,
+      "missing_mandatory": 0,
+      "facts_unchanged": 28
+    },
+    "prior14": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "pending": 0,
+      "text_changed": 1,
+      "lost_delivery": 0,
+      "prices_lost": 0,
+      "prices_moved": 2,
+      "missing_mandatory": 0,
+      "facts_unchanged": 13
+    }
+  },
+  "regression_delivery": {
+    "positions": 49,
+    "links": 2152,
+    "negative_mutations": 100,
+    "source_sha256": "a74a6868d47037c242773ba6f7ec8649ff876abe99a9c5f3b46316ab43e3b44b"
+  },
+  "regression_summary_ko": "기존 35개와 앞선 14개 입력에서 필수 응수·대가 누락 0건. 관찰한 모든 사실·수순·국면 보존. 목적 설명이 선택된 두 입력의 가격 6개는 상세로 이동했다. 저장 보고서만으로 48개 완전 재생, 한 개는 새 재시도 결과가 없어 부분 재생으로 남겼다. 그 한 개의 추가 실제 보고서까지 합친 7개 보고서는 수정본에서 정확히 재생·전달됐다.",
+  "final_development_label": "finaldevelopment2",
+  "final_development": [
+    {
+      "id": "B03",
+      "result": {
+        "game_id": "B03",
+        "elapsed_ms": 25741,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "question": "selected_comparison",
+      "text": "Nc3 develops the knight from b1 to c3, controlling d5 and e4. Bb5 develops the bishop from f1 to b5. After Bb5, White's bishop on b5 attacks Black's knight on c6.",
+      "reply_space_proposals": []
+    },
+    {
+      "id": "D05",
+      "result": {
+        "game_id": "D05",
+        "elapsed_ms": 4961,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "question": "selected_comparison",
+      "text": "In the recorded Re8 line, Black loses one pawn. In the recorded e4 line, no capture or promotion is recorded. After e4, Black's pawn on e4 now targets White's knight on f3. e4 moves the pawn out of the attack from White's knight on f3. Nd4 moves the knight out of the attack from Black's pawn on e4. After Kc5, the black pawn originally on e5 is still present on e3. After Re8, Black's rook on e8 adds support to Black's pawn on e5, which is under attack from White's knight on f3. With Nxh4, the white knight originally on f3 captures the black pawn originally on h4. After Rf3, Black's rook on f3 now targets White's knight on e3. Ng2 moves the knight out of the attack from Black's rook on f3. After Kf2, the black pawn originally on e5 is still present on e5.",
+      "reply_space_proposals": []
+    },
+    {
+      "id": "D06",
+      "result": {
+        "game_id": "D06",
+        "elapsed_ms": 6401,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "question": "observed_terminal_comparison",
+      "text": "After Re1, White's rook on e1 does not control f2. In the provided Re1 line: Qf2+ gives check to the White king on g1 with Black's queen on f2. Kh1 moves the king to h1. The recorded continuation is Qf2+ Kh1 Qh4+ Kg1. In the Re1 line through Qh2#, neither side loses material or promotes. After Qh2#, Black wins by checkmate. In the Rxf6 line: After Kg3, White's king on g3 now targets Black's rook on f4. Rxe4 moves the rook out of the attack from White's king on g3. In the Rxf6 line, White gives up one pawn and one rook for one queen.",
+      "reply_space_proposals": []
+    },
+    {
+      "id": "C03",
+      "result": {
+        "game_id": "C03",
+        "elapsed_ms": 20175,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "question": "investigated_mechanism",
+      "text": "Nbd7 occupies d7, taking that retreat square away from Black's knight on f6. After e5 attacks the knight, the recorded reply is Ne8. Na6 leaves d7 available: against the same e5, Black can play Nd7. In that tested position, Nd7 evaluates above Ne8. After Nd7, Black's knight on d7 attacks White's pawn on e5; after Ne8, Black's knight on e8 does not attack White's pawn on e5.",
+      "reply_space_proposals": [
+        "discovery:d3b62a1cd4d26ca283a81f184cb817067c01750c955bca8017d9a4191e68a734"
+      ]
+    },
+    {
+      "id": "S4",
+      "result": {
+        "game_id": "S4",
+        "elapsed_ms": 13783,
+        "works": 5,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "question": "selected_comparison",
+      "text": "Compare what happens to the black pawn originally on d6 and the white pawn originally on e4 in the recorded d5 and Rd8 lines. After d5, Black's pawn on d5 now targets White's pawn on e4. The recorded continuation is Ne2. With Qxd5, the white queen originally on d3 captures the black pawn originally on d6. After Rd8, Black's rook on d8 now targets White's queen on d7. With Qxd8+, the white queen originally on d3 captures the attacking black rook originally on c8. In the provided Qxd8+ line: Qxd8+ gives check to the Black king on g8 with White's queen on d8; Bxd8 captures the checking queen on d8. With Bxd8, the black bishop originally on f6 recaptures the white queen originally on d3; with Rxd8+, the white rook originally on d1 recaptures that bishop. With Rxf7+, the white rook originally on d1 captures the black pawn originally on f7. After Qe3, the white rook originally on d1 is still present on c7. After Qe3, the white pawn originally on e4 is still present on e4. After Rd8, Black's rook on d8 adds support to Black's pawn on d6, which is under attack from White's queen on d3. The recorded continuation is Rg1. After Qg3, White's rook on d1 now targets Black's pawn on d5. dxe4 moves the pawn out of the attack from White's rook on d1. With dxe4, the black pawn originally on d6 captures the white pawn originally on e4. dxe4 clears d5; later Rxd8 passes through that square in this line. With Rxd8, the white rook originally on d1 captures the black rook originally on c8; with Bxd8, the black bishop originally on f6 captures that rook. After Rb3, the white queen originally on d3 is still present on g3. After Rb3, the black pawn originally on d6 is still present on e4. In the d5 line: The recorded continuation is Kh7 … Kg8.",
+      "reply_space_proposals": []
+    },
+    {
+      "id": "S2",
+      "result": {
+        "game_id": "S2",
+        "elapsed_ms": 19427,
+        "works": 6,
+        "adapter_error": null,
+        "phase": "completed",
+        "stop_condition": null,
+        "pending": false
+      },
+      "verification": {
+        "state": "stopped",
+        "target_depth": 29,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:4"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      },
+      "question": "selected_comparison",
+      "text": "Compare what happens to the white pawn originally on d5 in the recorded Qa3 and Rhd1 lines. The recorded continuation is Qa3. After Nf6, Black's knight on f6 now targets White's pawn on d5. With Nbxd5, the black knight originally on b6 captures the white pawn originally on d5. After Rhd1, White's rook on d1 adds support to White's pawn on d5, which is under attack from Black's knight on b6. The recorded continuation is h4. After bxc5, White's pawn on c5 now targets Black's knight on b6. Nc5 clears d7; Nd7 later occupies that square in this line. Nd7 moves the knight out of the attack from White's pawn on c5. After Qe3, the white pawn originally on d5 is still present on d6. In the Rhd1 line: bxc5 captures the black pawn on c5.",
+      "reply_space_proposals": []
+    }
+  ],
+  "final_development_delivery": {
+    "positions": 6,
+    "links": 164,
+    "negative_mutations": 13,
+    "source_sha256": "8a8642aed76b969bd2b4574d7b87dc751d8b2dd992398117d6c4388867dead44"
+  },
+  "final_development_summary_ko": "수정본으로 여섯 개발 사례를 실제 엔진과 일반 30초 작업 예산에서 다시 실행했고 모두 화면까지 전달됐다. C03의 새 비전술적 답도 자동 발견과 추가 비교부터 기본 해설까지 다시 확인했다. 30초는 요청 예산이며 기기별 속도 보장이나 통계적 성능 측정은 아니다.",
+  "original_four_delivery": {
+    "positions": 4,
+    "links": 152,
+    "negative_mutations": 10,
+    "source_sha256": "b2fb68c04f20489c80dc2eaf50c1e42e3910bddbe0e79079f70e64dd1488892e"
+  },
+  "supplemental_delivery": {
+    "positions": 1,
+    "links": 6,
+    "negative_mutations": 9,
+    "source_sha256": "8b4926f6c0fb0529048aee183bb268a0dd80a7b8232f73af72a5c84cf8a3723e"
+  },
+  "w24_delivery": {
+    "positions": 1,
+    "links": 26,
+    "negative_mutations": 9,
+    "source_sha256": "cb52dad967e8a26bbaf449fc6133e173b647ad045a3a421cb52c754269e16c95"
+  },
+  "important_new_case_explanations": 0,
+  "limitations_ko": "새 네 사례에서 중요한 차이를 추가로 해명한 성공은 0건이다. H03은 목적의 부분 전달, H04는 필수 가격 보존이며 별도 평가한다. H01은 처음의 손실 가설이 확인되지 않았고, H05는 중요한 엔드게임 차이를 추가 확인했으나 해설하지 못했다. 넓은 기존 UI 검사에도 작업 전부터 있던 낡은 fixture·계약 불일치가 남아 있다. 판독은 개발자 판단이며 초심자 사용자 실험이 아니다.",
+  "elapsed_summary_ko": "작업 시작부터 이 검증 기록까지 3시간 5분. 15시간 상한 안에서 수행.",
+  "evidence_sha256": {
+    "human-reading.json": "737c5d4aae5861e1ca8b9914bbcc6e3365d5b657585bed353399a87e0e5f5fad",
+    "deadline-repair.json": "b24a62ad208883f76f0ed4948fbe830fbc9d8eea6dc8ab116357afe2e0f12a62",
+    "continuation-test-baseline-comparison.json": "f8863af3c3649d68e6bdf25fbb0733879e1e41e68069d4ec5333dc4e86405cb4",
+    "legacy-ui-baseline-comparison.json": "f47b7963f6db3cae51cbed04aaabb23637456753c3bba202c7bd95fe0b53aa4f",
+    "regression-timingv15.json": "c0681023e49eb04cf85e487f2cdc7383214688c9478501f8e54a1a73f10704c1",
+    "regression-observation-timingv15.json": "50f588b3e59a6e271e9aad41361d472792020523a795267ed2ba8da7c365c108",
+    "deferred-price-reading.json": "3a598113bf14e6b55cebabe5aba2dbac12aa4e502bb9cbba7b1149fa20ca8491",
+    "delivery-repair-freeze.json": "32c7974a77e090b642d863129f4aa45a9410c3f9011e466ddc61d03ead6af414",
+    "driver-provenance.json": "af4a56c0b107e1fedc4fb21adec180ee0b4e1ae29fca103d429595e18453d90f"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "prepared_at_utc": "2026-10-04T03:55:38.291339+00:00",
+  "engine_executed": false,
+  "product_executed": false,
+  "files_sha256": {
+    "selection-policy.json": "22c8bf7839ec6ec00dbed52a34a8db171474e4347420a834c9ce93fdd4034259",
+    "prepare_candidates.py": "501a350a986f4081d8a0bfab06e547ab4c372f59ac7f1aa0eff7df1f3ee698c8",
+    "candidate-registry.json": "1c9a04dd4eed47739d4490fb7719239cb64957c263112b51d5e8ec5643918bd9",
+    "selected-games.pgn": "6585d3ddf63a99fdbd21a5ab57ea11e396a5e54579376e63f8054f4caa576594"
+  },
+  "cached_source_sha256": {
+    "generalization-candidates/source-wch2016.pgn": "0252e6b4ff0cd01c7cefedf9d299ae0ae0cd91772d37f783fa6e2bf2b3f05dd1",
+    "generalization-candidates/source-candidates2018.pgn": "de1acd25671807ddd2ac3290059f64a46f14b9f38a3da76f3e31e0e3f9601ac5",
+    "generalization-candidates/source-wch2024.pgn": "763701f8395b39049bab4c8244d8c8b56a275739525e5f80a42eb88662632470"
+  }
+}

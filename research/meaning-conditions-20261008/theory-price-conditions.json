@@ -1,0 +1,1912 @@
+{
+  "fixed_utc": "2026-10-07T21:39:42.603578+00:00",
+  "scope": {
+    "source_preserved": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\theory-scenes.json",
+      "sha256": "61c7fb1c27346445fc9cda5ec034a1643e5bf78c2d6dd848d89fdf64ec528fe3"
+    },
+    "new_product_outputs_read": false,
+    "engine_used": false,
+    "product_edits": false,
+    "source_render_recheck": {
+      "supergm_pdf_pages": [
+        49,
+        51,
+        54
+      ],
+      "render_files": [
+        "supergm-p049.png",
+        "supergm-p051.png",
+        "supergm-p054.png"
+      ]
+    },
+    "purpose": "이미 합법인 선택의 가격, 스스로 차단하는 기능, 반론 뒤 남는 조건부 가치의 최소 질문. 정해진 책 결말로 자동답 성공을 정의하지 않음.",
+    "identity_basis": "SG14는 표준 최초 국면부터 책의 전체 13수 이력으로 원래 기물 ID를 보존. SWARIO/SG02는 앞 전체 게임이 미제공이므로 책 도표 시점의 물리 기물을 ID 기준으로 삼음. 실제 제품 PieceRef를 복원했다고 주장하지 않음."
+  },
+  "SG14_same_legal_actions_different_prices": {
+    "original_root": {
+      "fen": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R3K2R w KQkq - 7 14",
+      "pieces": [
+        {
+          "id": "w:R@a1",
+          "square": "a1",
+          "role_now": "R"
+        },
+        {
+          "id": "w:K@e1",
+          "square": "e1",
+          "role_now": "K"
+        },
+        {
+          "id": "w:R@h1",
+          "square": "h1",
+          "role_now": "R"
+        },
+        {
+          "id": "w:P@a2",
+          "square": "a2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@f2",
+          "square": "f2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@g2",
+          "square": "g2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@h2",
+          "square": "h2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:B@c1",
+          "square": "a3",
+          "role_now": "B"
+        },
+        {
+          "id": "w:P@b2",
+          "square": "c3",
+          "role_now": "P"
+        },
+        {
+          "id": "w:N@g1",
+          "square": "f3",
+          "role_now": "N"
+        },
+        {
+          "id": "w:Q@d1",
+          "square": "a4",
+          "role_now": "Q"
+        },
+        {
+          "id": "w:P@e2",
+          "square": "d4",
+          "role_now": "P"
+        },
+        {
+          "id": "w:B@f1",
+          "square": "b5",
+          "role_now": "B"
+        },
+        {
+          "id": "b:N@b8",
+          "square": "c6",
+          "role_now": "N"
+        },
+        {
+          "id": "b:P@e7",
+          "square": "e6",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@g7",
+          "square": "g6",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@a7",
+          "square": "a7",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@b7",
+          "square": "b7",
+          "role_now": "P"
+        },
+        {
+          "id": "b:B@c8",
+          "square": "d7",
+          "role_now": "B"
+        },
+        {
+          "id": "b:P@f7",
+          "square": "f7",
+          "role_now": "P"
+        },
+        {
+          "id": "b:B@f8",
+          "square": "g7",
+          "role_now": "B"
+        },
+        {
+          "id": "b:P@h7",
+          "square": "h7",
+          "role_now": "P"
+        },
+        {
+          "id": "b:R@a8",
+          "square": "a8",
+          "role_now": "R"
+        },
+        {
+          "id": "b:Q@d8",
+          "square": "d8",
+          "role_now": "Q"
+        },
+        {
+          "id": "b:K@e8",
+          "square": "e8",
+          "role_now": "K"
+        },
+        {
+          "id": "b:R@h8",
+          "square": "h8",
+          "role_now": "R"
+        }
+      ]
+    },
+    "selected_ids": {
+      "queen": "w:Q@d1",
+      "bishop_a3": "w:B@c1",
+      "bishop_b5": "w:B@f1",
+      "knight_f3": "w:N@g1",
+      "pawn_c3": "w:P@b2",
+      "pawn_d4": "w:P@e2",
+      "black_knight_c6": "b:N@b8",
+      "black_bishop_g7": "b:B@f8",
+      "black_queen": "b:Q@d8"
+    },
+    "a_original_condition": "Qb3와 Qc2는 ...a6 Be2 Nxd4 뒤 같은 원래 나이트를 Nf3xd4로 잡을 수 있고, 이어 같은 원래 g7 비숍의 ...Bxd4에 c3xd4도 가능하다.",
+    "b_same_legal_choice": {
+      "Qb3_branch": [
+        {
+          "ply": 27,
+          "san": "Qb3",
+          "uci": "a4b3",
+          "mover_id": "w:Q@d1",
+          "role": "Q",
+          "from": "a4",
+          "to": "b3",
+          "capture_id": null,
+          "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/3P4/BQP2N2/P4PPP/R3K2R b KQkq - 8 14"
+        },
+        {
+          "ply": 28,
+          "san": "a6",
+          "uci": "a7a6",
+          "mover_id": "b:P@a7",
+          "role": "P",
+          "from": "a7",
+          "to": "a6",
+          "capture_id": null,
+          "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/1B6/3P4/BQP2N2/P4PPP/R3K2R w KQkq - 0 15"
+        },
+        {
+          "ply": 29,
+          "san": "Be2",
+          "uci": "b5e2",
+          "mover_id": "w:B@f1",
+          "role": "B",
+          "from": "b5",
+          "to": "e2",
+          "capture_id": null,
+          "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/8/3P4/BQP2N2/P3BPPP/R3K2R b KQkq - 1 15"
+        },
+        {
+          "ply": 30,
+          "san": "Nxd4",
+          "uci": "c6d4",
+          "mover_id": "b:N@b8",
+          "role": "N",
+          "from": "c6",
+          "to": "d4",
+          "capture_id": "w:P@e2",
+          "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3n4/BQP2N2/P3BPPP/R3K2R w KQkq - 0 16"
+        },
+        {
+          "ply": 31,
+          "san": "Nxd4",
+          "uci": "f3d4",
+          "mover_id": "w:N@g1",
+          "role": "N",
+          "from": "f3",
+          "to": "d4",
+          "capture_id": "b:N@b8",
+          "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3N4/BQP5/P3BPPP/R3K2R b KQkq - 0 16"
+        },
+        {
+          "ply": 32,
+          "san": "Bxd4",
+          "uci": "g7d4",
+          "mover_id": "b:B@f8",
+          "role": "B",
+          "from": "g7",
+          "to": "d4",
+          "capture_id": "w:N@g1",
+          "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3b4/BQP5/P3BPPP/R3K2R w KQkq - 0 17"
+        },
+        {
+          "ply": 33,
+          "san": "cxd4",
+          "uci": "c3d4",
+          "mover_id": "w:P@b2",
+          "role": "P",
+          "from": "c3",
+          "to": "d4",
+          "capture_id": "b:B@f8",
+          "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3P4/BQ6/P3BPPP/R3K2R b KQkq - 0 17"
+        }
+      ],
+      "Qc2_branch": [
+        {
+          "ply": 27,
+          "san": "Qc2",
+          "uci": "a4c2",
+          "mover_id": "w:Q@d1",
+          "role": "Q",
+          "from": "a4",
+          "to": "c2",
+          "capture_id": null,
+          "fen_after": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/3P4/B1P2N2/P1Q2PPP/R3K2R b KQkq - 8 14"
+        },
+        {
+          "ply": 28,
+          "san": "a6",
+          "uci": "a7a6",
+          "mover_id": "b:P@a7",
+          "role": "P",
+          "from": "a7",
+          "to": "a6",
+          "capture_id": null,
+          "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/1B6/3P4/B1P2N2/P1Q2PPP/R3K2R w KQkq - 0 15"
+        },
+        {
+          "ply": 29,
+          "san": "Be2",
+          "uci": "b5e2",
+          "mover_id": "w:B@f1",
+          "role": "B",
+          "from": "b5",
+          "to": "e2",
+          "capture_id": null,
+          "fen_after": "r2qk2r/1p1b1pbp/p1n1p1p1/8/3P4/B1P2N2/P1Q1BPPP/R3K2R b KQkq - 1 15"
+        },
+        {
+          "ply": 30,
+          "san": "Nxd4",
+          "uci": "c6d4",
+          "mover_id": "b:N@b8",
+          "role": "N",
+          "from": "c6",
+          "to": "d4",
+          "capture_id": "w:P@e2",
+          "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3n4/B1P2N2/P1Q1BPPP/R3K2R w KQkq - 0 16"
+        },
+        {
+          "ply": 31,
+          "san": "Nxd4",
+          "uci": "f3d4",
+          "mover_id": "w:N@g1",
+          "role": "N",
+          "from": "f3",
+          "to": "d4",
+          "capture_id": "b:N@b8",
+          "fen_after": "r2qk2r/1p1b1pbp/p3p1p1/8/3N4/B1P5/P1Q1BPPP/R3K2R b KQkq - 0 16"
+        },
+        {
+          "ply": 32,
+          "san": "Bxd4",
+          "uci": "g7d4",
+          "mover_id": "b:B@f8",
+          "role": "B",
+          "from": "g7",
+          "to": "d4",
+          "capture_id": "w:N@g1",
+          "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3b4/B1P5/P1Q1BPPP/R3K2R w KQkq - 0 17"
+        },
+        {
+          "ply": 33,
+          "san": "cxd4",
+          "uci": "c3d4",
+          "mover_id": "w:P@b2",
+          "role": "P",
+          "from": "c3",
+          "to": "d4",
+          "capture_id": "b:B@f8",
+          "fen_after": "r2qk2r/1p1b1p1p/p3p1p1/8/3P4/B7/P1Q1BPPP/R3K2R b KQkq - 0 17"
+        }
+      ]
+    },
+    "c_self_block_or_release": "c3xd4가 스스로 a5-b4-c3-d2-e1의 왕 가림을 없앤다. ...Qa5는 이제 체크다. Qb3는 원래 a3 비숍 지원과 방어 퀸 수를 남기지만 Qc2는 해당 가격을 보존하지 못한다.",
+    "d_required_result": "Nxd4/cxd4가 합법이라는 사실과 비숍을 회수했다는 사실만으로 성공하지 않는다. Qa5+의 모든 체크 대응과 기물 가격을 확인한다. 동시에 cxd4가 강제가 아니므로 조용한 Rd1으로 손실을 줄일 수 있는지 완료한다.",
+    "finite_local_proof": {
+      "Qb3": {
+        "prefix_san": "Qb3 a6 Be2 Nxd4 Nxd4 Bxd4 cxd4 Qa5+",
+        "root_fen": "r3k2r/1p1b1p1p/p3p1p1/q7/3P4/BQ6/P3BPPP/R3K2R w KQkq - 1 18",
+        "all_legal_evasions": [
+          {
+            "evasion": "Kf1",
+            "evasion_uci": "e1f1",
+            "mover_id": "w:K@e1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxa3",
+                    "uci": "b3a3",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": false
+          },
+          {
+            "evasion": "Kd1",
+            "evasion_uci": "e1d1",
+            "mover_id": "w:K@e1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxa3",
+                    "uci": "b3a3",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": false
+          },
+          {
+            "evasion": "Qb4",
+            "evasion_uci": "b3b4",
+            "mover_id": "w:Q@d1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxb4+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:Q@d1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Bxb4",
+                    "uci": "a3b4",
+                    "recapturer_id": "w:B@c1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              },
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxa3",
+                    "uci": "b4a3",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": false
+          },
+          {
+            "evasion": "Qc3",
+            "evasion_uci": "b3c3",
+            "mover_id": "w:Q@d1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxc3+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:Q@d1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              },
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxa3",
+                    "uci": "c3a3",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          },
+          {
+            "evasion": "Bb4",
+            "evasion_uci": "a3b4",
+            "mover_id": "w:B@c1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxb4+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxb4",
+                    "uci": "b3b4",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": false
+          }
+        ],
+        "safe_evasions_in_this_capture_scope": [
+          "Kf1",
+          "Kd1",
+          "Qb4",
+          "Bb4"
+        ],
+        "proof_scope": "모든 합법 체크 대응 뒤, 상대의 다음 합법 포획 및 즉시 합법 재포획을 전부 열거. 원래 퀸/원래 a3 비숍의 즉시 공짜 손실만 검사. 전체 포지션 우열/장기 전술 증명이 아님."
+      },
+      "Qc2": {
+        "prefix_san": "Qc2 a6 Be2 Nxd4 Nxd4 Bxd4 cxd4 Qa5+",
+        "root_fen": "r3k2r/1p1b1p1p/p3p1p1/q7/3P4/B7/P1Q1BPPP/R3K2R w KQkq - 1 18",
+        "all_legal_evasions": [
+          {
+            "evasion": "Kf1",
+            "evasion_uci": "e1f1",
+            "mover_id": "w:K@e1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          },
+          {
+            "evasion": "Kd1",
+            "evasion_uci": "e1d1",
+            "mover_id": "w:K@e1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          },
+          {
+            "evasion": "Bb4",
+            "evasion_uci": "a3b4",
+            "mover_id": "w:B@c1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxb4+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          },
+          {
+            "evasion": "Qc3",
+            "evasion_uci": "c2c3",
+            "mover_id": "w:Q@d1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxc3+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:Q@d1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              },
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Qxa3",
+                    "uci": "c3a3",
+                    "recapturer_id": "w:Q@d1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          },
+          {
+            "evasion": "Qd2",
+            "evasion_uci": "c2d2",
+            "mover_id": "w:Q@d1",
+            "candidate_next_captures": [
+              {
+                "capture": "Qxa3",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:B@c1",
+                "immediate_legal_recaptures": [],
+                "free_in_this_two_ply_scope": true
+              },
+              {
+                "capture": "Qxd2+",
+                "capturer_id": "b:Q@d8",
+                "victim_id": "w:Q@d1",
+                "immediate_legal_recaptures": [
+                  {
+                    "san": "Kxd2",
+                    "uci": "e1d2",
+                    "recapturer_id": "w:K@e1"
+                  }
+                ],
+                "free_in_this_two_ply_scope": false
+              }
+            ],
+            "has_free_capture_of_queen_or_a3_bishop": true
+          }
+        ],
+        "safe_evasions_in_this_capture_scope": [],
+        "proof_scope": "모든 합법 체크 대응 뒤, 상대의 다음 합법 포획 및 즉시 합법 재포획을 전부 열거. 원래 퀸/원래 a3 비숍의 즉시 공짜 손실만 검사. 전체 포지션 우열/장기 전술 증명이 아님."
+      }
+    },
+    "critical_counterexample_to_forced_recapture": {
+      "book_pages": [
+        157
+      ],
+      "prefix": "Qc2 a6 Be2 Nxd4 Nxd4 Bxd4",
+      "better_book_defense": "Rd1",
+      "followup_sample": "Bf6 O-O Be7",
+      "meaning": "책은 즉시 cxd4?보다 Rd1을 낫다고 명시한다. 따라서 비숍 손실을 Nxd4의 유일한 강제 결과로 묶는 조건은 잘못. Rd1을 뒀을 때도 흑이 유리하다는 판단은 책의 판단이며 본인은 엔진으로 독립 확인하지 않음."
+    },
+    "unknown": "Qb3/Qc2의 전체 우열, 다른 더 강한 반격, Rd1 뒤 장기 결과. 위의 한 포획+재포획 열거는 이를 증명하지 않음."
+  },
+  "SWARIO_same_resource_before_after_self_block": {
+    "root": {
+      "fen": "b2r1b1k/5q2/p4P1p/3Pp2p/1r5P/2N1BR2/PP3QP1/3RK3 b - - 0 34",
+      "pieces": [
+        {
+          "id": "w:R@d1",
+          "square": "d1",
+          "role_now": "R"
+        },
+        {
+          "id": "w:K@e1",
+          "square": "e1",
+          "role_now": "K"
+        },
+        {
+          "id": "w:P@a2",
+          "square": "a2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@b2",
+          "square": "b2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:Q@f2",
+          "square": "f2",
+          "role_now": "Q"
+        },
+        {
+          "id": "w:P@g2",
+          "square": "g2",
+          "role_now": "P"
+        },
+        {
+          "id": "w:N@c3",
+          "square": "c3",
+          "role_now": "N"
+        },
+        {
+          "id": "w:B@e3",
+          "square": "e3",
+          "role_now": "B"
+        },
+        {
+          "id": "w:R@f3",
+          "square": "f3",
+          "role_now": "R"
+        },
+        {
+          "id": "b:R@b4",
+          "square": "b4",
+          "role_now": "R"
+        },
+        {
+          "id": "w:P@h4",
+          "square": "h4",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@d5",
+          "square": "d5",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@e5",
+          "square": "e5",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@h5",
+          "square": "h5",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@a6",
+          "square": "a6",
+          "role_now": "P"
+        },
+        {
+          "id": "w:P@f6",
+          "square": "f6",
+          "role_now": "P"
+        },
+        {
+          "id": "b:P@h6",
+          "square": "h6",
+          "role_now": "P"
+        },
+        {
+          "id": "b:Q@f7",
+          "square": "f7",
+          "role_now": "Q"
+        },
+        {
+          "id": "b:B@a8",
+          "square": "a8",
+          "role_now": "B"
+        },
+        {
+          "id": "b:R@d8",
+          "square": "d8",
+          "role_now": "R"
+        },
+        {
+          "id": "b:B@f8",
+          "square": "f8",
+          "role_now": "B"
+        },
+        {
+          "id": "b:K@h8",
+          "square": "h8",
+          "role_now": "K"
+        }
+      ]
+    },
+    "a_original_condition": "Bxd5 Bc5에서는 원래 Qf2가 원래 Be3의 c5 진입을 지원하고, 원래 Rd1이 d5 비숍을 통해 d8 룩을 압박한다.",
+    "b_same_opponent_resource": {
+      "resource_id": "b:B@f8",
+      "move": "Bxc5",
+      "victim_id": "w:B@e3",
+      "before": {
+        "events": [
+          {
+            "ply": 1,
+            "san": "Bxd5",
+            "uci": "a8d5",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "a8",
+            "to": "d5",
+            "capture_id": "w:P@d5",
+            "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+          },
+          {
+            "ply": 2,
+            "san": "Bc5",
+            "uci": "e3c5",
+            "mover_id": "w:B@e3",
+            "role": "B",
+            "from": "e3",
+            "to": "c5",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+          },
+          {
+            "ply": 3,
+            "san": "Bxc5",
+            "uci": "f8c5",
+            "mover_id": "b:B@f8",
+            "role": "B",
+            "from": "f8",
+            "to": "c5",
+            "capture_id": "w:B@e3",
+            "fen_after": "3r3k/5q2/p4P1p/2bbp2p/1r5P/2N2R2/PP3QP1/3RK3 w - - 0 36"
+          }
+        ],
+        "Qxc5_legal": true
+      },
+      "after_own_Rxd4": {
+        "events": [
+          {
+            "ply": 1,
+            "san": "Bxd5",
+            "uci": "a8d5",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "a8",
+            "to": "d5",
+            "capture_id": "w:P@d5",
+            "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+          },
+          {
+            "ply": 2,
+            "san": "Bc5",
+            "uci": "e3c5",
+            "mover_id": "w:B@e3",
+            "role": "B",
+            "from": "e3",
+            "to": "c5",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+          },
+          {
+            "ply": 3,
+            "san": "Rd4",
+            "uci": "b4d4",
+            "mover_id": "b:R@b4",
+            "role": "R",
+            "from": "b4",
+            "to": "d4",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36"
+          },
+          {
+            "ply": 4,
+            "san": "Rxd4",
+            "uci": "d1d4",
+            "mover_id": "w:R@d1",
+            "role": "R",
+            "from": "d1",
+            "to": "d4",
+            "capture_id": "b:R@b4",
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3R3P/2N2R2/PP3QP1/4K3 b - - 0 36"
+          },
+          {
+            "ply": 5,
+            "san": "Bxc5",
+            "uci": "f8c5",
+            "mover_id": "b:B@f8",
+            "role": "B",
+            "from": "f8",
+            "to": "c5",
+            "capture_id": "w:B@e3",
+            "fen_after": "3r3k/5q2/p4P1p/2bbp2p/3R3P/2N2R2/PP3QP1/4K3 w - - 0 37"
+          }
+        ],
+        "Qxc5_legal": false
+      }
+    },
+    "c_self_block": "합법인 Rxd4는 원래 b4 룩을 잡지만, 원래 Rd1을 d4에 놓아 자기 Qf2-c5 대각선을 막는다. 상대의 같은 Bf8xc5가 이제 즉시 퀸 재포획을 받지 않는다. 이것은 상대가 지원을 지웠다는 사건만이 아니라 자기 포획 선택이 지원을 다시 막는 가격이다.",
+    "other_same_legal_resource": {
+      "move": "Bxf3",
+      "resource_id": "b:B@a8",
+      "victim_id": "w:R@f3",
+      "before_self_block": {
+        "prefix": "Bxd5 Bc5 Bxf3",
+        "events": [
+          {
+            "ply": 1,
+            "san": "Bxd5",
+            "uci": "a8d5",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "a8",
+            "to": "d5",
+            "capture_id": "w:P@d5",
+            "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+          },
+          {
+            "ply": 2,
+            "san": "Bc5",
+            "uci": "e3c5",
+            "mover_id": "w:B@e3",
+            "role": "B",
+            "from": "e3",
+            "to": "c5",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+          },
+          {
+            "ply": 3,
+            "san": "Bxf3",
+            "uci": "d5f3",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "d5",
+            "to": "f3",
+            "capture_id": "w:R@f3",
+            "fen_after": "3r1b1k/5q2/p4P1p/2B1p2p/1r5P/2N2b2/PP3QP1/3RK3 w - - 0 36"
+          }
+        ],
+        "Rxd8_legal": true
+      },
+      "after_Bxd4_self_block": {
+        "prefix": "Bxd5 Bc5 Rd4 Bxd4 Bxf3",
+        "events": [
+          {
+            "ply": 1,
+            "san": "Bxd5",
+            "uci": "a8d5",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "a8",
+            "to": "d5",
+            "capture_id": "w:P@d5",
+            "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/1r5P/2N1BR2/PP3QP1/3RK3 w - - 0 35"
+          },
+          {
+            "ply": 2,
+            "san": "Bc5",
+            "uci": "e3c5",
+            "mover_id": "w:B@e3",
+            "role": "B",
+            "from": "e3",
+            "to": "c5",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/1r5P/2N2R2/PP3QP1/3RK3 b - - 1 35"
+          },
+          {
+            "ply": 3,
+            "san": "Rd4",
+            "uci": "b4d4",
+            "mover_id": "b:R@b4",
+            "role": "R",
+            "from": "b4",
+            "to": "d4",
+            "capture_id": null,
+            "fen_after": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36"
+          },
+          {
+            "ply": 4,
+            "san": "Bxd4",
+            "uci": "c5d4",
+            "mover_id": "w:B@e3",
+            "role": "B",
+            "from": "c5",
+            "to": "d4",
+            "capture_id": "b:R@b4",
+            "fen_after": "3r1b1k/5q2/p4P1p/3bp2p/3B3P/2N2R2/PP3QP1/3RK3 b - - 0 36"
+          },
+          {
+            "ply": 5,
+            "san": "Bxf3",
+            "uci": "d5f3",
+            "mover_id": "b:B@a8",
+            "role": "B",
+            "from": "d5",
+            "to": "f3",
+            "capture_id": "w:R@f3",
+            "fen_after": "3r1b1k/5q2/p4P1p/4p2p/3B3P/2N2b2/PP3QP1/3RK3 w - - 0 37"
+          }
+        ],
+        "Rxd8_legal": false
+      },
+      "scope": "Bxf3 자체는 양쪽 합법. Bxd4가 자기 비숍을 d파일에 놓아 Rd1-d8 교환/가격 경로를 막는다는 사실만 확인. 초기 Bxf3가 나쁘다는 최종 평가나 강제 전체 손실은 주장하지 않음."
+    },
+    "d_required_result": "Black Bxc5가 즉시 재포획을 받지 않는 것과 White Bc5가 전체적으로 실수인 것은 별도다. Rxd4의 룩 이익, 이후 퀸의 핀 해소·f3 룩 지원 복구, 다른 모든 합법 응수도 검색해야 한다.",
+    "counterexample_to_only_three_capture_story": "세 잡는 수만이 전부라는 가정은 금지. 포획을 거절하거나 퀸을 이동해 지원/핀을 회복하는 응수가 있다면 비교해야 한다. 이것이 가격을 줄이는지는 미확정.",
+    "book_claim": "책 40은 Bxf8/Rxd4/Bxd4의 각 중간수로 성급한 수확이 실패한다고 설명한다. 정적 핀/기물 공격만으로 승리라는 가정이 반박됨.",
+    "unknown": "각 주요 포획/거절 뒤 전체 material와 평가, 최강 백/흑 응수, 불리한 흑의 실전적 구원 확률. 법적 지원 단절만으로 점수 원인을 확정하지 않음."
+  },
+  "SG02_refutation_of_forced_win_and_surviving_pressure": {
+    "source": {
+      "book": "supergm",
+      "pdf_pages": [
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ]
+    },
+    "same_legal_opponent_resource": {
+      "id": "b:Q@g5",
+      "move": "Qe3+",
+      "same_move_legal_both": true,
+      "after_acceptance": {
+        "events": [
+          {
+            "ply": 1,
+            "san": "Rxf3",
+            "uci": "f7f3",
+            "mover_id": "b:R@f7",
+            "role": "R",
+            "from": "f7",
+            "to": "f3",
+            "capture_id": "w:P@f3",
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+          },
+          {
+            "ply": 2,
+            "san": "gxf3",
+            "uci": "g2f3",
+            "mover_id": "w:P@g2",
+            "role": "P",
+            "from": "g2",
+            "to": "f3",
+            "capture_id": "b:R@f7",
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4PB1/1P5P/2RR2K1 b - - 0 2"
+          },
+          {
+            "ply": 3,
+            "san": "Qe3+",
+            "uci": "g5e3",
+            "mover_id": "b:Q@g5",
+            "role": "Q",
+            "from": "g5",
+            "to": "e3",
+            "capture_id": null,
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/1Q1P4/P3qPB1/1P5P/2RR2K1 w - - 1 3"
+          }
+        ],
+        "Qxe3_legal": false
+      },
+      "after_refusal": {
+        "events": [
+          {
+            "ply": 1,
+            "san": "Rxf3",
+            "uci": "f7f3",
+            "mover_id": "b:R@f7",
+            "role": "R",
+            "from": "f7",
+            "to": "f3",
+            "capture_id": "w:P@f3",
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+          },
+          {
+            "ply": 2,
+            "san": "Qd2",
+            "uci": "b4d2",
+            "mover_id": "w:Q@b4",
+            "role": "Q",
+            "from": "b4",
+            "to": "d2",
+            "capture_id": null,
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2"
+          },
+          {
+            "ply": 3,
+            "san": "Qe3+",
+            "uci": "g5e3",
+            "mover_id": "b:Q@g5",
+            "role": "Q",
+            "from": "g5",
+            "to": "e3",
+            "capture_id": null,
+            "fen_after": "2r3k1/1p4p1/2p4p/1p1b4/3P4/P3qrB1/1P1Q2PP/2RR2K1 w - - 2 3"
+          }
+        ],
+        "Qxe3_legal": true
+      },
+      "scope": "Qd2는 Qe3+를 불법으로 만들지 않는다. 같은 체크에 퀸 교환의 대응이 생기고, g2 폰 방패도 당장 약화시키지 않는다. Qe3+를 반박하는 이 기하 대조는 Re3/Qg4를 포함한 모든 강한 흑 응수의 무승부 증명이 아님."
+    },
+    "claims_that_must_be_withdrawn": [
+      "Rxf3가 gxf3를 강제한다.",
+      "룩 수용의 패배가 원래 수의 강제 승리를 증명한다."
+    ],
+    "claims_not_automatically_withdrawn": [
+      "d5 비숍을 남긴 것이 조건부 밝은 칸 공격/압박의 자원이 된다.",
+      "흑은 정확한 수비에 교환을 허용해도 구조와 활동으로 계속 압박할 수 있다."
+    ],
+    "pressure_surviving_example": {
+      "events": [
+        {
+          "ply": 1,
+          "san": "Rxf3",
+          "uci": "f7f3",
+          "mover_id": "b:R@f7",
+          "role": "R",
+          "from": "f7",
+          "to": "f3",
+          "capture_id": "w:P@f3",
+          "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2"
+        },
+        {
+          "ply": 2,
+          "san": "Qd2",
+          "uci": "b4d2",
+          "mover_id": "w:Q@b4",
+          "role": "Q",
+          "from": "b4",
+          "to": "d2",
+          "capture_id": null,
+          "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2"
+        },
+        {
+          "ply": 3,
+          "san": "Re3",
+          "uci": "f3e3",
+          "mover_id": "b:R@f7",
+          "role": "R",
+          "from": "f3",
+          "to": "e3",
+          "capture_id": null,
+          "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P3r1B1/1P1Q2PP/2RR2K1 w - - 2 3"
+        },
+        {
+          "ply": 4,
+          "san": "Rc3",
+          "uci": "c1c3",
+          "mover_id": "w:R@c1",
+          "role": "R",
+          "from": "c1",
+          "to": "c3",
+          "capture_id": null,
+          "fen_after": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P1R1r1B1/1P1Q2PP/3R2K1 b - - 3 3"
+        },
+        {
+          "ply": 5,
+          "san": "Rce8",
+          "uci": "c8e8",
+          "mover_id": "b:R@c8",
+          "role": "R",
+          "from": "c8",
+          "to": "e8",
+          "capture_id": null,
+          "fen_after": "4r1k1/1p4p1/2p4p/1p1b2q1/3P4/P1R1r1B1/1P1Q2PP/3R2K1 w - - 4 4"
+        },
+        {
+          "ply": 6,
+          "san": "Rxe3",
+          "uci": "c3e3",
+          "mover_id": "w:R@c1",
+          "role": "R",
+          "from": "c3",
+          "to": "e3",
+          "capture_id": "b:R@f7",
+          "fen_after": "4r1k1/1p4p1/2p4p/1p1b2q1/3P4/P3R1B1/1P1Q2PP/3R2K1 b - - 0 4"
+        },
+        {
+          "ply": 7,
+          "san": "Qxe3+",
+          "uci": "g5e3",
+          "mover_id": "b:Q@g5",
+          "role": "Q",
+          "from": "g5",
+          "to": "e3",
+          "capture_id": "w:R@c1",
+          "fen_after": "4r1k1/1p4p1/2p4p/1p1b4/3P4/P3q1B1/1P1Q2PP/3R2K1 w - - 0 5"
+        },
+        {
+          "ply": 8,
+          "san": "Qxe3",
+          "uci": "d2e3",
+          "mover_id": "w:Q@b4",
+          "role": "Q",
+          "from": "d2",
+          "to": "e3",
+          "capture_id": "b:Q@g5",
+          "fen_after": "4r1k1/1p4p1/2p4p/1p1b4/3P4/P3Q1B1/1P4PP/3R2K1 b - - 0 5"
+        },
+        {
+          "ply": 9,
+          "san": "Rxe3",
+          "uci": "e8e3",
+          "mover_id": "b:R@c8",
+          "role": "R",
+          "from": "e8",
+          "to": "e3",
+          "capture_id": "w:Q@b4",
+          "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/P3r1B1/1P4PP/3R2K1 w - - 0 6"
+        },
+        {
+          "ply": 10,
+          "san": "Kf2",
+          "uci": "g1f2",
+          "mover_id": "w:K@g1",
+          "role": "K",
+          "from": "g1",
+          "to": "f2",
+          "capture_id": null,
+          "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/P3r1B1/1P3KPP/3R4 b - - 1 6"
+        },
+        {
+          "ply": 11,
+          "san": "Rb3",
+          "uci": "e3b3",
+          "mover_id": "b:R@c8",
+          "role": "R",
+          "from": "e3",
+          "to": "b3",
+          "capture_id": null,
+          "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/Pr4B1/1P3KPP/3R4 w - - 2 7"
+        },
+        {
+          "ply": 12,
+          "san": "Rd2",
+          "uci": "d1d2",
+          "mover_id": "w:R@d1",
+          "role": "R",
+          "from": "d1",
+          "to": "d2",
+          "capture_id": null,
+          "fen_after": "6k1/1p4p1/2p4p/1p1b4/3P4/Pr4B1/1P1R1KPP/8 b - - 3 7"
+        },
+        {
+          "ply": 13,
+          "san": "b4",
+          "uci": "b5b4",
+          "mover_id": "b:P@b5",
+          "role": "P",
+          "from": "b5",
+          "to": "b4",
+          "capture_id": null,
+          "fen_after": "6k1/1p4p1/2p4p/3b4/1p1P4/Pr4B1/1P1R1KPP/8 w - - 0 8"
+        },
+        {
+          "ply": 14,
+          "san": "axb4",
+          "uci": "a3b4",
+          "mover_id": "w:P@a3",
+          "role": "P",
+          "from": "a3",
+          "to": "b4",
+          "capture_id": "b:P@b5",
+          "fen_after": "6k1/1p4p1/2p4p/3b4/1P1P4/1r4B1/1P1R1KPP/8 b - - 0 8"
+        },
+        {
+          "ply": 15,
+          "san": "Rxb4",
+          "uci": "b3b4",
+          "mover_id": "b:R@c8",
+          "role": "R",
+          "from": "b3",
+          "to": "b4",
+          "capture_id": "w:P@a3",
+          "fen_after": "6k1/1p4p1/2p4p/3b4/1r1P4/6B1/1P1R1KPP/8 w - - 0 9"
+        }
+      ],
+      "end_state": {
+        "fen": "6k1/1p4p1/2p4p/3b4/1r1P4/6B1/1P1R1KPP/8 w - - 0 9",
+        "pieces": [
+          {
+            "id": "w:P@b2",
+            "square": "b2",
+            "role_now": "P"
+          },
+          {
+            "id": "w:R@d1",
+            "square": "d2",
+            "role_now": "R"
+          },
+          {
+            "id": "w:K@g1",
+            "square": "f2",
+            "role_now": "K"
+          },
+          {
+            "id": "w:P@g2",
+            "square": "g2",
+            "role_now": "P"
+          },
+          {
+            "id": "w:P@h2",
+            "square": "h2",
+            "role_now": "P"
+          },
+          {
+            "id": "w:B@g3",
+            "square": "g3",
+            "role_now": "B"
+          },
+          {
+            "id": "b:R@c8",
+            "square": "b4",
+            "role_now": "R"
+          },
+          {
+            "id": "w:P@d4",
+            "square": "d4",
+            "role_now": "P"
+          },
+          {
+            "id": "b:B@d5",
+            "square": "d5",
+            "role_now": "B"
+          },
+          {
+            "id": "b:P@c6",
+            "square": "c6",
+            "role_now": "P"
+          },
+          {
+            "id": "b:P@h6",
+            "square": "h6",
+            "role_now": "P"
+          },
+          {
+            "id": "b:P@b7",
+            "square": "b7",
+            "role_now": "P"
+          },
+          {
+            "id": "b:P@g7",
+            "square": "g7",
+            "role_now": "P"
+          },
+          {
+            "id": "b:K@g8",
+            "square": "g8",
+            "role_now": "K"
+          }
+        ]
+      },
+      "original_bishop_survives": true,
+      "book_judgment": "거의 무승부지만 백의 b2/d4 고립 폰과 d2의 수동적 룩 때문에 방어가 계속 필요하다.",
+      "scope": "조건부 남는 압박의 책 예시. 비숍 생존/고립 폰만으로 원래 Rxf3의 비교 가치나 강제 우열을 독립 증명하지 않음."
+    },
+    "strongest_refutation_types": [
+      "Qd2로 왕 수비와 교환 준비",
+      "Re3에 Rc3로 큰 기물 교환",
+      "Qg4에 정확한 gxf3와 체크 방어",
+      "다른 강한 흑의 공격 재개 및 백 응수"
+    ],
+    "unknown": "모든 강한 거절 아래 남는 압박의 크기, Rxf3/Bxf3의 비교 가치에 대한 인과적 기여, 현대 엔진 최선 판단."
+  },
+  "minimal_value_questions": [
+    {
+      "id": "SG14-preparation",
+      "prefix_san": "",
+      "prefix_uci": [],
+      "root_fen": "r2qk2r/pp1b1pbp/2n1p1p1/1B6/Q2P4/B1P2N2/P4PPP/R3K2R w KQkq - 7 14",
+      "turn": "white",
+      "ask": "Qb3는 Qc2/캐슬링보다 퇴로와 후속 가격을 실제로 개선하는가?",
+      "named_candidates": [
+        "Qb3",
+        "Qc2",
+        "O-O"
+      ],
+      "all_legal_root_moves": [
+        "Bxc6",
+        "Ba6",
+        "Bc4",
+        "Bd3",
+        "Be2",
+        "Bf1",
+        "Qxa7",
+        "Qa6",
+        "Qa5",
+        "Qc4",
+        "Qb4",
+        "Qb3",
+        "Qc2",
+        "Qd1",
+        "Ng5",
+        "Ne5",
+        "Nh4",
+        "Nd2",
+        "Ng1",
+        "Bf8",
+        "Be7",
+        "Bd6",
+        "Bc5",
+        "Bb4",
+        "Bb2",
+        "Bc1",
+        "Rg1",
+        "Rf1",
+        "Ke2",
+        "Kd2",
+        "Kf1",
+        "Kd1",
+        "Rd1",
+        "Rc1",
+        "Rb1",
+        "O-O",
+        "O-O-O",
+        "d5",
+        "c4",
+        "h3",
+        "g3",
+        "h4",
+        "g4"
+      ],
+      "required_computation_scope": "같은 최초 국면. 각 선택 뒤 상대 root를 특정 책 수로 고정하지 않고 전부 검색하며 ...Ne7을 포함한 강한 응수를 비교. 최고 결과가 흔들리면 단정하지 않음.",
+      "refutation_classes": [
+        "...a6 중앙 포획",
+        "...Ne7 준비/교환",
+        "직접 공격/다른 퀸 대응"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG14-Qb3-capture",
+      "prefix_san": "Qb3 a6 Be2 Nxd4",
+      "prefix_uci": [
+        "a4b3",
+        "a7a6",
+        "b5e2",
+        "c6d4"
+      ],
+      "root_fen": "r2qk2r/1p1b1pbp/p3p1p1/8/3n4/BQP2N2/P3BPPP/R3K2R w KQkq - 0 16",
+      "turn": "white",
+      "ask": "합법인 Nxd4가 현재 퀸 공격을 해소한 뒤 필요한 기물 가격을 보존하는가?",
+      "named_candidates": [
+        "Nxd4"
+      ],
+      "all_legal_root_moves": [
+        "Ng5",
+        "Ne5",
+        "Nh4",
+        "Nxd4",
+        "Nd2",
+        "Ng1",
+        "Qxb7",
+        "Qxe6+",
+        "Qb6",
+        "Qd5",
+        "Qb5",
+        "Qc4",
+        "Qb4",
+        "Qa4",
+        "Qc2",
+        "Qb2",
+        "Qd1",
+        "Qb1",
+        "Bf8",
+        "Be7",
+        "Bd6",
+        "Bc5",
+        "Bb4",
+        "Bb2",
+        "Bc1",
+        "Bxa6",
+        "Bb5",
+        "Bc4",
+        "Bd3",
+        "Bf1",
+        "Bd1",
+        "Rg1",
+        "Rf1",
+        "Kd2",
+        "Kf1",
+        "Kd1",
+        "Rd1",
+        "Rc1",
+        "Rb1",
+        "O-O",
+        "O-O-O",
+        "cxd4",
+        "c4",
+        "h3",
+        "g3",
+        "h4",
+        "g4"
+      ],
+      "required_computation_scope": "Nxd4 뒤 흑의 모든 응수를 열고 포획/체크/회수 의무가 끝날 때까지 확인. 책 Bxd4를 유일 응수로 가정하지 않음.",
+      "refutation_classes": [
+        "...Bxd4",
+        "다른 퀸/중앙 반격"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG14-Qc2-capture",
+      "prefix_san": "Qc2 a6 Be2 Nxd4",
+      "prefix_uci": [
+        "a4c2",
+        "a7a6",
+        "b5e2",
+        "c6d4"
+      ],
+      "root_fen": "r2qk2r/1p1b1pbp/p3p1p1/8/3n4/B1P2N2/P1Q1BPPP/R3K2R w KQkq - 0 16",
+      "turn": "white",
+      "ask": "같은 Nxd4 뒤 결과가 Qb3와 달라지는가?",
+      "named_candidates": [
+        "Nxd4"
+      ],
+      "all_legal_root_moves": [
+        "Ng5",
+        "Ne5",
+        "Nh4",
+        "Nxd4",
+        "Nd2",
+        "Ng1",
+        "Bf8",
+        "Be7",
+        "Bd6",
+        "Bc5",
+        "Bb4",
+        "Bb2",
+        "Bc1",
+        "Bxa6",
+        "Bb5",
+        "Bc4",
+        "Bd3",
+        "Bf1",
+        "Bd1",
+        "Qxg6",
+        "Qf5",
+        "Qe4",
+        "Qa4",
+        "Qd3",
+        "Qb3",
+        "Qd2",
+        "Qb2",
+        "Qd1",
+        "Qc1",
+        "Qb1",
+        "Rg1",
+        "Rf1",
+        "Kd2",
+        "Kf1",
+        "Kd1",
+        "Rd1",
+        "Rc1",
+        "Rb1",
+        "O-O",
+        "O-O-O",
+        "cxd4",
+        "c4",
+        "h3",
+        "g3",
+        "h4",
+        "g4"
+      ],
+      "required_computation_scope": "동일한 원래 나이트의 동일 대상 포획. 상대 모든 응수와 ...Bxd4 뒤 재포획 거절도 비교.",
+      "refutation_classes": [
+        "...Bxd4 뒤 Qa5+",
+        "재포획을 하지 않는 안전한 전개"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG14-Qc2-recapture",
+      "prefix_san": "Qc2 a6 Be2 Nxd4 Nxd4 Bxd4",
+      "prefix_uci": [
+        "a4c2",
+        "a7a6",
+        "b5e2",
+        "c6d4",
+        "f3d4",
+        "g7d4"
+      ],
+      "root_fen": "r2qk2r/1p1b1p1p/p3p1p1/8/3b4/B1P5/P1Q1BPPP/R3K2R w KQkq - 0 17",
+      "turn": "white",
+      "ask": "합법인 cxd4가 비숍을 회수하는 이익과 왕 가림 제거/다른 비숍 손실을 동시에 만드는가?",
+      "named_candidates": [
+        "cxd4",
+        "Rd1"
+      ],
+      "all_legal_root_moves": [
+        "Bf8",
+        "Be7",
+        "Bd6",
+        "Bc5",
+        "Bb4",
+        "Bb2",
+        "Bc1",
+        "Bxa6",
+        "Bh5",
+        "Bb5",
+        "Bg4",
+        "Bc4",
+        "Bf3",
+        "Bd3",
+        "Bf1",
+        "Bd1",
+        "Qxg6",
+        "Qf5",
+        "Qe4",
+        "Qa4",
+        "Qd3",
+        "Qb3",
+        "Qd2",
+        "Qb2",
+        "Qd1",
+        "Qc1",
+        "Qb1",
+        "Rg1",
+        "Rf1",
+        "Kd2",
+        "Kf1",
+        "Kd1",
+        "Rd1",
+        "Rc1",
+        "Rb1",
+        "O-O",
+        "O-O-O",
+        "cxd4",
+        "c4",
+        "h3",
+        "g3",
+        "f3",
+        "h4",
+        "g4",
+        "f4"
+      ],
+      "required_computation_scope": "모든 백 root 응수 검색. cxd4의 강제 체크 대응은 전부 열거하고, Rd1 같은 조용한 거절도 끝내 보아야 Nxd4의 전체 가치 판단 가능.",
+      "refutation_classes": [
+        "...Qa5+의 퀸/비숍 포획",
+        "Rd1에 ...Bf6와 ...Be7",
+        "더 강한 흑 응수"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SWARIO-fork-choice",
+      "prefix_san": "Bxd5 Bc5 Rd4",
+      "prefix_uci": [
+        "a8d5",
+        "e3c5",
+        "b4d4"
+      ],
+      "root_fen": "3r1b1k/5q2/p4P1p/2Bbp2p/3r3P/2N2R2/PP3QP1/3RK3 w - - 2 36",
+      "turn": "white",
+      "ask": "모두 합법인 Bxf8/Rxd4/Bxd4가 어떤 지원/핀을 바꾸고 어떤 실제 가격을 받는가?",
+      "named_candidates": [
+        "Bxf8",
+        "Rxd4",
+        "Bxd4"
+      ],
+      "all_legal_root_moves": [
+        "Bxf8",
+        "Be7",
+        "Ba7",
+        "Bd6",
+        "Bb6",
+        "Bxd4",
+        "Bb4",
+        "Ba3",
+        "Rf5",
+        "Rf4",
+        "Rh3",
+        "Rg3",
+        "Re3",
+        "Rfd3",
+        "Nxd5",
+        "Nb5",
+        "Ne4",
+        "Na4",
+        "Ne2",
+        "Nb1",
+        "Qxd4",
+        "Qg3",
+        "Qe3",
+        "Qe2",
+        "Qd2",
+        "Qc2",
+        "Qg1",
+        "Qf1",
+        "Ke2",
+        "Kf1",
+        "Rxd4",
+        "Rdd3",
+        "Rd2",
+        "Rc1",
+        "Rb1",
+        "Ra1",
+        "g3",
+        "b3",
+        "a3",
+        "g4",
+        "b4",
+        "a4"
+      ],
+      "required_computation_scope": "각 포획에서 흑 전체 응수. 체크와 포획 경합이 끝나고 원래 기물들의 손실/회수 의무가 정리될 때까지, 조용한 지원 회복도 포함. 세 포획만이 백의 전부라고 가정하지 않음.",
+      "refutation_classes": [
+        "...Rxd1+",
+        "...Bxc5",
+        "...Bxf3와 ...exd4",
+        "백의 포획 거절/퀸 이동"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SWARIO-self-block",
+      "prefix_san": "Bxd5 Bc5 Rd4 Rxd4 Bxc5",
+      "prefix_uci": [
+        "a8d5",
+        "e3c5",
+        "b4d4",
+        "d1d4",
+        "f8c5"
+      ],
+      "root_fen": "3r3k/5q2/p4P1p/2bbp2p/3R3P/2N2R2/PP3QP1/4K3 w - - 0 37",
+      "turn": "white",
+      "ask": "Qxc5가 막힌 사실이 실제 손실로 끝나는가, 다른 합법 응수로 복구할 수 있는가?",
+      "named_candidates": [],
+      "all_legal_root_moves": [
+        "Rxd5",
+        "Rg4",
+        "Rdf4",
+        "Re4",
+        "Rc4",
+        "Rb4",
+        "Ra4",
+        "Rdd3",
+        "Rd2",
+        "Rd1",
+        "Rf5",
+        "Rff4",
+        "Rh3",
+        "Rg3",
+        "Re3",
+        "Rfd3",
+        "Nxd5",
+        "Nb5",
+        "Ne4",
+        "Na4",
+        "Ne2",
+        "Nd1",
+        "Nb1",
+        "Qg3",
+        "Qe3",
+        "Qe2",
+        "Qd2",
+        "Qc2",
+        "Qg1",
+        "Qf1",
+        "Ke2",
+        "Kd2",
+        "Kf1",
+        "Kd1",
+        "g3",
+        "b3",
+        "a3",
+        "g4",
+        "b4",
+        "a4"
+      ],
+      "required_computation_scope": "백의 모든 합법 응수, 특히 퀸 이동으로 핀을 풀고 f3 룩을 다시 지원하는 수를 열어야 한다. Qxc5 불가만으로 최초 Bc5의 전체 우열을 결정하지 않는다.",
+      "refutation_classes": [
+        "퀸의 지원 복구",
+        "d5 비숍/활성 룩 공격",
+        "체크와 강제 교환"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG02-refusal",
+      "prefix_san": "Rxf3",
+      "prefix_uci": [
+        "f7f3"
+      ],
+      "root_fen": "2r3k1/1p4p1/2p4p/1p1b2q1/1Q1P4/P4rB1/1P4PP/2RR2K1 w - - 0 2",
+      "turn": "white",
+      "ask": "Qd2가 희생 수용의 강제 패배를 피하면서 무엇을 남기는가?",
+      "named_candidates": [
+        "Qd2",
+        "gxf3"
+      ],
+      "all_legal_root_moves": [
+        "Qf8+",
+        "Qe7",
+        "Qd6",
+        "Qc5",
+        "Qxb5",
+        "Qa5",
+        "Qc4",
+        "Qa4",
+        "Qc3",
+        "Qb3",
+        "Qd2",
+        "Qe1",
+        "Bb8",
+        "Bc7",
+        "Bd6",
+        "Be5",
+        "Bh4",
+        "Bf4",
+        "Bf2",
+        "Be1",
+        "Kh1",
+        "Rd3",
+        "Rd2",
+        "Rf1",
+        "Re1",
+        "Rxc6",
+        "Rc5",
+        "Rc4",
+        "Rc3",
+        "Rc2",
+        "Rb1",
+        "Ra1",
+        "gxf3",
+        "a4",
+        "h3",
+        "b3",
+        "h4"
+      ],
+      "required_computation_scope": "백 전체 root를 검색. Qd2 뒤 흑의 모든 강한 응수를 열어 공격 재개·회피·교환을 비교. gxf3의 패배 수순만으로 강제 승리 주장 금지.",
+      "refutation_classes": [
+        "...Re3",
+        "...Qg4",
+        "다른 강한 공격/교환"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG02-after-refusal",
+      "prefix_san": "Rxf3 Qd2",
+      "prefix_uci": [
+        "f7f3",
+        "b4d2"
+      ],
+      "root_fen": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P4rB1/1P1Q2PP/2RR2K1 b - - 1 2",
+      "turn": "black",
+      "ask": "같은 Qe3+가 합법이어도 퀸 교환 대응 때문에 기능이 달라지는가? 흑의 가장 강한 재압박은 무엇인가?",
+      "named_candidates": [
+        "Re3",
+        "Qg4",
+        "Qe3+"
+      ],
+      "all_legal_root_moves": [
+        "Kh8",
+        "Kf8",
+        "Kh7",
+        "Kf7",
+        "Rcf8",
+        "Re8",
+        "Rd8",
+        "Rb8",
+        "Ra8",
+        "Rc7",
+        "Qd8",
+        "Qe7",
+        "Qg6",
+        "Qf6",
+        "Qh5",
+        "Qf5",
+        "Qe5",
+        "Qh4",
+        "Qg4",
+        "Qf4",
+        "Qxg3",
+        "Qe3+",
+        "Qxd2",
+        "Bf7",
+        "Be6",
+        "Be4",
+        "Bc4",
+        "Bb3",
+        "Ba2",
+        "Rff8",
+        "Rf7",
+        "Rf6",
+        "Rf5",
+        "Rf4",
+        "Rxg3",
+        "Re3",
+        "Rd3",
+        "Rc3",
+        "Rb3",
+        "Rxa3",
+        "Rf2",
+        "Rf1+",
+        "g6",
+        "b6",
+        "h5",
+        "c5",
+        "b4"
+      ],
+      "required_computation_scope": "모든 흑 root 응수. Qe3+의 합법성/교환 가능성은 기하 확인만으로 끝나며, 전체 우열은 Re3/Qg4 및 갱신 수순의 주요 방어가 완료돼야 판단.",
+      "refutation_classes": [
+        "백의 Rc3와 큰 기물 교환",
+        "Qg4 뒤 정확한 gxf3",
+        "희생을 잡지 않는 수비"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    },
+    {
+      "id": "SG02-defensive-completion",
+      "prefix_san": "Rxf3 Qd2 Re3",
+      "prefix_uci": [
+        "f7f3",
+        "b4d2",
+        "f3e3"
+      ],
+      "root_fen": "2r3k1/1p4p1/2p4p/1p1b2q1/3P4/P3r1B1/1P1Q2PP/2RR2K1 w - - 2 3",
+      "turn": "white",
+      "ask": "Rc3가 교환을 유도하면서 남는 흑 압박을 어느 범위까지 낮추는가?",
+      "named_candidates": [
+        "Rc3"
+      ],
+      "all_legal_root_moves": [
+        "Bb8",
+        "Bc7",
+        "Bd6",
+        "Be5",
+        "Bh4",
+        "Bf4",
+        "Bf2",
+        "Be1",
+        "Qa5",
+        "Qb4",
+        "Qxe3",
+        "Qd3",
+        "Qc3",
+        "Qf2",
+        "Qe2",
+        "Qc2",
+        "Qe1",
+        "Kf2",
+        "Kh1",
+        "Kf1",
+        "Rf1",
+        "Re1",
+        "Rxc6",
+        "Rc5",
+        "Rc4",
+        "Rc3",
+        "Rc2",
+        "Rb1",
+        "Ra1",
+        "a4",
+        "h3",
+        "b3",
+        "h4",
+        "b4"
+      ],
+      "required_computation_scope": "백 전체 root와 흑의 교환 회피/수용을 검색. 강제 포획 정리 뒤 rook+bishop 엔드게임의 활성도/폰 의무를 확인. 특정 종착 FEN/책 점수와 일치 요구 금지.",
+      "refutation_classes": [
+        "...Rce8",
+        "...Rxc3",
+        "다른 교환 회피"
+      ],
+      "value_status": "미확정. 본인은 엔진/제품 출력을 읽거나 실행하지 않았음.",
+      "must_not_require": "정해진 책 PV/SAN 전체의 재현 또는 책의 목표 점수"
+    }
+  ],
+  "calculation_boundary": {
+    "board_proofs_completed_here": [
+      "원래 기물 ID와 동일 포획 대상",
+      "주요 선택의 합법성",
+      "자기 선택이 여는 왕 가림/막는 지원선",
+      "SG14 Qa5+의 모든 체크 대응 뒤 즉시 포획·재포획",
+      "SG02 같은 Qe3+에 교환 응수의 유무"
+    ],
+    "value_questions_not_completed_here": "위 9개 가치 질문은 책의 결말을 목표로 삼지 않고 같은 node의 실제 최강 응수/가격을 요구한다. 법적 대조의 성공은 가치 해명의 성공으로 세지 않는다.",
+    "minimum_extent": "필요한 체크·포획·회수 경합을 실제로 끝내고, 비용을 줄이는 조용한 거절/지원 복구를 열어 본다. 안정된 판단이 나올 때까지 분석 조건을 기록하며 갱신한다. 단순히 고정 N플라이나 시간 종료를 완료의 정의로 쓰지 않는다.",
+    "stop_as_unresolved": "강한 응수가 갱신되거나 장기 활동 가치가 안정되지 않으면 해당 가치/우열은 미확정으로 남긴다. 조건부 기능과 실제 가격 중 확인한 범위만 코멘트로 쓴다.",
+    "new_code_success_condition": "서로 다른 합법 경로에서 동일 원래 기물/상대 자원의 실제 기능과 가격을 비교하고, 선택이 스스로 만든 비용도 보존하면서 넓은 사건 목록을 필수 조건으로 요구하지 않아야 한다."
+  }
+}

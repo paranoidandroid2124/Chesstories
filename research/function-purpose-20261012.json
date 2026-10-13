@@ -1,0 +1,199 @@
+{
+  "goal": "Shared function question, reply investigation and core answer beyond capture/decline",
+  "registered_before_new_product_output": true,
+  "limits": {
+    "quality_cases": 2,
+    "wall_clock_budget_ms": 10000,
+    "depth_max": 18,
+    "real_browser": true
+  },
+  "existing": {
+    "id": "FJ-SG42-RD3",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "function-purpose-existing",
+      "variant": "standard",
+      "initial_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "move_prefix_uci": [],
+      "current_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e3d3",
+        "resulting_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BPr4/4p1PP/2R1R2K w - - 1 2"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "criteria_source": "functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json",
+    "minimum": [
+      "Explain positive continuing rook activation via d2 and the b2 entry/pressure rather than describing only attacks that disappear.",
+      "Connect the activation to preservation of the advanced e2 pawn and its restriction of White; preserve the replacement guard.",
+      "Explain the functional difference of an actual tested reply which contests the continuation, without confusing its child score with the root grade.",
+      "Keep actual selected captures, recaptures and checks. A named route is not a forced win."
+    ]
+  },
+  "fresh": {
+    "id": "GF-IVANCHUK-2009-10-A3",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "function-purpose-new",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "g1f3",
+        "c7c5",
+        "c2c4",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "g2g3",
+        "d8b6",
+        "d4c2",
+        "e7e6",
+        "f1g2",
+        "d7d5",
+        "c4d5",
+        "f6d5",
+        "e1g1",
+        "f8c5"
+      ],
+      "current_fen": "r1b1k2r/pp3ppp/1qn1p3/2bn4/8/6P1/PPN1PPBP/RNBQ1RK1 w kq - 2 10",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "a2a3",
+        "resulting_fen": "r1b1k2r/pp3ppp/1qn1p3/2bn4/8/P5P1/1PN1PPBP/RNBQ1RK1 b kq - 0 10"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+    "pages": [
+      23,
+      24,
+      25,
+      26
+    ],
+    "prior_research_matches": [],
+    "minimum": [
+      "Explain a3 as control of b4, constraining the black knight entry and supporting b4 to gain space against the c5 bishop.",
+      "Compare a reply which permits b4 with a reply such as a5 which contests b4; explain actual function and continuation, not just reply ranking.",
+      "Keep this conditional account separate from a forced advantage, inevitable e4 plan or the cause of the exact root evaluation.",
+      "Keep the material/check costs of every selected continuation."
+    ]
+  },
+  "completion": "Both preregistered meanings must reach actual basic product-component screens in fresh 10-second engine jobs; compilation and phrase checks alone do not complete the goal.",
+  "result": {
+    "status": "completed_for_registered_function_scope",
+    "implementation": {
+      "shared_question": "MovePurpose.Question -> required reply pool -> MovePurpose.Reading -> typed core -> browser ownership",
+      "discovery": "Newly supported legal pawn advances and rook entry squares can be asked without a realization in the root PV. Actual PV support/entry uses remain candidates.",
+      "function_matching": "Task kind and destination identify the functional use; actual piece identity, support and route remain witnesses. A different qualifying pawn or rook is allowed.",
+      "allocation": "One function question before first capture/decline; at most one full reply pool and one missing-class comparison; no new search depth or deadline extension.",
+      "answer": "Both reply classes must be returned by one owned completed work, and at least one actual path must realize the function. Existing completePairAnswer and completeSelectedConditions retain costs and checks.",
+      "six": "Absolute-score conflict did not block either final job. No change to the root-verification/score conflict policy.",
+      "new_dependencies": []
+    },
+    "environment": {
+      "locale": "en-US",
+      "browser": "headed Chrome",
+      "engine": "browser Stockfish 18",
+      "threads": 2,
+      "hash_mb": 16,
+      "runtime": "Java 21 HTTP",
+      "surface": "Actual product coordinator, decoder, view and Chessground in a local component harness",
+      "timing": "Fresh engine jobs, from coordinator activation/worker preparation through rendering; no saved-response timing",
+      "first_case": "Rd3 was the first user request to the restarted final server. Existing generic unscored startup warmup retained."
+    },
+    "cases": [
+      {
+        "id": "FJ-SG42-RD3",
+        "elapsed_ms": 8736.069999992847,
+        "depths": [
+          12,
+          12,
+          12
+        ],
+        "issued_purposes": [
+          "root_search",
+          "response_comparison",
+          "response_comparison"
+        ],
+        "screen": "research/function-purpose-20261012/rd3.png",
+        "raw_response_sha256": "21a6a32cf948e14ada7cbd04ce8d992f099147e2d7f1ecde0371e27754710ea6",
+        "summary": "Rd3 opens a route for the rook through d2, so its activity can continue beyond the immediate attack. Black's pawn on e2 remains one step from promotion, in front of White's rook on e1; preserving this pawn keeps that restriction while the other piece becomes active. After Rd3, Black's rook on e8 adds support to Black's pawn on e2, which is under attack from White's rook on e1. In the Rd3 line: The recorded continuation is Kg1 Rd2. Kg1 adds no new opposing controller of d2. Rd2 uses that square with Black's rook on d2, targeting White's pawn on d4. From there the rook controls c2 and b2, extending its pressure along that rank. In the Rd3 line: The recorded continuation is Rc2 Rd1. Rc2 adds control of d2 with White's rook on c2. Rd1 continues with Black's rook on d1 instead of using d2 in this line, targeting White's pawn on d4 and White's rook on e1. The compared root choices are Bd3 and Rd3.",
+        "semantic_reading": "Pass: continuing d2 -> c2/b2 rook activity plus replacement e8 guard of e2 and e1 blockade; Kg1 permits Rd2 while Rc2 adds d2 control and the actual reply is Rd1 attacking e1. Rc2 is an investigated functional contrast, not claimed best defense. No forced b2 entry or win is claimed."
+      },
+      {
+        "id": "GF-IVANCHUK-2009-10-A3",
+        "elapsed_ms": 2680.4549999833107,
+        "depths": [
+          12,
+          12
+        ],
+        "issued_purposes": [
+          "root_search",
+          "response_comparison"
+        ],
+        "screen": "research/function-purpose-20261012/a3.png",
+        "raw_response_sha256": "69c90350e79d1c39ad55daa9e7c90bcb093cc118db2b259b3735960b24b4960e",
+        "summary": "a3 adds control of b4, supporting the pawn advance to b4 and contesting entry by Black's knight on c6 and Black's knight on d5. In the a3 line: The recorded continuation is O-O b4. O-O adds no new opposing controller of b4. b4 gains space with White's pawn on b4 under that support, targeting Black's bishop on c5. In the a3 line: The recorded continuation is a5 e4. a5 adds control of b4 with Black's pawn on a5. e4 continues with White's pawn on e4 instead of using b4 in this line, targeting Black's knight on d5. The compared root choices are a3 and e4.",
+        "semantic_reading": "Pass: a3 supports b4 and contests entry of both black knights. O-O b4 gains space and attacks Bc5; a5 adds b4 control and the actual continuation is e4 attacking Nd5. The root PV contains a5/e4, not b4; its absence no longer prevents this question. No claim that b4 becomes illegal or that the book plan is forced."
+      }
+    ],
+    "failures_retained": [
+      {
+        "stage": "unchanged baseline",
+        "case": "Rd3",
+        "elapsed_ms": 9339,
+        "failure": "Replacement guard described, continuing d2/b2 activity missing."
+      },
+      {
+        "stage": "unchanged baseline",
+        "case": "a3",
+        "elapsed_ms": 3885,
+        "failure": "First capture/decline investigation concentrated on Bxa3 instead of b4 support."
+      },
+      {
+        "stage": "first implementation",
+        "case": "Rd3",
+        "elapsed_ms": 4788,
+        "failure": "Server generated the functional core but browser rejected its restricted response pool ownership."
+      },
+      {
+        "stage": "first implementation",
+        "case": "a3",
+        "elapsed_ms": 3503,
+        "failure": "Root PV with a5/e4 omitted b4; PV-only purpose discovery fell back to Bxa3."
+      },
+      {
+        "stage": "candidate selection",
+        "case": "a3",
+        "elapsed_ms": 3065,
+        "failure": "Be7/b4 showed the square but omitted the c5 bishop pressure. Chose an already returned function realization with actual contact, O-O/b4, without adding search."
+      }
+    ],
+    "checks": {
+      "new_contract_tests": 3,
+      "existing_delivery_contract_tests": 3,
+      "passed": 6,
+      "scala_sources_compile": "passed",
+      "browser_bundle": "passed",
+      "scope": "Two chess quality positions only. Existing contract fixtures were replayed without additional engine quality positions."
+    },
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/function-purpose-browser.json.gz",
+    "limits": [
+      "One function question per short automatic job; broader strategic function discovery and equivalence remain incomplete.",
+      "Root numerical grades are preserved; this is not a complete causal explanation of their exact values.",
+      "The new position was used during development, not held out as an independent generalization score.",
+      "No full regression, full Lila Docker integration, Korean screen validation or universal ten-second guarantee."
+    ],
+    "preservation": {
+      "baseline_dirty_entries": 350,
+      "existing_missing_or_restored_files": [],
+      "prior_changes": "Preserved and extended in place; baseline hashes and copies retained under target.",
+      "committed": false
+    }
+  }
+}

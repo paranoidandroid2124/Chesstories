@@ -1,0 +1,1299 @@
+{
+  "schema_version": 1,
+  "research_date": "2026-10-04",
+  "author_agent": "/root/concise_answer_review",
+  "scope": "보유 이론서에서 관계·시간·선택 비교를 폭넓게 추출하는 독립 문헌 조사. 현 코드의 표현 유형에 맞춘 분류 또는 구현 제안이 아니다.",
+  "product_llm": false,
+  "new_engine_runs": 0,
+  "product_files_read": 0,
+  "protected_materials_read": false,
+  "skill_used": {
+    "path": "C:/Users/양자/.codex/skills/pdf/SKILL.md",
+    "action": "원본 PDF 텍스트 + 제한된 페이지 렌더링과 시각 확인"
+  },
+  "method": {
+    "selection": "Chess 하위 보유 목록과 실제 목차를 먼저 읽어 서로 다른 여섯 저자군을 선택. 주제 범위를 넓히도록 탐색 중 대표 페이지를 확정했으므로 사전 고정된 블라인드 표본이 아니다. 제품 출력은 선택에 사용하지 않음.",
+    "minimum_distinct_author_books": 6,
+    "books_count": 6,
+    "principal_body_pages_count": 18,
+    "text_tool": "PyMuPDF",
+    "visual_tool": "PyMuPDF page rendering plus view_image",
+    "human_reader_evaluation": false,
+    "independent_board_or_engine_validation": false,
+    "quotation_policy": "전문 수집과 장문 인용 없음. 제목·장 이름·짧은 SAN 예 외에는 한국어로 요약.",
+    "interpretation_boundary": "paraphrase는 해당 본문의 요약이다. atomic_relations, combined_relation, time_and_choice_comparison 및 conclusions는 읽은 내용을 관계로 정리한 연구자의 해석이며 저자가 이 형식의 체계를 직접 제시했다고 주장하지 않는다.",
+    "phase_boundary": "phase1/phase2는 Chesstories의 현재 책임 범위와 장기 판단을 구별하기 위한 연구자의 적용 범위이다. 책 자체의 구분 또는 실제 제품 구현 평가가 아니다.",
+    "intermediate_render_directory": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/relation-coverage-map-20261004/pdf-pages"
+  },
+  "source_selection_exclusions": [
+    {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/The Catalan - move by move.pdf",
+      "reason": "실제 파일은 기보 재편집 형식으로 보이며 제목·저자·목차의 출처 연결이 부족하다. 일부 탐색은 했으나 여섯 권의 검증된 저자군 또는 본문 결론 근거로 세지 않음."
+    },
+    {
+      "title": "The Silicon Road to Chess Improvement",
+      "reason": "부모 에이전트가 별도로 읽기로 하여 중복 본문 조사를 피함."
+    }
+  ],
+  "books": [
+    {
+      "id": "sadler-regan-2019",
+      "title": "Game Changer: AlphaZero’s Groundbreaking Chess Strategies and the Promise of AI",
+      "authors": [
+        "Matthew Sadler",
+        "Natasha Regan"
+      ],
+      "year": 2019,
+      "publisher": "New In Chess",
+      "isbn": "978-90-5691-818-7",
+      "chapter_map": [
+        "Part I: AlphaZero’s history",
+        "Part II: Inside the box",
+        "Part III: Themes in AlphaZero’s play",
+        "Chapter 7: Piece mobility: outposts",
+        "Chapter 8: Piece mobility: activity",
+        "Chapter 9: Attacking the king: the march of the rook’s pawn",
+        "Chapter 10: Attacking the king: colour complexes",
+        "Chapter 11: Attacking the king: sacrifices for time, space and damage",
+        "Chapter 12: Attacking the king: opposite-side castling",
+        "Chapter 13: Attacking the king: defence",
+        "Part IV: AlphaZero’s opening choices",
+        "Part V: Conclusion"
+      ],
+      "page_notice": "이 전자판 PDF에는 읽은 본문의 출판사 인쇄 쪽 번호가 보이지 않는다. PDF 번호만으로 인용한다.",
+      "readings": [
+        {
+          "id": "GC-outpost",
+          "pdf_page_1based": 149,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 7: Piece mobility: outposts",
+          "paraphrase": "중앙의 안정된 받침과 상대 활동의 제한을 먼저 확보하여 긴 기물 재배치를 가능하게 한다. 강한 칸으로 옮기는 시간에는 상대 반격의 기회가 생긴다.",
+          "atomic_relations": [
+            {
+              "subject": "중앙 폰",
+              "relation": "받친다",
+              "object": "전진한 기물의 거점",
+              "condition": null
+            },
+            {
+              "subject": "상대 기물의 활동 제한",
+              "relation": "허용한다",
+              "object": "느린 재배치",
+              "condition": null
+            },
+            {
+              "subject": "재배치에 쓰는 시간",
+              "relation": "허용할 수 있다",
+              "object": "상대 반격",
+              "condition": null
+            }
+          ],
+          "combined_relation": "지지되는 거점 + 상대 반격의 제한 → 여러 차례 재배치 → 활동성 개선. 도착 칸 한 개의 공격 관계로 이 설명을 대신할 수 없다.",
+          "time_and_choice_comparison": "목적지의 가치와 도착까지 소모한 시간, 그 사이 상대가 할 수 있는 일을 함께 비교한다.",
+          "phase1_observable_or_bounded": "제공된 수순에서 폰의 지지, 합법적인 경로, 상대의 실제 대응과 거점 사용은 확인할 수 있다.",
+          "phase2_general_or_long_term": "거점이 장기적으로 안전한지, 상대의 다른 폰 돌파나 교환으로 쫓겨날 수 없는지는 별도 판단이 필요하다.",
+          "limitations": "읽은 페이지는 저자의 주제 요약이다. 특정 국면의 모든 대응을 검증한 증명이나 현재 엔진의 우열 판정이 아니다."
+        },
+        {
+          "id": "GC-colour-attack",
+          "pdf_page_1based": 286,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 10: Attacking the king: colour complexes",
+          "paraphrase": "킹 가까이의 같은 색 칸들을 공격 통로로 사용한다. 열린 파일, 킹을 향한 대각선, 제한된 킹의 위치를 조합하며 통로와 수비자를 바꾸기 위해 물질을 투자하기도 한다.",
+          "atomic_relations": [
+            {
+              "subject": "열린 파일",
+              "relation": "제공한다",
+              "object": "메이저 기물의 진입",
+              "condition": null
+            },
+            {
+              "subject": "열린 대각선",
+              "relation": "제공한다",
+              "object": "같은 색 칸을 따라가는 공격",
+              "condition": null
+            },
+            {
+              "subject": "킹의 이동 제약",
+              "relation": "줄인다",
+              "object": "회피 선택",
+              "condition": null
+            },
+            {
+              "subject": "희생",
+              "relation": "제거할 수 있다",
+              "object": "통로의 장애물 또는 수비자",
+              "condition": null
+            }
+          ],
+          "combined_relation": "서로 다른 기물의 경로 + 킹의 회피 제한 + 그 색을 다투는 수비의 부족이 함께 지속되는 공격을 구성한다.",
+          "time_and_choice_comparison": "당장 체크하는 수와 전제 조건을 먼저 갖추는 수를 구별한다. 반대 색 비숍이라는 물질 구성만으로 공격 또는 무승부를 정하지 않는다.",
+          "phase1_observable_or_bounded": "실제 수순에 나타난 선의 개방, 수비자 제거, 체크와 회피, 지불한 물질은 확인 가능하다.",
+          "phase2_general_or_long_term": "공격이 오래 지속되거나 수비가 끝내 버티지 못한다는 평가는 다른 수비와 역습까지 필요로 한다.",
+          "limitations": "세 조건은 이 책의 주제를 설명하는 조합이며 모든 킹 공격에 강제하는 보편적인 체크리스트가 아니다."
+        },
+        {
+          "id": "GC-sacrifice",
+          "pdf_page_1based": 347,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 11: Attacking the king: sacrifices for time, space and damage",
+          "paraphrase": "희생은 공격 시간을 얻는 경우, 파일·대각선을 여는 경우, 킹의 폰 보호를 훼손하는 경우로 나뉜다. 열린 선에 기물이 신속히 참여할 준비가 되어 있어야 물질 투자와 공격이 연결된다.",
+          "atomic_relations": [
+            {
+              "subject": "물질 투자",
+              "relation": "살 수 있다",
+              "object": "공격의 시간",
+              "condition": null
+            },
+            {
+              "subject": "물질 투자",
+              "relation": "열 수 있다",
+              "object": "기물의 접근 경로",
+              "condition": null
+            },
+            {
+              "subject": "물질 투자",
+              "relation": "훼손할 수 있다",
+              "object": "킹의 폰 보호",
+              "condition": null
+            },
+            {
+              "subject": "준비된 기물",
+              "relation": "사용한다",
+              "object": "새로 열린 선",
+              "condition": null
+            }
+          ],
+          "combined_relation": "잃은 물질 → 바뀐 시간·공간·보호 조건 → 실제 공격 기물의 참여. 조건이 사용되지 않거나 반격이 먼저 도착하면 보상 주장이 성립하지 않는다.",
+          "time_and_choice_comparison": "같은 포획 가격이라도 보상의 종류와 실현 시점이 다르다. 반대쪽 물질을 지키는 시간과 공격을 계속하는 시간을 비교할 수 있다.",
+          "phase1_observable_or_bounded": "제공된 연속 수순 안의 포획, 선 개방, 폰 보호의 변화와 그 통로 사용은 유한한 사실로 설명할 수 있다.",
+          "phase2_general_or_long_term": "충분한 보상, 올바른 희생, 장기적인 공격 우세는 포획 가격이나 단일 PV의 활동성만으로 증명되지 않는다.",
+          "limitations": "본문의 분류와 위험 설명을 읽었다. 해당 장의 모든 게임이나 방어 자원은 읽지 않았다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/AI/Matthew Sadler, Natasha Regan - Game Changer_ AlphaZero’s Groundbreaking Chess Strategies and the Promise of AI-new in chess (02-20-19).pdf",
+        "sha256": "b233b4a0d170a322881c982553c98029440bdacd1aeecce3fdf6b3235d396ec3",
+        "bytes": 24568048,
+        "pdf_page_count": 534,
+        "metadata": {
+          "format": "PDF 1.4",
+          "title": "",
+          "author": "",
+          "subject": "",
+          "keywords": "",
+          "creator": "",
+          "producer": "iOS Version 17.6.1 (Build 21G93) Quartz PDFContext",
+          "creationDate": "D:20250217150131Z00'00'",
+          "modDate": "D:20250217150131Z00'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        149,
+        286,
+        347
+      ],
+      "visually_checked_pdf_pages_1based": [
+        5,
+        286
+      ],
+      "bibliographic_pdf_pages_1based": [
+        3,
+        4
+      ],
+      "toc_read_pdf_pages_1based": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "doknjas-2022",
+      "title": "The AI Revolution in Chess",
+      "authors": [
+        "Joshua Doknjas"
+      ],
+      "year": 2022,
+      "publisher": "Everyman Chess / Gloucester Publishers Limited",
+      "isbn": "978-1-78194-599-5",
+      "chapter_map": [
+        "Part One: Opening Developments",
+        "1 The Grünfeld",
+        "2 The Catalan",
+        "3 The Najdorf",
+        "4 AI-Inspired Openings",
+        "Part Two: Middlegame Ideas and Dynamics",
+        "5 Pawn Sacrifices",
+        "6 Closed Positions",
+        "7 Material Imbalances",
+        "Part Three: Conclusion",
+        "8 Cautionary Tales"
+      ],
+      "page_notice": "읽은 전자판 본문에는 출판사 인쇄 쪽 번호가 보이지 않는다.",
+      "readings": [
+        {
+          "id": "AI-prophylaxis",
+          "pdf_page_1based": 201,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 3: The Najdorf; Game 25, E. l’Ami–F. Pessoa, ICCF 2018; after 21...Bf6",
+          "paraphrase": "22.Ka3은 …e4–e3의 강제 진행을 예방하는 왕 이동으로 설명된다. 대안 22.Rhe1에서는 …e4+ 23.Bd4 e3가 나온다. 왕이 전진한다는 겉모습보다 상대 수가 체크를 동반하는지와 유리한 비숍 교환을 얻는지가 핵심이다.",
+          "atomic_relations": [
+            {
+              "subject": "b2의 백 킹",
+              "relation": "노출된다",
+              "object": "e5가 비워질 때 f6 비숍의 대각선",
+              "condition": null
+            },
+            {
+              "subject": "Ka3",
+              "relation": "피한다",
+              "object": "…e4의 발견 체크",
+              "condition": null
+            },
+            {
+              "subject": "…e4+에 대한 Bd4",
+              "relation": "허용한다",
+              "object": "…e3를 동반한 비숍 교환 연쇄",
+              "condition": null
+            }
+          ],
+          "combined_relation": "현재 킹의 대각선 노출 → …e4+가 응수의 시간을 강제 → …e3와 비숍 교환. Ka3은 앞의 강제 조건을 바꾼다.",
+          "time_and_choice_comparison": "상대의 폰 전진 자체를 막는 것과, 그 전진이 체크로 시간을 버는 것을 막는 것은 다르다.",
+          "phase1_observable_or_bounded": "표시된 보드에서 킹이 대각선을 벗어나는 사실과 책에 제시된 22.Rhe1 e4+ 23.Bd4 e3 변형은 구체적으로 확인할 수 있다.",
+          "phase2_general_or_long_term": "a3의 킹이 장기적으로 공격받지 않으며 Ka3이 최선이라는 책의 평가를 제품의 검증된 결론으로 바로 이전할 수는 없다.",
+          "limitations": "해당 페이지의 다이어그램을 시각 확인했다. …e4 자체가 불법 또는 불가능해졌다고 해석하지 않는다. 엔진 계산이나 모든 변형의 독립 재검증은 하지 않았다."
+        },
+        {
+          "id": "AI-closed-progress",
+          "pdf_page_1based": 372,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 6: Closed Positions",
+          "paraphrase": "닫힌 국면의 진전은 당장의 강제수뿐 아니라 작은 개선을 누적하고 나중의 돌파를 준비하는 것으로 설명된다. 책은 여러 오프닝의 사례를 예고하며 한 구조만으로 일반화하지 않는다.",
+          "atomic_relations": [
+            {
+              "subject": "닫힌 구조",
+              "relation": "제한한다",
+              "object": "직접적인 진입 경로",
+              "condition": null
+            },
+            {
+              "subject": "점진적 재배치",
+              "relation": "준비한다",
+              "object": "후속 돌파",
+              "condition": null
+            },
+            {
+              "subject": "돌파 조건",
+              "relation": "결정한다",
+              "object": "개선이 실제 행동으로 쓰일 시점",
+              "condition": null
+            }
+          ],
+          "combined_relation": "고정된 구조의 제약 + 여러 기물의 개선 + 돌파 준비가 함께 있어야 기다리는 수의 목적을 설명할 수 있다.",
+          "time_and_choice_comparison": "지금의 위협 유무와 미래 행동의 준비 여부는 다른 질문이다. 즉시 포획이 없다는 이유로 조용한 수의 의미가 없다고 보지 않는다.",
+          "phase1_observable_or_bounded": "제공된 수순에서 특정 재배치가 실제 돌파에 사용되는 경우는 좁게 말할 수 있다.",
+          "phase2_general_or_long_term": "오랜 조작이 왜 진전인지, 반대 계획보다 좋은지, 닫힌 구조에서 항상 우세한지는 장기 계획과 상대 대안의 검토가 필요하다.",
+          "limitations": "장 도입의 방법 설명만 읽었다. 2022년 책의 당시 엔진 특성에 관한 논평을 현재 Stockfish 일반 성능 주장으로 사용하지 않는다."
+        },
+        {
+          "id": "AI-material-function",
+          "pdf_page_1based": 429,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 7: Material Imbalances",
+          "paraphrase": "룩과 폰 대 마이너 기물 같은 비대칭에서 남은 기물들의 협력과 활동을 함께 봐야 한다. 책은 마이너 둘 대 룩과 폰 둘, 퀸 희생 등을 통해 무게가 큰 기물이 항상 우세하다는 가정을 문제 삼는다.",
+          "atomic_relations": [
+            {
+              "subject": "마이너 기물들의 협력",
+              "relation": "만든다",
+              "object": "사용 가능한 공격·방어 행동",
+              "condition": null
+            },
+            {
+              "subject": "무거운 기물의 명목 가치",
+              "relation": "대신할 수 없다",
+              "object": "실제 기능의 비교",
+              "condition": null
+            },
+            {
+              "subject": "물질 교환",
+              "relation": "바꾼다",
+              "object": "남은 기물의 구성",
+              "condition": null
+            }
+          ],
+          "combined_relation": "교환 원장 + 남은 기물들의 협력 + 사용할 경로와 표적을 함께 비교해야 비대칭의 의미를 설명할 수 있다.",
+          "time_and_choice_comparison": "즉시 교환량과 교환 후 기능, 이후에 실현하는 활동을 분리한다.",
+          "phase1_observable_or_bounded": "교환 가격과 제공된 후속 수순의 구체적인 협력은 설명할 수 있다.",
+          "phase2_general_or_long_term": "물질 보상의 충분함이나 장기 우세는 해당 역할이 여러 응수 뒤에도 유지되는지에 달려 있다.",
+          "limitations": "장 도입을 읽은 것으로 퀸 희생의 정확성 또는 장 전체의 예제 계산을 검증했다고 주장하지 않는다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/AI/Doknjas, Joshua - The AI Revolution in Chess-Everyman Chess (2022).pdf",
+        "sha256": "97ee074205be2bbfe83bfb42fd24f4fbf5637ecb52c5d297e9f3b38ddf7d7039",
+        "bytes": 19721499,
+        "pdf_page_count": 514,
+        "metadata": {
+          "format": "PDF 1.4",
+          "title": "",
+          "author": "",
+          "subject": "",
+          "keywords": "",
+          "creator": "",
+          "producer": "iOS Version 17.6.1 (Build 21G93) Quartz PDFContext",
+          "creationDate": "D:20250217150115Z00'00'",
+          "modDate": "D:20250217150115Z00'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        201,
+        372,
+        429
+      ],
+      "visually_checked_pdf_pages_1based": [
+        6,
+        201
+      ],
+      "bibliographic_pdf_pages_1based": [
+        2,
+        3,
+        5
+      ],
+      "toc_read_pdf_pages_1based": [
+        6
+      ]
+    },
+    {
+      "id": "de-la-villa-2021",
+      "title": "100 Endgame Patterns You Must Know: Recognize Key Moves & Motifs and Avoid Typical Errors",
+      "authors": [
+        "Jesus de la Villa"
+      ],
+      "year": 2021,
+      "publisher": "New In Chess",
+      "isbn": "978-90-5691-972-6",
+      "chapter_map": [
+        "1 Pawn endings",
+        "2 Knight vs pawns",
+        "3 Bishop vs pawns",
+        "4 Rook vs pawns",
+        "5 Queen vs pawns",
+        "6 Same-coloured bishops",
+        "7 Opposite-coloured bishops",
+        "8 Knight vs bishop",
+        "9 Knight endings",
+        "10 Rook endings",
+        "11 Rook vs minor piece",
+        "12 Queen endings",
+        "13 Queen vs rook",
+        "14 Queen vs two pieces",
+        "15 Queen vs two rooks",
+        "16 Exercises"
+      ],
+      "page_notice": "소유한 개인 독서판(ReportLab 생성 2026-09-27)이다. PDF 쪽 번호와 이 독서판 인쇄 번호는 같다. footer의 Source PDF 범위는 원 PDF 쪽 번호이며 원 출판사 인쇄 번호가 아니다. 판권은 PDF8에서 확인했다.",
+      "extra_body_scout_pages": [
+        58,
+        71
+      ],
+      "readings": [
+        {
+          "id": "EG-reserve-tempi",
+          "pdf_page_1based": 59,
+          "printed_page": 59,
+          "original_source_pdf_pages_1based": [
+            92,
+            93,
+            94
+          ],
+          "chapter_or_section": "Chapter 1; Pattern 11: Reserve tempi",
+          "paraphrase": "거의 같은 킹·폰 배치도 남겨 둔 폰 수와 현재 차례 때문에 승패가 달라진다. 폰을 두 번째 줄에 남겨 한 칸·두 칸 전진을 선택하거나 h3, h4, a3를 순서대로 써 상대 킹에게 양보를 강제하는 예가 제시된다.",
+          "atomic_relations": [
+            {
+              "subject": "아직 사용하지 않은 폰 전진",
+              "relation": "저장한다",
+              "object": "차례를 넘길 자원",
+              "condition": null
+            },
+            {
+              "subject": "예비 수의 사용",
+              "relation": "넘긴다",
+              "object": "불리한 이동 의무",
+              "condition": null
+            },
+            {
+              "subject": "상대 킹의 양보",
+              "relation": "허용한다",
+              "object": "진입 또는 맞섬 획득",
+              "condition": null
+            }
+          ],
+          "combined_relation": "배치 + 차례 + 남은 비파괴적인 폰 수가 결합해 킹의 진입을 바꾼다. 보드의 기물 수나 킹 거리만으로 결과를 요약할 수 없다.",
+          "time_and_choice_comparison": "이미 쓴 전진과 아직 남겨 둔 전진은 다른 자원이다. 손해 없이 패스할 수 있다는 가정이 실제 이동 의무를 대체하지 못한다.",
+          "phase1_observable_or_bounded": "예시의 폰 전진 선택과 제공된 킹 응수를 추적할 수 있다. 차례가 바뀌는 것은 실제 수순의 사실이다.",
+          "phase2_general_or_long_term": "추크츠방 또는 승리를 일반적으로 단정하려면 가능한 왕·폰 응수를 확인해야 한다.",
+          "limitations": "승리 판정은 저자의 예제 설명이며 독립 엔진/테이블베이스 판정이 아니다. 세 유사한 다이어그램을 시각 확인했다."
+        },
+        {
+          "id": "EG-triangulation",
+          "pdf_page_1based": 68,
+          "printed_page": 68,
+          "original_source_pdf_pages_1based": [
+            108,
+            109,
+            110
+          ],
+          "chapter_or_section": "Chapter 1; Pattern 13: Triangulation and corresponding squares; Camacho–Ibarra, Granada rapid 2011",
+          "paraphrase": "대응칸은 상대 킹의 진입을 막기 위해 따라가야 하는 칸의 쌍이다. 한쪽에는 연결된 대기칸 둘이 있고 상대에는 대응할 대기칸 하나만 있을 때, 같은 칸으로 더 긴 경로를 돌아 차례를 넘기는 삼각 기동이 가능해진다.",
+          "atomic_relations": [
+            {
+              "subject": "흑 킹 d5",
+              "relation": "요구한다",
+              "object": "백 킹 d3의 대응",
+              "condition": null
+            },
+            {
+              "subject": "흑 킹 e5",
+              "relation": "요구한다",
+              "object": "백 킹 e3의 대응",
+              "condition": null
+            },
+            {
+              "subject": "d6와 e6의 연결",
+              "relation": "허용한다",
+              "object": "백이 모방할 수 없는 우회",
+              "condition": null
+            },
+            {
+              "subject": "우회",
+              "relation": "바꾼다",
+              "object": "같은 배치에서의 차례",
+              "condition": null
+            }
+          ],
+          "combined_relation": "서로 짝지어진 방어칸 + 대기칸 연결성의 비대칭 + 흉내 낼 수 없는 경로가 이동 의무를 뒤집는다.",
+          "time_and_choice_comparison": "최단 경로의 수가 아니라 누가 대응을 먼저 유지하거나 빼앗는지가 핵심이다. 같은 기물이 같은 칸으로 돌아와도 차례의 차이가 남는다.",
+          "phase1_observable_or_bounded": "제시된 킹 이동의 합법성·대응칸·접근 경로는 유한한 관계로 서술 가능하다.",
+          "phase2_general_or_long_term": "대응칸 전체와 모방 불가능성을 확인하지 않고 3수 왕 이동을 모두 삼각 기동 또는 승리로 분류할 수는 없다.",
+          "limitations": "그림과 이 페이지의 설명을 읽었다. 다음 페이지로 이어지는 모든 변형이나 복잡한 대응칸 이론 전체를 읽은 것은 아니다."
+        },
+        {
+          "id": "EG-race-tactics",
+          "pdf_page_1based": 72,
+          "printed_page": 72,
+          "original_source_pdf_pages_1based": [
+            114,
+            115,
+            116
+          ],
+          "chapter_or_section": "Chapter 1; Pattern 14: Tactical tricks in the race to queen a pawn; Illescas–Izeta 1991 and Ljubojevic–Browne 1972",
+          "paraphrase": "승격 순서보다 승격 후 체크·메이트와 킹의 위치가 결과를 바꾼다. 첫 예에서는 흑이 g1=Q를 한 직후 백의 e7#가 끝낸다. 둘째 예에서는 흑이 늦게 승격해도 f1=Q+로 먼저 강제 행동을 한다. 실제 게임의 …f5?와 책의 …Kd5! 변형은 구분된다.",
+          "atomic_relations": [
+            {
+              "subject": "d7의 백 폰",
+              "relation": "제한한다",
+              "object": "흑 킹의 탈출",
+              "condition": null
+            },
+            {
+              "subject": "e7로 가는 백 폰",
+              "relation": "준다",
+              "object": "메이트",
+              "condition": null
+            },
+            {
+              "subject": "흑 퀸의 f1 승격",
+              "relation": "동반한다",
+              "object": "a6 킹에 대한 체크",
+              "condition": null
+            },
+            {
+              "subject": "킹의 유도",
+              "relation": "정한다",
+              "object": "승격 직후 체크의 대상 칸",
+              "condition": null
+            }
+          ],
+          "combined_relation": "폰의 도착 시간 + 킹이 서게 되는 칸 + 승격 직후 강제수/메이트를 함께 계산해야 경주의 결과가 성립한다.",
+          "time_and_choice_comparison": "먼저 승격하거나 왕으로 두 수를 아끼는 것이 언제나 좋지는 않다. 실제 수에서 놓친 기회와 다른 쪽의 이후 선택 책임을 섞지 않는다.",
+          "phase1_observable_or_bounded": "책에 제공된 승격과 체크·메이트의 연속 수순에 한정한 설명은 구체적이다.",
+          "phase2_general_or_long_term": "임의의 폰 경주 승패나 교환의 실수성은 다른 합법 응수와 같은 위치의 대안을 더 확인해야 한다.",
+          "limitations": "두 다이어그램을 시각 확인했다. 저자의 승리·실수 평가는 출처 의견으로 기록하며 엔진 또는 독립 완전 계산으로 승격시키지 않는다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/100 Endgame Patterns.pdf",
+        "sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3",
+        "bytes": 54033118,
+        "pdf_page_count": 486,
+        "metadata": {
+          "format": "PDF 1.4",
+          "title": "100 Endgame Patterns You Must Know · Personal Reading Edition",
+          "author": "Jesus de la Villa",
+          "subject": "(unspecified)",
+          "keywords": "",
+          "creator": "(unspecified)",
+          "producer": "ReportLab PDF Library - (opensource)",
+          "creationDate": "D:20260927022109+09'00'",
+          "modDate": "D:20260927022109+09'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        59,
+        68,
+        72
+      ],
+      "visually_checked_pdf_pages_1based": [
+        2,
+        59,
+        68,
+        72
+      ],
+      "bibliographic_pdf_pages_1based": [
+        7,
+        8
+      ],
+      "toc_read_pdf_pages_1based": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "grooten-2019",
+      "title": "Understanding before Moving 3: Sicilian Structures Part 1 — Najdorf & Scheveningen",
+      "authors": [
+        "Herman Grooten"
+      ],
+      "year": 2019,
+      "publisher": "Thinkers Publishing",
+      "isbn": "9789492510631",
+      "chapter_map": [
+        "Chapter 1 Study of openings",
+        "Chapter 2 Background of the Sicilian",
+        "2.2 Standard Tactics",
+        "2.3 Typical Manoeuvres and Strategic Concepts",
+        "2.4 The Origin of the Najdorf",
+        "2.5 Fundamentals of the Scheveningen",
+        "Chapter 3 Model Games with the Najdorf",
+        "Chapter 4 Model Games with the Scheveningen",
+        "Chapter 5 Exercises"
+      ],
+      "page_notice": "읽은 전자판 본문에는 출판사 인쇄 쪽 번호가 보이지 않는다.",
+      "readings": [
+        {
+          "id": "SIC-structure-route",
+          "pdf_page_1based": 45,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Section 2.3; Concepts 2–4, c-file pressure / e6-point / d5 outpost",
+          "paraphrase": "…b5 뒤의 반열린 c파일과 c4 진입은 백에게 약해지는 b3를 유도할 수 있다. 별도의 공격에서는 e6를 압박해 …e5가 나오면 d5 지배가 바뀐다. 폰 전진은 현재 표적을 지키는 동시에 다른 칸의 제약을 바꾼다.",
+          "atomic_relations": [
+            {
+              "subject": "반열린 c파일",
+              "relation": "제공한다",
+              "object": "룩의 압박",
+              "condition": null
+            },
+            {
+              "subject": "c4",
+              "relation": "제공한다",
+              "object": "나이트 또는 룩의 중계칸",
+              "condition": null
+            },
+            {
+              "subject": "e6 폰의 …e5",
+              "relation": "포기한다",
+              "object": "d5에 대한 폰 지배",
+              "condition": null
+            }
+          ],
+          "combined_relation": "폰 구조의 변형은 파일·중계칸·약점·기물의 상대적 역할을 함께 바꾼다. e6 공격과 d5 거점은 같은 칸에 대한 반복 공격이 아닌 조건의 전환이다.",
+          "time_and_choice_comparison": "한 약점을 지키는 응수가 새 약점이나 거점을 제공하는지 추적한다.",
+          "phase1_observable_or_bounded": "특정 제공 수순에서 e6–e5 이후 d5 폰 지배의 소멸, c파일 통로의 사용, 실제 b3 전진은 확인할 수 있다.",
+          "phase2_general_or_long_term": "그 d5 거점이 지속되거나 백이 우세하다는 평가는 교환과 다른 반격에 달려 있다.",
+          "limitations": "책의 전형적 계획 설명을 읽었다. b3가 모든 변형에서 강제라는 보편 주장으로 옮기지 않는다."
+        },
+        {
+          "id": "SIC-trade-role",
+          "pdf_page_1based": 49,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Section 2.3; Concept 10 continuation and Concept 11: Freeing his game with central trades",
+          "paraphrase": "d5 나이트를 비숍으로 교환하고 e폰으로 되잡게 하면 남은 백 비숍의 활동을 폰 구조로 제한할 수 있다. 다른 중앙 교환은 …e5로 백 비숍을 몰고 공격 재료를 줄인 뒤 흑 나이트가 d7–e5로 들어갈 경로를 만든다.",
+          "atomic_relations": [
+            {
+              "subject": "e폰의 d5 되잡기",
+              "relation": "막는다",
+              "object": "백의 남은 밝은칸 비숍 경로",
+              "condition": null
+            },
+            {
+              "subject": "중앙 교환 뒤 …e5",
+              "relation": "몰아낸다",
+              "object": "d4의 백 비숍",
+              "condition": null
+            },
+            {
+              "subject": "f6 나이트의 재배치",
+              "relation": "사용한다",
+              "object": "d7–e5 경로",
+              "condition": null
+            }
+          ],
+          "combined_relation": "교환 대상 + 강제된 되잡기 주체 + 남은 기물의 기능 + 후속 재배치가 교환의 의미를 정한다.",
+          "time_and_choice_comparison": "같은 비숍 대 나이트 교환도 어떤 폰으로 되잡느냐와 다음 비숍 교환을 할 수 있느냐에 따라 목적이 달라진다.",
+          "phase1_observable_or_bounded": "해당 수순에서 실제 교환, 되잡기 정체성, 생긴 장애물과 뒤의 정확한 경로를 설명할 수 있다.",
+          "phase2_general_or_long_term": "비숍이 장기적으로 나쁘거나 나이트 쌍이 유리하다는 평가는 구조 안정성과 다른 돌파·교환까지 필요하다.",
+          "limitations": "이 페이지의 정적 다이어그램과 주제 설명을 읽었다. 도식의 모든 화살표를 하나의 합법 연속 수순으로 취급하지 않는다."
+        },
+        {
+          "id": "SIC-attack-defense",
+          "pdf_page_1based": 50,
+          "printed_page": null,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Section 2.3; Concept 12: pieces in front of or behind pawns",
+          "paraphrase": "퀸을 폰 앞에 두는 기물 공격과 g폰을 밀어 공간을 여는 공격은 서로 다른 준비와 위험을 가진다. 후자의 폰 전진은 자기 킹을 약하게 만들 수 있어 중앙 돌파를 살펴야 한다. f룩의 기존 폰 지원을 남겨 a룩을 옮기고, 비숍이 길을 비키면서 b2를 지키는 역할 조정도 제시된다.",
+          "atomic_relations": [
+            {
+              "subject": "g폰 전진",
+              "relation": "열 수 있다",
+              "object": "킹쪽 공간",
+              "condition": null
+            },
+            {
+              "subject": "g폰 전진",
+              "relation": "약화할 수 있다",
+              "object": "자기 킹 보호",
+              "condition": null
+            },
+            {
+              "subject": "상대 중앙 돌파",
+              "relation": "사용할 수 있다",
+              "object": "새 킹 노출",
+              "condition": null
+            },
+            {
+              "subject": "a룩 재배치",
+              "relation": "보존한다",
+              "object": "f룩의 폰 지원",
+              "condition": null
+            },
+            {
+              "subject": "비숍의 c1 후퇴",
+              "relation": "결합한다",
+              "object": "룩 경로 양보와 b2 수비",
+              "condition": null
+            }
+          ],
+          "combined_relation": "공격 통로의 준비와 자기 킹·기존 수비의 보존이 함께 있어야 조용한 준비수 또는 어떤 룩을 옮길지 설명된다.",
+          "time_and_choice_comparison": "동일한 목적지로 가는 두 룩을 비교할 때 도착 효과뿐 아니라 출발칸에서 잃는 기능을 비교한다. 비숍의 후퇴 시점이 룩 기동과 맞아야 한다.",
+          "phase1_observable_or_bounded": "제공된 경로와 실제 응수 안의 기능 보존·이중 목적·자기 보호의 변화를 서술할 수 있다.",
+          "phase2_general_or_long_term": "공격법의 선택, 상대 중앙 돌파의 실효성, 폰 스톰의 안전함은 별도 비교 조사와 장기 평가가 필요하다.",
+          "limitations": "다이어그램과 화살표를 시각 확인했다. 저자의 경험칙은 규칙 증명이 아니며 두 공격법을 모든 국면의 이분법으로 만들지 않는다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/Najdorf/Understanding Before Moving 3 - Sicilian Structures - Part 1 -- Herman Grooten -- Understanding before Moving 3.pdf",
+        "sha256": "03c77bd9c6c6ae987e07067822fd63bdb0af39970220f5dd08ee3b95e111b821",
+        "bytes": 36959860,
+        "pdf_page_count": 351,
+        "metadata": {
+          "format": "PDF 1.6",
+          "title": "Understanding before Moving 3.1 - Sicilian Structures – The Najdorf and Scheveningen",
+          "author": "Herman Grooten",
+          "subject": "",
+          "keywords": "",
+          "creator": "Acrobat PDFMaker 11 for Word",
+          "producer": "Adobe PDF Library 11.0",
+          "creationDate": "D:20200128202400+01'00'",
+          "modDate": "D:20200128203623+01'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        45,
+        49,
+        50
+      ],
+      "visually_checked_pdf_pages_1based": [
+        4,
+        49,
+        50
+      ],
+      "bibliographic_pdf_pages_1based": [
+        5
+      ],
+      "toc_read_pdf_pages_1based": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "kovalchuk-2021",
+      "title": "The Modernized Modern Benoni",
+      "authors": [
+        "Alexey Kovalchuk"
+      ],
+      "year": 2021,
+      "publisher": "Thinkers Publishing",
+      "isbn": "9789464201048",
+      "chapter_map": [
+        "Introduction",
+        "1 Classical Main Line",
+        "2 Knight’s Tour Variation",
+        "3 Modern Main Line",
+        "4 Kapengut Variation",
+        "5 Nge2 Systems",
+        "6 Bg5 & Bb5 Systems",
+        "7 f4 System",
+        "8 Fianchetto Variation",
+        "9 Bf4 System",
+        "10 Sidelines",
+        "11 Anti-Benoni Systems"
+      ],
+      "page_notice": "이 전자판에는 쪽 번호가 찍혀 있으며 읽은 PDF15/22/24의 footer 번호도 각각 15/22/24이다. 다른 출판사 판본의 쪽 번호로 확장하지 않는다.",
+      "readings": [
+        {
+          "id": "BEN-space-development",
+          "pdf_page_1based": 15,
+          "printed_page": 15,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Introduction; Chapters 6–7 overview",
+          "paraphrase": "공간이 부족한 흑은 전개를 마치고 기물의 혼잡을 풀며 마이너 기물 교환을 고려한다. 백은 e5 거점을 강화하거나 f4와 e5로 중앙을 열려고 한다.",
+          "atomic_relations": [
+            {
+              "subject": "공간 부족",
+              "relation": "제한한다",
+              "object": "기물의 조화로운 배치",
+              "condition": null
+            },
+            {
+              "subject": "마이너 교환",
+              "relation": "줄일 수 있다",
+              "object": "기물 혼잡",
+              "condition": null
+            },
+            {
+              "subject": "백 f4",
+              "relation": "준비한다",
+              "object": "e5 중앙 전진",
+              "condition": null
+            }
+          ],
+          "combined_relation": "폰이 점유한 공간 + 배치할 기물의 밀도 + 중앙 돌파의 가능성이 양쪽의 다른 목적을 구성한다.",
+          "time_and_choice_comparison": "전개를 끝내는 시간과 백의 중앙 전진 시점을 함께 비교해야 한다.",
+          "phase1_observable_or_bounded": "실제 수순에서 교환 후 비워진 칸과 다음 기물 이동, f4–e5 사용은 관측 가능하다.",
+          "phase2_general_or_long_term": "공간 부족을 교환으로 해결할 수 있는지와 그 교환이 유리한지는 수비자 제거와 폰 구조 변화도 필요로 한다.",
+          "limitations": "짧은 시스템 소개를 읽었다. 공간이 적으면 모든 교환을 권하는 규칙으로 만들지 않는다."
+        },
+        {
+          "id": "BEN-advance-function",
+          "pdf_page_1based": 22,
+          "printed_page": 22,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 1: Classical Main Line",
+          "paraphrase": "백의 공간 우세에 대해 흑은 e4 압박, …a6–b5의 퀸쪽 행동, …c4로 공간을 얻고 c5를 나이트에 내주는 세 행동을 제시한다. 폰 전진은 표면의 공격 방향과 별도로 후속 기물의 칸을 제공한다.",
+          "atomic_relations": [
+            {
+              "subject": "…c5–c4",
+              "relation": "얻는다",
+              "object": "퀸쪽 공간",
+              "condition": null
+            },
+            {
+              "subject": "…c5–c4",
+              "relation": "비운다",
+              "object": "나이트가 사용할 c5",
+              "condition": null
+            },
+            {
+              "subject": "…a6",
+              "relation": "준비한다",
+              "object": "…b5 전진",
+              "condition": null
+            }
+          ],
+          "combined_relation": "폰 전진의 공간 효과 + 출발칸 양보 + 후속 나이트 배치가 하나의 계획으로 연결된다.",
+          "time_and_choice_comparison": "어떤 폰을 얼마나 전진했는지보다 새 행동이 가능한 시점과 상대가 그 행동에 어떻게 대응하는지를 비교한다.",
+          "phase1_observable_or_bounded": "제공된 수순에 …c4와 이어지는 Nc5가 있으면 출발칸 비움과 실제 사용을 좁게 설명할 수 있다.",
+          "phase2_general_or_long_term": "그 계획이 백 공간 우세를 충분히 보상하는지와 상대의 다른 대응에서도 가능한지는 추가 평가가 필요하다.",
+          "limitations": "저자의 …a6 이후 응수가 거의 강제라는 표현은 출처 의견이다. 모든 백 대안을 독립 검증하지 않았다."
+        },
+        {
+          "id": "BEN-exchange-choice",
+          "pdf_page_1based": 24,
+          "printed_page": 24,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 1: 10.a4 Bg4",
+          "paraphrase": "c8 비숍에 활동 공간이 부족하여 …Bg4 뒤 나이트와의 교환을 고려한다. 다른 변형에는 흑의 e5 점유와 백의 반열린 f파일·Nd2–f1–g3–f5 기동이 함께 있어, 한쪽 좋은 칸만으로 우세를 말하지 않는다.",
+          "atomic_relations": [
+            {
+              "subject": "c8 비숍의 막힌 활동",
+              "relation": "동기를 제공한다",
+              "object": "…Bg4 뒤 교환",
+              "condition": null
+            },
+            {
+              "subject": "흑 e5 점유",
+              "relation": "경쟁한다",
+              "object": "백의 f파일과 f5 기동",
+              "condition": null
+            },
+            {
+              "subject": "불필요한 공격 h3",
+              "relation": "쓸 수 있다",
+              "object": "이미 교환할 비숍을 쫓는 시간",
+              "condition": null
+            }
+          ],
+          "combined_relation": "교환의 대상과 역할 + 상대의 남는 통로·기동 + 소모한 시간이 선택의 의미를 구성한다.",
+          "time_and_choice_comparison": "저자는 비숍이 어차피 교환할 준비라면 h3로 한 수를 쓰는 목적을 문제 삼는다. 상대 의도와 다른 효과를 살펴야 하며 h3 전체를 나쁜 수로 일반화하지 않는다.",
+          "phase1_observable_or_bounded": "실제 교환, 출발 기물의 기능 소멸, 제공된 f파일·f5 경로 사용을 설명할 수 있다.",
+          "phase2_general_or_long_term": "활동이 어려운 기물의 교환 가치와 특정 대안의 우열은 다른 응수 및 수비 기능에 의존한다.",
+          "limitations": "다이어그램과 문장을 시각 확인했다. 페이지 끝의 h3 설명은 다음 쪽으로 이어지므로 그 전체 계산을 검증했다고 주장하지 않는다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/The Modernized Modern Benoni.pdf",
+        "sha256": "bdafd51512d6e59f43c844beee59e309ad3315eeda887a0c2a18ac2e47c1ead0",
+        "bytes": 61628348,
+        "pdf_page_count": 551,
+        "metadata": {
+          "format": "PDF 1.3",
+          "title": "",
+          "author": "",
+          "subject": "",
+          "keywords": "",
+          "creator": "",
+          "producer": "iOS Version 17.6.1 (Build 21G93) Quartz PDFContext",
+          "creationDate": "D:20260507104358Z00'00'",
+          "modDate": "D:20260507104358Z00'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        15,
+        22,
+        24
+      ],
+      "visually_checked_pdf_pages_1based": [
+        2,
+        24
+      ],
+      "bibliographic_pdf_pages_1based": [
+        3
+      ],
+      "toc_read_pdf_pages_1based": [
+        2
+      ]
+    },
+    {
+      "id": "jarmula-2023",
+      "title": "The Nimzo and Bogo-Indian Revisited: A Complete Repertoire for Black",
+      "authors": [
+        "Lukasz Jarmula"
+      ],
+      "year": 2023,
+      "publisher": "Thinkers Publishing",
+      "isbn": "9789464201734",
+      "chapter_map": [
+        "Part I: The Bogo-Indian",
+        "1 Bogo-Indian with Bd2",
+        "2 Bogo-Indian with Nd2",
+        "Part II: The Nimzo-Indian",
+        "3 4.Qc2",
+        "4 4.e3",
+        "5 4.Nf3",
+        "6 4.f3",
+        "7 Other Sidelines",
+        "Part III: Other Systems After 1.d4 Nf6",
+        "8 2.Nf3 e6 3.e3",
+        "9 2.Nf3 e6 3.g3",
+        "10 London System",
+        "11 Trompowsky, Jobava and Torre Attacks",
+        "Part IV: Analyzed Games"
+      ],
+      "page_notice": "읽은 PDF47/49/132는 footer 인쇄 쪽 번호44/46/129로, 세 쪽 차이가 있다. 각 인용에 둘을 함께 기록한다.",
+      "readings": [
+        {
+          "id": "NB-compensated-trade",
+          "pdf_page_1based": 47,
+          "printed_page": 44,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 2: Bogo-Indian with Nd2; 6.Bd3 c5 7.a3 Bxd2+",
+          "paraphrase": "비숍을 나이트와 바꾸어 비숍 쌍을 허용하더라도 …cxd4와 …e5라는 후속 행동이 보상이 될 수 있다. 백이 Nxd4 대신 exd4로 되잡는 비교에서는 …dxc4와 …Bb7 뒤 밝은칸의 구멍이 문제가 된다.",
+          "atomic_relations": [
+            {
+              "subject": "…Bxd2+",
+              "relation": "넘긴다",
+              "object": "백에게 비숍 쌍",
+              "condition": null
+            },
+            {
+              "subject": "…cxd4 뒤 …e5",
+              "relation": "제공한다",
+              "object": "교환의 후속 보상",
+              "condition": null
+            },
+            {
+              "subject": "exd4의 되잡기",
+              "relation": "바꾼다",
+              "object": "밝은칸 구조와 …Bb7의 기능",
+              "condition": null
+            }
+          ],
+          "combined_relation": "동일 교환 가격 + 되잡기 주체 + 다음 중앙 행동 + 색의 제약이 교환의 실제 의미를 정한다.",
+          "time_and_choice_comparison": "한 수의 물질 교환이 아니라 상대가 어떻게 되잡았는지까지 비교한다.",
+          "phase1_observable_or_bounded": "명시된 변형에서 정확한 되잡기와 폰·대각선 변화를 설명할 수 있다.",
+          "phase2_general_or_long_term": "비숍 쌍에 대한 충분한 보상이나 흑 우세는 다른 백 선택과 돌파를 더 확인해야 한다.",
+          "limitations": "책의 특정 변형이다. 비숍 대 나이트 교환의 보편적인 우열 판정으로 사용하지 않는다."
+        },
+        {
+          "id": "NB-uncompensated-trade",
+          "pdf_page_1based": 49,
+          "printed_page": 46,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 2: Bogo-Indian with Nd2; position after 6...Be7",
+          "paraphrase": "다른 배치에서는 …Bxd2+ 뒤 비숍 쌍에 대한 뚜렷한 보상이 없으므로 비숍을 후퇴시킨다고 설명한다. 앞 페이지의 교환과 기물 가격은 같지만 뒤의 역할과 행동 조건이 다르다.",
+          "atomic_relations": [
+            {
+              "subject": "특정 배치의 …Bxd2+",
+              "relation": "잃는다",
+              "object": "비숍 보존 선택",
+              "condition": null
+            },
+            {
+              "subject": "뚜렷한 후속 보상 부재",
+              "relation": "동기를 제공한다",
+              "object": "…Be7 후퇴",
+              "condition": null
+            }
+          ],
+          "combined_relation": "같은 형태의 교환이라도 보상 행동이 연결되지 않는 배치에서는 기물을 남기는 선택이 달라진다.",
+          "time_and_choice_comparison": "PDF47의 긍정 사례와 비교할 때 SAN의 이름 또는 동일 기물 종류만으로 목적과 가치를 재사용할 수 없다.",
+          "phase1_observable_or_bounded": "제공된 배치와 비숍의 보존·교환 여부는 확인할 수 있다.",
+          "phase2_general_or_long_term": "보상이 전혀 없다는 일반 결론은 책의 한 문장만으로 새 국면에 증명되지 않는다.",
+          "limitations": "직전 페이지와 다른 분기의 조건 비교이다. 동일 FEN에서 두 수를 엔진으로 비교한 연구 결과로 취급하지 않는다."
+        },
+        {
+          "id": "NB-colour-successors",
+          "pdf_page_1based": 132,
+          "printed_page": 129,
+          "original_source_pdf_pages_1based": null,
+          "chapter_or_section": "Chapter 4: 4.e3; 5.Bd3 d5 6.Nf3 b6",
+          "paraphrase": "…b6–Ba6로 백의 강한 밝은칸 비숍을 바꾸어 그 색의 칸과 남은 어두운칸 비숍의 상대적 활동을 바꾸려 한다. 비숍의 제거 효과는 한 표적 포획뿐 아니라 이후 여러 칸을 방어할 수 있는 기물 구성에 남는다.",
+          "atomic_relations": [
+            {
+              "subject": "…b6",
+              "relation": "열고 준비한다",
+              "object": "…Ba6 경로",
+              "condition": null
+            },
+            {
+              "subject": "…Ba6 교환",
+              "relation": "제거하려 한다",
+              "object": "백의 밝은칸 비숍",
+              "condition": null
+            },
+            {
+              "subject": "비숍 제거",
+              "relation": "바꾼다",
+              "object": "밝은칸 수비와 남은 비숍의 상대적 역할",
+              "condition": null
+            }
+          ],
+          "combined_relation": "대각선 준비 + 특정 기능을 가진 수비자의 교환 + 여러 칸의 남은 수비 상태가 색 전략의 연결을 이룬다.",
+          "time_and_choice_comparison": "교환 순간의 손익뿐 아니라 역할을 대체할 폰이나 다른 기물이 남는지를 비교해야 한다.",
+          "phase1_observable_or_bounded": "제공된 실제 교환과 다음 특정 밝은칸 사용은 좁게 설명 가능하다.",
+          "phase2_general_or_long_term": "색 전체가 약해졌다거나 남은 비숍이 나쁘다는 평가는 폰 배치·다른 수비자·침입 가능성을 함께 살펴야 한다.",
+          "limitations": "해당 다이어그램을 시각 확인했다. 저자의 오프닝 평가를 모든 밝은칸 비숍 교환에 일반화하지 않는다."
+        }
+      ],
+      "source_pdf": {
+        "absolute_path": "G:/내 드라이브/GoodNotes Sync/Chess/The Nimzo and Bogo-Indian Revisited.pdf",
+        "sha256": "f7859458d32da319cdae75b2657efd937c326902cdfd7fcb68f272f478e1d76f",
+        "bytes": 30745554,
+        "pdf_page_count": 356,
+        "metadata": {
+          "format": "PDF 1.7",
+          "title": "",
+          "author": "",
+          "subject": "",
+          "keywords": "",
+          "creator": "",
+          "producer": "",
+          "creationDate": "D:20240219094130+01'00'",
+          "modDate": "D:20240219095529+01'00'",
+          "trapped": "",
+          "encryption": null
+        },
+        "text_extraction_available": true,
+        "scanned_only": false
+      },
+      "reading_method": "해당 목차와 본문을 PyMuPDF로 읽고 지정된 PNG 페이지를 직접 시각 확인. 전문 텍스트 저장·새 엔진·제품 출력/소스 대조 없음.",
+      "principal_body_pdf_pages_1based": [
+        47,
+        49,
+        132
+      ],
+      "visually_checked_pdf_pages_1based": [
+        5,
+        132
+      ],
+      "bibliographic_pdf_pages_1based": [
+        2,
+        3,
+        4
+      ],
+      "toc_read_pdf_pages_1based": [
+        5
+      ]
+    }
+  ],
+  "relation_coverage": [
+    {
+      "family": "핵심 전술 / 강제 행동",
+      "direct_body_readings": [
+        "AI-prophylaxis",
+        "EG-race-tactics"
+      ],
+      "relation": "발견 체크 → 대응 시간, 유도된 킹 위치 → 체크 승격, 폰이 차지한 칸 → 탈출 제한과 메이트",
+      "limit": "전술 전체 목록이나 포크·핀·스큐어의 체계적 완전 조사까지 수행한 것은 아니다."
+    },
+    {
+      "family": "폰 구조",
+      "direct_body_readings": [
+        "SIC-structure-route",
+        "SIC-trade-role",
+        "BEN-advance-function",
+        "NB-compensated-trade"
+      ],
+      "relation": "고정·되잡기·전진 → 선과 칸의 지배 → 기물 역할과 후속 행동",
+      "limit": "대표 Sicilian/Benoni/Indian 구조 편중. 모든 폰 구조의 계획을 읽지 않았다."
+    },
+    {
+      "family": "기물 활동 / 이동성",
+      "direct_body_readings": [
+        "GC-outpost",
+        "SIC-attack-defense",
+        "BEN-space-development"
+      ],
+      "relation": "지지·통로·출발칸 기능·상대 제한 → 실제 재배치와 사용",
+      "limit": "도착 칸이나 합법 이동 수만으로 활동의 가치를 판정할 수 없다."
+    },
+    {
+      "family": "공간 / 색의 복합체",
+      "direct_body_readings": [
+        "GC-colour-attack",
+        "BEN-space-development",
+        "NB-colour-successors",
+        "SIC-trade-role"
+      ],
+      "relation": "점유·폰 고정·색 수비자 교환 → 가능한 칸과 협력의 비대칭",
+      "limit": "비숍 하나의 제거를 그 색 전체의 약점과 동일시하지 않는다."
+    },
+    {
+      "family": "킹 공격 / 수비",
+      "direct_body_readings": [
+        "GC-colour-attack",
+        "GC-sacrifice",
+        "SIC-attack-defense",
+        "AI-prophylaxis"
+      ],
+      "relation": "선 개방·참여 기물·회피 제한·반격 조건 → 공격 또는 강제 연쇄의 변화",
+      "limit": "한 그림 또는 공격 PV는 다른 방어를 모두 배제하지 않는다."
+    },
+    {
+      "family": "주도권 / 템포",
+      "direct_body_readings": [
+        "GC-sacrifice",
+        "GC-outpost",
+        "AI-prophylaxis",
+        "EG-reserve-tempi"
+      ],
+      "relation": "응수 의무·자원 투자·상대 활동 제한·차례 전환",
+      "limit": "템포를 무조건 이득으로 합산하지 않는다."
+    },
+    {
+      "family": "교환 / 희생",
+      "direct_body_readings": [
+        "GC-sacrifice",
+        "AI-material-function",
+        "SIC-trade-role",
+        "BEN-exchange-choice",
+        "NB-compensated-trade",
+        "NB-uncompensated-trade"
+      ],
+      "relation": "물질 가격 + 역할 변화 + 실현 시점 + 상대 회복·반격",
+      "limit": "남은 기물의 명목 가격만으로 충분한 보상을 선언하지 않는다."
+    },
+    {
+      "family": "예방 / 상대 계획",
+      "direct_body_readings": [
+        "AI-prophylaxis",
+        "SIC-attack-defense"
+      ],
+      "relation": "가능한 상대 연쇄의 전제 조건 변경, 특히 체크와 중앙 돌파 시점",
+      "limit": "상대가 실제로 선택하지 않은 행동의 검증에는 별도 분기가 필요하다. 패스 가정은 이동 의무를 항상 보존하지 않는다."
+    },
+    {
+      "family": "엔딩 / 폰 경주 / 추크츠방",
+      "direct_body_readings": [
+        "EG-reserve-tempi",
+        "EG-triangulation",
+        "EG-race-tactics"
+      ],
+      "relation": "대응칸·차례·예비 이동·킹 유도·승격 후 강제수",
+      "toc_only_not_body_claims": [
+        "fortress",
+        "rook activity",
+        "opposite-coloured bishop defence",
+        "perpetual check strategy"
+      ],
+      "limit": "폰 엔딩 본문만 직접 표본으로 읽었다. 룩·퀸·비숍 엔딩의 목차 항목을 실제 조사 완료로 세지 않는다."
+    },
+    {
+      "family": "전략 / 장기 계획",
+      "direct_body_readings": [
+        "AI-closed-progress",
+        "GC-outpost",
+        "SIC-attack-defense",
+        "BEN-advance-function",
+        "NB-colour-successors"
+      ],
+      "relation": "지속되는 구조 제약·다른 기물의 기능 분배·점진적 개선·돌파 준비",
+      "limit": "후속 수순에서 한 번 사용된 계획과 모든 대안보다 좋은 일반 계획은 구별된다."
+    }
+  ],
+  "conclusions": [
+    {
+      "id": "C1",
+      "conclusion": "관계의 대상은 기물과 표적만이 아니다. 칸·파일·대각선·구조·킹의 회피 선택·남은 차례 자원도 설명의 대상이 된다.",
+      "readings": [
+        "GC-colour-attack",
+        "SIC-structure-route",
+        "EG-reserve-tempi",
+        "EG-triangulation"
+      ]
+    },
+    {
+      "id": "C2",
+      "conclusion": "현재 관계, 행동의 가능 조건, 실제 사용, 행동 뒤에 남는 제약을 구별해야 한다. 같은 기물이 계속 등장하거나 같은 포획 칸을 썼다는 이유만으로 이 연결이 생기지는 않는다.",
+      "readings": [
+        "GC-outpost",
+        "SIC-trade-role",
+        "SIC-attack-defense",
+        "BEN-advance-function"
+      ]
+    },
+    {
+      "id": "C3",
+      "conclusion": "기물 활동은 가능한 이동 수가 많다는 사실만으로 충분하지 않다. 실제로 갈 곳의 기능, 그곳을 지지하는 구조, 이동하는 동안의 상대 반격과 출발칸에서 포기한 역할을 함께 보아야 한다.",
+      "readings": [
+        "GC-outpost",
+        "SIC-attack-defense",
+        "BEN-space-development"
+      ]
+    },
+    {
+      "id": "C4",
+      "conclusion": "폰 구조 변화는 여러 관계를 한꺼번에 바꾼다. 원래 공격을 없애면서 새 거점을 주거나, 전진하여 공간을 얻으면서 출발칸을 다른 기물에 내줄 수 있다.",
+      "readings": [
+        "SIC-structure-route",
+        "BEN-advance-function",
+        "NB-compensated-trade"
+      ]
+    },
+    {
+      "id": "C5",
+      "conclusion": "교환의 뜻은 가격과 기능 변화의 결합이다. 되잡기 주체·남은 기물·색의 수비·공간과 다음 행동이 달라지면 같은 Bxd2라도 교환과 보존의 선택이 달라진다.",
+      "readings": [
+        "AI-material-function",
+        "SIC-trade-role",
+        "BEN-exchange-choice",
+        "NB-compensated-trade",
+        "NB-uncompensated-trade",
+        "NB-colour-successors"
+      ]
+    },
+    {
+      "id": "C6",
+      "conclusion": "킹 공격과 수비는 진입 경로, 참여 기물, 킹의 회피, 수비자의 기능과 반격 시점을 조합한다. 열린 파일 하나 또는 폰 보호 변화만으로 공격의 성공을 주장할 수 없다.",
+      "readings": [
+        "GC-colour-attack",
+        "GC-sacrifice",
+        "SIC-attack-defense"
+      ]
+    },
+    {
+      "id": "C7",
+      "conclusion": "예방수는 상대 수 자체를 금지할 수도 있고 그 수의 체크·템포·후속 교환 조건을 없앨 수도 있다. 상대 행동의 어떤 기능을 바꾸었는지를 말해야 한다.",
+      "readings": [
+        "AI-prophylaxis",
+        "NB-colour-successors",
+        "SIC-attack-defense"
+      ]
+    },
+    {
+      "id": "C8",
+      "conclusion": "시간의 가치는 국면에 따라 바뀐다. 공격을 앞당기는 희생, 긴 재배치를 허용하는 제한, 예비 폰 수, 삼각 기동은 서로 다른 시간 관계다. 더 짧은 경로나 먼저 승격한다는 사실은 결과의 대용이 아니다.",
+      "readings": [
+        "GC-sacrifice",
+        "GC-outpost",
+        "EG-reserve-tempi",
+        "EG-triangulation",
+        "EG-race-tactics"
+      ]
+    },
+    {
+      "id": "C9",
+      "conclusion": "장기적 이론은 설명 후보를 만들고 조사할 대안을 지정할 수 있지만 단일 PV의 관측을 보편적인 안전·보상·우세·강제 결과로 바꾸지 않는다. 확인된 사용과 가격을 말하는 단계와 이론적 선택을 평가하는 단계를 함께 기록해야 한다.",
+      "readings": [
+        "AI-closed-progress",
+        "AI-material-function",
+        "GC-outpost",
+        "EG-race-tactics"
+      ]
+    }
+  ],
+  "overall_limits": [
+    "보유 목록은 현대 오프닝과 엔진 해설서의 비중이 크며 고전 전략·순수 수비·종합 엔딩 교재를 균등하게 대표하지 않는다.",
+    "여섯 책의 목차와 책별 세 대표 본문 페이지를 읽은 제한된 표본이다. 목차에 있다는 사실을 본문 분석으로 승격하지 않았다.",
+    "저자의 구체적 승리·최선·보상 판정은 출처의 주장이다. 새로운 엔진 또는 테이블베이스로 검증하지 않았다.",
+    "일반 경험칙의 교차 출현은 관계의 존재와 유용한 질문을 뒷받침할 뿐 자동 중요도 정책의 성공률이나 모든 국면의 우선순위를 증명하지 않는다.",
+    "한 실제 PV가 장기 전략을 증명한다는 결론을 내리지 않는다. 반사실 대안·안전·충분한 보상·강제 결과에 필요한 추가 증명을 각 항목에 구분했다.",
+    "개인 독서판의 Source PDF footer 범위와 원 출판사 인쇄 쪽 번호를 혼동하지 않는다.",
+    "스캔 전용 PDF는 이번 여섯 권에 없었다. 기물 도해는 텍스트에 포함되지 않아 대표 페이지를 별도로 시각 확인했다."
+  ]
+}

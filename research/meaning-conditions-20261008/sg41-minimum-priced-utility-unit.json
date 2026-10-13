@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T01:49:19.341340+00:00",
+  "scope": "Smallest honest explanatory unit for SG41's conditional priced capture utility, derived from preserved source reading and completed comparisons. No new fixture, product edit or engine experiment.",
+  "source_criteria_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\sg41-priced-capture-and-mover-commentary-criteria.json",
+  "source_criteria_sha256": "ff51aa5c8689d6e5fe478fba3adea3376ab6ece745e7afc5d25eb55b6b8efb05",
+  "source_book": {
+    "book_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+    "book_sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+    "reading_edition_pages_reread": [
+      413,
+      414,
+      415,
+      416,
+      417,
+      418
+    ],
+    "diagrams_or_page_layout_visually_checked_this_phase": [
+      413,
+      418
+    ],
+    "earlier_diagram_pages_checked": [
+      414,
+      415,
+      416
+    ],
+    "source_pdf_footer_pages": "489–497",
+    "completed_comparisons_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\independent-minimum-batch-driver\\summary.json",
+    "completed_comparisons_sha256": "1b3c2cbe72fd6f41789dfce2c26f0fa697c1e394a01345762df225e065c84a19",
+    "full_book_or_general_product_success_claim": false
+  },
+  "source_pages_visually_rechecked_in_this_phase": [
+    413,
+    418
+  ],
+  "completed_semantic_reading_sha256": "cd84018cf264e9842d19c7c7aeb0753f2ea8d6605016f28eb4d081486f3e9e80",
+  "criterion_does_not_retroactively_change_original_independent_eight_or_followup_four": true,
+  "new_engine_results_read_or_engine_executed": false,
+  "identity_anchor": "Actor labels refer to the same book-root position, not a new actor created on each later square.",
+  "minimum_claim": "Moving the e6 pawn removes one effective cheap defense against the already legal Nd5. A remaining rook capture is not automatically an equivalent substitute; its best recapture and strongest alternative defense determine the useful scope.",
+  "conditions": [
+    {
+      "level": "same_actual_target_and_stage",
+      "necessary": "The same White knight from book-root c3 reaches d5 legally after either ...a5 or ...exf5. Black is to move in the inspected states. The original Rc5 capture of that knight remains legal in both.",
+      "states": [
+        "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+        "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+      ]
+    },
+    {
+      "level": "lost_effective_resource",
+      "necessary": "With the original Pe6 retained, ...exd5 can give that pawn for the knight; White's pawn and rook recaptures must both be allowed. In the completed unrestricted d24 comparison, this direct capture is the strongest returned Black move (-358 White CP).",
+      "not_required": "White need not choose the earlier voluntary rook-only chain; selecting an inferior recapture on White's behalf is not an explanation of Black's best defense."
+    },
+    {
+      "level": "remaining_capture_price",
+      "necessary": "After either root defense, ...Rc5xd5 allows White Pe4xd5. Black gives a rook for the knight before any compensation is considered. The completed named queries are +173 before and +284 after from White's perspective; the remaining capture does not duplicate the lost cheap denial at that bound.",
+      "not_required": "Not every rook capture is bad and not every pawn capture is sound. Nominal values pose the question; strongest replies, forcing checks and compensation answer it."
+    },
+    {
+      "level": "strongest_counter_and_changed_defender",
+      "necessary": "After ...exf5 Nd5, the completed unrestricted d24 top reply is ...fxe4 (+54 White CP), ahead of the weak named ...Rxd5 (+284). After R4xe4 the Pe4 defender is gone, but Rd1 (the original book-root Re1) can recapture ...Rxd5.",
+      "not_required": "The original pawn defender need not survive permanently. Nor must the knight remain forever on d5: after ...Bf5-Re2-Be6 the inspected strong line changes realization with Nb4."
+    },
+    {
+      "level": "bounded_usefulness",
+      "necessary": "The tested changed defense still leaves usable activity at the declared depth, with its required pawn prices. Treat this as an optional plan under pressure, not immunity from attack or a forced win.",
+      "not_required": "The exact book PV, a specific later capture, one permanent king/knight square, or the absence of all geometric attackers."
+    },
+    {
+      "level": "root_cause_boundary",
+      "necessary": "The price contrast belongs to matched descendant Nd5 states. Black ...a5 can be met by good Ne2 rather than the bad optional Nd5. It therefore does not make ...a5 a forced winning defense or prove why Red1 has the highest root evaluation.",
+      "current_numeric_comparison_boundary": "The actual v26 SG41 basic reports compare a5/exf5 with Bc6. The preserved a5/exf5 functional evidence is not a proved cause of either current Bc6 ranking."
+    }
+  ],
+  "smallest_honest_basic_comment": "...exf5 captures the f5 pawn but removes the e6 pawn's cheap capture of a knight on d5. The rook can still take that knight, but White's e4 pawn can recapture, so Black would give a rook for a knight. In the tested continuation Black instead challenges the center with ...fxe4; White must keep the knight adequately defended and adapt its activity, so Nd5 is an option rather than a forced win.",
+  "even_smaller_unit_when_only_capture_price_is_verified": "...exf5 removes the pawn's cheap answer to Nd5. A rook capture remains legal, but ...Rxd5 exd5 has a different price: a rook for a knight.",
+  "scope_of_smaller_unit": "This states only the matched target/capture price. It must not be rendered as a proof that Nd5 remains useful against strongest defense until that separate comparison is complete.",
+  "reverse_basic_comment_after_a5": "...a5 restricts b4 while leaving the e6 pawn's cheap answer to Nd5 in place. White can choose another route, such as Ne2, so this restriction does not stop every useful plan.",
+  "general_semantic_insight": "Two resources are equivalent only relative to the outcome required by the explanation. Sharing an attacked square, being legal, or leaving another capturer present does not certify equivalent denial at an acceptable price. Conversely, the loss of one defender does not refute an idea if another adequate defender supports its changed realization.",
+  "legal_recheck_scope": "All recorded legal target captures and immediate recaptures in the five preserved resource states were replayed without an engine. Value claims refer solely to previously completed registered comparisons; current product hidden lines were not read.",
+  "limits": [
+    "Named-search values alone do not certify the strongest defense; the cited strongest counter comes from the completed unrestricted root search.",
+    "An unrestricted top3 is not an individually completed proof for every root or every later response.",
+    "The original author discusses tension and flexible piece routes; the matched Nd5 price controls are our later derived research, not verbatim source proof.",
+    "No general product success, exclusive ranking cause or all-depth best-play theorem is established here."
+  ]
+}

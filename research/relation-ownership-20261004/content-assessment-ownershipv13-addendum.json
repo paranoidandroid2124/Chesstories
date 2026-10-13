@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "assessed_at_utc": "2026-10-04T09:22:23.664499+00:00",
+  "assessor": "relationship_generalization research LLM agent reading full exact before/after English basic units and prewritten obligations; no product LLM",
+  "historical_v12": {
+    "assessment_file": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+    "assessment_file_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+    "input_file": "research/relation-ownership-20261004/same-input-ownershipv12-18.json",
+    "input_file_sha256": "1830bd4ade3b380603bb53d07353c8368f5b6fa3ded09e295ce89c4993a90fc6",
+    "after_manifest_sha256": "4dad167850796daab8f0cb058353443753e103dab09cd8006ae2d09224a3166a",
+    "primary_useful_and_complete": 4,
+    "auxiliary_semantically_useful_and_complete": 11,
+    "important_price_omission_positions": 1,
+    "missing_physical_items": 1,
+    "local_price_scope_observation": [
+      "wch2024-11"
+    ],
+    "preserved_without_changes": true
+  },
+  "final_input_file": "research/relation-ownership-20261004/same-input-ownershipv13-18.json",
+  "final_input_file_sha256": "29bf4b7a47ac6c0b6ca274246e3658553dbcf8b2d93c0db9dbd765549f2d1b72",
+  "saved_requests_reports_input_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+  "after_manifest_sha256": "9ff49673c358dd6decc03935d9b8efde246bde2dcac7134c33b510045976f85e",
+  "changed_positions": [
+    "wch2024-11"
+  ],
+  "unchanged_basic_count": 17,
+  "newly_read_position": {
+    "game_id": "wch2024-11",
+    "request_id": "fresh-wch2024-11-47",
+    "comparison_id": "comparison:move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:evidence:candidate-comparison:3e1944141977402082cf7913f10a9b6d1657f49fe6353b7d26a1ca327e35dc44",
+    "before_question": "selected_comparison",
+    "after_question": "selected_comparison",
+    "assessment_state": "current",
+    "before_length": 1629,
+    "after_length": 1591,
+    "basic_changed": true,
+    "prior_primary_useful_and_complete": false,
+    "prior_auxiliary_useful_and_complete": false,
+    "reviewed_before_primary_useful_and_complete": false,
+    "new_primary_useful_and_complete": false,
+    "new_auxiliary_semantically_useful_and_complete": false,
+    "usefulness_changed": false,
+    "content_class": "one_arm_bounded_fragment",
+    "normal_reader_answer_recovery": {
+      "two_choice_difference": "h4_counterpart_mechanism_not_delivered",
+      "actual_response": "Rb5_file_use_and_recaptures_present",
+      "actual_price": "local_price_now_includes_actual_rook_recapture;all_selected_captures_retained"
+    },
+    "question_selection_or_contrast_failure": true,
+    "main_answer_fragmentation_failure": false,
+    "reader_rationale": "최종 v13은 실제 흑 룩 되잡기를 국소 가격에 포함해 양쪽 룩 하나 교환과 백 비숍 손실을 전달한다. Bxc6의 나이트 획득과 이어진 다른 룩 제거도 별도 문장에 남아 여섯 선택 포획의 coverage를 유지한다. v12의 비숍을 내주고 룩을 얻는 한쪽 구간만 보이는 우려는 이 수정으로 완화됐다. 그러나 h4 쪽은 여전히 recorded continuation이라는 표식뿐이다. 두 선택의 같은 b파일 개방/교환을 답하지 않으므로 primary와 auxiliary 유용성은 모두 실패를 유지한다. 가격 소계를 전체 끝 결과나 강제 교환으로 확대하지 않는다.",
+    "supporting_after_excerpts": [
+      "bxc6 clears b7; later Rxb8 passes through that square",
+      "In the Rb5 line, both sides exchange one rook; White also loses one bishop.",
+      "The recorded continuation is h4."
+    ],
+    "high_confidence_important_price_omissions": [],
+    "scope_sensitive_price_omissions": [],
+    "mechanical_price_coverage_items": [],
+    "unsupported_cause_threat_or_attack_resolution_observed": [],
+    "obligations_primary_question": "How do the two orders use the b-file and open it for the rook exchange?",
+    "obligations_bounded_answer": "Both lines use Rb5 and Rdb1. Bxc6/bxc6 trades the White g2 bishop for the Black c6 knight and clears the original b7 pawn from the b-file; Rxb8/Rxb8/Rxb8+/Qxb8 then exchanges all four rooks. The later pawn gains differ.",
+    "claims_extended_to_full_game_or_universal_responses": false,
+    "controls_unchanged_in_supplied_bundle": {
+      "request_fen": true,
+      "partial_flag": true,
+      "work_trace": true,
+      "report_count": true,
+      "candidate": true,
+      "pair_lines": true,
+      "raw_positions": true,
+      "raw_paths_and_ledgers": true,
+      "raw_statements": true,
+      "verification": true,
+      "assessment": true,
+      "assessment_state": true,
+      "assessment_scope": true,
+      "progress": true
+    },
+    "price_scope_note": {
+      "status": "v12_one_sided_price_observation_mitigated_in_final_v13",
+      "local_price_refs_relative_moves": [
+        8,
+        9,
+        10
+      ],
+      "other_capture_refs_relative_moves": [
+        7,
+        11,
+        12
+      ],
+      "claim_limit": "선택한 국소 가격 소계다. 전체 수순 끝에서 룩 한 쌍만 사라졌다는 주장이 아니며, 별도 Bxc6/Rxb8+/Qxb8 문장도 함께 보존된다. 단순 가격 수정으로 h4 대비 미전달과 본문 구성 실패가 해결됐다고 하지 않는다."
+    }
+  },
+  "final_summary": {
+    "positions": 18,
+    "basic_available": 18,
+    "historical_prior_primary_useful_and_complete": 4,
+    "reviewed_new_primary_useful_and_complete": 4,
+    "reviewed_new_auxiliary_semantically_useful_and_complete": 11,
+    "primary_usefulness_improved_positions": [],
+    "primary_usefulness_regressed_positions": [],
+    "high_confidence_important_price_omission_positions": 1,
+    "high_confidence_missing_physical_items": 1,
+    "important_price_repaired_positions": [
+      "wch2016-09",
+      "wch2016-11",
+      "candidates2018-09",
+      "wch2024-12"
+    ],
+    "important_price_repaired_physical_items": 5,
+    "scope_sensitive_price_omission_positions": 2,
+    "question_selection_or_contrast_failure_positions": 5,
+    "main_answer_fragmentation_failure_positions": 8,
+    "observed_local_price_scope_ambiguity_positions": [],
+    "unsupported_cause_threat_or_attack_resolution_observed": 0,
+    "assessment_state_needs_refresh": 4,
+    "quality_threshold": {
+      "useful_and_complete_min": 14,
+      "important_price_omissions_max": 0,
+      "unsupported_threat_or_attack_resolution_max": 0
+    },
+    "quality_threshold_met": false,
+    "synthetic_safety_tests_or_full_regression_tests_independently_rerun": false,
+    "historical_v12_local_price_scope_observation_mitigated_positions": [
+      "wch2024-11"
+    ],
+    "final_changed_from_v12_positions": [
+      "wch2024-11"
+    ],
+    "unchanged_basic_from_v12_count": 17
+  },
+  "independent_human_reader_evaluation_performed": false,
+  "limits": [
+    "최종 변경 한 국면의 본문·단위만 추가 판독했다.",
+    "나머지17 동일 본문 확인은 텍스트 동등성 검사이며 제품·엔진 실행이 아니다.",
+    "원래 strict14/18, 중요 가격 누락0, unsupported0 기준을 낮추지 않았다.",
+    "305 테스트 통과와 저장 재생은 parent가 실행한 검증이며 본 연구 판독이 독립 재실행한 것은 아니다."
+  ]
+}

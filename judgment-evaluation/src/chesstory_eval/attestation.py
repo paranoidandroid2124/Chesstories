@@ -2210,6 +2210,24 @@ def _derived_release_seed(seed: int, purpose: str, identity: str) -> int:
     return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big")
 
 
+def _completed_evidence_counts(
+    completed: Sequence[Mapping[str, Any]],
+) -> tuple[int, int]:
+    # Keep this local: attestation must not reuse the runner's derived counts.
+    cluster_count = len({str(row["atomic_cluster_id"]) for row in completed})
+    rater_counts = [
+        int(row.get("diagnostics", {}).get("held_out_human_rater_count", 0))
+        for row in completed
+        if isinstance(row.get("diagnostics"), Mapping)
+    ]
+    minimum_observed_raters = (
+        min(rater_counts)
+        if len(rater_counts) == len(completed) and rater_counts
+        else 0
+    )
+    return cluster_count, minimum_observed_raters
+
+
 def _recompute_all_oracle_ceiling(
     *,
     rows: Sequence[Mapping[str, Any]],
@@ -2243,17 +2261,7 @@ def _recompute_all_oracle_ceiling(
             if len(completed) == len(selected) and selected
             else None
         )
-        cluster_count = len({str(row["atomic_cluster_id"]) for row in completed})
-        rater_counts = [
-            int(row.get("diagnostics", {}).get("held_out_human_rater_count", 0))
-            for row in completed
-            if isinstance(row.get("diagnostics"), Mapping)
-        ]
-        minimum_observed_raters = (
-            min(rater_counts)
-            if len(rater_counts) == len(completed) and rater_counts
-            else 0
-        )
+        cluster_count, minimum_observed_raters = _completed_evidence_counts(completed)
         lower_bound = (
             _cluster_success_lower_bound(
                 completed,
@@ -2584,17 +2592,7 @@ def _release_endpoint_evidence(
         if len(completed) == len(sample_ids) and completed
         else None
     )
-    cluster_count = len({str(row["atomic_cluster_id"]) for row in completed})
-    rater_counts = [
-        int(row.get("diagnostics", {}).get("held_out_human_rater_count", 0))
-        for row in completed
-        if isinstance(row.get("diagnostics"), Mapping)
-    ]
-    minimum_observed_raters = (
-        min(rater_counts)
-        if len(rater_counts) == len(completed) and rater_counts
-        else 0
-    )
+    cluster_count, minimum_observed_raters = _completed_evidence_counts(completed)
     evaluator_hashes: dict[str, str] = {}
     for sample_id in sample_ids:
         row = by_sample[sample_id]

@@ -1,0 +1,89 @@
+{
+  "scope": "Narrow reference reading for basic-answer content selection. Author annotations are reference judgements, not new Chesstories engine evidence. No product outputs, engine execution, or sealed fixtures were read.",
+  "method": "PDF text plus visual inspection of Catalan PDF page 7, Endgame reading pages 25-26, and Sicilian PDF page 23. Page numbers below are one-based; different editions must not silently reuse them.",
+  "references": [
+    {
+      "id": "catalan-purpose-and-counterplay",
+      "file": "G:/내 드라이브/GoodNotes Sync/Chess/The Catalan - move by move.pdf",
+      "pages": {
+        "pdf": [
+          7,
+          8,
+          9
+        ],
+        "printed": [
+          6,
+          7,
+          8
+        ]
+      },
+      "location": "Naiditsch-Kopylov, Basel 2016: 7 Qc2, 8 Nbd2, 12 Re1, 15 Ne3, 17 b3.",
+      "observed_method": "The author first answers a concrete reader question. For Nbd2 versus Nc3, the relevant content is preparing e4 while preserving the queen's access to c4 after ...dxc4. The square choice is explained by what it permits and what the alternative obstructs. Other Catalan preferences are background, not proof of this game's outcome.",
+      "response_and_cost": "The discussion of ...Bb4+ and Bd2 admits the apparent benefit of free development, then explains the cost: the bishop occupies d2 and obstructs Nbd2/e4. The apparent gain and its qualification belong together. Later Ne3 counters ...Qc2 while preparing a kingside route; b3 answers ...Nc4/...Nxe3, which would remove that counter and revive ...Qc2.",
+      "ordinary_moves": "Qd1 is worth mentioning because retreat does not relinquish the e5 foothold and allows a route after Nf3 moves. Re1 has two genuinely separate jobs: pressure related to ...f6 and vacating f1 for Nbd2-f1-e3. The book does not imply that these jobs must be fused into one theme.",
+      "phase1_use": "Select the actual question and preserve its enabling move, actual use, and opponent continuation that changes the explanation. A supported route or obstruction can be explained from exact provided lines; shared square or same actor alone is not a causal link.",
+      "beyond_phase1": "Permanent space advantage, the strategic necessity of ...c5, opening-wide popularity, and kingside attacking prospects require theory or broader comparisons. These annotations are not evidence that one supplied PV proves those claims."
+    },
+    {
+      "id": "protected-passer-result-and-limits",
+      "file": "G:/내 드라이브/GoodNotes Sync/Chess/100 Endgame Patterns.pdf",
+      "edition": "Personal Reading Edition; PDF/reading pages differ from original source pages.",
+      "pages": {
+        "pdf": [
+          24,
+          25,
+          26
+        ],
+        "reading": [
+          24,
+          25,
+          26
+        ],
+        "source_pdf_ranges": {
+          "24": "28-30",
+          "25": "30-32",
+          "26": "32-33"
+        }
+      },
+      "location": "Pattern 2: Jakovenko-Akobian, Yerevan 2000, contrasted with Votava-Simacek, Czechia team 2003/04.",
+      "observed_method": "The motif is introduced together with its limitations. In Jakovenko's case the king enters from the queenside; the alternative ...Kb6 would stop entry, so the explanation includes e6/e7 as a diversion, ...Kxe7, and Kxc5. Losing the initially praised passer can serve the stated objective. Votava's superficially similar protected passer does not win because the king cannot enter and Black has precise defensive resources.",
+      "response_and_cost": "After 66...c5+ and 67 Kc3, ...c4 preserves pawn defence. The quiet king continuation keeps the defender inside the e-pawn's square; trading the passer with e6 Kxe6 Kc4 Kf7 does not dislodge the king. The actual alternative race ends in a drawn queen ending. Reporting only promotion or pawn gain would conceal the result that qualifies the original advantage.",
+      "ordinary_moves": "Quiet king moves are explained only through the entry/defence question. Repeated wandering is compressed. The exact defensive ...c4 is retained because omitting it would turn a defendable position into an apparent win.",
+      "phase1_use": "When an answer praises retained support or an advancing pawn, preserve a witnessed sacrifice, defensive reply, or terminal state that changes that praise. Distinguish material acquired, surviving material, and actual ending. A provided drawn line is not proof that every legal reply draws.",
+      "beyond_phase1": "Winning because of a protected passer, an outside passer, king entry, or a pawn majority is a positional/endgame-theory judgement unless separately certified. The reference contrasts cases; it does not license a motif-wide success rule."
+    },
+    {
+      "id": "sicilian-variation-as-justification",
+      "file": "G:/내 드라이브/GoodNotes Sync/Chess/Najdorf/Understanding Before Moving 3 - Sicilian Structures - Part 1 -- Herman Grooten -- Understanding before Moving 3.pdf",
+      "author": "Herman Grooten",
+      "pages": {
+        "intro_pdf": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "case_pdf": [
+          22,
+          23,
+          24
+        ],
+        "printed": "No printed page number observed on these rendered e-book pages."
+      },
+      "location": "Depasquale-Johansen, Melbourne 1991: 12 f5, 13 Nd5, 15 Ne6, and acceptance branches.",
+      "observed_method": "The foreword makes explanatory concepts the organizing subject and variations their justification. At 12 f5 the author explains why ...bxc3 cannot simply win a piece: fxe6/exf7 and a knight underpromotion change the consequence. The actual ...e5 is then followed by Nd5. At 15 Ne6 the sacrifice is justified with a concrete acceptance branch, including a further rook sacrifice, rather than by naming the theme alone.",
+      "response_and_cost": "The actual response ...Rb8 is separate from hypothetical ...fxe6. In the latter, fxe6, Qh5+, ...g6, Rxf8+ ...Kxf8, Rf1+ ...Kg7 and Qf3 explain the ensuing mating threat. Omitting the accepted knight or rook sacrifice would misdescribe how the attack is obtained. The branches retain their conditional status.",
+      "ordinary_moves": "Nd5 receives a short placement explanation within the f5/...e5 narrative. Exchanges and queen relocation are shown as setup for the next decision, rather than each becoming an independent headline. Visual arrows denote proposed manoeuvres and highlights denote targets; they supplement an explanation rather than determine importance.",
+      "phase1_use": "A verified alternative can explain why an opponent declines a gain. Preserve the exact choice point, accepted cost, relevant continuation, and bounded outcome. The author supplies a teaching hypothesis; Chesstories still needs its own legal/evidence ownership checks.",
+      "beyond_phase1": "Forced win, permanent outposts, and general Sicilian structural compensation cannot be inferred from pattern names or copied annotations. They require their own verified comparison or broader theory."
+    }
+  ],
+  "selection_principles": [
+    "Organize around the decision the reader must understand, not all observed functions of the root move.",
+    "Retain an ordinary action when it enables the selected explanation or an actual reply changes its interpretation; novelty or tactical vocabulary is not required.",
+    "A claim-changing loss, recapture, defensive reply, or witnessed ending cannot be dropped while preserving the earlier gain claim.",
+    "Separate actual continuation from acceptance alternatives, intentions, and author theory. Branches support one question without becoming one legal sequence.",
+    "Independent useful purposes may coexist. These references do not provide a universal rank among independently complete answers, nor justify selecting by fact counts, string length, or thematic labels."
+  ],
+  "limitations": "Three deliberately narrow readings, not an empirical generalization or independent reader evaluation. The Endgame PDF is a reformatted personal edition. No engine verification or product-policy changes were performed."
+}

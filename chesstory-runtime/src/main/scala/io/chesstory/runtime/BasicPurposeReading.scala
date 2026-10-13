@@ -6,8 +6,9 @@ import lila.chessjudgment.model.line.CandidateLineEvaluation
 /** Current purposes can suffice for an admitted close comparison. The grade
   * only permits this reading; it does not supply the purpose or prove safety.
   * A moved piece's present contacts can be named without selecting its whole
-  * future history. Changed defence and another piece's new attack retain the
-  * fuller answer. Future episodes stay available with their original prices. */
+  * future history. Quiet pressure includes its replacement guard; lost defence
+  * and another piece's new attack retain the fuller answer. Future episodes
+  * stay available with their original prices. */
 private[runtime] object BasicPurposeReading:
   import CommentaryAnswer.*
   import CommentaryEnglish.at
@@ -44,10 +45,17 @@ private[runtime] object BasicPurposeReading:
         if before.view.currentCheckSources(actor.side).isEmpty &&
           before.view.attackedTargets(actor.side).forall(_._1 != actor) &&
           after.view.attackedTargets(actor.side).forall(_._1 != moved)
-        note <- notes.find(note => note.edge.evidence.id == path.ids.head &&
-          note.edge.from == path.positions.head && note.edge.to == path.positions(1) && (note.note.detail match
+        rootNotes = notes.filter(note => note.edge.evidence.id == path.ids.head &&
+          note.edge.from == path.positions.head && note.edge.to == path.positions(1))
+        familiar = rootNotes.find(_.note.detail match
             case _: Detail.Development | _: Detail.Castle | _: Detail.RookFile => true
-            case _ => false))
+            case _ => false)
+        pressure = rootNotes.filter(_.note.detail match
+          case Detail.Attack(provider, _, _) => provider == moved
+          case Detail.Support(provider, target, opposition, _) => opposition.nonEmpty &&
+            (provider == moved || before.controlledBy(actor)(target.at))
+          case _ => false)
+        note <- familiar.orElse(pressure.find(_.note.actor == moved))
         central = note.note.detail match
           case Detail.Development(_, _, _, squares) => squares.toSet
           case _ => Set.empty[String]
@@ -61,12 +69,16 @@ private[runtime] object BasicPurposeReading:
           after.controllers(target.at, actor.side).forall(controller => controller == moved ||
             before.controllers(target.at, actor.side).contains(controller))
         }
-        // A defence that changes now is not an incidental future development
-        // story. Include the castling rook as well as the root mover.
+        // A quiet pressure answer states the current replacement guard;
+        // losing the last guard still requires the fuller explanation.
         if (before.view.attackedTargets(actor.side).map(_._1) ++ after.view.attackedTargets(actor.side).map(_._1))
           .distinct.forall { target =>
             before.contains(target) && after.contains(target) &&
-              before.controllers(target.at, actor.side) == after.controllers(target.at, actor.side)
+              (before.controllers(target.at, actor.side) == after.controllers(target.at, actor.side) ||
+                familiar.isEmpty && before.controllers(target.at, actor.side).nonEmpty &&
+                  after.controllers(target.at, actor.side).nonEmpty && pressure.exists(_.note.detail match
+                    case Detail.Support(_, supported, _, _) => supported == target
+                    case _ => false))
           }
         if path.certified.flatMap(_._2.material).exists(_.events.forall(_.plyOffset != 0)) &&
           !path.certified.toList.flatMap(_._2.lineEvents).exists(event =>
@@ -75,10 +87,13 @@ private[runtime] object BasicPurposeReading:
         val detail = note.note.detail match
           case Detail.RookFile(piece, fileType, _) => Detail.RookFile(piece, fileType, None)
           case value => value
-        Section(Action(MoveRef(path, 0), detail) :: contacts.map(target =>
-          ControlState(MoveRef(path, 0), moved, Some(target), target.at, present = true)), focus =
+        val statements = if familiar.isEmpty then pressure.map(note => Action(MoveRef(path, 0), note.note.detail))
+          else Action(MoveRef(path, 0), detail) :: contacts.map(target =>
+            ControlState(MoveRef(path, 0), moved, Some(target), target.at, present = true))
+        Section(statements, focus =
           Option.when(detail == note.note.detail)(Focus(MoveRef(path, 0), note)).toList) ->
-          (note.evidence ++ after.sourceRefs(after.sources(moved, contacts.map(_.at)))).distinct
+          (note.evidence ++ Option.when(familiar.isEmpty)(pressure.flatMap(_.evidence)).toList.flatten ++
+            after.sourceRefs(after.sources(moved, contacts.map(_.at)))).distinct
     }
     purposes match
       case List(Some(left), Some(right)) =>

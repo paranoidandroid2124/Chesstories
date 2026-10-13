@@ -1,0 +1,26 @@
+{
+  "recorded_utc": "2026-10-05T22:06:32.674439+00:00",
+  "reading_rules_still_frozen": true,
+  "original_freeze_sha256": "62963de99e24c49bc40347f8891a7d25bb5ff9709c3f4746dc39a9cd9b7ac3e0",
+  "source_sha256": {
+    "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts": "ee024b80f3c6520418d1f0fff7b61abe20467d026ed597e31d7e108ee2f7cf5a",
+    "judgment-evaluation\\schemas\\public-v6\\move-observations.schema.json": "471ba9bbe9aa3b6ca17876d83721e2641d3f2d181065831af5c5a3fa1afa855f"
+  },
+  "changes": [
+    "Register typed current_defense in the decoder and public schema.",
+    "Validate the stationary future-square preparation even when it incidentally starts by supporting its future target elsewhere. Preserve the continuous moving-target support path when the future square is not yet controlled."
+  ],
+  "scope": "Transport fixes made after inspecting D01. New8 is an engineering check, not an untouched independent evaluation of the complete frontend.",
+  "original_failure": {
+    "case": "D01",
+    "run": "new8",
+    "accepted_works": 4,
+    "pending": true
+  },
+  "retry": {
+    "case": "D01",
+    "run": "d01retry",
+    "accepted_works": 6,
+    "pending": false
+  }
+}

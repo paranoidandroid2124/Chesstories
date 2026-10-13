@@ -1,0 +1,24 @@
+{
+  "frozen_on": "2026-10-04",
+  "stage": "Pre-engine and pre-product preparation completed",
+  "game_count": 18,
+  "participant_count": 10,
+  "candidate_position_slot_count": 70,
+  "legally_replayed_recorded_moves": 1641,
+  "question_seeds_complete": true,
+  "engine_execution": false,
+  "product_execution": false,
+  "balance_status": "pending root unrestricted pre-choice analysis",
+  "historic_development_exposure": "separate from Chess Fundamentals Games 1-10; earlier overall development exposure unconfirmed",
+  "hashes_sha256": {
+    "selection-policy.json": "061d56a134594d13697e6922bf41c726d7d8ffdbe87da524a2094584f6763aa5",
+    "candidate-registry.json": "ff573809144cb30fde20a46eafd2edd8eb527039814ec570fb6feb3b17a2b16a",
+    "selected-games.pgn": "04c85e6b0661d50647d924e1f98aa6a381ebc8d24430b0a35296c34de360444f",
+    "independent-question-seeds.json": "ad7a147ed3bf3c49fc76e24af5e7e42bb9a4d01bbf8283661aeb2ae25fb6cf51",
+    "prepare_candidates.py": "be9bb4dc84ca9ff2e5827a60902d4fa182e0153f9225474f339350f19fc68f07",
+    "source-wch2016.pgn": "0252e6b4ff0cd01c7cefedf9d299ae0ae0cd91772d37f783fa6e2bf2b3f05dd1",
+    "source-candidates2018.pgn": "de1acd25671807ddd2ac3290059f64a46f14b9f38a3da76f3e31e0e3f9601ac5",
+    "source-wch2024.pgn": "763701f8395b39049bab4c8244d8c8b56a275739525e5f80a42eb88662632470"
+  },
+  "source_parsing_note": "Original TWIC bytes preserved; Windows-1252 decoding where required and CRLF/multiple-empty-line layout normalization recorded. Comments and variations not exported or used for selection or memos."
+}

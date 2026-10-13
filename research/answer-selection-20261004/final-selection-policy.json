@@ -1,0 +1,23 @@
+{
+  "version": "selectionv9-frozen-candidate",
+  "scope": "A bounded selection experiment in the existing physical fallback, plus common completion fixes; not a replacement general ranking framework.",
+  "priority_preserved": ["terminal", "convergence", "exchange retention", "investigated mechanism", "existing selected question", "verified threat/contact"],
+  "new_candidate": {
+    "question": "What happens to the same original piece captured at one root, and what is the observed price in each provided line?",
+    "subject": "Exactly one distinct original victim of an actual root capture in the two certified arms.",
+    "contrast": "Different observed removal/survival or different actual price. Same result and price with different timing is insufficient.",
+    "price": "Existing accounts and exact actual events; narrow dependent recovery requires an immediate or continuously verified reply. Subject's own price is retained.",
+    "guards": ["No ordinary-price use across promotion", "Both arms have closed certified prices without unresolved duty costs", "Already selected condition/use action and proof remain owned", "Existing capturing-use account price remains covered", "No fabricated attack, force, evaluation cause, or root causality"],
+    "detail": "Unselected typed statements and complete line ledgers remain available; position proof anchors need not be spoken as events."
+  },
+  "common_completion": [
+    "Separate action references from position-only proof references while retaining exact proof and board links.",
+    "Actual roots, necessary trade closure and actual check replies are still expressed or semantically represented.",
+    "Actual supported countercapture can own an adjacent ally loss only with exact support, original identity and legal recapture evidence; unplayed recapture remains proof only."
+  ],
+  "not_implemented": ["New root-evasion selector", "New root condition/use importance selector", "General ranking of competing closed questions", "Automatic threat investigation"],
+  "known_boundaries": ["Quiet-use later price is not certified by the capturing-use guard", "Existing adjacency/sign compensation heuristics are not replaced", "Closed actual use is not importance"],
+  "fresh_evaluation": "One attempt per frozen request, no source tuning or request reselection after fresh output. Facts and reader obligations are written before basic prose is read.",
+  "quality_thresholds": {"useful_complete": "14/18", "important_price_omissions": 0, "unsupported_threat_or_attack_resolution": 0},
+  "constraints": {"product_llm": false, "docker": false, "fullstack_ui": false, "independent_human_reader_evaluation": false}
+}

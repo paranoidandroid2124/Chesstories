@@ -1,0 +1,5370 @@
+{
+  "schema_version": 1,
+  "study_date_local": "2026-10-08",
+  "scope": "새 제품 코드와 새 제품/엔진 출력을 읽기 전, 개발용 SG13/SG14/SG32 및 앞선 제품 이론 사례와 구분해 고정한 독립 5장면. 도표 확인과 합법 재생만 수행했다.",
+  "independence": {
+    "product_or_engine_outputs_read_for_selection": false,
+    "product_code_read_or_edited": false,
+    "engine_run_for_this_artifact": false,
+    "prior_source_records_modified": false,
+    "complete_book_reading_claim": false
+  },
+  "sources": {
+    "supergm": {
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+      "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba"
+    },
+    "swindler": {
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\The Complete Chess Swindler - Reading Edition.pdf",
+      "sha256": "ce6e06704a6c4479d8e97fe0d30b088e9d63d6f35fab2694ee94a0d9b93def17"
+    }
+  },
+  "cases": [
+    {
+      "id": "IC-SG23",
+      "title": "같은 d5 진입의 서로 다른 방어 비용",
+      "game": "Robert James Fischer – Karl Robatsch, Vinkovci 1968, 21.White",
+      "types": [
+        "already_legal_action_different_utility",
+        "strong_counter_neutralizes_attractive_purpose",
+        "same_idea_different_realization"
+      ],
+      "source": {
+        "book": "Think Like a Super-GM",
+        "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+        "reading_edition_pages_read": [
+          242,
+          243,
+          244,
+          245,
+          246,
+          247,
+          248,
+          249
+        ],
+        "reading_edition_diagram_pages_visually_checked": [
+          242,
+          246,
+          247
+        ],
+        "source_pdf_footer_pages": "282–291",
+        "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+      },
+      "primary_move_san": "Bd5",
+      "additional_input_moves_san": [
+        "Nd5"
+      ],
+      "human_question": "d5에 어느 기물을 놓아야 흑이 교환과 후퇴로 전부 정리하지 못하고 작은 수동성이 남는가?",
+      "necessary_functional_conditions": [
+        "d5를 사용할 수 있다는 합법성만으로는 부족하다. 흑이 ...Bxd4, e 파일 룩 교환, ...Nec5 등으로 압박을 비용 없이 정리할 수 있는지 확인해야 한다.",
+        "비교 이유를 주장하려면 Bd5 뒤의 주요 방어에서도 흑의 남은 기물에 방어 비용이나 수동성이 남고 백의 활동이 유지되어야 한다.",
+        "그 비용은 e8 나이트의 수동성, b7 나이트의 수동성, c 파일 압박처럼 다른 방식으로 실현될 수 있다. 같은 첫 교환과 같은 종착 칸을 요구하지 않는다.",
+        "저자는 작은 우세를 말한다. 즉시 물질 획득이나 강제 승리를 설명의 필요 결과로 정하지 않는다."
+      ],
+      "nonessential_sequence_events": [
+        "21...Bxd5와 22...Bxd4의 정확한 교환 순서",
+        "24...Nxe8이라는 특정 재포획",
+        "25.a4 이후의 실제 경기 전개",
+        "Nc7이 모든 응수에서 실제로 실행되는 것"
+      ],
+      "strong_counter_policy": {
+        "primary_counter_types": [
+          "d5를 받아 주되 e 파일 교환으로 나이트 포크를 없애는 방어",
+          "...Nec5처럼 뒤로 움직여 기물 협력을 복구하는 방어",
+          "...Nd6 또는 ...Rac8로 다른 방식의 협력을 만드는 방어"
+        ],
+        "book_specific_resources": [
+          "Nd5 Bxd4 Nxd4 Nec5!",
+          "Bd5 Nd6",
+          "Bd5 Bxd5 Nxd5 Rac8",
+          "Bd5 Bxd5 Nxd5 Bxd4 Nxd4 Nef6"
+        ],
+        "ranking_scope": "...Nec5는 Nd5에 대한 저자의 가장 정확한 중화 수다. Bd5 뒤 전 응수의 최강 순서는 새 엔진/독립 판독 없이 확정하지 않는다."
+      },
+      "answer_type": "comparison_if_asking_why_Bd5; purposeful_small_pressure_for_basic_comment",
+      "minimal_basic_comment": "비숍을 d5에 놓아 흑이 교환으로 정리하더라도 남은 나이트의 수동성을 이용할 작은 우세를 남깁니다.",
+      "minimal_comparison_comment": "나이트로 먼저 d5에 가면 ...Nec5로 흑이 e 파일 교환과 포크 방어를 함께 준비할 수 있습니다. 비숍으로 먼저 들어가면 다른 교환 순서에서도 흑의 기물에 방어 부담이 남습니다.",
+      "counter_revision": "Bd5 뒤에도 비용 없이 완전히 중화하는 주요 방어가 확인되면 '작은 우세를 남긴다'를 철회하고 d5 압박이라는 목적만 조건부로 설명한다.",
+      "multiple_good_moves": {
+        "author_assessment": "Bd5만 작은 우세를 키우는 가장 정확한 선택으로 제시하며 Nd5는 흑이 중화할 수 있다.",
+        "do_not_infer": "Nd5가 물질을 잃는 블런더라는 뜻은 아니다. 현재 엔진 조건에서 작은 우세 차이가 유지되는지는 미확정이다."
+      },
+      "misleading_risks": [
+        "Nc7이 합법이므로 포크가 반드시 이득이라는 표현",
+        "e8에 실제 나이트가 남지 않은 갱신 수순을 설명 반박으로 처리",
+        "작은 우세를 강제 승리로 바꾸는 표현"
+      ],
+      "minimum_comparison_scope": "Nd5의 ...Bxd4 이후 ...Nec5 중화와 Bd5 뒤 다른 교환 순서·...Nd6·...Rac8을 최소한 같이 확인한다. 합법 Nc7 하나를 증인으로 삼지 않는다.",
+      "unresolved": [
+        "갱신된 주요 응수 전체에서 작은 우세가 남는지",
+        "시점에 따라 방어 비용이 나이트 수동성에서 룩 압박으로 바뀌는 것을 같은 아이디어로 묶는 판정"
+      ],
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "root_reconstruction": {
+        "kind": "complete_standard_game_history",
+        "history_san": [
+          "e4",
+          "e5",
+          "Nf3",
+          "Nc6",
+          "Bb5",
+          "a6",
+          "Ba4",
+          "Nf6",
+          "O-O",
+          "Be7",
+          "Re1",
+          "b5",
+          "Bb3",
+          "d6",
+          "c3",
+          "O-O",
+          "h3",
+          "Nb8",
+          "d4",
+          "Nbd7",
+          "Nh4",
+          "exd4",
+          "cxd4",
+          "Nb6",
+          "Nf3",
+          "c5",
+          "Bf4",
+          "Bb7",
+          "dxc5",
+          "dxc5",
+          "Qxd8",
+          "Bxd8",
+          "Bd6",
+          "Re8",
+          "Bxc5",
+          "Nbd7",
+          "Bd4",
+          "Nxe4",
+          "Nc3",
+          "Bf6"
+        ],
+        "history_uci": [
+          "e2e4",
+          "e7e5",
+          "g1f3",
+          "b8c6",
+          "f1b5",
+          "a7a6",
+          "b5a4",
+          "g8f6",
+          "e1g1",
+          "f8e7",
+          "f1e1",
+          "b7b5",
+          "a4b3",
+          "d7d6",
+          "c2c3",
+          "e8g8",
+          "h2h3",
+          "c6b8",
+          "d2d4",
+          "b8d7",
+          "f3h4",
+          "e5d4",
+          "c3d4",
+          "d7b6",
+          "h4f3",
+          "c7c5",
+          "c1f4",
+          "c8b7",
+          "d4c5",
+          "d6c5",
+          "d1d8",
+          "e7d8",
+          "f4d6",
+          "f8e8",
+          "d6c5",
+          "b6d7",
+          "c5d4",
+          "f6e4",
+          "b1c3",
+          "d8f6"
+        ],
+        "rights_and_counter_scope": "실제 완전 이력에서 계산"
+      },
+      "book_lines": [
+        {
+          "label": "main_ending_with_back_rank_knight",
+          "san": [
+            "Bd5",
+            "Bxd5",
+            "Nxd5",
+            "Bxd4",
+            "Nxd4",
+            "Nef6",
+            "Rxe8+",
+            "Nxe8",
+            "a4"
+          ],
+          "reading_edition_pages": [
+            245,
+            246,
+            247
+          ],
+          "claim_scope": "저자는 백의 작은 우세를 남기는 것으로 평가한다. Nxe8이라는 사건 하나가 모든 응수의 필수 조건은 아니다.",
+          "uci": [
+            "b3d5",
+            "b7d5",
+            "c3d5",
+            "f6d4",
+            "f3d4",
+            "e4f6",
+            "e1e8",
+            "f6e8",
+            "a2a4"
+          ],
+          "legally_replayed": true,
+          "final_fen": "r3n1k1/3n1ppp/p7/1p1N4/P2N4/7P/1P3PP1/R5K1 b - - 0 25",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Bd5",
+              "uci": "b3d5",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd5",
+              "uci": "b7d5",
+              "moving_root_piece_id": "b-B@b7",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Bxd4",
+              "uci": "f6d4",
+              "moving_root_piece_id": "b-B@f6",
+              "captured_root_piece_id": "w-B@d4",
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1N4/3bn3/5N1P/PP3PP1/R3R1K1 w - - 0 23"
+            },
+            {
+              "ply": 5,
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-B@f6",
+              "before_fen": "r3r1k1/3n1ppp/p7/1p1N4/3bn3/5N1P/PP3PP1/R3R1K1 w - - 0 23",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23"
+            },
+            {
+              "ply": 6,
+              "san": "Nef6",
+              "uci": "e4f6",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23",
+              "after_fen": "r3r1k1/3n1ppp/p4n2/1p1N4/3N4/7P/PP3PP1/R3R1K1 w - - 1 24"
+            },
+            {
+              "ply": 7,
+              "san": "Rxe8+",
+              "uci": "e1e8",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": "b-R@e8",
+              "before_fen": "r3r1k1/3n1ppp/p4n2/1p1N4/3N4/7P/PP3PP1/R3R1K1 w - - 1 24",
+              "after_fen": "r3R1k1/3n1ppp/p4n2/1p1N4/3N4/7P/PP3PP1/R5K1 b - - 0 24"
+            },
+            {
+              "ply": 8,
+              "san": "Nxe8",
+              "uci": "f6e8",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": "w-R@e1",
+              "before_fen": "r3R1k1/3n1ppp/p4n2/1p1N4/3N4/7P/PP3PP1/R5K1 b - - 0 24",
+              "after_fen": "r3n1k1/3n1ppp/p7/1p1N4/3N4/7P/PP3PP1/R5K1 w - - 0 25"
+            },
+            {
+              "ply": 9,
+              "san": "a4",
+              "uci": "a2a4",
+              "moving_root_piece_id": "w-P@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "r3n1k1/3n1ppp/p7/1p1N4/3N4/7P/PP3PP1/R5K1 w - - 0 25",
+              "after_fen": "r3n1k1/3n1ppp/p7/1p1N4/P2N4/7P/1P3PP1/R5K1 b - - 0 25"
+            }
+          ]
+        },
+        {
+          "label": "different_exchange_order_same_position",
+          "san": [
+            "Bd5",
+            "Bxd4",
+            "Nxd4",
+            "Bxd5",
+            "Nxd5"
+          ],
+          "reading_edition_pages": [
+            246
+          ],
+          "claim_scope": "교환 순서가 달라도 첫 주수순의 23.Nxd4 뒤와 같은 기물 배치와 차례에 도달한다. 반수 카운터는 다르다.",
+          "uci": [
+            "b3d5",
+            "f6d4",
+            "f3d4",
+            "b7d5",
+            "c3d5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Bd5",
+              "uci": "b3d5",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd4",
+              "uci": "f6d4",
+              "moving_root_piece_id": "b-B@f6",
+              "captured_root_piece_id": "w-B@d4",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1B4/3bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-B@f6",
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1B4/3bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1B4/3Nn3/2N4P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Bxd5",
+              "uci": "b7d5",
+              "moving_root_piece_id": "b-B@b7",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1B4/3Nn3/2N4P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1b4/3Nn3/2N4P/PP3PP1/R3R1K1 w - - 0 23"
+            },
+            {
+              "ply": 5,
+              "san": "Nxd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "r3r1k1/3n1ppp/p7/1p1b4/3Nn3/2N4P/PP3PP1/R3R1K1 w - - 0 23",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23"
+            }
+          ]
+        },
+        {
+          "label": "different_realization_passive_b7_knight",
+          "san": [
+            "Bd5",
+            "Nd6",
+            "Bxb7",
+            "Nxb7",
+            "Nd5"
+          ],
+          "reading_edition_pages": [
+            246
+          ],
+          "claim_scope": "같은 소규모 압박이 b7의 수동적인 나이트를 통해 남는다. e8 나이트를 반드시 요구하면 이 근거를 버린다.",
+          "uci": [
+            "b3d5",
+            "e4d6",
+            "d5b7",
+            "d6b7",
+            "c3d5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "r3r1k1/1n1n1ppp/p4b2/1p1N4/3B4/5N1P/PP3PP1/R3R1K1 b - - 1 23",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Bd5",
+              "uci": "b3d5",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Nd6",
+              "uci": "e4d6",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p2n1b2/1p1B4/3B4/2N2N1P/PP3PP1/R3R1K1 w - - 4 22"
+            },
+            {
+              "ply": 3,
+              "san": "Bxb7",
+              "uci": "d5b7",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "r3r1k1/1b1n1ppp/p2n1b2/1p1B4/3B4/2N2N1P/PP3PP1/R3R1K1 w - - 4 22",
+              "after_fen": "r3r1k1/1B1n1ppp/p2n1b2/1p6/3B4/2N2N1P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Nxb7",
+              "uci": "d6b7",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "r3r1k1/1B1n1ppp/p2n1b2/1p6/3B4/2N2N1P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/1n1n1ppp/p4b2/1p6/3B4/2N2N1P/PP3PP1/R3R1K1 w - - 0 23"
+            },
+            {
+              "ply": 5,
+              "san": "Nd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1n1n1ppp/p4b2/1p6/3B4/2N2N1P/PP3PP1/R3R1K1 w - - 0 23",
+              "after_fen": "r3r1k1/1n1n1ppp/p4b2/1p1N4/3B4/5N1P/PP3PP1/R3R1K1 b - - 1 23"
+            }
+          ]
+        },
+        {
+          "label": "different_realization_rook_pressure",
+          "san": [
+            "Bd5",
+            "Bxd5",
+            "Nxd5",
+            "Rac8",
+            "Rac1"
+          ],
+          "reading_edition_pages": [
+            246
+          ],
+          "claim_scope": "즉시 교환 완료를 요구하지 않고 Rc1으로 압박을 유지하는 저자의 대안이다.",
+          "uci": [
+            "b3d5",
+            "b7d5",
+            "c3d5",
+            "a8c8",
+            "a1c1"
+          ],
+          "legally_replayed": true,
+          "final_fen": "2r1r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/2R1R1K1 b - - 2 23",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Bd5",
+              "uci": "b3d5",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd5",
+              "uci": "b7d5",
+              "moving_root_piece_id": "b-B@b7",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Rac8",
+              "uci": "a8c8",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "2r1r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 w - - 1 23"
+            },
+            {
+              "ply": 5,
+              "san": "Rac1",
+              "uci": "a1c1",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "2r1r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 w - - 1 23",
+              "after_fen": "2r1r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/2R1R1K1 b - - 2 23"
+            }
+          ]
+        },
+        {
+          "label": "d6_defence_has_cost",
+          "san": [
+            "Bd5",
+            "Bxd5",
+            "Nxd5",
+            "Bxd4",
+            "Nxd4",
+            "Nd6",
+            "Nc7",
+            "Rxe1+",
+            "Rxe1",
+            "Ra7",
+            "Ne8"
+          ],
+          "reading_edition_pages": [
+            247
+          ],
+          "claim_scope": "흑이 d6로 방어하는 다른 수순에서도 백의 나이트 활동 때문에 수동성이 남는다는 책의 예시다.",
+          "uci": [
+            "b3d5",
+            "b7d5",
+            "c3d5",
+            "f6d4",
+            "f3d4",
+            "e4d6",
+            "d5c7",
+            "e8e1",
+            "a1e1",
+            "a8a7",
+            "c7e8"
+          ],
+          "legally_replayed": true,
+          "final_fen": "4N1k1/r2n1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 b - - 2 26",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Bd5",
+              "uci": "b3d5",
+              "moving_root_piece_id": "w-B@b3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd5",
+              "uci": "b7d5",
+              "moving_root_piece_id": "b-B@b7",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1B4/3Bn3/2N2N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1b4/3Bn3/2N2N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Bxd4",
+              "uci": "f6d4",
+              "moving_root_piece_id": "b-B@f6",
+              "captured_root_piece_id": "w-B@d4",
+              "before_fen": "r3r1k1/3n1ppp/p4b2/1p1N4/3Bn3/5N1P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1N4/3bn3/5N1P/PP3PP1/R3R1K1 w - - 0 23"
+            },
+            {
+              "ply": 5,
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-B@f6",
+              "before_fen": "r3r1k1/3n1ppp/p7/1p1N4/3bn3/5N1P/PP3PP1/R3R1K1 w - - 0 23",
+              "after_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23"
+            },
+            {
+              "ply": 6,
+              "san": "Nd6",
+              "uci": "e4d6",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23",
+              "after_fen": "r3r1k1/3n1ppp/p2n4/1p1N4/3N4/7P/PP3PP1/R3R1K1 w - - 1 24"
+            },
+            {
+              "ply": 7,
+              "san": "Nc7",
+              "uci": "d5c7",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/3n1ppp/p2n4/1p1N4/3N4/7P/PP3PP1/R3R1K1 w - - 1 24",
+              "after_fen": "r3r1k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/R3R1K1 b - - 2 24"
+            },
+            {
+              "ply": 8,
+              "san": "Rxe1+",
+              "uci": "e8e1",
+              "moving_root_piece_id": "b-R@e8",
+              "captured_root_piece_id": "w-R@e1",
+              "before_fen": "r3r1k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/R3R1K1 b - - 2 24",
+              "after_fen": "r5k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/R3r1K1 w - - 0 25"
+            },
+            {
+              "ply": 9,
+              "san": "Rxe1",
+              "uci": "a1e1",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": "b-R@e8",
+              "before_fen": "r5k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/R3r1K1 w - - 0 25",
+              "after_fen": "r5k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 b - - 0 25"
+            },
+            {
+              "ply": 10,
+              "san": "Ra7",
+              "uci": "a8a7",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": null,
+              "before_fen": "r5k1/2Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 b - - 0 25",
+              "after_fen": "6k1/r1Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 w - - 1 26"
+            },
+            {
+              "ply": 11,
+              "san": "Ne8",
+              "uci": "c7e8",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "6k1/r1Nn1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 w - - 1 26",
+              "after_fen": "4N1k1/r2n1ppp/p2n4/1p6/3N4/7P/PP3PP1/4R1K1 b - - 2 26"
+            }
+          ]
+        },
+        {
+          "label": "same_legal_Nc7_can_be_neutralized",
+          "san": [
+            "Nd5",
+            "Bxd4",
+            "Nxd4",
+            "Nec5",
+            "Nc7",
+            "Rxe1+",
+            "Rxe1",
+            "Rc8",
+            "Nf5",
+            "Rxc7"
+          ],
+          "reading_edition_pages": [
+            245,
+            246
+          ],
+          "claim_scope": "Nc7은 계속 합법적이지만 ...Rxe1+와 ...Rc8이 압박을 없앤다. Nf5는 책에 제시된 나쁜 후속 수다.",
+          "uci": [
+            "c3d5",
+            "f6d4",
+            "f3d4",
+            "e4c5",
+            "d5c7",
+            "e8e1",
+            "a1e1",
+            "a8c8",
+            "d4f5",
+            "c8c7"
+          ],
+          "legally_replayed": true,
+          "final_fen": "6k1/1brn1ppp/p7/1pn2N2/8/1B5P/PP3PP1/4R1K1 w - - 0 26",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Nd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1N4/3Bn3/1B3N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd4",
+              "uci": "f6d4",
+              "moving_root_piece_id": "b-B@f6",
+              "captured_root_piece_id": "w-B@d4",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1N4/3Bn3/1B3N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3bn3/1B3N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-B@f6",
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3bn3/1B3N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3Nn3/1B5P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Nec5",
+              "uci": "e4c5",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3Nn3/1B5P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R3R1K1 w - - 1 23"
+            },
+            {
+              "ply": 5,
+              "san": "Nc7",
+              "uci": "d5c7",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R3R1K1 w - - 1 23",
+              "after_fen": "r3r1k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/R3R1K1 b - - 2 23"
+            },
+            {
+              "ply": 6,
+              "san": "Rxe1+",
+              "uci": "e8e1",
+              "moving_root_piece_id": "b-R@e8",
+              "captured_root_piece_id": "w-R@e1",
+              "before_fen": "r3r1k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/R3R1K1 b - - 2 23",
+              "after_fen": "r5k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/R3r1K1 w - - 0 24"
+            },
+            {
+              "ply": 7,
+              "san": "Rxe1",
+              "uci": "a1e1",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": "b-R@e8",
+              "before_fen": "r5k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/R3r1K1 w - - 0 24",
+              "after_fen": "r5k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/4R1K1 b - - 0 24"
+            },
+            {
+              "ply": 8,
+              "san": "Rc8",
+              "uci": "a8c8",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": null,
+              "before_fen": "r5k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/4R1K1 b - - 0 24",
+              "after_fen": "2r3k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/4R1K1 w - - 1 25"
+            },
+            {
+              "ply": 9,
+              "san": "Nf5",
+              "uci": "d4f5",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": null,
+              "before_fen": "2r3k1/1bNn1ppp/p7/1pn5/3N4/1B5P/PP3PP1/4R1K1 w - - 1 25",
+              "after_fen": "2r3k1/1bNn1ppp/p7/1pn2N2/8/1B5P/PP3PP1/4R1K1 b - - 2 25"
+            },
+            {
+              "ply": 10,
+              "san": "Rxc7",
+              "uci": "c8c7",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": "w-N@c3",
+              "before_fen": "2r3k1/1bNn1ppp/p7/1pn2N2/8/1B5P/PP3PP1/4R1K1 b - - 2 25",
+              "after_fen": "6k1/1brn1ppp/p7/1pn2N2/8/1B5P/PP3PP1/4R1K1 w - - 0 26"
+            }
+          ]
+        },
+        {
+          "label": "quiet_neutralization",
+          "san": [
+            "Nd5",
+            "Bxd4",
+            "Nxd4",
+            "Nec5",
+            "Rxe8+",
+            "Rxe8",
+            "Rd1",
+            "Nxb3",
+            "Nxb3",
+            "Bxd5",
+            "Rxd5",
+            "Nf6",
+            "Rd6",
+            "Re1+",
+            "Kh2",
+            "Ne8",
+            "Rxa6",
+            "Rb1",
+            "Nd4",
+            "Rxb2"
+          ],
+          "reading_edition_pages": [
+            246
+          ],
+          "claim_scope": "책은 이 교환 경로가 무승부에 가까워진다고 설명한다. Nd5를 전술적 블런더라고 판정하는 근거가 아니다.",
+          "uci": [
+            "c3d5",
+            "f6d4",
+            "f3d4",
+            "e4c5",
+            "e1e8",
+            "a8e8",
+            "a1d1",
+            "c5b3",
+            "d4b3",
+            "b7d5",
+            "d1d5",
+            "d7f6",
+            "d5d6",
+            "e8e1",
+            "g1h2",
+            "f6e8",
+            "d6a6",
+            "e1b1",
+            "b3d4",
+            "b1b2"
+          ],
+          "legally_replayed": true,
+          "final_fen": "4n1k1/5ppp/R7/1p6/3N4/7P/Pr3PPK/8 w - - 0 31",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Nd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p4b2/1p1N4/3Bn3/1B3N1P/PP3PP1/R3R1K1 b - - 3 21"
+            },
+            {
+              "ply": 2,
+              "san": "Bxd4",
+              "uci": "f6d4",
+              "moving_root_piece_id": "b-B@f6",
+              "captured_root_piece_id": "w-B@d4",
+              "before_fen": "r3r1k1/1b1n1ppp/p4b2/1p1N4/3Bn3/1B3N1P/PP3PP1/R3R1K1 b - - 3 21",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3bn3/1B3N1P/PP3PP1/R3R1K1 w - - 0 22"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd4",
+              "uci": "f3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-B@f6",
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3bn3/1B3N1P/PP3PP1/R3R1K1 w - - 0 22",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3Nn3/1B5P/PP3PP1/R3R1K1 b - - 0 22"
+            },
+            {
+              "ply": 4,
+              "san": "Nec5",
+              "uci": "e4c5",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": null,
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1p1N4/3Nn3/1B5P/PP3PP1/R3R1K1 b - - 0 22",
+              "after_fen": "r3r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R3R1K1 w - - 1 23"
+            },
+            {
+              "ply": 5,
+              "san": "Rxe8+",
+              "uci": "e1e8",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": "b-R@e8",
+              "before_fen": "r3r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R3R1K1 w - - 1 23",
+              "after_fen": "r3R1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R5K1 b - - 0 23"
+            },
+            {
+              "ply": 6,
+              "san": "Rxe8",
+              "uci": "a8e8",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": "w-R@e1",
+              "before_fen": "r3R1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R5K1 b - - 0 23",
+              "after_fen": "4r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R5K1 w - - 0 24"
+            },
+            {
+              "ply": 7,
+              "san": "Rd1",
+              "uci": "a1d1",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "4r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R5K1 w - - 0 24",
+              "after_fen": "4r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/3R2K1 b - - 1 24"
+            },
+            {
+              "ply": 8,
+              "san": "Nxb3",
+              "uci": "c5b3",
+              "moving_root_piece_id": "b-N@e4",
+              "captured_root_piece_id": "w-B@b3",
+              "before_fen": "4r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/3R2K1 b - - 1 24",
+              "after_fen": "4r1k1/1b1n1ppp/p7/1p1N4/3N4/1n5P/PP3PP1/3R2K1 w - - 0 25"
+            },
+            {
+              "ply": 9,
+              "san": "Nxb3",
+              "uci": "d4b3",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": "b-N@e4",
+              "before_fen": "4r1k1/1b1n1ppp/p7/1p1N4/3N4/1n5P/PP3PP1/3R2K1 w - - 0 25",
+              "after_fen": "4r1k1/1b1n1ppp/p7/1p1N4/8/1N5P/PP3PP1/3R2K1 b - - 0 25"
+            },
+            {
+              "ply": 10,
+              "san": "Bxd5",
+              "uci": "b7d5",
+              "moving_root_piece_id": "b-B@b7",
+              "captured_root_piece_id": "w-N@c3",
+              "before_fen": "4r1k1/1b1n1ppp/p7/1p1N4/8/1N5P/PP3PP1/3R2K1 b - - 0 25",
+              "after_fen": "4r1k1/3n1ppp/p7/1p1b4/8/1N5P/PP3PP1/3R2K1 w - - 0 26"
+            },
+            {
+              "ply": 11,
+              "san": "Rxd5",
+              "uci": "d1d5",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": "b-B@b7",
+              "before_fen": "4r1k1/3n1ppp/p7/1p1b4/8/1N5P/PP3PP1/3R2K1 w - - 0 26",
+              "after_fen": "4r1k1/3n1ppp/p7/1p1R4/8/1N5P/PP3PP1/6K1 b - - 0 26"
+            },
+            {
+              "ply": 12,
+              "san": "Nf6",
+              "uci": "d7f6",
+              "moving_root_piece_id": "b-N@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "4r1k1/3n1ppp/p7/1p1R4/8/1N5P/PP3PP1/6K1 b - - 0 26",
+              "after_fen": "4r1k1/5ppp/p4n2/1p1R4/8/1N5P/PP3PP1/6K1 w - - 1 27"
+            },
+            {
+              "ply": 13,
+              "san": "Rd6",
+              "uci": "d5d6",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "4r1k1/5ppp/p4n2/1p1R4/8/1N5P/PP3PP1/6K1 w - - 1 27",
+              "after_fen": "4r1k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PP1/6K1 b - - 2 27"
+            },
+            {
+              "ply": 14,
+              "san": "Re1+",
+              "uci": "e8e1",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": null,
+              "before_fen": "4r1k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PP1/6K1 b - - 2 27",
+              "after_fen": "6k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PP1/4r1K1 w - - 3 28"
+            },
+            {
+              "ply": 15,
+              "san": "Kh2",
+              "uci": "g1h2",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "6k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PP1/4r1K1 w - - 3 28",
+              "after_fen": "6k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PPK/4r3 b - - 4 28"
+            },
+            {
+              "ply": 16,
+              "san": "Ne8",
+              "uci": "f6e8",
+              "moving_root_piece_id": "b-N@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "6k1/5ppp/p2R1n2/1p6/8/1N5P/PP3PPK/4r3 b - - 4 28",
+              "after_fen": "4n1k1/5ppp/p2R4/1p6/8/1N5P/PP3PPK/4r3 w - - 5 29"
+            },
+            {
+              "ply": 17,
+              "san": "Rxa6",
+              "uci": "d6a6",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": "b-P@a6",
+              "before_fen": "4n1k1/5ppp/p2R4/1p6/8/1N5P/PP3PPK/4r3 w - - 5 29",
+              "after_fen": "4n1k1/5ppp/R7/1p6/8/1N5P/PP3PPK/4r3 b - - 0 29"
+            },
+            {
+              "ply": 18,
+              "san": "Rb1",
+              "uci": "e1b1",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": null,
+              "before_fen": "4n1k1/5ppp/R7/1p6/8/1N5P/PP3PPK/4r3 b - - 0 29",
+              "after_fen": "4n1k1/5ppp/R7/1p6/8/1N5P/PP3PPK/1r6 w - - 1 30"
+            },
+            {
+              "ply": 19,
+              "san": "Nd4",
+              "uci": "b3d4",
+              "moving_root_piece_id": "w-N@f3",
+              "captured_root_piece_id": null,
+              "before_fen": "4n1k1/5ppp/R7/1p6/8/1N5P/PP3PPK/1r6 w - - 1 30",
+              "after_fen": "4n1k1/5ppp/R7/1p6/3N4/7P/PP3PPK/1r6 b - - 2 30"
+            },
+            {
+              "ply": 20,
+              "san": "Rxb2",
+              "uci": "b1b2",
+              "moving_root_piece_id": "b-R@a8",
+              "captured_root_piece_id": "w-P@b2",
+              "before_fen": "4n1k1/5ppp/R7/1p6/3N4/7P/PP3PPK/1r6 b - - 2 30",
+              "after_fen": "4n1k1/5ppp/R7/1p6/3N4/7P/Pr3PPK/8 w - - 0 31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "IC-SG41",
+      "title": "긴장을 유지하며 실현 경로를 늦게 선택하는 Red1",
+      "game": "Inna Agrest – Li Chao, Internet rapid 2019, 20.White",
+      "types": [
+        "already_legal_action_different_utility",
+        "same_idea_different_realization",
+        "natural_good_move",
+        "premature_exchange_error"
+      ],
+      "source": {
+        "book": "Think Like a Super-GM",
+        "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+        "reading_edition_pages_read": [
+          410,
+          411,
+          412,
+          413,
+          414,
+          415,
+          416,
+          417,
+          418
+        ],
+        "reading_edition_diagram_pages_visually_checked": [
+          410
+        ],
+        "source_pdf_footer_pages": "486–497",
+        "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+      },
+      "primary_move_san": "Red1",
+      "additional_input_moves_san": [
+        "fxe6"
+      ],
+      "human_question": "f5 폰을 서둘러 교환하지 않으면서, 흑의 응수에 맞춰 나이트 활동과 약점 압박을 어떻게 이어 가는가?",
+      "necessary_functional_conditions": [
+        "f5 폰을 유지하는 것이 백에게 유효해야 한다. 흑의 ...exf5가 합법이라는 사실만으로 폰을 구해야 하는 긴급 문제라고 정하지 않는다.",
+        "...exf5를 허용했을 때 d5 진입과 다른 활동이 가격을 보상하는지 확인한다. 소규모 물질 양보와 약점·기물 활동의 결과를 같이 읽어야 한다.",
+        "Red1은 두 번째 룩을 개선하면서 e 파일 대립의 불편을 피하고 나이트의 경로를 미리 고정하지 않는다. ...a5 뒤 Ne2-g3과 다른 응수 뒤 c3-d5가 서로 다른 증인이 될 수 있다.",
+        "fxe6 뒤 ...fxe6는 중앙 구조를 고치고 f5 칸을 비워 ...f6-f5 및 e7 비숍의 활동을 허용한다. 실제 경기의 모든 후속 교환은 필수 조건이 아니다.",
+        "흑의 ...Re5, ...Rg8, ...Re6와 같은 적극적 자원이 목적의 범위를 바꿀 수 있으므로 '흑이 아무것도 할 수 없다'고 말하지 않는다."
+      ],
+      "nonessential_sequence_events": [
+        "나이트가 최종적으로 g3 또는 b4에 반드시 도달하는 것",
+        "Ne2 뒤 Nc3로 돌아가지 않는 것",
+        "흑이 실제 경기처럼 ...Kc7을 택하는 것",
+        "나이트의 변두리 경로를 무조건 나쁜 사건으로 분류하는 것"
+      ],
+      "strong_counter_policy": {
+        "primary_counter_types": [
+          "...exf5로 물질을 받아 백의 보상이 충분한지 묻는 방어",
+          "...Re5로 e 파일 대립과 e4 압박을 만드는 방어",
+          "...Rg8 또는 ...Re6-f5로 수동적 비숍을 활성화하는 반격"
+        ],
+        "book_specific_resources": [
+          "Ne2 exf5 Nc3",
+          "Na2 exf5 Nb4 fxe4 Rdxe4 Re5 Nxa6 Re6!",
+          "Red1 a5 Ne2 exf5 Ng3",
+          "fxe6 fxe6 Red1 f5!"
+        ],
+        "ranking_scope": "Red1 뒤 최강 응수 한 개는 저자가 여기서 확정하지 않는다. 새 조사에서는 모든 합법 첫 응수를 보되 위 기능 반론을 먼저 판독한다."
+      },
+      "answer_type": "basic_purpose_for_Red1; error_reason_for_fxe6; conditional_comparison_when_requested",
+      "minimal_basic_comment": "룩을 d1에 모으면서 f5의 긴장을 유지합니다. 나이트를 어느 쪽으로 돌릴지는 흑의 다음 수를 보고 결정할 수 있습니다.",
+      "minimal_error_comment": "f5 폰을 먼저 교환하면 흑의 폰 구조를 정리해 주고 ...f5로 비숍들을 풀 기회를 줍니다. 긴장을 유지한 채 룩과 나이트를 개선하는 편이 더 까다로운 압박을 남깁니다.",
+      "counter_revision": "...exf5 뒤 활동이 가격을 충분히 보상하지 못하거나 적극적 반격이 압박을 풀면 '강한 봉쇄'를 철회하고 유연한 개선이라는 기본 목적만 남긴다. 즉각적 전술 손실이 확인되면 기본 목적 설명보다 그 가격을 먼저 말한다.",
+      "multiple_good_moves": {
+        "author_assessment": "Red1이 가장 유연한 권고다. a4, Na2, Ne2를 포함해 좋은 수가 여러 개 있으며 Ne2는 저자의 첫 선택이었다.",
+        "do_not_infer": "Ne2나 Na2를 실수로 꾸며 Red1의 우열을 설명하지 않는다."
+      },
+      "misleading_risks": [
+        "f5가 두 번 공격받으므로 먼저 교환해야 한다는 물질적 단정",
+        "흑의 비숍이 완전히 움직일 수 없다는 표현",
+        "나이트의 특정 경로를 고정해 다른 좋은 실현을 누락",
+        "긴장 유지가 언제나 좋은 일반 규칙이라는 결론"
+      ],
+      "minimum_comparison_scope": "Red1 뒤 최소 ...exf5와 ...a5의 서로 다른 나이트 경로, ...Re5형 대립을 검사한다. fxe6 뒤는 ...fxe6-f5와 비숍 활동까지 읽되 실제 경기 전체 승패를 원인 증명으로 쓰지 않는다.",
+      "unresolved": [
+        "Red1 뒤 가장 강한 반격의 순위와 충분한 압박 지속 여부",
+        "기물 이동을 허용하는 합법성보다 '이 교환의 수혜자가 누구인가'를 제품이 평가할 수 있는지"
+      ],
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "root_reconstruction": {
+        "kind": "complete_standard_game_history",
+        "history_san": [
+          "e4",
+          "c5",
+          "Nf3",
+          "Nc6",
+          "d4",
+          "cxd4",
+          "Nxd4",
+          "Nf6",
+          "Nc3",
+          "d6",
+          "Bg5",
+          "e6",
+          "f4",
+          "Be7",
+          "Qd2",
+          "a6",
+          "O-O-O",
+          "Bd7",
+          "Be2",
+          "b5",
+          "Bf3",
+          "Rc8",
+          "Kb1",
+          "Qb6",
+          "Rhe1",
+          "h6",
+          "Bxf6",
+          "gxf6",
+          "f5",
+          "Qxd4",
+          "Qxd4",
+          "Nxd4",
+          "Rxd4",
+          "h5",
+          "h4",
+          "Rc5",
+          "a3",
+          "Kd8"
+        ],
+        "history_uci": [
+          "e2e4",
+          "c7c5",
+          "g1f3",
+          "b8c6",
+          "d2d4",
+          "c5d4",
+          "f3d4",
+          "g8f6",
+          "b1c3",
+          "d7d6",
+          "c1g5",
+          "e7e6",
+          "f2f4",
+          "f8e7",
+          "d1d2",
+          "a7a6",
+          "e1c1",
+          "c8d7",
+          "f1e2",
+          "b7b5",
+          "e2f3",
+          "a8c8",
+          "c1b1",
+          "d8b6",
+          "h1e1",
+          "h7h6",
+          "g5f6",
+          "g7f6",
+          "f4f5",
+          "b6d4",
+          "d2d4",
+          "c6d4",
+          "d1d4",
+          "h6h5",
+          "h2h4",
+          "c8c5",
+          "a2a3",
+          "e8d8"
+        ],
+        "rights_and_counter_scope": "실제 완전 이력에서 계산"
+      },
+      "book_lines": [
+        {
+          "label": "flexible_rook_then_kingside_knight",
+          "san": [
+            "Red1",
+            "a5",
+            "Ne2",
+            "exf5",
+            "Ng3"
+          ],
+          "reading_edition_pages": [
+            416
+          ],
+          "claim_scope": "Red1은 나이트 경로를 미리 고정하지 않는다. 흑의 a5에 따라 킹사이드 경로를 택할 수 있다는 저자의 예시다.",
+          "uci": [
+            "e1d1",
+            "a6a5",
+            "c3e2",
+            "e6f5",
+            "e2g3"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4BN1/1PP3P1/1K1R4 b - - 1 22",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+            },
+            {
+              "ply": 2,
+              "san": "a5",
+              "uci": "a6a5",
+              "moving_root_piece_id": "b-P@a6",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+              "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Ne2",
+              "uci": "c3e2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21",
+              "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22"
+            },
+            {
+              "ply": 5,
+              "san": "Ng3",
+              "uci": "e2g3",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 22",
+              "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4BN1/1PP3P1/1K1R4 b - - 1 22"
+            }
+          ]
+        },
+        {
+          "label": "clamp_release_by_black_then_d5",
+          "san": [
+            "Red1",
+            "exf5",
+            "Nd5"
+          ],
+          "reading_edition_pages": [
+            411,
+            412,
+            415,
+            416
+          ],
+          "claim_scope": "Nd5 자체는 처음부터 합법적이다. ...exf5로 e6 폰이 떠난 뒤에는 같은 진입의 직접 폰 포획 가격이 달라진다. 이 짧은 경로는 기능 질문을 위한 합법 구성으로, 최선 수순 주장은 아니다.",
+          "uci": [
+            "e1d1",
+            "e6f5",
+            "c3d5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20"
+            },
+            {
+              "ply": 2,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21"
+            }
+          ]
+        },
+        {
+          "label": "premature_exchange_new_bishop_route",
+          "san": [
+            "fxe6",
+            "fxe6",
+            "Red1",
+            "f5",
+            "Ne2",
+            "Be8",
+            "Nf4",
+            "Bf7"
+          ],
+          "reading_edition_pages": [
+            413,
+            416
+          ],
+          "claim_scope": "긴장을 백이 먼저 풀면 ...f5와 비숍 활동이 생긴다. 저자는 즉시 ...f5를 실제 경기의 ...Kc7보다 강한 방어 개선으로 제시한다.",
+          "uci": [
+            "f5e6",
+            "f7e6",
+            "e1d1",
+            "f6f5",
+            "c3e2",
+            "d7e8",
+            "e2f4",
+            "e8f7"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k3r/4bb2/p2pp3/1pr2p1p/3RPN1P/P4B2/1PP3P1/1K1R4 w - - 4 24",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "fxe6",
+              "uci": "f5e6",
+              "moving_root_piece_id": "w-P@f5",
+              "captured_root_piece_id": "b-P@e6",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20"
+            },
+            {
+              "ply": 2,
+              "san": "fxe6",
+              "uci": "f7e6",
+              "moving_root_piece_id": "b-P@f7",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20",
+              "after_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "f5",
+              "uci": "f6f5",
+              "moving_root_piece_id": "b-P@f6",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 1 21",
+              "after_fen": "3k3r/3bb3/p2pp3/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 22"
+            },
+            {
+              "ply": 5,
+              "san": "Ne2",
+              "uci": "c3e2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2pp3/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 22",
+              "after_fen": "3k3r/3bb3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 22"
+            },
+            {
+              "ply": 6,
+              "san": "Be8",
+              "uci": "d7e8",
+              "moving_root_piece_id": "b-B@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 22",
+              "after_fen": "3kb2r/4b3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 2 23"
+            },
+            {
+              "ply": 7,
+              "san": "Nf4",
+              "uci": "e2f4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3kb2r/4b3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 2 23",
+              "after_fen": "3kb2r/4b3/p2pp3/1pr2p1p/3RPN1P/P4B2/1PP3P1/1K1R4 b - - 3 23"
+            },
+            {
+              "ply": 8,
+              "san": "Bf7",
+              "uci": "e8f7",
+              "moving_root_piece_id": "b-B@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "3kb2r/4b3/p2pp3/1pr2p1p/3RPN1P/P4B2/1PP3P1/1K1R4 b - - 3 23",
+              "after_fen": "3k3r/4bb2/p2pp3/1pr2p1p/3RPN1P/P4B2/1PP3P1/1K1R4 w - - 4 24"
+            }
+          ]
+        },
+        {
+          "label": "game_exchange_helps_black",
+          "san": [
+            "fxe6",
+            "fxe6",
+            "Red1",
+            "Kc7",
+            "Ne2",
+            "f5",
+            "exf5",
+            "Rxf5",
+            "Ng3",
+            "Re5"
+          ],
+          "reading_edition_pages": [
+            416,
+            417
+          ],
+          "claim_scope": "실제 수순은 흑이 구조와 활동을 개선한 예시다. 이 사건 목록을 전부 재현해야 교환의 결함을 설명할 수 있는 것은 아니다.",
+          "uci": [
+            "f5e6",
+            "f7e6",
+            "e1d1",
+            "d8c7",
+            "c3e2",
+            "f6f5",
+            "e4f5",
+            "c5f5",
+            "e2g3",
+            "f5e5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "7r/2kbb3/p2pp3/1p2r2p/3R3P/P4BN1/1PP3P1/1K1R4 w - - 2 25",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "fxe6",
+              "uci": "f5e6",
+              "moving_root_piece_id": "w-P@f5",
+              "captured_root_piece_id": "b-P@e6",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20"
+            },
+            {
+              "ply": 2,
+              "san": "fxe6",
+              "uci": "f7e6",
+              "moving_root_piece_id": "b-P@f7",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2pPp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 0 20",
+              "after_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "Kc7",
+              "uci": "d8c7",
+              "moving_root_piece_id": "b-K@d8",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 1 21",
+              "after_fen": "7r/2kbb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 2 22"
+            },
+            {
+              "ply": 5,
+              "san": "Ne2",
+              "uci": "c3e2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbb3/p2ppp2/1pr4p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 2 22",
+              "after_fen": "7r/2kbb3/p2ppp2/1pr4p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 3 22"
+            },
+            {
+              "ply": 6,
+              "san": "f5",
+              "uci": "f6f5",
+              "moving_root_piece_id": "b-P@f6",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbb3/p2ppp2/1pr4p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 3 22",
+              "after_fen": "7r/2kbb3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 23"
+            },
+            {
+              "ply": 7,
+              "san": "exf5",
+              "uci": "e4f5",
+              "moving_root_piece_id": "w-P@e4",
+              "captured_root_piece_id": "b-P@f6",
+              "before_fen": "7r/2kbb3/p2pp3/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K1R4 w - - 0 23",
+              "after_fen": "7r/2kbb3/p2pp3/1pr2P1p/3R3P/P4B2/1PP1N1P1/1K1R4 b - - 0 23"
+            },
+            {
+              "ply": 8,
+              "san": "Rxf5",
+              "uci": "c5f5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": "w-P@e4",
+              "before_fen": "7r/2kbb3/p2pp3/1pr2P1p/3R3P/P4B2/1PP1N1P1/1K1R4 b - - 0 23",
+              "after_fen": "7r/2kbb3/p2pp3/1p3r1p/3R3P/P4B2/1PP1N1P1/1K1R4 w - - 0 24"
+            },
+            {
+              "ply": 9,
+              "san": "Ng3",
+              "uci": "e2g3",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbb3/p2pp3/1p3r1p/3R3P/P4B2/1PP1N1P1/1K1R4 w - - 0 24",
+              "after_fen": "7r/2kbb3/p2pp3/1p3r1p/3R3P/P4BN1/1PP3P1/1K1R4 b - - 1 24"
+            },
+            {
+              "ply": 10,
+              "san": "Re5",
+              "uci": "f5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbb3/p2pp3/1p3r1p/3R3P/P4BN1/1PP3P1/1K1R4 b - - 1 24",
+              "after_fen": "7r/2kbb3/p2pp3/1p2r2p/3R3P/P4BN1/1PP3P1/1K1R4 w - - 2 25"
+            }
+          ]
+        },
+        {
+          "label": "natural_knight_route_can_turn_back",
+          "san": [
+            "Ne2",
+            "exf5",
+            "Nc3",
+            "Re5",
+            "Red1",
+            "Rg8",
+            "a4",
+            "bxa4",
+            "exf5",
+            "a5",
+            "Nxa4",
+            "Bxf5",
+            "Nb6"
+          ],
+          "reading_edition_pages": [
+            414
+          ],
+          "claim_scope": "Ne2도 좋은 선택이며, 흑의 응수 뒤 Nc3로 되돌아가는 실현이 가능하다. Ng3만 계획의 유일한 증인으로 고정하지 않는다.",
+          "uci": [
+            "c3e2",
+            "e6f5",
+            "e2c3",
+            "c5e5",
+            "e1d1",
+            "h8g8",
+            "a3a4",
+            "b5a4",
+            "e4f5",
+            "a6a5",
+            "c3a4",
+            "d7f5",
+            "a4b6"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k2r1/4bp2/1N1p1p2/p3rb1p/3R3P/5B2/1PP3P1/1K1R4 b - - 1 26",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Ne2",
+              "uci": "c3e2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/1PP1N1P1/1K2R3 b - - 2 20"
+            },
+            {
+              "ply": 2,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/1PP1N1P1/1K2R3 b - - 2 20",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nc3",
+              "uci": "e2c3",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P4B2/1PP1N1P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "Re5",
+              "uci": "c5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K2R3 b - - 1 21",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 2 22"
+            },
+            {
+              "ply": 5,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 2 22",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 3 22"
+            },
+            {
+              "ply": 6,
+              "san": "Rg8",
+              "uci": "h8g8",
+              "moving_root_piece_id": "b-R@h8",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 3 22",
+              "after_fen": "3k2r1/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 4 23"
+            },
+            {
+              "ply": 7,
+              "san": "a4",
+              "uci": "a3a4",
+              "moving_root_piece_id": "w-P@a3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k2r1/3bbp2/p2p1p2/1p2rp1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 4 23",
+              "after_fen": "3k2r1/3bbp2/p2p1p2/1p2rp1p/P2RP2P/2N2B2/1PP3P1/1K1R4 b - - 0 23"
+            },
+            {
+              "ply": 8,
+              "san": "bxa4",
+              "uci": "b5a4",
+              "moving_root_piece_id": "b-P@b5",
+              "captured_root_piece_id": "w-P@a3",
+              "before_fen": "3k2r1/3bbp2/p2p1p2/1p2rp1p/P2RP2P/2N2B2/1PP3P1/1K1R4 b - - 0 23",
+              "after_fen": "3k2r1/3bbp2/p2p1p2/4rp1p/p2RP2P/2N2B2/1PP3P1/1K1R4 w - - 0 24"
+            },
+            {
+              "ply": 9,
+              "san": "exf5",
+              "uci": "e4f5",
+              "moving_root_piece_id": "w-P@e4",
+              "captured_root_piece_id": "b-P@e6",
+              "before_fen": "3k2r1/3bbp2/p2p1p2/4rp1p/p2RP2P/2N2B2/1PP3P1/1K1R4 w - - 0 24",
+              "after_fen": "3k2r1/3bbp2/p2p1p2/4rP1p/p2R3P/2N2B2/1PP3P1/1K1R4 b - - 0 24"
+            },
+            {
+              "ply": 10,
+              "san": "a5",
+              "uci": "a6a5",
+              "moving_root_piece_id": "b-P@a6",
+              "captured_root_piece_id": null,
+              "before_fen": "3k2r1/3bbp2/p2p1p2/4rP1p/p2R3P/2N2B2/1PP3P1/1K1R4 b - - 0 24",
+              "after_fen": "3k2r1/3bbp2/3p1p2/p3rP1p/p2R3P/2N2B2/1PP3P1/1K1R4 w - - 0 25"
+            },
+            {
+              "ply": 11,
+              "san": "Nxa4",
+              "uci": "c3a4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-P@b5",
+              "before_fen": "3k2r1/3bbp2/3p1p2/p3rP1p/p2R3P/2N2B2/1PP3P1/1K1R4 w - - 0 25",
+              "after_fen": "3k2r1/3bbp2/3p1p2/p3rP1p/N2R3P/5B2/1PP3P1/1K1R4 b - - 0 25"
+            },
+            {
+              "ply": 12,
+              "san": "Bxf5",
+              "uci": "d7f5",
+              "moving_root_piece_id": "b-B@d7",
+              "captured_root_piece_id": "w-P@e4",
+              "before_fen": "3k2r1/3bbp2/3p1p2/p3rP1p/N2R3P/5B2/1PP3P1/1K1R4 b - - 0 25",
+              "after_fen": "3k2r1/4bp2/3p1p2/p3rb1p/N2R3P/5B2/1PP3P1/1K1R4 w - - 0 26"
+            },
+            {
+              "ply": 13,
+              "san": "Nb6",
+              "uci": "a4b6",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k2r1/4bp2/3p1p2/p3rb1p/N2R3P/5B2/1PP3P1/1K1R4 w - - 0 26",
+              "after_fen": "3k2r1/4bp2/1N1p1p2/p3rb1p/3R3P/5B2/1PP3P1/1K1R4 b - - 1 26"
+            }
+          ]
+        },
+        {
+          "label": "left_route_adapts_to_a5",
+          "san": [
+            "Na2",
+            "a5",
+            "Nc1",
+            "exf5",
+            "Nb3",
+            "Re5",
+            "Nxa5"
+          ],
+          "reading_edition_pages": [
+            415
+          ],
+          "claim_scope": "Nb4가 막혀도 Nc1-b3가 같은 약점 공략을 계속한다. 목적 유지와 똑같은 경로 유지를 분리한다.",
+          "uci": [
+            "c3a2",
+            "a6a5",
+            "a2c1",
+            "e6f5",
+            "c1b3",
+            "c5e5",
+            "b3a5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k3r/3bbp2/3p1p2/Np2rp1p/3RP2P/P4B2/1PP3P1/1K2R3 b - - 0 23",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Na2",
+              "uci": "c3a2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20"
+            },
+            {
+              "ply": 2,
+              "san": "a5",
+              "uci": "a6a5",
+              "moving_root_piece_id": "b-P@a6",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20",
+              "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nc1",
+              "uci": "a2c1",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP3P1/1KN1R3 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP3P1/1KN1R3 b - - 1 21",
+              "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP3P1/1KN1R3 w - - 0 22"
+            },
+            {
+              "ply": 5,
+              "san": "Nb3",
+              "uci": "c1b3",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/P4B2/1PP3P1/1KN1R3 w - - 0 22",
+              "after_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/PN3B2/1PP3P1/1K2R3 b - - 1 22"
+            },
+            {
+              "ply": 6,
+              "san": "Re5",
+              "uci": "c5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/3p1p2/ppr2p1p/3RP2P/PN3B2/1PP3P1/1K2R3 b - - 1 22",
+              "after_fen": "3k3r/3bbp2/3p1p2/pp2rp1p/3RP2P/PN3B2/1PP3P1/1K2R3 w - - 2 23"
+            },
+            {
+              "ply": 7,
+              "san": "Nxa5",
+              "uci": "b3a5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-P@a6",
+              "before_fen": "3k3r/3bbp2/3p1p2/pp2rp1p/3RP2P/PN3B2/1PP3P1/1K2R3 w - - 2 23",
+              "after_fen": "3k3r/3bbp2/3p1p2/Np2rp1p/3RP2P/P4B2/1PP3P1/1K2R3 b - - 0 23"
+            }
+          ]
+        },
+        {
+          "label": "left_route_active_piece_price",
+          "san": [
+            "Na2",
+            "exf5",
+            "Nb4",
+            "fxe4",
+            "Rdxe4",
+            "Re5",
+            "Nxa6",
+            "Re6",
+            "Nb8",
+            "f5",
+            "R4e2",
+            "Bxh4",
+            "Rh1"
+          ],
+          "reading_edition_pages": [
+            415
+          ],
+          "claim_scope": "흑의 ...Re6와 ...f5라는 강한 활동 반론까지 반영한 조건부 작은 우세다. 폰을 공짜로 준다는 단순 설명도, 영구 봉쇄라는 설명도 부정확하다.",
+          "uci": [
+            "c3a2",
+            "e6f5",
+            "a2b4",
+            "f5e4",
+            "d4e4",
+            "c5e5",
+            "b4a6",
+            "e5e6",
+            "a6b8",
+            "f6f5",
+            "e4e2",
+            "e7h4",
+            "e1h1"
+          ],
+          "legally_replayed": true,
+          "final_fen": "1N1k3r/3b1p2/3pr3/1p3p1p/7b/P4B2/1PP1R1P1/1K5R b - - 1 26",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Na2",
+              "uci": "c3a2",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20"
+            },
+            {
+              "ply": 2,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P4B2/NPP3P1/1K2R3 b - - 2 20",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nb4",
+              "uci": "a2b4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P4B2/NPP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/1N1RP2P/P4B2/1PP3P1/1K2R3 b - - 1 21"
+            },
+            {
+              "ply": 4,
+              "san": "fxe4",
+              "uci": "f5e4",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@e4",
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/1N1RP2P/P4B2/1PP3P1/1K2R3 b - - 1 21",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr4p/1N1Rp2P/P4B2/1PP3P1/1K2R3 w - - 0 22"
+            },
+            {
+              "ply": 5,
+              "san": "Rdxe4",
+              "uci": "d4e4",
+              "moving_root_piece_id": "w-R@d4",
+              "captured_root_piece_id": "b-P@e6",
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr4p/1N1Rp2P/P4B2/1PP3P1/1K2R3 w - - 0 22",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1pr4p/1N2R2P/P4B2/1PP3P1/1K2R3 b - - 0 22"
+            },
+            {
+              "ply": 6,
+              "san": "Re5",
+              "uci": "c5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/1pr4p/1N2R2P/P4B2/1PP3P1/1K2R3 b - - 0 22",
+              "after_fen": "3k3r/3bbp2/p2p1p2/1p2r2p/1N2R2P/P4B2/1PP3P1/1K2R3 w - - 1 23"
+            },
+            {
+              "ply": 7,
+              "san": "Nxa6",
+              "uci": "b4a6",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-P@a6",
+              "before_fen": "3k3r/3bbp2/p2p1p2/1p2r2p/1N2R2P/P4B2/1PP3P1/1K2R3 w - - 1 23",
+              "after_fen": "3k3r/3bbp2/N2p1p2/1p2r2p/4R2P/P4B2/1PP3P1/1K2R3 b - - 0 23"
+            },
+            {
+              "ply": 8,
+              "san": "Re6",
+              "uci": "e5e6",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/N2p1p2/1p2r2p/4R2P/P4B2/1PP3P1/1K2R3 b - - 0 23",
+              "after_fen": "3k3r/3bbp2/N2prp2/1p5p/4R2P/P4B2/1PP3P1/1K2R3 w - - 1 24"
+            },
+            {
+              "ply": 9,
+              "san": "Nb8",
+              "uci": "a6b8",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/N2prp2/1p5p/4R2P/P4B2/1PP3P1/1K2R3 w - - 1 24",
+              "after_fen": "1N1k3r/3bbp2/3prp2/1p5p/4R2P/P4B2/1PP3P1/1K2R3 b - - 2 24"
+            },
+            {
+              "ply": 10,
+              "san": "f5",
+              "uci": "f6f5",
+              "moving_root_piece_id": "b-P@f6",
+              "captured_root_piece_id": null,
+              "before_fen": "1N1k3r/3bbp2/3prp2/1p5p/4R2P/P4B2/1PP3P1/1K2R3 b - - 2 24",
+              "after_fen": "1N1k3r/3bbp2/3pr3/1p3p1p/4R2P/P4B2/1PP3P1/1K2R3 w - - 0 25"
+            },
+            {
+              "ply": 11,
+              "san": "R4e2",
+              "uci": "e4e2",
+              "moving_root_piece_id": "w-R@d4",
+              "captured_root_piece_id": null,
+              "before_fen": "1N1k3r/3bbp2/3pr3/1p3p1p/4R2P/P4B2/1PP3P1/1K2R3 w - - 0 25",
+              "after_fen": "1N1k3r/3bbp2/3pr3/1p3p1p/7P/P4B2/1PP1R1P1/1K2R3 b - - 1 25"
+            },
+            {
+              "ply": 12,
+              "san": "Bxh4",
+              "uci": "e7h4",
+              "moving_root_piece_id": "b-B@e7",
+              "captured_root_piece_id": "w-P@h4",
+              "before_fen": "1N1k3r/3bbp2/3pr3/1p3p1p/7P/P4B2/1PP1R1P1/1K2R3 b - - 1 25",
+              "after_fen": "1N1k3r/3b1p2/3pr3/1p3p1p/7b/P4B2/1PP1R1P1/1K2R3 w - - 0 26"
+            },
+            {
+              "ply": 13,
+              "san": "Rh1",
+              "uci": "e1h1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "1N1k3r/3b1p2/3pr3/1p3p1p/7b/P4B2/1PP1R1P1/1K2R3 w - - 0 26",
+              "after_fen": "1N1k3r/3b1p2/3pr3/1p3p1p/7b/P4B2/1PP1R1P1/1K5R b - - 1 26"
+            }
+          ]
+        },
+        {
+          "label": "a_file_route_instead_of_fixed_knight_destination",
+          "san": [
+            "a4",
+            "bxa4",
+            "Nxa4",
+            "Re5",
+            "Red1",
+            "Kc7",
+            "Rc4+",
+            "Kb8",
+            "Nb6",
+            "Bb5",
+            "Rc3"
+          ],
+          "reading_edition_pages": [
+            415
+          ],
+          "claim_scope": "a4로 생긴 나이트의 변두리 위치는 다른 경로와 룩의 가로 활동으로 보완될 수 있다.",
+          "uci": [
+            "a3a4",
+            "b5a4",
+            "c3a4",
+            "c5e5",
+            "e1d1",
+            "d8c7",
+            "d4c4",
+            "c7b8",
+            "a4b6",
+            "d7b5",
+            "c4c3"
+          ],
+          "legally_replayed": true,
+          "final_fen": "1k5r/4bp2/pN1ppp2/1b2rP1p/4P2P/2R2B2/1PP3P1/1K1R4 b - - 8 25",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "a4",
+              "uci": "a3a4",
+              "moving_root_piece_id": "w-P@a3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/P2RP2P/2N2B2/1PP3P1/1K2R3 b - - 0 20"
+            },
+            {
+              "ply": 2,
+              "san": "bxa4",
+              "uci": "b5a4",
+              "moving_root_piece_id": "b-P@b5",
+              "captured_root_piece_id": "w-P@a3",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/P2RP2P/2N2B2/1PP3P1/1K2R3 b - - 0 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/p2RP2P/2N2B2/1PP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nxa4",
+              "uci": "c3a4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-P@b5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/p2RP2P/2N2B2/1PP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/N2RP2P/5B2/1PP3P1/1K2R3 b - - 0 21"
+            },
+            {
+              "ply": 4,
+              "san": "Re5",
+              "uci": "c5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/N2RP2P/5B2/1PP3P1/1K2R3 b - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K2R3 w - - 1 22"
+            },
+            {
+              "ply": 5,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K2R3 w - - 1 22",
+              "after_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 b - - 2 22"
+            },
+            {
+              "ply": 6,
+              "san": "Kc7",
+              "uci": "d8c7",
+              "moving_root_piece_id": "b-K@d8",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 b - - 2 22",
+              "after_fen": "7r/2kbbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 w - - 3 23"
+            },
+            {
+              "ply": 7,
+              "san": "Rc4+",
+              "uci": "d4c4",
+              "moving_root_piece_id": "w-R@d4",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 w - - 3 23",
+              "after_fen": "7r/2kbbp2/p2ppp2/4rP1p/N1R1P2P/5B2/1PP3P1/1K1R4 b - - 4 23"
+            },
+            {
+              "ply": 8,
+              "san": "Kb8",
+              "uci": "c7b8",
+              "moving_root_piece_id": "b-K@d8",
+              "captured_root_piece_id": null,
+              "before_fen": "7r/2kbbp2/p2ppp2/4rP1p/N1R1P2P/5B2/1PP3P1/1K1R4 b - - 4 23",
+              "after_fen": "1k5r/3bbp2/p2ppp2/4rP1p/N1R1P2P/5B2/1PP3P1/1K1R4 w - - 5 24"
+            },
+            {
+              "ply": 9,
+              "san": "Nb6",
+              "uci": "a4b6",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "1k5r/3bbp2/p2ppp2/4rP1p/N1R1P2P/5B2/1PP3P1/1K1R4 w - - 5 24",
+              "after_fen": "1k5r/3bbp2/pN1ppp2/4rP1p/2R1P2P/5B2/1PP3P1/1K1R4 b - - 6 24"
+            },
+            {
+              "ply": 10,
+              "san": "Bb5",
+              "uci": "d7b5",
+              "moving_root_piece_id": "b-B@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "1k5r/3bbp2/pN1ppp2/4rP1p/2R1P2P/5B2/1PP3P1/1K1R4 b - - 6 24",
+              "after_fen": "1k5r/4bp2/pN1ppp2/1b2rP1p/2R1P2P/5B2/1PP3P1/1K1R4 w - - 7 25"
+            },
+            {
+              "ply": 11,
+              "san": "Rc3",
+              "uci": "c4c3",
+              "moving_root_piece_id": "w-R@d4",
+              "captured_root_piece_id": null,
+              "before_fen": "1k5r/4bp2/pN1ppp2/1b2rP1p/2R1P2P/5B2/1PP3P1/1K1R4 w - - 7 25",
+              "after_fen": "1k5r/4bp2/pN1ppp2/1b2rP1p/4P2P/2R2B2/1PP3P1/1K1R4 b - - 8 25"
+            }
+          ]
+        },
+        {
+          "label": "a_file_route_after_other_capture",
+          "san": [
+            "a4",
+            "bxa4",
+            "Nxa4",
+            "Re5",
+            "Red1",
+            "exf5",
+            "exf5",
+            "Rxf5",
+            "Nc3"
+          ],
+          "reading_edition_pages": [
+            415,
+            416
+          ],
+          "claim_scope": "실현 경로가 달라도 흑의 약한 폰들과 백의 활동을 중심으로 설명한다.",
+          "uci": [
+            "a3a4",
+            "b5a4",
+            "c3a4",
+            "c5e5",
+            "e1d1",
+            "e6f5",
+            "e4f5",
+            "e5f5",
+            "a4c3"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3k3r/3bbp2/p2p1p2/5r1p/3R3P/2N2B2/1PP3P1/1K1R4 b - - 1 24",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "a4",
+              "uci": "a3a4",
+              "moving_root_piece_id": "w-P@a3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/P2RP2P/2N2B2/1PP3P1/1K2R3 b - - 0 20"
+            },
+            {
+              "ply": 2,
+              "san": "bxa4",
+              "uci": "b5a4",
+              "moving_root_piece_id": "b-P@b5",
+              "captured_root_piece_id": "w-P@a3",
+              "before_fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/P2RP2P/2N2B2/1PP3P1/1K2R3 b - - 0 20",
+              "after_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/p2RP2P/2N2B2/1PP3P1/1K2R3 w - - 0 21"
+            },
+            {
+              "ply": 3,
+              "san": "Nxa4",
+              "uci": "c3a4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-P@b5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/p2RP2P/2N2B2/1PP3P1/1K2R3 w - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/N2RP2P/5B2/1PP3P1/1K2R3 b - - 0 21"
+            },
+            {
+              "ply": 4,
+              "san": "Re5",
+              "uci": "c5e5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/2r2P1p/N2RP2P/5B2/1PP3P1/1K2R3 b - - 0 21",
+              "after_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K2R3 w - - 1 22"
+            },
+            {
+              "ply": 5,
+              "san": "Red1",
+              "uci": "e1d1",
+              "moving_root_piece_id": "w-R@e1",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K2R3 w - - 1 22",
+              "after_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 b - - 2 22"
+            },
+            {
+              "ply": 6,
+              "san": "exf5",
+              "uci": "e6f5",
+              "moving_root_piece_id": "b-P@e6",
+              "captured_root_piece_id": "w-P@f5",
+              "before_fen": "3k3r/3bbp2/p2ppp2/4rP1p/N2RP2P/5B2/1PP3P1/1K1R4 b - - 2 22",
+              "after_fen": "3k3r/3bbp2/p2p1p2/4rp1p/N2RP2P/5B2/1PP3P1/1K1R4 w - - 0 23"
+            },
+            {
+              "ply": 7,
+              "san": "exf5",
+              "uci": "e4f5",
+              "moving_root_piece_id": "w-P@e4",
+              "captured_root_piece_id": "b-P@e6",
+              "before_fen": "3k3r/3bbp2/p2p1p2/4rp1p/N2RP2P/5B2/1PP3P1/1K1R4 w - - 0 23",
+              "after_fen": "3k3r/3bbp2/p2p1p2/4rP1p/N2R3P/5B2/1PP3P1/1K1R4 b - - 0 23"
+            },
+            {
+              "ply": 8,
+              "san": "Rxf5",
+              "uci": "e5f5",
+              "moving_root_piece_id": "b-R@c5",
+              "captured_root_piece_id": "w-P@e4",
+              "before_fen": "3k3r/3bbp2/p2p1p2/4rP1p/N2R3P/5B2/1PP3P1/1K1R4 b - - 0 23",
+              "after_fen": "3k3r/3bbp2/p2p1p2/5r1p/N2R3P/5B2/1PP3P1/1K1R4 w - - 0 24"
+            },
+            {
+              "ply": 9,
+              "san": "Nc3",
+              "uci": "a4c3",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "3k3r/3bbp2/p2p1p2/5r1p/N2R3P/5B2/1PP3P1/1K1R4 w - - 0 24",
+              "after_fen": "3k3r/3bbp2/p2p1p2/5r1p/3R3P/2N2B2/1PP3P1/1K1R4 b - - 1 24"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "IC-SG45",
+      "title": "여러 좋은 수 가운데 자연스러운 Rfd1",
+      "game": "Robert James Fischer – Ismet Ibrahimoglu, Siegen Olympiad 1970, 18.White",
+      "types": [
+        "already_legal_action_different_utility",
+        "natural_good_move",
+        "multiple_good_options",
+        "same_idea_different_realization"
+      ],
+      "source": {
+        "book": "Think Like a Super-GM",
+        "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+        "reading_edition_pages_read": [
+          440,
+          441,
+          442,
+          443,
+          444,
+          445,
+          446
+        ],
+        "reading_edition_diagram_pages_visually_checked": [
+          440
+        ],
+        "source_pdf_footer_pages": "526–534",
+        "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+      },
+      "primary_move_san": "Rfd1",
+      "additional_input_moves_san": [],
+      "human_question": "이미 유리한 구조에서 룩을 개선하며 나이트의 두 좋은 경로를 유지하면 충분하지 않은가?",
+      "necessary_functional_conditions": [
+        "민감한 밝은 칸과 비숍 쌍이라는 지속적 장점이 남아야 한다. Rfd1의 목적은 갑자기 만들어진 강제 전술이 아니다.",
+        "나이트의 즉시 Nc4와 Nb1-c3라는 서로 다른 경로가 모두 실전적으로 유효한 선택이어야 한다. 이미 합법인 수라도 ...b5, ...Nd6, ...Qc6-Nc7 뒤 가격과 활동을 따로 확인한다.",
+        "f1 룩을 d1로 움직이는 것은 다른 룩의 a 파일 선택을 남기고 비숍의 f1 칸을 비운다. 이 개선이 구체적인 전술 손실을 허용하지 않으면 그 목적만으로 정상적인 기본 답이 된다.",
+        "흑의 응수에 따라 Rd6, Qb5, 비숍 개선, a 파일 압박 중 다른 실현으로 바뀌어도 수의 유연한 역할은 남을 수 있다.",
+        "기본 코멘트에 최상위 수 간의 미묘한 점수 차이를 반드시 해명할 필요는 없다. 특정 우열을 주장하려면 새 조사에서 그 차이를 입증해야 한다."
+      ],
+      "nonessential_sequence_events": [
+        "백 나이트의 반드시 d5 도착",
+        "a 파일에 룩 두 개를 반드시 모으는 것",
+        "Bf1이 모든 응수에서 실제로 나오는 것",
+        "Fischer가 실제 경기에서 택한 Nb1을 낮은 선택으로 분류하는 것"
+      ],
+      "strong_counter_policy": {
+        "primary_counter_types": [
+          "...Nd6로 중앙 협력을 복구하는 방어",
+          "...Qc6-Nc7로 밝은 칸과 a 파일을 정리하는 방어",
+          "...b5로 Nc4 나이트를 밀어내려는 구조적 반격"
+        ],
+        "book_specific_resources": [
+          "Rfd1 Nd6",
+          "Rfd1 Qc6 Nc4 Nc7 Rd6",
+          "Nb1 Qc6! Nc3 Nc7",
+          "Nc4 b5 Na3"
+        ],
+        "ranking_scope": "저자는 Rfd1을 실전적으로 선호하지만 최선 수순 증명을 제공하지 않는다. 독립 엔진 비교 전에는 Rfd1만 유일하게 우세를 유지한다고 말하지 않는다."
+      },
+      "answer_type": "standalone_basic_purpose_sufficient",
+      "minimal_basic_comment": "룩을 d파일에 놓고 f1 칸을 비워 비숍의 활동도 준비합니다. 나이트는 Nc4나 Nb1-c3 중 흑의 대응에 맞는 경로를 택할 수 있습니다.",
+      "optional_comparison_comment": "a6로 룩을 먼저 올려도 백은 좋지만 ...Nc7이 룩을 템포로 건드릴 수 있습니다. Rfd1은 그런 선택을 서두르지 않고 다른 기물을 먼저 개선하는 유연한 방법입니다.",
+      "counter_revision": "새 조사에서 특정 방어가 한 나이트 경로를 무효화하면 '두 경로가 남는다'를 그 범위에 맞게 좁힌다. 두 경로와 활동의 의미가 유지되면 특정 책 수순이 없다는 이유로 목적을 철회하지 않는다.",
+      "multiple_good_moves": {
+        "author_assessment": "저자는 약 20개의 수가 뚜렷한 장점을 유지한다고 말하며 Rfd1, Nb1, Nc4를 매우 좋은 선택으로 인정한다. Ra6도 백이 여전히 좋다.",
+        "do_not_infer": "책의 컴퓨터 선호, 10/9 점수 또는 현재 엔진 소차를 강제 우열 설명으로 바꾸지 않는다."
+      },
+      "misleading_risks": [
+        "Rfd1이 Nc4를 처음 가능하게 했다는 표현",
+        "좋은 Nb1을 수동적인 실수로 단정",
+        "평범한 개선 수의 기본 답에 긴 양쪽 PV를 강제",
+        "Ra6 뒤 ...Nc7을 물질 손실이나 평가 역전으로 과장"
+      ],
+      "minimum_comparison_scope": "기본 목적 설명은 f1 비움과 룩 개선의 사실 및 즉각적인 불리한 응수 여부로 충분하다. 비교 주장을 추가할 때만 ...Nd6, ...Qc6-Nc7, ...b5의 가격을 조사한다.",
+      "unresolved": [
+        "현재 분석 조건에서 좋은 선택 사이의 작은 평가 차이가 안정적인지",
+        "이 유연성을 승리 확률이나 반드시 더 쉬운 변환으로 수치화할 근거는 없음"
+      ],
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+      "root_reconstruction": {
+        "kind": "complete_standard_game_history",
+        "history_san": [
+          "e4",
+          "c6",
+          "d3",
+          "d5",
+          "Nd2",
+          "g6",
+          "Ngf3",
+          "Bg7",
+          "g3",
+          "Nf6",
+          "Bg2",
+          "O-O",
+          "O-O",
+          "Bg4",
+          "h3",
+          "Bxf3",
+          "Qxf3",
+          "Nbd7",
+          "Qe2",
+          "dxe4",
+          "dxe4",
+          "Qc7",
+          "a4",
+          "Rad8",
+          "Nb3",
+          "b6",
+          "Be3",
+          "c5",
+          "a5",
+          "e5",
+          "Nd2",
+          "Ne8",
+          "axb6",
+          "axb6"
+        ],
+        "history_uci": [
+          "e2e4",
+          "c7c6",
+          "d2d3",
+          "d7d5",
+          "b1d2",
+          "g7g6",
+          "g1f3",
+          "f8g7",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "e8g8",
+          "e1g1",
+          "c8g4",
+          "h2h3",
+          "g4f3",
+          "d1f3",
+          "b8d7",
+          "f3e2",
+          "d5e4",
+          "d3e4",
+          "d8c7",
+          "a2a4",
+          "a8d8",
+          "d2b3",
+          "b7b6",
+          "c1e3",
+          "c6c5",
+          "a4a5",
+          "e7e5",
+          "b3d2",
+          "f6e8",
+          "a5b6",
+          "a7b6"
+        ],
+        "rights_and_counter_scope": "실제 완전 이력에서 계산"
+      },
+      "book_lines": [
+        {
+          "label": "flexible_rook_then_trade_and_bishop",
+          "san": [
+            "Rfd1",
+            "Nd6",
+            "Nc4",
+            "Nxc4",
+            "Qxc4",
+            "Nf6",
+            "Rxd8",
+            "Rxd8",
+            "Bf1",
+            "Qc6",
+            "Ra7",
+            "Rd7",
+            "Qa4",
+            "Qxa4",
+            "Rxa4",
+            "Bf8",
+            "Bb5"
+          ],
+          "reading_edition_pages": [
+            443,
+            444
+          ],
+          "claim_scope": "백의 더 좋은 기물 활동이라는 작은 목적이 남는다. 모든 단계나 특정 나이트 칸이 필수인 것은 아니다.",
+          "uci": [
+            "f1d1",
+            "e8d6",
+            "d2c4",
+            "d6c4",
+            "e2c4",
+            "d7f6",
+            "d1d8",
+            "f8d8",
+            "g2f1",
+            "c7c6",
+            "a1a7",
+            "d8d7",
+            "c4a4",
+            "c6a4",
+            "a7a4",
+            "g7f8",
+            "f1b5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "5bk1/3r1p1p/1p3np1/1Bp1p3/R3P3/4B1PP/1PP2P2/6K1 b - - 2 26",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rfd1",
+              "uci": "f1d1",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Nd6",
+              "uci": "e8d6",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18",
+              "after_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Nc4",
+              "uci": "d2c4",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+              "after_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19"
+            },
+            {
+              "ply": 4,
+              "san": "Nxc4",
+              "uci": "d6c4",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": "w-N@d2",
+              "before_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19",
+              "after_fen": "3r1rk1/2qn1pbp/1p4p1/2p1p3/2n1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 0 20"
+            },
+            {
+              "ply": 5,
+              "san": "Qxc4",
+              "uci": "e2c4",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": "b-N@e8",
+              "before_fen": "3r1rk1/2qn1pbp/1p4p1/2p1p3/2n1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 0 20",
+              "after_fen": "3r1rk1/2qn1pbp/1p4p1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R2R2K1 b - - 0 20"
+            },
+            {
+              "ply": 6,
+              "san": "Nf6",
+              "uci": "d7f6",
+              "moving_root_piece_id": "b-N@d7",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2qn1pbp/1p4p1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R2R2K1 b - - 0 20",
+              "after_fen": "3r1rk1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R2R2K1 w - - 1 21"
+            },
+            {
+              "ply": 7,
+              "san": "Rxd8",
+              "uci": "d1d8",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": "b-R@d8",
+              "before_fen": "3r1rk1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R2R2K1 w - - 1 21",
+              "after_fen": "3R1rk1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R5K1 b - - 0 21"
+            },
+            {
+              "ply": 8,
+              "san": "Rxd8",
+              "uci": "f8d8",
+              "moving_root_piece_id": "b-R@f8",
+              "captured_root_piece_id": "w-R@f1",
+              "before_fen": "3R1rk1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R5K1 b - - 0 21",
+              "after_fen": "3r2k1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R5K1 w - - 0 22"
+            },
+            {
+              "ply": 9,
+              "san": "Bf1",
+              "uci": "g2f1",
+              "moving_root_piece_id": "w-B@g2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r2k1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2PB1/R5K1 w - - 0 22",
+              "after_fen": "3r2k1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2P2/R4BK1 b - - 1 22"
+            },
+            {
+              "ply": 10,
+              "san": "Qc6",
+              "uci": "c7c6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3r2k1/2q2pbp/1p3np1/2p1p3/2Q1P3/4B1PP/1PP2P2/R4BK1 b - - 1 22",
+              "after_fen": "3r2k1/5pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/R4BK1 w - - 2 23"
+            },
+            {
+              "ply": 11,
+              "san": "Ra7",
+              "uci": "a1a7",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "3r2k1/5pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/R4BK1 w - - 2 23",
+              "after_fen": "3r2k1/R4pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/5BK1 b - - 3 23"
+            },
+            {
+              "ply": 12,
+              "san": "Rd7",
+              "uci": "d8d7",
+              "moving_root_piece_id": "b-R@f8",
+              "captured_root_piece_id": null,
+              "before_fen": "3r2k1/R4pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/5BK1 b - - 3 23",
+              "after_fen": "6k1/R2r1pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/5BK1 w - - 4 24"
+            },
+            {
+              "ply": 13,
+              "san": "Qa4",
+              "uci": "c4a4",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "6k1/R2r1pbp/1pq2np1/2p1p3/2Q1P3/4B1PP/1PP2P2/5BK1 w - - 4 24",
+              "after_fen": "6k1/R2r1pbp/1pq2np1/2p1p3/Q3P3/4B1PP/1PP2P2/5BK1 b - - 5 24"
+            },
+            {
+              "ply": 14,
+              "san": "Qxa4",
+              "uci": "c6a4",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": "w-Q@e2",
+              "before_fen": "6k1/R2r1pbp/1pq2np1/2p1p3/Q3P3/4B1PP/1PP2P2/5BK1 b - - 5 24",
+              "after_fen": "6k1/R2r1pbp/1p3np1/2p1p3/q3P3/4B1PP/1PP2P2/5BK1 w - - 0 25"
+            },
+            {
+              "ply": 15,
+              "san": "Rxa4",
+              "uci": "a7a4",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": "b-Q@c7",
+              "before_fen": "6k1/R2r1pbp/1p3np1/2p1p3/q3P3/4B1PP/1PP2P2/5BK1 w - - 0 25",
+              "after_fen": "6k1/3r1pbp/1p3np1/2p1p3/R3P3/4B1PP/1PP2P2/5BK1 b - - 0 25"
+            },
+            {
+              "ply": 16,
+              "san": "Bf8",
+              "uci": "g7f8",
+              "moving_root_piece_id": "b-B@g7",
+              "captured_root_piece_id": null,
+              "before_fen": "6k1/3r1pbp/1p3np1/2p1p3/R3P3/4B1PP/1PP2P2/5BK1 b - - 0 25",
+              "after_fen": "5bk1/3r1p1p/1p3np1/2p1p3/R3P3/4B1PP/1PP2P2/5BK1 w - - 1 26"
+            },
+            {
+              "ply": 17,
+              "san": "Bb5",
+              "uci": "f1b5",
+              "moving_root_piece_id": "w-B@g2",
+              "captured_root_piece_id": null,
+              "before_fen": "5bk1/3r1p1p/1p3np1/2p1p3/R3P3/4B1PP/1PP2P2/5BK1 w - - 1 26",
+              "after_fen": "5bk1/3r1p1p/1p3np1/1Bp1p3/R3P3/4B1PP/1PP2P2/6K1 b - - 2 26"
+            }
+          ]
+        },
+        {
+          "label": "opponent_queen_route_d_file_realization",
+          "san": [
+            "Rfd1",
+            "Qc6",
+            "Nc4",
+            "Nc7",
+            "Rd6"
+          ],
+          "reading_edition_pages": [
+            443,
+            444
+          ],
+          "claim_scope": "동일한 개선이 a 파일이 아니라 d 파일 룩 진입으로 실현되는 저자의 중요한 대안이다.",
+          "uci": [
+            "f1d1",
+            "c7c6",
+            "d2c4",
+            "e8c7",
+            "d1d6"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3r1rk1/2nn1pbp/1pqR2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 b - - 5 20",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rfd1",
+              "uci": "f1d1",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Qc6",
+              "uci": "c7c6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Nc4",
+              "uci": "d2c4",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19"
+            },
+            {
+              "ply": 4,
+              "san": "Nc7",
+              "uci": "e8c7",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 b - - 3 19",
+              "after_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 4 20"
+            },
+            {
+              "ply": 5,
+              "san": "Rd6",
+              "uci": "d1d6",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R2R2K1 w - - 4 20",
+              "after_fen": "3r1rk1/2nn1pbp/1pqR2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R5K1 b - - 5 20"
+            }
+          ]
+        },
+        {
+          "label": "other_knight_defence_queen_realization",
+          "san": [
+            "Rfd1",
+            "Nef6",
+            "Qb5"
+          ],
+          "reading_edition_pages": [
+            442,
+            444
+          ],
+          "claim_scope": "흑 나이트가 d6와의 접촉을 잃자 이미 합법적인 Qb5의 유용성이 커진다. 이것을 Rfd1이 Qb5를 처음 합법화했다고 표현하면 안 된다.",
+          "uci": [
+            "f1d1",
+            "e8f6",
+            "e2b5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3r1rk1/2qn1pbp/1p3np1/1Qp1p3/4P3/4B1PP/1PPN1PB1/R2R2K1 b - - 3 19",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rfd1",
+              "uci": "f1d1",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Nef6",
+              "uci": "e8f6",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18",
+              "after_fen": "3r1rk1/2qn1pbp/1p3np1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Qb5",
+              "uci": "e2b5",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2qn1pbp/1p3np1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+              "after_fen": "3r1rk1/2qn1pbp/1p3np1/1Qp1p3/4P3/4B1PP/1PPN1PB1/R2R2K1 b - - 3 19"
+            }
+          ]
+        },
+        {
+          "label": "immediate_Nc4_is_good_too",
+          "san": [
+            "Nc4",
+            "Nd6",
+            "Nxd6",
+            "Qxd6",
+            "Qb5"
+          ],
+          "reading_edition_pages": [
+            443
+          ],
+          "claim_scope": "즉시 Nc4도 매우 좋은 선택이다. Rfd1만 유일한 좋은 수라는 비교 코멘트를 반박한다.",
+          "uci": [
+            "d2c4",
+            "e8d6",
+            "c4d6",
+            "c7d6",
+            "e2b5"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3r1rk1/3n1pbp/1p1q2p1/1Qp1p3/4P3/4B1PP/1PP2PB1/R4RK1 b - - 1 20",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Nc4",
+              "uci": "d2c4",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R4RK1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Nd6",
+              "uci": "e8d6",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R4RK1 b - - 1 18",
+              "after_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R4RK1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Nxd6",
+              "uci": "c4d6",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": "b-N@e8",
+              "before_fen": "3r1rk1/2qn1pbp/1p1n2p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R4RK1 w - - 2 19",
+              "after_fen": "3r1rk1/2qn1pbp/1p1N2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R4RK1 b - - 0 19"
+            },
+            {
+              "ply": 4,
+              "san": "Qxd6",
+              "uci": "c7d6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": "w-N@d2",
+              "before_fen": "3r1rk1/2qn1pbp/1p1N2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R4RK1 b - - 0 19",
+              "after_fen": "3r1rk1/3n1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R4RK1 w - - 0 20"
+            },
+            {
+              "ply": 5,
+              "san": "Qb5",
+              "uci": "e2b5",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/3n1pbp/1p1q2p1/2p1p3/4P3/4B1PP/1PP1QPB1/R4RK1 w - - 0 20",
+              "after_fen": "3r1rk1/3n1pbp/1p1q2p1/1Qp1p3/4P3/4B1PP/1PP2PB1/R4RK1 b - - 1 20"
+            }
+          ]
+        },
+        {
+          "label": "rook_doubling_has_tempo_cost_but_still_good",
+          "san": [
+            "Ra6",
+            "Qc6",
+            "Rfa1",
+            "Nc7",
+            "Ra7"
+          ],
+          "reading_edition_pages": [
+            443
+          ],
+          "claim_scope": "...Nc7이 룩을 템포로 건드리지만 백은 여전히 우세하다. Ra6를 전술적 실수로 바꾸어 말하지 않는다.",
+          "uci": [
+            "a1a6",
+            "c7c6",
+            "f1a1",
+            "e8c7",
+            "a6a7"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3r1rk1/R1nn1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 b - - 5 20",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Ra6",
+              "uci": "a1a6",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/Rp4p1/2p1p3/4P3/4B1PP/1PPNQPB1/5RK1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Qc6",
+              "uci": "c7c6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/Rp4p1/2p1p3/4P3/4B1PP/1PPNQPB1/5RK1 b - - 1 18",
+              "after_fen": "3rnrk1/3n1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/5RK1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Rfa1",
+              "uci": "f1a1",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/5RK1 w - - 2 19",
+              "after_fen": "3rnrk1/3n1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 b - - 3 19"
+            },
+            {
+              "ply": 4,
+              "san": "Nc7",
+              "uci": "e8c7",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 b - - 3 19",
+              "after_fen": "3r1rk1/2nn1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 w - - 4 20"
+            },
+            {
+              "ply": 5,
+              "san": "Ra7",
+              "uci": "a6a7",
+              "moving_root_piece_id": "w-R@a1",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2nn1pbp/Rpq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 w - - 4 20",
+              "after_fen": "3r1rk1/R1nn1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R5K1 b - - 5 20"
+            }
+          ]
+        },
+        {
+          "label": "Nb1_remains_good_after_strong_defence",
+          "san": [
+            "Nb1",
+            "Qc6",
+            "Nc3",
+            "Nc7",
+            "Rfd1",
+            "Ra8"
+          ],
+          "reading_edition_pages": [
+            444
+          ],
+          "claim_scope": "Fischer의 Nb1도 좋은 선택이다. ...Qc6와 ...Nc7에 따라 계획을 다시 조정한다.",
+          "uci": [
+            "d2b1",
+            "c7c6",
+            "b1c3",
+            "e8c7",
+            "f1d1",
+            "d8a8"
+          ],
+          "legally_replayed": true,
+          "final_fen": "r4rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R2R2K1 w - - 6 21",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Nb1",
+              "uci": "d2b1",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Qc6",
+              "uci": "c7c6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 b - - 1 18",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Nc3",
+              "uci": "b1c3",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 w - - 2 19",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 b - - 3 19"
+            },
+            {
+              "ply": 4,
+              "san": "Nc7",
+              "uci": "e8c7",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 b - - 3 19",
+              "after_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 w - - 4 20"
+            },
+            {
+              "ply": 5,
+              "san": "Rfd1",
+              "uci": "f1d1",
+              "moving_root_piece_id": "w-R@f1",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 w - - 4 20",
+              "after_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R2R2K1 b - - 5 20"
+            },
+            {
+              "ply": 6,
+              "san": "Ra8",
+              "uci": "d8a8",
+              "moving_root_piece_id": "b-R@d8",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R2R2K1 b - - 5 20",
+              "after_fen": "r4rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R2R2K1 w - - 6 21"
+            }
+          ]
+        },
+        {
+          "label": "Nb1_plan_with_different_realization",
+          "san": [
+            "Nb1",
+            "Qc6",
+            "Nc3",
+            "Nc7",
+            "Nd5",
+            "Nxd5",
+            "exd5",
+            "Qd6",
+            "Qb5",
+            "f5",
+            "Qc6"
+          ],
+          "reading_edition_pages": [
+            444
+          ],
+          "claim_scope": "흑의 ...e5-e4 비숍 활성화 가능성을 고려해야 하는 조건부 유리한 경로다.",
+          "uci": [
+            "d2b1",
+            "c7c6",
+            "b1c3",
+            "e8c7",
+            "c3d5",
+            "c7d5",
+            "e4d5",
+            "c6d6",
+            "e2b5",
+            "f7f5",
+            "b5c6"
+          ],
+          "legally_replayed": true,
+          "final_fen": "3r1rk1/3n2bp/1pQq2p1/2pPpp2/8/4B1PP/1PP2PB1/R4RK1 b - - 1 23",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Nb1",
+              "uci": "d2b1",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+              "after_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 b - - 1 18"
+            },
+            {
+              "ply": 2,
+              "san": "Qc6",
+              "uci": "c7c6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 b - - 1 18",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 w - - 2 19"
+            },
+            {
+              "ply": 3,
+              "san": "Nc3",
+              "uci": "b1c3",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PP1QPB1/RN3RK1 w - - 2 19",
+              "after_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 b - - 3 19"
+            },
+            {
+              "ply": 4,
+              "san": "Nc7",
+              "uci": "e8c7",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": null,
+              "before_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 b - - 3 19",
+              "after_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 w - - 4 20"
+            },
+            {
+              "ply": 5,
+              "san": "Nd5",
+              "uci": "c3d5",
+              "moving_root_piece_id": "w-N@d2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/2nn1pbp/1pq3p1/2p1p3/4P3/2N1B1PP/1PP1QPB1/R4RK1 w - - 4 20",
+              "after_fen": "3r1rk1/2nn1pbp/1pq3p1/2pNp3/4P3/4B1PP/1PP1QPB1/R4RK1 b - - 5 20"
+            },
+            {
+              "ply": 6,
+              "san": "Nxd5",
+              "uci": "c7d5",
+              "moving_root_piece_id": "b-N@e8",
+              "captured_root_piece_id": "w-N@d2",
+              "before_fen": "3r1rk1/2nn1pbp/1pq3p1/2pNp3/4P3/4B1PP/1PP1QPB1/R4RK1 b - - 5 20",
+              "after_fen": "3r1rk1/3n1pbp/1pq3p1/2pnp3/4P3/4B1PP/1PP1QPB1/R4RK1 w - - 0 21"
+            },
+            {
+              "ply": 7,
+              "san": "exd5",
+              "uci": "e4d5",
+              "moving_root_piece_id": "w-P@e4",
+              "captured_root_piece_id": "b-N@e8",
+              "before_fen": "3r1rk1/3n1pbp/1pq3p1/2pnp3/4P3/4B1PP/1PP1QPB1/R4RK1 w - - 0 21",
+              "after_fen": "3r1rk1/3n1pbp/1pq3p1/2pPp3/8/4B1PP/1PP1QPB1/R4RK1 b - - 0 21"
+            },
+            {
+              "ply": 8,
+              "san": "Qd6",
+              "uci": "c6d6",
+              "moving_root_piece_id": "b-Q@c7",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/3n1pbp/1pq3p1/2pPp3/8/4B1PP/1PP1QPB1/R4RK1 b - - 0 21",
+              "after_fen": "3r1rk1/3n1pbp/1p1q2p1/2pPp3/8/4B1PP/1PP1QPB1/R4RK1 w - - 1 22"
+            },
+            {
+              "ply": 9,
+              "san": "Qb5",
+              "uci": "e2b5",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/3n1pbp/1p1q2p1/2pPp3/8/4B1PP/1PP1QPB1/R4RK1 w - - 1 22",
+              "after_fen": "3r1rk1/3n1pbp/1p1q2p1/1QpPp3/8/4B1PP/1PP2PB1/R4RK1 b - - 2 22"
+            },
+            {
+              "ply": 10,
+              "san": "f5",
+              "uci": "f7f5",
+              "moving_root_piece_id": "b-P@f7",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/3n1pbp/1p1q2p1/1QpPp3/8/4B1PP/1PP2PB1/R4RK1 b - - 2 22",
+              "after_fen": "3r1rk1/3n2bp/1p1q2p1/1QpPpp2/8/4B1PP/1PP2PB1/R4RK1 w - - 0 23"
+            },
+            {
+              "ply": 11,
+              "san": "Qc6",
+              "uci": "b5c6",
+              "moving_root_piece_id": "w-Q@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "3r1rk1/3n2bp/1p1q2p1/1QpPpp2/8/4B1PP/1PP2PB1/R4RK1 w - - 0 23",
+              "after_fen": "3r1rk1/3n2bp/1pQq2p1/2pPpp2/8/4B1PP/1PP2PB1/R4RK1 b - - 1 23"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "IC-SG28",
+      "title": "활동적인 무승부와 수동적인 무승부를 구분하는 Rd5",
+      "game": "Philip Hurtado – N.N., Internet blitz 2019, diagram Black to move",
+      "types": [
+        "natural_good_move",
+        "strong_counter_narrows_purpose",
+        "equal_objective_result_different_practical_task"
+      ],
+      "source": {
+        "book": "Think Like a Super-GM",
+        "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Think Like a Super-GM - Reading Edition.pdf",
+        "reading_edition_pages_read": [
+          290,
+          291,
+          292,
+          293,
+          294,
+          295,
+          296
+        ],
+        "reading_edition_diagram_pages_visually_checked": [
+          290,
+          294
+        ],
+        "source_pdf_footer_pages": "343–352",
+        "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+      },
+      "primary_move_san": "Rd5",
+      "additional_input_moves_san": [],
+      "human_question": "빠른 c 통과 폰을 수동적으로 막는 대신 왕에 체크를 걸며 반격하되, 정확한 방어 뒤 어느 결과까지 약속할 수 있는가?",
+      "necessary_functional_conditions": [
+        "...Rd2+의 체크 반격이 c 폰의 승급 속도를 상쇄할 만큼 실질적이어야 한다. 단순한 활동 칸이나 합법 체크만으로 승리를 주장하지 않는다.",
+        "백의 Kf1-Rf2+ 뒤 Ke1과 Rc3가 강한 방어다. 이 응수가 흑의 e/f 폰을 통제하는 기능을 남기면 체크 목적은 강제 승리에서 무승부 반격으로 좁혀야 한다.",
+        "백이 Kg1을 택해도 지는 것이 아니라 더 정확한 Ra4 등의 방어가 필요하다는 책의 구분을 유지한다.",
+        "수동적인 ...Re7 경로도 무승부를 지킬 수 있다. Rd5의 실전적 권고와 유일한 객관적 생존 수라는 주장을 분리한다."
+      ],
+      "nonessential_sequence_events": [
+        "흑이 정확히 f2 체크를 선택하는 것",
+        "백이 반드시 Kg1로 가는 것",
+        "흑이 최종적으로 폰 두 개를 더 갖는 것",
+        "모든 경로에서 동일한 룩 위치로 끝나는 것"
+      ],
+      "strong_counter_policy": {
+        "primary_counter_types": [
+          "체크에 왕을 중앙 쪽으로 옮겨 Rc3로 폰의 진입을 멈추는 방어",
+          "빠른 승급을 서두르지 않고 필요한 방어 룩 이동을 택하는 방어",
+          "반복 체크를 받아 무승부를 확보하는 선택"
+        ],
+        "book_specific_resources": [
+          "Rd5 c6 Rd2+ Kf1 Rf2+ Ke1! Rxg2 Rc3!",
+          "Rd5 c6 Rd2+ Kf1 Rf2+ Kg1 f3 gxf3 Rxf3 Ra4!"
+        ],
+        "ranking_scope": "Ke1-Rc3는 저자가 가장 끈질긴 방어로 설명한다. 책의 테이블베이스 서술을 현재 도구에서 직접 조회하거나 모든 첫 응수 결과를 증명한 것은 아니다."
+      },
+      "answer_type": "basic_active_defence_with_result_limit; comparison_only_if_asked",
+      "minimal_basic_comment": "룩을 활동적으로 두어 ...Rd2+로 왕을 압박합니다. 백이 통과 폰만 밀면 위험하지만 정확히 왕과 룩으로 방어하면 무승부를 지킬 수 있습니다.",
+      "optional_comparison_comment": "...Re7로 통과 폰을 막는 방법도 무승부를 지킬 수 있습니다. ...Rd5는 왕에 체크를 걸며 흑이 먼저 반격할 수 있는 더 활동적인 선택입니다.",
+      "counter_revision": "Ke1-Rc3가 확인되면 '강제 승리'를 철회한다. 이후 갱신된 응수에서 활동 목적 자체가 실패할 때만 그 역할 설명도 좁힌다.",
+      "multiple_good_moves": {
+        "author_assessment": "Rd5를 권고하지만 Re7도 무승부다. 백의 Ke1과 Kg1은 모두 무승부를 유지하며 후속 정확성의 요구가 다르다.",
+        "do_not_infer": "주석 '?' 또는 '? !'을 엔진 평가 손실과 동일시하지 않는다."
+      },
+      "misleading_risks": [
+        "체크가 있으므로 흑이 이긴다는 표현",
+        "백 c 폰의 승급을 모든 상황에서 과장",
+        "수동적인 Re7을 지는 수로 분류",
+        "정확한 방어를 빼고 폰 이득만으로 결과를 설명"
+      ],
+      "minimum_comparison_scope": "활동의 결과를 평가하려면 적어도 Ke1-Rc3까지 마친다. Kg1 후 Ra4 방어와 Re7의 생존 자원을 반례로 같이 남긴다. 모든 기본 출력에 긴 종료 수순은 요구하지 않는다.",
+      "unresolved": [
+        "책의 객관적 무승부 결과를 현재 엔진/테이블베이스로 독립 확인하는 일",
+        "실전적 좁은 길을 허위 확률 없이 표현하는 일반 단위"
+      ],
+      "fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+      "root_reconstruction": {
+        "kind": "visually_read_book_diagram",
+        "history_san": [],
+        "history_uci": [],
+        "rights_and_counter_scope": "도표는 양쪽 캐슬링 권리가 없으며 반수 카운터는 알려져 있지 않아 0으로 정규화. 이전 반복과 50수 규칙의 역사까지 재구성한 것은 아니다."
+      },
+      "book_lines": [
+        {
+          "label": "active_rook_best_resistance_defensive_Rc3",
+          "san": [
+            "Rd5",
+            "c6",
+            "Rd2+",
+            "Kf1",
+            "Rf2+",
+            "Ke1",
+            "Rxg2",
+            "Rc3",
+            "f3",
+            "Rxe3",
+            "Rxc2",
+            "Rxf3",
+            "Rxc6"
+          ],
+          "reading_edition_pages": [
+            292,
+            293,
+            294,
+            295
+          ],
+          "claim_scope": "왕 이동만으로 강제 승리를 주장할 수 없다. Ke1와 Rc3라는 강한 방어가 흑의 폰들을 제어하고 무승부로 이어진다는 책의 평가다.",
+          "uci": [
+            "e5d5",
+            "c5c6",
+            "d5d2",
+            "e2f1",
+            "d2f2",
+            "f1e1",
+            "f2g2",
+            "c4c3",
+            "f4f3",
+            "c3e3",
+            "g2c2",
+            "e3f3",
+            "c2c6"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/8/2r5/5pk1/7p/5R1P/8/4K3 w - - 0 8",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rd5",
+              "uci": "e5d5",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rd2+",
+              "uci": "d5d2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf1",
+              "uci": "e2f1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Rf2+",
+              "uci": "d2f2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "Ke1",
+              "uci": "f1e1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/4K3 b - - 4 4"
+            },
+            {
+              "ply": 7,
+              "san": "Rxg2",
+              "uci": "f2g2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@g2",
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/4K3 b - - 4 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3r1/4K3 w - - 0 5"
+            },
+            {
+              "ply": 8,
+              "san": "Rc3",
+              "uci": "c4c3",
+              "moving_root_piece_id": "w-R@c4",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3r1/4K3 w - - 0 5",
+              "after_fen": "8/8/2P5/5pk1/5p1p/2R1p2P/2P3r1/4K3 b - - 1 5"
+            },
+            {
+              "ply": 9,
+              "san": "f3",
+              "uci": "f4f3",
+              "moving_root_piece_id": "b-P@f4",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/5p1p/2R1p2P/2P3r1/4K3 b - - 1 5",
+              "after_fen": "8/8/2P5/5pk1/7p/2R1pp1P/2P3r1/4K3 w - - 0 6"
+            },
+            {
+              "ply": 10,
+              "san": "Rxe3",
+              "uci": "c3e3",
+              "moving_root_piece_id": "w-R@c4",
+              "captured_root_piece_id": "b-P@e3",
+              "before_fen": "8/8/2P5/5pk1/7p/2R1pp1P/2P3r1/4K3 w - - 0 6",
+              "after_fen": "8/8/2P5/5pk1/7p/4Rp1P/2P3r1/4K3 b - - 0 6"
+            },
+            {
+              "ply": 11,
+              "san": "Rxc2",
+              "uci": "g2c2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@c2",
+              "before_fen": "8/8/2P5/5pk1/7p/4Rp1P/2P3r1/4K3 b - - 0 6",
+              "after_fen": "8/8/2P5/5pk1/7p/4Rp1P/2r5/4K3 w - - 0 7"
+            },
+            {
+              "ply": 12,
+              "san": "Rxf3",
+              "uci": "e3f3",
+              "moving_root_piece_id": "w-R@c4",
+              "captured_root_piece_id": "b-P@f4",
+              "before_fen": "8/8/2P5/5pk1/7p/4Rp1P/2r5/4K3 w - - 0 7",
+              "after_fen": "8/8/2P5/5pk1/7p/5R1P/2r5/4K3 b - - 0 7"
+            },
+            {
+              "ply": 13,
+              "san": "Rxc6",
+              "uci": "c2c6",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@c5",
+              "before_fen": "8/8/2P5/5pk1/7p/5R1P/2r5/4K3 b - - 0 7",
+              "after_fen": "8/8/2r5/5pk1/7p/5R1P/8/4K3 w - - 0 8"
+            }
+          ]
+        },
+        {
+          "label": "settling_for_repetition",
+          "san": [
+            "Rd5",
+            "c6",
+            "Rd2+",
+            "Kf1",
+            "Rd1+",
+            "Ke2",
+            "Rd2+",
+            "Kf1"
+          ],
+          "reading_edition_pages": [
+            293
+          ],
+          "claim_scope": "동일한 활동 목적이 반복 체크를 통해 무승부로 끝날 수도 있다.",
+          "uci": [
+            "e5d5",
+            "c5c6",
+            "d5d2",
+            "e2f1",
+            "d2d1",
+            "f1e2",
+            "d1d2",
+            "e2f1"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 6 5",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rd5",
+              "uci": "e5d5",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rd2+",
+              "uci": "d5d2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf1",
+              "uci": "e2f1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Rd1+",
+              "uci": "d2d1",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3P1/3r1K2 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "Ke2",
+              "uci": "f1e2",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3P1/3r1K2 w - - 3 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/3r4 b - - 4 4"
+            },
+            {
+              "ply": 7,
+              "san": "Rd2+",
+              "uci": "d1d2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/3r4 b - - 4 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 5 5"
+            },
+            {
+              "ply": 8,
+              "san": "Kf1",
+              "uci": "e2f1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 5 5",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 6 5"
+            }
+          ]
+        },
+        {
+          "label": "different_resistance_narrower_drawing_path",
+          "san": [
+            "Rd5",
+            "c6",
+            "Rd2+",
+            "Kf1",
+            "Rf2+",
+            "Kg1",
+            "f3",
+            "gxf3",
+            "Rxf3",
+            "Ra4",
+            "Rxh3",
+            "c7",
+            "e2",
+            "Kf2",
+            "Rc3",
+            "Kxe2",
+            "Rxc2+",
+            "Kf3",
+            "Rxc7"
+          ],
+          "reading_edition_pages": [
+            293,
+            294
+          ],
+          "claim_scope": "Kg1도 지는 수는 아니지만 더 정확한 후속 수가 필요하다. 둘의 차이를 엔진 블런더로 과장하지 않는다.",
+          "uci": [
+            "e5d5",
+            "c5c6",
+            "d5d2",
+            "e2f1",
+            "d2f2",
+            "f1g1",
+            "f4f3",
+            "g2f3",
+            "f2f3",
+            "c4a4",
+            "f3h3",
+            "c6c7",
+            "e3e2",
+            "g1f2",
+            "h3c3",
+            "f2e2",
+            "c3c2",
+            "e2f3",
+            "c2c7"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/2r5/8/5pk1/R6p/5K2/8/8 w - - 0 11",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rd5",
+              "uci": "e5d5",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rd2+",
+              "uci": "d5d2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf1",
+              "uci": "e2f1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Rf2+",
+              "uci": "d2f2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "Kg1",
+              "uci": "f1g1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/6K1 b - - 4 4"
+            },
+            {
+              "ply": 7,
+              "san": "f3",
+              "uci": "f4f3",
+              "moving_root_piece_id": "b-P@f4",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/6K1 b - - 4 4",
+              "after_fen": "8/8/2P5/5pk1/2R4p/4pp1P/2P2rP1/6K1 w - - 0 5"
+            },
+            {
+              "ply": 8,
+              "san": "gxf3",
+              "uci": "g2f3",
+              "moving_root_piece_id": "w-P@g2",
+              "captured_root_piece_id": "b-P@f4",
+              "before_fen": "8/8/2P5/5pk1/2R4p/4pp1P/2P2rP1/6K1 w - - 0 5",
+              "after_fen": "8/8/2P5/5pk1/2R4p/4pP1P/2P2r2/6K1 b - - 0 5"
+            },
+            {
+              "ply": 9,
+              "san": "Rxf3",
+              "uci": "f2f3",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@g2",
+              "before_fen": "8/8/2P5/5pk1/2R4p/4pP1P/2P2r2/6K1 b - - 0 5",
+              "after_fen": "8/8/2P5/5pk1/2R4p/4pr1P/2P5/6K1 w - - 0 6"
+            },
+            {
+              "ply": 10,
+              "san": "Ra4",
+              "uci": "c4a4",
+              "moving_root_piece_id": "w-R@c4",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R4p/4pr1P/2P5/6K1 w - - 0 6",
+              "after_fen": "8/8/2P5/5pk1/R6p/4pr1P/2P5/6K1 b - - 1 6"
+            },
+            {
+              "ply": 11,
+              "san": "Rxh3",
+              "uci": "f3h3",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@h3",
+              "before_fen": "8/8/2P5/5pk1/R6p/4pr1P/2P5/6K1 b - - 1 6",
+              "after_fen": "8/8/2P5/5pk1/R6p/4p2r/2P5/6K1 w - - 0 7"
+            },
+            {
+              "ply": 12,
+              "san": "c7",
+              "uci": "c6c7",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/R6p/4p2r/2P5/6K1 w - - 0 7",
+              "after_fen": "8/2P5/8/5pk1/R6p/4p2r/2P5/6K1 b - - 0 7"
+            },
+            {
+              "ply": 13,
+              "san": "e2",
+              "uci": "e3e2",
+              "moving_root_piece_id": "b-P@e3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/R6p/4p2r/2P5/6K1 b - - 0 7",
+              "after_fen": "8/2P5/8/5pk1/R6p/7r/2P1p3/6K1 w - - 0 8"
+            },
+            {
+              "ply": 14,
+              "san": "Kf2",
+              "uci": "g1f2",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/R6p/7r/2P1p3/6K1 w - - 0 8",
+              "after_fen": "8/2P5/8/5pk1/R6p/7r/2P1pK2/8 b - - 1 8"
+            },
+            {
+              "ply": 15,
+              "san": "Rc3",
+              "uci": "h3c3",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/R6p/7r/2P1pK2/8 b - - 1 8",
+              "after_fen": "8/2P5/8/5pk1/R6p/2r5/2P1pK2/8 w - - 2 9"
+            },
+            {
+              "ply": 16,
+              "san": "Kxe2",
+              "uci": "f2e2",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": "b-P@e3",
+              "before_fen": "8/2P5/8/5pk1/R6p/2r5/2P1pK2/8 w - - 2 9",
+              "after_fen": "8/2P5/8/5pk1/R6p/2r5/2P1K3/8 b - - 0 9"
+            },
+            {
+              "ply": 17,
+              "san": "Rxc2+",
+              "uci": "c3c2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@c2",
+              "before_fen": "8/2P5/8/5pk1/R6p/2r5/2P1K3/8 b - - 0 9",
+              "after_fen": "8/2P5/8/5pk1/R6p/8/2r1K3/8 w - - 0 10"
+            },
+            {
+              "ply": 18,
+              "san": "Kf3",
+              "uci": "e2f3",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/R6p/8/2r1K3/8 w - - 0 10",
+              "after_fen": "8/2P5/8/5pk1/R6p/5K2/2r5/8 b - - 1 10"
+            },
+            {
+              "ply": 19,
+              "san": "Rxc7",
+              "uci": "c2c7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@c5",
+              "before_fen": "8/2P5/8/5pk1/R6p/5K2/2r5/8 b - - 1 10",
+              "after_fen": "8/2r5/8/5pk1/R6p/5K2/8/8 w - - 0 11"
+            }
+          ]
+        },
+        {
+          "label": "premature_White_promotion_fails",
+          "san": [
+            "Rd5",
+            "c6",
+            "Rd2+",
+            "Kf1",
+            "Rf2+",
+            "Ke1",
+            "Rxg2",
+            "c7",
+            "f3",
+            "c8=Q",
+            "Rg1#"
+          ],
+          "reading_edition_pages": [
+            294
+          ],
+          "claim_scope": "흑의 체크 목적은 실제 위협을 담지만 백이 Rc3로 방어하면 그대로 실현되지 않는다.",
+          "uci": [
+            "e5d5",
+            "c5c6",
+            "d5d2",
+            "e2f1",
+            "d2f2",
+            "f1e1",
+            "f2g2",
+            "c6c7",
+            "f4f3",
+            "c7c8q",
+            "g2g1"
+          ],
+          "legally_replayed": true,
+          "final_fen": "2Q5/8/8/5pk1/2R4p/4pp1P/2P5/4K1r1 w - - 1 7",
+          "final_checkmate": true,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rd5",
+              "uci": "e5d5",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2Pr1pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rd2+",
+              "uci": "d5d2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/3r1pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf1",
+              "uci": "e2f1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2PrK1P1/8 w - - 1 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Rf2+",
+              "uci": "d2f2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2Pr2P1/5K2 b - - 2 3",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "Ke1",
+              "uci": "f1e1",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/4K3 b - - 4 4"
+            },
+            {
+              "ply": 7,
+              "san": "Rxg2",
+              "uci": "f2g2",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": "w-P@g2",
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/4K3 b - - 4 4",
+              "after_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3r1/4K3 w - - 0 5"
+            },
+            {
+              "ply": 8,
+              "san": "c7",
+              "uci": "c6c7",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P3r1/4K3 w - - 0 5",
+              "after_fen": "8/2P5/8/5pk1/2R2p1p/4p2P/2P3r1/4K3 b - - 0 5"
+            },
+            {
+              "ply": 9,
+              "san": "f3",
+              "uci": "f4f3",
+              "moving_root_piece_id": "b-P@f4",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/2R2p1p/4p2P/2P3r1/4K3 b - - 0 5",
+              "after_fen": "8/2P5/8/5pk1/2R4p/4pp1P/2P3r1/4K3 w - - 0 6"
+            },
+            {
+              "ply": 10,
+              "san": "c8=Q",
+              "uci": "c7c8q",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P5/8/5pk1/2R4p/4pp1P/2P3r1/4K3 w - - 0 6",
+              "after_fen": "2Q5/8/8/5pk1/2R4p/4pp1P/2P3r1/4K3 b - - 0 6"
+            },
+            {
+              "ply": 11,
+              "san": "Rg1#",
+              "uci": "g2g1",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "2Q5/8/8/5pk1/2R4p/4pp1P/2P3r1/4K3 b - - 0 6",
+              "after_fen": "2Q5/8/8/5pk1/2R4p/4pp1P/2P5/4K1r1 w - - 1 7"
+            }
+          ]
+        },
+        {
+          "label": "passive_rook_also_draws",
+          "san": [
+            "Re7",
+            "c6",
+            "Rc7",
+            "Kf3",
+            "Re7",
+            "Ke2"
+          ],
+          "reading_edition_pages": [
+            292,
+            293
+          ],
+          "claim_scope": "Re7은 덜 활동적이나 책에서 무승부를 지킬 수 있는 것으로 명시한다. Rd5가 유일한 무승부 수라는 주장과 다르다.",
+          "uci": [
+            "e5e7",
+            "c5c6",
+            "e7c7",
+            "e2f3",
+            "c7e7",
+            "f3e2"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 4 4",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Re7",
+              "uci": "e5e7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/4r3/8/2P2pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/8/2P2pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rc7",
+              "uci": "e7c7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/2r5/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf3",
+              "uci": "e2f3",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2r5/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 3",
+              "after_fen": "8/2r5/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Re7",
+              "uci": "c7e7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2r5/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 2 3",
+              "after_fen": "8/4r3/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "Ke2",
+              "uci": "f3e2",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 w - - 3 4",
+              "after_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 4 4"
+            }
+          ]
+        },
+        {
+          "label": "passive_rook_has_its_own_concrete_resource",
+          "san": [
+            "Re7",
+            "c6",
+            "Rc7",
+            "Kf3",
+            "Re7",
+            "c7",
+            "e2",
+            "c8=Q",
+            "Re3+",
+            "Kf2",
+            "e1=Q#"
+          ],
+          "reading_edition_pages": [
+            293
+          ],
+          "claim_scope": "Re7 경로에도 구체적인 ...e2 자원이 남는다. 수동성 하나로 모든 기능을 부정하면 안 된다.",
+          "uci": [
+            "e5e7",
+            "c5c6",
+            "e7c7",
+            "e2f3",
+            "c7e7",
+            "c6c7",
+            "e3e2",
+            "c7c8q",
+            "e7e3",
+            "f3f2",
+            "e2e1q"
+          ],
+          "legally_replayed": true,
+          "final_fen": "2Q5/8/8/5pk1/2R2p1p/4r2P/2P2KP1/4q3 w - - 0 7",
+          "final_checkmate": true,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Re7",
+              "uci": "e5e7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+              "after_fen": "8/4r3/8/2P2pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2"
+            },
+            {
+              "ply": 2,
+              "san": "c6",
+              "uci": "c5c6",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/8/2P2pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 2",
+              "after_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2"
+            },
+            {
+              "ply": 3,
+              "san": "Rc7",
+              "uci": "e7c7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 2",
+              "after_fen": "8/2r5/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 3"
+            },
+            {
+              "ply": 4,
+              "san": "Kf3",
+              "uci": "e2f3",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2r5/2P5/5pk1/2R2p1p/4p2P/2P1K1P1/8 w - - 1 3",
+              "after_fen": "8/2r5/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 2 3"
+            },
+            {
+              "ply": 5,
+              "san": "Re7",
+              "uci": "c7e7",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2r5/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 2 3",
+              "after_fen": "8/4r3/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 w - - 3 4"
+            },
+            {
+              "ply": 6,
+              "san": "c7",
+              "uci": "c6c7",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/4r3/2P5/5pk1/2R2p1p/4pK1P/2P3P1/8 w - - 3 4",
+              "after_fen": "8/2P1r3/8/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 0 4"
+            },
+            {
+              "ply": 7,
+              "san": "e2",
+              "uci": "e3e2",
+              "moving_root_piece_id": "b-P@e3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P1r3/8/5pk1/2R2p1p/4pK1P/2P3P1/8 b - - 0 4",
+              "after_fen": "8/2P1r3/8/5pk1/2R2p1p/5K1P/2P1p1P1/8 w - - 0 5"
+            },
+            {
+              "ply": 8,
+              "san": "c8=Q",
+              "uci": "c7c8q",
+              "moving_root_piece_id": "w-P@c5",
+              "captured_root_piece_id": null,
+              "before_fen": "8/2P1r3/8/5pk1/2R2p1p/5K1P/2P1p1P1/8 w - - 0 5",
+              "after_fen": "2Q5/4r3/8/5pk1/2R2p1p/5K1P/2P1p1P1/8 b - - 0 5"
+            },
+            {
+              "ply": 9,
+              "san": "Re3+",
+              "uci": "e7e3",
+              "moving_root_piece_id": "b-R@e5",
+              "captured_root_piece_id": null,
+              "before_fen": "2Q5/4r3/8/5pk1/2R2p1p/5K1P/2P1p1P1/8 b - - 0 5",
+              "after_fen": "2Q5/8/8/5pk1/2R2p1p/4rK1P/2P1p1P1/8 w - - 1 6"
+            },
+            {
+              "ply": 10,
+              "san": "Kf2",
+              "uci": "f3f2",
+              "moving_root_piece_id": "w-K@e2",
+              "captured_root_piece_id": null,
+              "before_fen": "2Q5/8/8/5pk1/2R2p1p/4rK1P/2P1p1P1/8 w - - 1 6",
+              "after_fen": "2Q5/8/8/5pk1/2R2p1p/4r2P/2P1pKP1/8 b - - 2 6"
+            },
+            {
+              "ply": 11,
+              "san": "e1=Q#",
+              "uci": "e2e1q",
+              "moving_root_piece_id": "b-P@e3",
+              "captured_root_piece_id": null,
+              "before_fen": "2Q5/8/8/5pk1/2R2p1p/4r2P/2P1pKP1/8 b - - 2 6",
+              "after_fen": "2Q5/8/8/5pk1/2R2p1p/4r2P/2P2KP1/4q3 w - - 0 7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "IC-SWK62",
+      "title": "같은 승리라도 변환 과제가 어려워지는 단순화",
+      "game": "Vladimir Kramnik – Magnus Carlsen, London 2010, 62.White after 61...Rc5",
+      "types": [
+        "practical_task_change_without_objective_blunder",
+        "strong_counter_changes_comment",
+        "later_true_error_control"
+      ],
+      "source": {
+        "book": "The Complete Chess Swindler",
+        "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\The Complete Chess Swindler - Reading Edition.pdf",
+        "reading_edition_pages_read": [
+          82,
+          83,
+          84,
+          85,
+          86,
+          87
+        ],
+        "reading_edition_diagram_pages_visually_checked": [
+          83,
+          84,
+          85,
+          86,
+          87
+        ],
+        "source_pdf_footer_pages": "112–120",
+        "scope": "지정된 연결 페이지 독해와 도표 확인. 책 전체 완독이나 최선의 직접 증명이 아니다."
+      },
+      "primary_move_san": "Rxd6+",
+      "additional_input_moves_san": [],
+      "human_question": "기물 하나를 얻는 간단한 단순화가 실제로 승리 과제까지 쉽게 만드는가, 아니면 흑 왕의 활동 때문에 새 정확성이 필요한가?",
+      "necessary_functional_conditions": [
+        "62.Rxd6+ Kxd6 63.Ne4+ Kc6 64.Nxc5 Kxc5 뒤 백이 비숍 하나를 더 갖는 것은 사실이다. 책은 이 수가 여전히 승리하며 객관적으로 최선일 수도 있다고 명시한다.",
+        "흑의 적극적인 Kd4-d3-d2와 a 통과 폰 때문에 백의 왕 이동과 g 폰 돌파의 순서가 중요해진다. 물질 획득만으로 쉬운 변환을 약속하지 않는다.",
+        "승리를 유지한다고 주장하는 설명은 g5 뒤 흑 왕이 f8 봉쇄로 도망가는 자원을 막고, 필요한 왕·비숍의 타이밍을 남겨야 한다.",
+        "70.Kh4는 저자가 승리를 놓치는 실제 평가 오류로 설명하는 별도 시점이다. 62수의 실전적 '?'와 구분한다.",
+        "일부 깊은 승리 경로에 특정 체크 승급 타이밍이 필수일 수 있지만 전체 수순이 같은 사건 순서를 따라야 한다고 일반화하지 않는다."
+      ],
+      "nonessential_sequence_events": [
+        "62.Rxd6+가 반드시 엔진 최선이어야 한다는 조건",
+        "다른 쉬운 경로가 정확히 책의 Rd3과 같은 사건으로 끝나는 것",
+        "백이 반드시 69.Kg3을 택하는 것",
+        "강한 사람이 함정을 놓칠 확률을 추정하는 것"
+      ],
+      "strong_counter_policy": {
+        "primary_counter_types": [
+          "흑 왕의 적극적 침투로 백의 변환 과제를 바꾸는 반격",
+          "...h5+로 폰 교환을 유도한 뒤 왕이 f8로 돌아가 봉쇄하는 자원",
+          "...g6-g5로 백 왕의 진입과 폰 제거 순서를 고정하는 봉쇄"
+        ],
+        "book_specific_resources": [
+          "65...Kd4!",
+          "70.g5 Ke4 Kg4 Ke3 Ba2 Ke4 g3 Ke3 Bb1 Kf2 g6 h5+",
+          "70.Kh4 Kf2! Bd5 g6 Kh3 g5!"
+        ],
+        "ranking_scope": "실전적 목적은 저자의 해석이다. 상대 실수 확률, Carlsen이 실제로 생각한 내용, mate-in-32는 이 연구에서 직접 확인하지 않는다. 객관적 비교는 부모의 별도 엔진 연구가 맡는다."
+      },
+      "answer_type": "material_result_plus_new_conversion_task; never_engine_blunder_at_62_without_verified_loss",
+      "minimal_basic_comment": "이 단순화로 비숍 하나를 더 갖는 엔드게임이 됩니다. 승리는 남지만 흑 왕이 활동적으로 들어올 수 있어, 폰을 밀고 왕을 옮기는 순서를 정확히 잡아야 합니다.",
+      "later_error_comment": "70.Kh4 뒤에는 ...Kf2와 ...g6-g5로 흑이 왕의 진입로를 봉쇄할 수 있습니다. g5로 돌파 가능성을 유지할 기회를 놓친 것이 이 시점의 문제입니다.",
+      "counter_revision": "단순화 뒤 승리 경로를 아직 완료하지 못하면 물질 획득은 설명하되 강제 승리의 이유를 확보했다고 세지 않는다. 봉쇄 반론이 승리를 실제로 없애는 시점이면 목적을 조건부로 남기는 것만으로 끝내지 않고 평가 오류의 이유를 먼저 말한다.",
+      "multiple_good_moves": {
+        "author_assessment": "62.Rd3는 더 평범한 변환으로 권고되고 62.Rxd6+도 객관적으로 승리다. 70수에는 g5가 승리를 유지하는 깊은 자원으로 제시된다.",
+        "do_not_infer": "62수의 '?'를 블런더로 바꾸거나 70수의 평가 오류를 단순한 실전 난도로 덮지 않는다."
+      },
+      "misleading_risks": [
+        "기물을 얻었으므로 변환도 쉬워졌다는 표현",
+        "책의 '?'를 수치 판정으로 그대로 옮김",
+        "한 폰 돌파가 합법적이므로 봉쇄를 깨고 이긴다고 결론",
+        "책의 승리 경로를 재생한 것을 모든 주요 방어 검증으로 셈"
+      ],
+      "minimum_comparison_scope": "62수 물질 결과는 64...Kxc5까지. 변환 과제는 최소 적극적 ...Kd4와 g5/f8 봉쇄 반론을 같이 읽는다. 70수 판정은 Kh4와 g5 이후 강한 반론을 각자 마치고 비교해야 한다.",
+      "unresolved": [
+        "62.Rd3 뒤 현재 조건에서 가장 강한 방어의 실제 변환 난도",
+        "70.g5의 전 주요 응수 승리 확인 및 체크 승급 시간 계산",
+        "실전적 편의와 객관적 평가를 제품에서 별도 판단으로 표현하는 일반 단위"
+      ],
+      "fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "root_reconstruction": {
+        "kind": "visually_read_book_diagram",
+        "history_san": [],
+        "history_uci": [],
+        "rights_and_counter_scope": "도표는 양쪽 캐슬링 권리가 없으며 반수 카운터는 알려져 있지 않아 0으로 정규화. 이전 반복과 50수 규칙의 역사까지 재구성한 것은 아니다."
+      },
+      "book_lines": [
+        {
+          "label": "simplification_still_wins_then_later_error_draws",
+          "san": [
+            "Rxd6+",
+            "Kxd6",
+            "Ne4+",
+            "Kc6",
+            "Nxc5",
+            "Kxc5",
+            "Kf2",
+            "Kd4",
+            "Kf3",
+            "Kd3",
+            "g4",
+            "Kd2",
+            "Be6",
+            "Kd3",
+            "Kg3",
+            "Ke3",
+            "Kh4",
+            "Kf2",
+            "Bd5",
+            "g6",
+            "Kh3",
+            "g5",
+            "Kh2",
+            "Kf1"
+          ],
+          "reading_edition_pages": [
+            85,
+            86,
+            87
+          ],
+          "claim_scope": "62.Rxd6+ 자체는 여전히 승리하며 실전적 난도에 대한 '?'다. 70.Kh4는 저자가 승리를 놓치는 별도의 오류로 설명한다.",
+          "uci": [
+            "d1d6",
+            "c6d6",
+            "c3e4",
+            "d6c6",
+            "e4c5",
+            "c6c5",
+            "g1f2",
+            "c5d4",
+            "f2f3",
+            "d4d3",
+            "g3g4",
+            "d3d2",
+            "a2e6",
+            "d2d3",
+            "f3g3",
+            "d3e3",
+            "g3h4",
+            "e3f2",
+            "e6d5",
+            "g7g6",
+            "h4h3",
+            "g6g5",
+            "h3h2",
+            "f2f1"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/8/7p/3B2p1/6P1/p7/6PK/5k2 w - - 2 74",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rxd6+",
+              "uci": "d1d6",
+              "moving_root_piece_id": "w-R@d1",
+              "captured_root_piece_id": "b-N@d6",
+              "before_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+              "after_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62"
+            },
+            {
+              "ply": 2,
+              "san": "Kxd6",
+              "uci": "c6d6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-R@d1",
+              "before_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62",
+              "after_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63"
+            },
+            {
+              "ply": 3,
+              "san": "Ne4+",
+              "uci": "c3e4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63",
+              "after_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63"
+            },
+            {
+              "ply": 4,
+              "san": "Kc6",
+              "uci": "d6c6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63",
+              "after_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64"
+            },
+            {
+              "ply": 5,
+              "san": "Nxc5",
+              "uci": "e4c5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-R@c5",
+              "before_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64",
+              "after_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64"
+            },
+            {
+              "ply": 6,
+              "san": "Kxc5",
+              "uci": "c6c5",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-N@c3",
+              "before_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65"
+            },
+            {
+              "ply": 7,
+              "san": "Kf2",
+              "uci": "g1f2",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65"
+            },
+            {
+              "ply": 8,
+              "san": "Kd4",
+              "uci": "c5d4",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65",
+              "after_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66"
+            },
+            {
+              "ply": 9,
+              "san": "Kf3",
+              "uci": "f2f3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66",
+              "after_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66"
+            },
+            {
+              "ply": 10,
+              "san": "Kd3",
+              "uci": "d4d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66",
+              "after_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67"
+            },
+            {
+              "ply": 11,
+              "san": "g4",
+              "uci": "g3g4",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67",
+              "after_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67"
+            },
+            {
+              "ply": 12,
+              "san": "Kd2",
+              "uci": "d3d2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67",
+              "after_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68"
+            },
+            {
+              "ply": 13,
+              "san": "Be6",
+              "uci": "a2e6",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68"
+            },
+            {
+              "ply": 14,
+              "san": "Kd3",
+              "uci": "d2d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69"
+            },
+            {
+              "ply": 15,
+              "san": "Kg3",
+              "uci": "f3g3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69",
+              "after_fen": "8/6p1/4B2p/8/6P1/p2k2K1/6P1/8 b - - 4 69"
+            },
+            {
+              "ply": 16,
+              "san": "Ke3",
+              "uci": "d3e3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p2k2K1/6P1/8 b - - 4 69",
+              "after_fen": "8/6p1/4B2p/8/6P1/p3k1K1/6P1/8 w - - 5 70"
+            },
+            {
+              "ply": 17,
+              "san": "Kh4",
+              "uci": "g3h4",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p3k1K1/6P1/8 w - - 5 70",
+              "after_fen": "8/6p1/4B2p/8/6PK/p3k3/6P1/8 b - - 6 70"
+            },
+            {
+              "ply": 18,
+              "san": "Kf2",
+              "uci": "e3f2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6PK/p3k3/6P1/8 b - - 6 70",
+              "after_fen": "8/6p1/4B2p/8/6PK/p7/5kP1/8 w - - 7 71"
+            },
+            {
+              "ply": 19,
+              "san": "Bd5",
+              "uci": "e6d5",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6PK/p7/5kP1/8 w - - 7 71",
+              "after_fen": "8/6p1/7p/3B4/6PK/p7/5kP1/8 b - - 8 71"
+            },
+            {
+              "ply": 20,
+              "san": "g6",
+              "uci": "g7g6",
+              "moving_root_piece_id": "b-P@g7",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/3B4/6PK/p7/5kP1/8 b - - 8 71",
+              "after_fen": "8/8/6pp/3B4/6PK/p7/5kP1/8 w - - 0 72"
+            },
+            {
+              "ply": 21,
+              "san": "Kh3",
+              "uci": "h4h3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/6pp/3B4/6PK/p7/5kP1/8 w - - 0 72",
+              "after_fen": "8/8/6pp/3B4/6P1/p6K/5kP1/8 b - - 1 72"
+            },
+            {
+              "ply": 22,
+              "san": "g5",
+              "uci": "g6g5",
+              "moving_root_piece_id": "b-P@g7",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/6pp/3B4/6P1/p6K/5kP1/8 b - - 1 72",
+              "after_fen": "8/8/7p/3B2p1/6P1/p6K/5kP1/8 w - - 0 73"
+            },
+            {
+              "ply": 23,
+              "san": "Kh2",
+              "uci": "h3h2",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/7p/3B2p1/6P1/p6K/5kP1/8 w - - 0 73",
+              "after_fen": "8/8/7p/3B2p1/6P1/p7/5kPK/8 b - - 1 73"
+            },
+            {
+              "ply": 24,
+              "san": "Kf1",
+              "uci": "f2f1",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/8/7p/3B2p1/6P1/p7/5kPK/8 b - - 1 73",
+              "after_fen": "8/8/7p/3B2p1/6P1/p7/6PK/5k2 w - - 2 74"
+            }
+          ]
+        },
+        {
+          "label": "harder_winning_route_after_simplification",
+          "san": [
+            "Rxd6+",
+            "Kxd6",
+            "Ne4+",
+            "Kc6",
+            "Nxc5",
+            "Kxc5",
+            "Kf2",
+            "Kd4",
+            "Kf3",
+            "Kd3",
+            "g4",
+            "Kd2",
+            "Be6",
+            "Kd3",
+            "Kg3",
+            "Ke3",
+            "g5",
+            "Ke4",
+            "Kg4",
+            "Ke3",
+            "Ba2",
+            "Ke4",
+            "g3",
+            "Ke3",
+            "Bb1",
+            "Kf2",
+            "g6",
+            "h5+",
+            "Kf4",
+            "Kg2",
+            "Ba2",
+            "Kf2",
+            "Bd5",
+            "Ke2",
+            "Ke5",
+            "Kf2",
+            "Ke6",
+            "Kxg3",
+            "Kf7"
+          ],
+          "reading_edition_pages": [
+            85,
+            86,
+            87
+          ],
+          "claim_scope": "책은 76.Kf4가 매우 깊은 승리 자원이라고 설명한다. 여기서는 합법적인 기물 배치와 이 경로만 확인했으며 mate-in-32 또는 전 응수 승리를 직접 증명하지 않았다.",
+          "uci": [
+            "d1d6",
+            "c6d6",
+            "c3e4",
+            "d6c6",
+            "e4c5",
+            "c6c5",
+            "g1f2",
+            "c5d4",
+            "f2f3",
+            "d4d3",
+            "g3g4",
+            "d3d2",
+            "a2e6",
+            "d2d3",
+            "f3g3",
+            "d3e3",
+            "g4g5",
+            "e3e4",
+            "g3g4",
+            "e4e3",
+            "e6a2",
+            "e3e4",
+            "g2g3",
+            "e4e3",
+            "a2b1",
+            "e3f2",
+            "g5g6",
+            "h6h5",
+            "g4f4",
+            "f2g2",
+            "b1a2",
+            "g2f2",
+            "a2d5",
+            "f2e2",
+            "f4e5",
+            "e2f2",
+            "e5e6",
+            "f2g3",
+            "e6f7"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/5Kp1/6P1/3B3p/8/p5k1/8/8 b - - 1 81",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rxd6+",
+              "uci": "d1d6",
+              "moving_root_piece_id": "w-R@d1",
+              "captured_root_piece_id": "b-N@d6",
+              "before_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+              "after_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62"
+            },
+            {
+              "ply": 2,
+              "san": "Kxd6",
+              "uci": "c6d6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-R@d1",
+              "before_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62",
+              "after_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63"
+            },
+            {
+              "ply": 3,
+              "san": "Ne4+",
+              "uci": "c3e4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63",
+              "after_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63"
+            },
+            {
+              "ply": 4,
+              "san": "Kc6",
+              "uci": "d6c6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63",
+              "after_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64"
+            },
+            {
+              "ply": 5,
+              "san": "Nxc5",
+              "uci": "e4c5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-R@c5",
+              "before_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64",
+              "after_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64"
+            },
+            {
+              "ply": 6,
+              "san": "Kxc5",
+              "uci": "c6c5",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-N@c3",
+              "before_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65"
+            },
+            {
+              "ply": 7,
+              "san": "Kf2",
+              "uci": "g1f2",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65"
+            },
+            {
+              "ply": 8,
+              "san": "Kd4",
+              "uci": "c5d4",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65",
+              "after_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66"
+            },
+            {
+              "ply": 9,
+              "san": "Kf3",
+              "uci": "f2f3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66",
+              "after_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66"
+            },
+            {
+              "ply": 10,
+              "san": "Kd3",
+              "uci": "d4d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66",
+              "after_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67"
+            },
+            {
+              "ply": 11,
+              "san": "g4",
+              "uci": "g3g4",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67",
+              "after_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67"
+            },
+            {
+              "ply": 12,
+              "san": "Kd2",
+              "uci": "d3d2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67",
+              "after_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68"
+            },
+            {
+              "ply": 13,
+              "san": "Be6",
+              "uci": "a2e6",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68"
+            },
+            {
+              "ply": 14,
+              "san": "Kd3",
+              "uci": "d2d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69"
+            },
+            {
+              "ply": 15,
+              "san": "Kg3",
+              "uci": "f3g3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69",
+              "after_fen": "8/6p1/4B2p/8/6P1/p2k2K1/6P1/8 b - - 4 69"
+            },
+            {
+              "ply": 16,
+              "san": "Ke3",
+              "uci": "d3e3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p2k2K1/6P1/8 b - - 4 69",
+              "after_fen": "8/6p1/4B2p/8/6P1/p3k1K1/6P1/8 w - - 5 70"
+            },
+            {
+              "ply": 17,
+              "san": "g5",
+              "uci": "g4g5",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p3k1K1/6P1/8 w - - 5 70",
+              "after_fen": "8/6p1/4B2p/6P1/8/p3k1K1/6P1/8 b - - 0 70"
+            },
+            {
+              "ply": 18,
+              "san": "Ke4",
+              "uci": "e3e4",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/6P1/8/p3k1K1/6P1/8 b - - 0 70",
+              "after_fen": "8/6p1/4B2p/6P1/4k3/p5K1/6P1/8 w - - 1 71"
+            },
+            {
+              "ply": 19,
+              "san": "Kg4",
+              "uci": "g3g4",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/6P1/4k3/p5K1/6P1/8 w - - 1 71",
+              "after_fen": "8/6p1/4B2p/6P1/4k1K1/p7/6P1/8 b - - 2 71"
+            },
+            {
+              "ply": 20,
+              "san": "Ke3",
+              "uci": "e4e3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/6P1/4k1K1/p7/6P1/8 b - - 2 71",
+              "after_fen": "8/6p1/4B2p/6P1/6K1/p3k3/6P1/8 w - - 3 72"
+            },
+            {
+              "ply": 21,
+              "san": "Ba2",
+              "uci": "e6a2",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/6P1/6K1/p3k3/6P1/8 w - - 3 72",
+              "after_fen": "8/6p1/7p/6P1/6K1/p3k3/B5P1/8 b - - 4 72"
+            },
+            {
+              "ply": 22,
+              "san": "Ke4",
+              "uci": "e3e4",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/6K1/p3k3/B5P1/8 b - - 4 72",
+              "after_fen": "8/6p1/7p/6P1/4k1K1/p7/B5P1/8 w - - 5 73"
+            },
+            {
+              "ply": 23,
+              "san": "g3",
+              "uci": "g2g3",
+              "moving_root_piece_id": "w-P@g2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/4k1K1/p7/B5P1/8 w - - 5 73",
+              "after_fen": "8/6p1/7p/6P1/4k1K1/p5P1/B7/8 b - - 0 73"
+            },
+            {
+              "ply": 24,
+              "san": "Ke3",
+              "uci": "e4e3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/4k1K1/p5P1/B7/8 b - - 0 73",
+              "after_fen": "8/6p1/7p/6P1/6K1/p3k1P1/B7/8 w - - 1 74"
+            },
+            {
+              "ply": 25,
+              "san": "Bb1",
+              "uci": "a2b1",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/6K1/p3k1P1/B7/8 w - - 1 74",
+              "after_fen": "8/6p1/7p/6P1/6K1/p3k1P1/8/1B6 b - - 2 74"
+            },
+            {
+              "ply": 26,
+              "san": "Kf2",
+              "uci": "e3f2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/6K1/p3k1P1/8/1B6 b - - 2 74",
+              "after_fen": "8/6p1/7p/6P1/6K1/p5P1/5k2/1B6 w - - 3 75"
+            },
+            {
+              "ply": 27,
+              "san": "g6",
+              "uci": "g5g6",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/6P1/6K1/p5P1/5k2/1B6 w - - 3 75",
+              "after_fen": "8/6p1/6Pp/8/6K1/p5P1/5k2/1B6 b - - 0 75"
+            },
+            {
+              "ply": 28,
+              "san": "h5+",
+              "uci": "h6h5",
+              "moving_root_piece_id": "b-P@h6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6Pp/8/6K1/p5P1/5k2/1B6 b - - 0 75",
+              "after_fen": "8/6p1/6P1/7p/6K1/p5P1/5k2/1B6 w - - 0 76"
+            },
+            {
+              "ply": 29,
+              "san": "Kf4",
+              "uci": "g4f4",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/7p/6K1/p5P1/5k2/1B6 w - - 0 76",
+              "after_fen": "8/6p1/6P1/7p/5K2/p5P1/5k2/1B6 b - - 1 76"
+            },
+            {
+              "ply": 30,
+              "san": "Kg2",
+              "uci": "f2g2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/7p/5K2/p5P1/5k2/1B6 b - - 1 76",
+              "after_fen": "8/6p1/6P1/7p/5K2/p5P1/6k1/1B6 w - - 2 77"
+            },
+            {
+              "ply": 31,
+              "san": "Ba2",
+              "uci": "b1a2",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/7p/5K2/p5P1/6k1/1B6 w - - 2 77",
+              "after_fen": "8/6p1/6P1/7p/5K2/p5P1/B5k1/8 b - - 3 77"
+            },
+            {
+              "ply": 32,
+              "san": "Kf2",
+              "uci": "g2f2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/7p/5K2/p5P1/B5k1/8 b - - 3 77",
+              "after_fen": "8/6p1/6P1/7p/5K2/p5P1/B4k2/8 w - - 4 78"
+            },
+            {
+              "ply": 33,
+              "san": "Bd5",
+              "uci": "a2d5",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/7p/5K2/p5P1/B4k2/8 w - - 4 78",
+              "after_fen": "8/6p1/6P1/3B3p/5K2/p5P1/5k2/8 b - - 5 78"
+            },
+            {
+              "ply": 34,
+              "san": "Ke2",
+              "uci": "f2e2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/3B3p/5K2/p5P1/5k2/8 b - - 5 78",
+              "after_fen": "8/6p1/6P1/3B3p/5K2/p5P1/4k3/8 w - - 6 79"
+            },
+            {
+              "ply": 35,
+              "san": "Ke5",
+              "uci": "f4e5",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/3B3p/5K2/p5P1/4k3/8 w - - 6 79",
+              "after_fen": "8/6p1/6P1/3BK2p/8/p5P1/4k3/8 b - - 7 79"
+            },
+            {
+              "ply": 36,
+              "san": "Kf2",
+              "uci": "e2f2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/3BK2p/8/p5P1/4k3/8 b - - 7 79",
+              "after_fen": "8/6p1/6P1/3BK2p/8/p5P1/5k2/8 w - - 8 80"
+            },
+            {
+              "ply": 37,
+              "san": "Ke6",
+              "uci": "e5e6",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/6P1/3BK2p/8/p5P1/5k2/8 w - - 8 80",
+              "after_fen": "8/6p1/4K1P1/3B3p/8/p5P1/5k2/8 b - - 9 80"
+            },
+            {
+              "ply": 38,
+              "san": "Kxg3",
+              "uci": "f2g3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-P@g2",
+              "before_fen": "8/6p1/4K1P1/3B3p/8/p5P1/5k2/8 b - - 9 80",
+              "after_fen": "8/6p1/4K1P1/3B3p/8/p5k1/8/8 w - - 0 81"
+            },
+            {
+              "ply": 39,
+              "san": "Kf7",
+              "uci": "e6f7",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4K1P1/3B3p/8/p5k1/8/8 w - - 0 81",
+              "after_fen": "8/5Kp1/6P1/3B3p/8/p5k1/8/8 b - - 1 81"
+            }
+          ]
+        },
+        {
+          "label": "natural_capture_can_make_true_fortress",
+          "san": [
+            "Rxd6+",
+            "Kxd6",
+            "Ne4+",
+            "Kc6",
+            "Nxc5",
+            "Kxc5",
+            "Kf2",
+            "Kd4",
+            "Kf3",
+            "Kd3",
+            "g4",
+            "Kd2",
+            "Be6",
+            "Kd3",
+            "g5",
+            "hxg5",
+            "Kg4",
+            "Ke3",
+            "Kxg5",
+            "Kf2",
+            "g4",
+            "Kg3"
+          ],
+          "reading_edition_pages": [
+            86
+          ],
+          "claim_scope": "69.g5 뒤 즉시 Kxg5는 흑의 ...g6 봉쇄 자원을 허용한다는 책의 반론이다. g5만 발견한 것으로 변환 목적을 다 설명했다고 세지 않는다.",
+          "uci": [
+            "d1d6",
+            "c6d6",
+            "c3e4",
+            "d6c6",
+            "e4c5",
+            "c6c5",
+            "g1f2",
+            "c5d4",
+            "f2f3",
+            "d4d3",
+            "g3g4",
+            "d3d2",
+            "a2e6",
+            "d2d3",
+            "g4g5",
+            "h6g5",
+            "f3g4",
+            "d3e3",
+            "g4g5",
+            "e3f2",
+            "g2g4",
+            "f2g3"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/6p1/4B3/6K1/6P1/p5k1/8/8 w - - 1 73",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rxd6+",
+              "uci": "d1d6",
+              "moving_root_piece_id": "w-R@d1",
+              "captured_root_piece_id": "b-N@d6",
+              "before_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+              "after_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62"
+            },
+            {
+              "ply": 2,
+              "san": "Kxd6",
+              "uci": "c6d6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-R@d1",
+              "before_fen": "8/6p1/2kR3p/2r5/8/p1N3P1/B5P1/6K1 b - - 0 62",
+              "after_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63"
+            },
+            {
+              "ply": 3,
+              "san": "Ne4+",
+              "uci": "c3e4",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/8/p1N3P1/B5P1/6K1 w - - 0 63",
+              "after_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63"
+            },
+            {
+              "ply": 4,
+              "san": "Kc6",
+              "uci": "d6c6",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/3k3p/2r5/4N3/p5P1/B5P1/6K1 b - - 1 63",
+              "after_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64"
+            },
+            {
+              "ply": 5,
+              "san": "Nxc5",
+              "uci": "e4c5",
+              "moving_root_piece_id": "w-N@c3",
+              "captured_root_piece_id": "b-R@c5",
+              "before_fen": "8/6p1/2k4p/2r5/4N3/p5P1/B5P1/6K1 w - - 2 64",
+              "after_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64"
+            },
+            {
+              "ply": 6,
+              "san": "Kxc5",
+              "uci": "c6c5",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": "w-N@c3",
+              "before_fen": "8/6p1/2k4p/2N5/8/p5P1/B5P1/6K1 b - - 0 64",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65"
+            },
+            {
+              "ply": 7,
+              "san": "Kf2",
+              "uci": "g1f2",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B5P1/6K1 w - - 0 65",
+              "after_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65"
+            },
+            {
+              "ply": 8,
+              "san": "Kd4",
+              "uci": "c5d4",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/2k5/8/p5P1/B4KP1/8 b - - 1 65",
+              "after_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66"
+            },
+            {
+              "ply": 9,
+              "san": "Kf3",
+              "uci": "f2f3",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p5P1/B4KP1/8 w - - 2 66",
+              "after_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66"
+            },
+            {
+              "ply": 10,
+              "san": "Kd3",
+              "uci": "d4d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/3k4/p4KP1/B5P1/8 b - - 3 66",
+              "after_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67"
+            },
+            {
+              "ply": 11,
+              "san": "g4",
+              "uci": "g3g4",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/8/p2k1KP1/B5P1/8 w - - 4 67",
+              "after_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67"
+            },
+            {
+              "ply": 12,
+              "san": "Kd2",
+              "uci": "d3d2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p2k1K2/B5P1/8 b - - 0 67",
+              "after_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68"
+            },
+            {
+              "ply": 13,
+              "san": "Be6",
+              "uci": "a2e6",
+              "moving_root_piece_id": "w-B@a2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/7p/8/6P1/p4K2/B2k2P1/8 w - - 1 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68"
+            },
+            {
+              "ply": 14,
+              "san": "Kd3",
+              "uci": "d2d3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p4K2/3k2P1/8 b - - 2 68",
+              "after_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69"
+            },
+            {
+              "ply": 15,
+              "san": "g5",
+              "uci": "g4g5",
+              "moving_root_piece_id": "w-P@g3",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B2p/8/6P1/p2k1K2/6P1/8 w - - 3 69",
+              "after_fen": "8/6p1/4B2p/6P1/8/p2k1K2/6P1/8 b - - 0 69"
+            },
+            {
+              "ply": 16,
+              "san": "hxg5",
+              "uci": "h6g5",
+              "moving_root_piece_id": "b-P@h6",
+              "captured_root_piece_id": "w-P@g3",
+              "before_fen": "8/6p1/4B2p/6P1/8/p2k1K2/6P1/8 b - - 0 69",
+              "after_fen": "8/6p1/4B3/6p1/8/p2k1K2/6P1/8 w - - 0 70"
+            },
+            {
+              "ply": 17,
+              "san": "Kg4",
+              "uci": "f3g4",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B3/6p1/8/p2k1K2/6P1/8 w - - 0 70",
+              "after_fen": "8/6p1/4B3/6p1/6K1/p2k4/6P1/8 b - - 1 70"
+            },
+            {
+              "ply": 18,
+              "san": "Ke3",
+              "uci": "d3e3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B3/6p1/6K1/p2k4/6P1/8 b - - 1 70",
+              "after_fen": "8/6p1/4B3/6p1/6K1/p3k3/6P1/8 w - - 2 71"
+            },
+            {
+              "ply": 19,
+              "san": "Kxg5",
+              "uci": "g4g5",
+              "moving_root_piece_id": "w-K@g1",
+              "captured_root_piece_id": "b-P@h6",
+              "before_fen": "8/6p1/4B3/6p1/6K1/p3k3/6P1/8 w - - 2 71",
+              "after_fen": "8/6p1/4B3/6K1/8/p3k3/6P1/8 b - - 0 71"
+            },
+            {
+              "ply": 20,
+              "san": "Kf2",
+              "uci": "e3f2",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B3/6K1/8/p3k3/6P1/8 b - - 0 71",
+              "after_fen": "8/6p1/4B3/6K1/8/p7/5kP1/8 w - - 1 72"
+            },
+            {
+              "ply": 21,
+              "san": "g4",
+              "uci": "g2g4",
+              "moving_root_piece_id": "w-P@g2",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B3/6K1/8/p7/5kP1/8 w - - 1 72",
+              "after_fen": "8/6p1/4B3/6K1/6P1/p7/5k2/8 b - - 0 72"
+            },
+            {
+              "ply": 22,
+              "san": "Kg3",
+              "uci": "f2g3",
+              "moving_root_piece_id": "b-K@c6",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/4B3/6K1/6P1/p7/5k2/8 b - - 0 72",
+              "after_fen": "8/6p1/4B3/6K1/6P1/p5k1/8/8 w - - 1 73"
+            }
+          ]
+        },
+        {
+          "label": "plain_continuation_is_valid_control",
+          "san": [
+            "Rd3"
+          ],
+          "reading_edition_pages": [
+            85
+          ],
+          "claim_scope": "저자는 Rd3로 평범하게 계속하면 더 단순한 변환을 택할 수 있다고 제시한다. 상세 최선 방어 수순은 이 페이지에 없다.",
+          "uci": [
+            "d1d3"
+          ],
+          "legally_replayed": true,
+          "final_fen": "8/6p1/2kn3p/2r5/8/p1NR2P1/B5P1/6K1 b - - 1 62",
+          "final_checkmate": false,
+          "nodes": [
+            {
+              "ply": 1,
+              "san": "Rd3",
+              "uci": "d1d3",
+              "moving_root_piece_id": "w-R@d1",
+              "captured_root_piece_id": null,
+              "before_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+              "after_fen": "8/6p1/2kn3p/2r5/8/p1NR2P1/B5P1/6K1 b - - 1 62"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legal_function_observations": [
+    {
+      "case_id": "IC-SG23",
+      "prefix_san": [
+        "Bd5",
+        "Bxd5",
+        "Nxd5",
+        "Bxd4",
+        "Nxd4",
+        "Nef6"
+      ],
+      "fen": "r3r1k1/3n1ppp/p4n2/1p1N4/3N4/7P/PP3PP1/R3R1K1 w - - 1 24",
+      "option_uci": "d5c7",
+      "legal": true,
+      "role": "원래 c3 나이트의 c7 진입은 합법. 책의 작은 우세 쪽 배치.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG23",
+      "prefix_san": [
+        "Nd5",
+        "Bxd4",
+        "Nxd4",
+        "Nec5"
+      ],
+      "fen": "r3r1k1/1b1n1ppp/p7/1pnN4/3N4/1B5P/PP3PP1/R3R1K1 w - - 1 23",
+      "option_uci": "d5c7",
+      "legal": true,
+      "role": "동일한 원래 c3 나이트의 동일한 c7 진입은 여기서도 합법. ...Rxe1+와 ...Rc8 중화 반론이 남는다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG41",
+      "prefix_san": [],
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "option_uci": "c3d5",
+      "legal": true,
+      "role": "나이트의 d5 진입은 처음부터 합법적이나 e6 폰의 포획 가격이 있다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG41",
+      "prefix_san": [
+        "Red1",
+        "exf5"
+      ],
+      "fen": "3k3r/3bbp2/p2p1p2/1pr2p1p/3RP2P/P1N2B2/1PP3P1/1K1R4 w - - 0 21",
+      "option_uci": "c3d5",
+      "legal": true,
+      "role": "동일한 나이트의 진입은 여전히 합법이며 e6 폰의 직접 포획 가격이 사라졌다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG41",
+      "prefix_san": [
+        "Nd5"
+      ],
+      "fen": "3k3r/3bbp2/p2ppp2/1prN1P1p/3RP2P/P4B2/1PP3P1/1K2R3 b - - 2 20",
+      "option_uci": "c5d5",
+      "legal": true,
+      "role": "흑 원래 c5 룩이 같은 나이트를 잡는 수는 합법. 이 자원만 존재 여부로 세면 기물 가격을 놓친다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG41",
+      "prefix_san": [
+        "Red1",
+        "exf5",
+        "Nd5"
+      ],
+      "fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+      "option_uci": "c5d5",
+      "legal": true,
+      "role": "동일한 흑 룩의 동일 포획도 합법. 뒤에 d4 룩이 재포획할 수 있다는 가격을 평가해야 한다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG45",
+      "prefix_san": [],
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+      "option_uci": "d2c4",
+      "legal": true,
+      "role": "Nc4는 Rfd1 이전부터 합법이고 책에서도 좋은 선택이다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG45",
+      "prefix_san": [
+        "Rfd1",
+        "Qc6"
+      ],
+      "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+      "option_uci": "d2c4",
+      "legal": true,
+      "role": "같은 Nc4가 다른 준비와 반론 시점에서도 합법적이다. 기능의 의미는 준비된 룩과 방어 비용에 있다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG45",
+      "prefix_san": [
+        "Nc4"
+      ],
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/2N1P3/4B1PP/1PP1QPB1/R4RK1 b - - 1 18",
+      "option_uci": "e8d6",
+      "legal": true,
+      "role": "같은 흑 e8 나이트의 ...Nd6 방어는 즉시 Nc4 뒤 합법이다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG45",
+      "prefix_san": [
+        "Rfd1"
+      ],
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 b - - 1 18",
+      "option_uci": "e8d6",
+      "legal": true,
+      "role": "같은 방어는 Rfd1 뒤에도 합법이다. Rfd1이 이 응수를 법적으로 금지한 것이 아니다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG28",
+      "prefix_san": [
+        "Rd5",
+        "c6",
+        "Rd2+",
+        "Kf1",
+        "Rf2+"
+      ],
+      "fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4",
+      "option_uci": "f1e1",
+      "legal": true,
+      "role": "강한 방어 Ke1이 합법이다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SG28",
+      "prefix_san": [
+        "Rd5",
+        "c6",
+        "Rd2+",
+        "Kf1",
+        "Rf2+"
+      ],
+      "fen": "8/8/2P5/5pk1/2R2p1p/4p2P/2P2rP1/5K2 w - - 3 4",
+      "option_uci": "f1g1",
+      "legal": true,
+      "role": "다른 무승부 방어 Kg1도 합법이다. 두 결과의 후속 정확성 요구는 다르다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SWK62",
+      "prefix_san": [],
+      "fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "option_uci": "d1d6",
+      "legal": true,
+      "role": "Rxd6+ 단순화가 합법이다. 기물 결과가 좋은 것과 변환 난도가 쉬운 것은 다르다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    },
+    {
+      "case_id": "IC-SWK62",
+      "prefix_san": [],
+      "fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "option_uci": "d1d3",
+      "legal": true,
+      "role": "Rd3라는 평범한 유지 수도 합법적이다. 즉각 물질 이득만 유효한 답으로 취급하지 않는다.",
+      "scope": "합법/배치 확인만으로 유용성이나 최선 평가를 증명하지 않는다."
+    }
+  ],
+  "same_resource_price_probe": {
+    "case_id": "IC-SG41",
+    "common_opponent_resource": "b-R@c5, c5d5, capturing w-N@c3 now on d5",
+    "both_rook_captures_legal": true,
+    "early_position_has_cheaper_pawn_capture": true,
+    "after_exf5_same_pawn_is_no_longer_on_e6": true,
+    "rook_capture_recapture_prefixes": [
+      {
+        "san": [
+          "Nd5",
+          "Rxd5",
+          "Rxd5"
+        ],
+        "fen": "3k3r/3bbp2/p2ppp2/1p1R1P1p/4P2P/P4B2/1PP3P1/1K2R3 b - - 0 21",
+        "legally_replayed": true
+      },
+      {
+        "san": [
+          "Red1",
+          "exf5",
+          "Nd5",
+          "Rxd5",
+          "Rxd5"
+        ],
+        "fen": "3k3r/3bbp2/p2p1p2/1p1R1p1p/4P2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+        "legally_replayed": true
+      }
+    ],
+    "claim_limit": "원래 폰과 룩, 같은 d5 나이트를 식별한 즉각 포획 가격만 확인한다. Nd5 또는 Red1의 전 주요 응수 우세나 전체 교환의 최선성은 증명하지 않는다."
+  },
+  "different_events_same_position_probe": {
+    "case_id": "IC-SG23",
+    "first_prefix_san": [
+      "Bd5",
+      "Bxd5",
+      "Nxd5",
+      "Bxd4",
+      "Nxd4"
+    ],
+    "second_prefix_san": [
+      "Bd5",
+      "Bxd4",
+      "Nxd4",
+      "Bxd5",
+      "Nxd5"
+    ],
+    "same_board_turn_rights_ep": true,
+    "first_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23",
+    "second_fen": "r3r1k1/3n1ppp/p7/1p1N4/3Nn3/7P/PP3PP1/R3R1K1 b - - 0 23",
+    "scope": "반수 카운터와 개별 사건 순서는 다르다. 조건 검사는 기물 기능을 대상으로 해야 한다."
+  },
+  "missing_general_meaning_units": [
+    {
+      "unit": "이미 가능한 행동의 방어 가격",
+      "evidence_cases": [
+        "IC-SG23",
+        "IC-SG41",
+        "IC-SG45"
+      ],
+      "meaning": "Nc7, Nd5, Nc4가 양쪽에서 합법이어도 상대의 같은 방어 자원이 남기는 교환 가격과 기물 협력의 비용을 비교해야 한다.",
+      "past_repeat_to_avoid": "새 합법 행동 또는 PV에 실제 등장한 행동만으로 중요도를 판정"
+    },
+    {
+      "unit": "목적을 보존하는 여러 실현",
+      "evidence_cases": [
+        "IC-SG23",
+        "IC-SG41",
+        "IC-SG45"
+      ],
+      "meaning": "Nxe8, Nb4, Ng3, a 파일 룩 전개는 가능한 증인이다. 기능 조건이 유지되면 다른 경로와 다른 약한 기물로 실현되어도 설명은 남을 수 있다.",
+      "past_repeat_to_avoid": "넓은 사건 목록의 일치 또는 특정 종착 칸의 실제 도달을 설명 유지 조건으로 요구"
+    },
+    {
+      "unit": "반론 뒤 목적의 결과 범위",
+      "evidence_cases": [
+        "IC-SG23",
+        "IC-SG28",
+        "IC-SWK62"
+      ],
+      "meaning": "강한 응수가 있으면 목적을 작은 압박, 무승부 반격, 더 어려운 승리 과제로 좁힌다. 기본 목적을 계속 말할 수 있어도 원래 주장한 우열은 철회해야 할 수 있다.",
+      "past_repeat_to_avoid": "반론 조사 기능의 존재를 강한 반론을 완료한 것으로 셈"
+    },
+    {
+      "unit": "좋은 수가 여럿일 때 충분한 기본 답",
+      "evidence_cases": [
+        "IC-SG45",
+        "IC-SG41",
+        "IC-SG28"
+      ],
+      "meaning": "평범한 룩 개선과 유연성이 이미 사용자에게 필요한 설명일 수 있다. 좋은 대안을 실수로 만들거나 비교 답 전달율을 성공 기준으로 강제하지 않는다.",
+      "past_repeat_to_avoid": "매 수에서 중요한 차이를 억지로 만들거나 기본 목적 설명을 실패로 취급"
+    },
+    {
+      "unit": "객관적 결과와 사람의 변환 과제",
+      "evidence_cases": [
+        "IC-SG28",
+        "IC-SWK62"
+      ],
+      "meaning": "같은 무승부나 같은 승리에도 필요한 정확성·활동·실현 과제가 달라진다. 이를 엔진 점수 손실이나 사람 실수 확률로 대신 표현하지 않는다.",
+      "past_repeat_to_avoid": "책의 ?, ?!와 엔진 판정을 동일시하거나 물질 증가를 쉬운 승리로 단정"
+    }
+  ],
+  "verification": {
+    "scene_count": 5,
+    "legal_book_or_function_lines": 33,
+    "legal_action_observation_count": 14,
+    "all_roots_valid": true,
+    "limitations": "합법 재생은 책의 평가를 독립 증명하지 않는다. 모든 최강 응수 및 오래 걸리는 변환 비교는 부모가 별도로 완료해야 한다."
+  }
+}

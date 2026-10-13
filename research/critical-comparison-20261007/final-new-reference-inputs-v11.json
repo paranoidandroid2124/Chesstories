@@ -1,0 +1,138 @@
+{
+  "registered_utc": "2026-10-07T10:14:47.197273+00:00",
+  "scope": "Four different previously engine-unseen theory boards, one declared run each after the rule freeze, including one good pawn advance. Book illustrative lines checked for legality but never supplied to product. Purposeful sample, not population or novice comprehension evidence.",
+  "cases": [
+    {
+      "id": "N01",
+      "category": "new_after_critical_freeze",
+      "initial_fen": "8/5p2/2k5/K7/8/1P6/8/8 b - - 0 39",
+      "move_prefix_uci": [],
+      "fen": "8/5p2/2k5/K7/8/1P6/8/8 b - - 0 39",
+      "played_san": "f5",
+      "lines": [
+        [
+          "f7f5"
+        ]
+      ],
+      "alternatives_san": [
+        "Kd5"
+      ],
+      "hypothesis_alternatives": [
+        "c6d5"
+      ],
+      "source": "100 Endgame Patterns personal reading PDF72, Ljubojevic-Browne, Amsterdam1972. Diagram visually inspected.",
+      "human_task": "Judge the premature pawn advance against first displacing the opposing king. The important difference is whether the promotion race can finish with check; winning a pawn or preserving an advance alone is insufficient.",
+      "falsifiers": [
+        "Use actual equal-depth ranking and replies; do not inject the book judgment or its future line.",
+        "A generic route/capture description is not a successful explanation of the comparison.",
+        "If the difference is close or the required cause is not confirmed, leave it unresolved."
+      ],
+      "history_limit": "The explicit prefix is legal and retained. Earlier history and initial halfmove clock are unavailable; no repetition or fifty-move inference.",
+      "engine_output_previously_read": false,
+      "prior_research_board_matches": [],
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "N02",
+      "category": "new_after_critical_freeze",
+      "initial_fen": "8/6p1/1k3pP1/p2KpP2/8/2P2P2/8/8 w - - 0 53",
+      "move_prefix_uci": [],
+      "fen": "8/6p1/1k3pP1/p2KpP2/8/2P2P2/8/8 w - - 0 53",
+      "played_san": "Kd6",
+      "lines": [
+        [
+          "d5d6"
+        ]
+      ],
+      "alternatives_san": [
+        "c4"
+      ],
+      "hypothesis_alternatives": [
+        "c3c4"
+      ],
+      "source": "100 Endgame Patterns personal reading PDF74, Montecatine-de la Villa, DosHermanas1992. Diagram visually inspected.",
+      "human_task": "Judge whether a king waiting move really preserves a draw. Compare advancing the c-pawn first: after the delayed advance the opposing king can evade the expected repetition and its outside pawn promotes. A long list of attacks does not convey this move-order consequence.",
+      "falsifiers": [
+        "Use actual equal-depth ranking and replies; do not inject the book judgment or its future line.",
+        "A generic route/capture description is not a successful explanation of the comparison.",
+        "If the difference is close or the required cause is not confirmed, leave it unresolved."
+      ],
+      "history_limit": "The explicit prefix is legal and retained. Earlier history and initial halfmove clock are unavailable; no repetition or fifty-move inference.",
+      "engine_output_previously_read": false,
+      "prior_research_board_matches": [],
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "N03",
+      "category": "new_after_critical_freeze",
+      "initial_fen": "8/7p/4k3/pK4p1/P4p2/5P2/5P1P/8 b - - 0 44",
+      "move_prefix_uci": [
+        "e6d5",
+        "b5a5",
+        "d5c5",
+        "h2h3"
+      ],
+      "fen": "8/7p/8/K1k3p1/P4p2/5P1P/5P2/8 b - - 0 46",
+      "played_san": "h6",
+      "lines": [
+        [
+          "h7h6"
+        ]
+      ],
+      "alternatives_san": [
+        "h5"
+      ],
+      "hypothesis_alternatives": [
+        "h7h5"
+      ],
+      "source": "100 Endgame Patterns personal reading PDF75, Sokolov-Hellsten, Malmo1997. Diagram visually inspected.",
+      "human_task": "A pawn advance is correct here: the one-square advance keeps enough later pawn moves to confine the opposing king in front of its rook pawn. Compare h5 only if the engine separates it. Do not treat every advance as a mistake or infer that the captured a-pawn itself decides the result.",
+      "falsifiers": [
+        "Use actual equal-depth ranking and replies; do not inject the book judgment or its future line.",
+        "A generic route/capture description is not a successful explanation of the comparison.",
+        "If the difference is close or the required cause is not confirmed, leave it unresolved."
+      ],
+      "history_limit": "The explicit prefix is legal and retained. Earlier history and initial halfmove clock are unavailable; no repetition or fifty-move inference.",
+      "engine_output_previously_read": false,
+      "prior_research_board_matches": [],
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "N04",
+      "category": "new_after_critical_freeze",
+      "initial_fen": "8/8/8/pPk3pp/2P1p3/1pK3P1/5PP1/8 b - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "8/8/8/pPk3pp/2P1p3/1pK3P1/5PP1/8 b - - 0 1",
+      "played_san": "a4",
+      "lines": [
+        [
+          "a5a4"
+        ]
+      ],
+      "alternatives_san": [
+        "g4"
+      ],
+      "hypothesis_alternatives": [
+        "g5g4"
+      ],
+      "source": "100 Endgame Patterns personal reading PDF77, Kuznetsov-Zelenskikh, correspondence1971. Diagram visually inspected.",
+      "human_task": "Compare advancing the queenside pawn with fixing the doubled pawns first. The key is whether h4 can create separated passers despite material loss. Opposing g4 and g3 can close that break after a4; the actual best defence may differ from the book example.",
+      "falsifiers": [
+        "Use actual equal-depth ranking and replies; do not inject the book judgment or its future line.",
+        "A generic route/capture description is not a successful explanation of the comparison.",
+        "If the difference is close or the required cause is not confirmed, leave it unresolved."
+      ],
+      "history_limit": "The explicit prefix is legal and retained. Earlier history and initial halfmove clock are unavailable; no repetition or fifty-move inference.",
+      "engine_output_previously_read": false,
+      "prior_research_board_matches": [],
+      "provided_future_lines": false,
+      "provided_scores": false
+    }
+  ],
+  "rule_freeze_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\critical-comparison-20261007\\final-rule-freeze-v11.json",
+  "rule_freeze_sha256": "266fbfdb9e75d13d6be7892b89c528ca39f8e62301bdc27470bcdeaba3db80a6",
+  "previous_registration_sha256": "dc106cd91c272f6e130e29643ee9b31acb267ee9108373706ecbedefdb020cc1"
+}

@@ -1,0 +1,1249 @@
+{
+  "policy_id": "relationship-delivery-final-new-games-v6",
+  "policy_sha256": "22c8bf7839ec6ec00dbed52a34a8db171474e4347420a834c9ce93fdd4034259",
+  "engine_executed": false,
+  "product_executed": false,
+  "cached_sources": [
+    {
+      "id": "wch2016",
+      "url": "https://theweekinchess.com/assets/files/pgn/wch16.pgn",
+      "file": "generalization-candidates/source-wch2016.pgn",
+      "sha256": "0252e6b4ff0cd01c7cefedf9d299ae0ae0cd91772d37f783fa6e2bf2b3f05dd1",
+      "source_game_count": 12,
+      "parse_encoding": "utf-8-sig",
+      "parse_layout_normalization": "Collapse runs of more than one empty line; original source bytes remain unchanged.",
+      "selection_order": "actual cached PGN file order"
+    },
+    {
+      "id": "candidates2018",
+      "url": "https://theweekinchess.com/assets/files/pgn/wchcand18.pgn",
+      "file": "generalization-candidates/source-candidates2018.pgn",
+      "sha256": "de1acd25671807ddd2ac3290059f64a46f14b9f38a3da76f3e31e0e3f9601ac5",
+      "source_game_count": 56,
+      "parse_encoding": "utf-8-sig",
+      "parse_layout_normalization": "Collapse runs of more than one empty line; original source bytes remain unchanged.",
+      "selection_order": "sorted(Round numeric integer part, White, Black)"
+    },
+    {
+      "id": "wch2024",
+      "url": "https://theweekinchess.com/assets/files/pgn/wch24.pgn",
+      "file": "generalization-candidates/source-wch2024.pgn",
+      "sha256": "763701f8395b39049bab4c8244d8c8b56a275739525e5f80a42eb88662632470",
+      "source_game_count": 14,
+      "parse_encoding": "windows-1252",
+      "parse_layout_normalization": "Collapse runs of more than one empty line; original source bytes remain unchanged.",
+      "selection_order": "actual cached PGN file order"
+    }
+  ],
+  "selected_pgn_sha256": "6585d3ddf63a99fdbd21a5ab57ea11e396a5e54579376e63f8054f4caa576594",
+  "selected_pgn_line_endings": "UTF-8 LF bytes",
+  "previous_registry_sha256": "ff573809144cb30fde20a46eafd2edd8eb527039814ec570fb6feb3b17a2b16a",
+  "duplicate_games_within_cohort": 0,
+  "duplicate_games_against_previous_first_six": 0,
+  "games": [
+    {
+      "id": "wch2016-07",
+      "source_id": "wch2016",
+      "within_event_ordinal": 7,
+      "new_group_ordinal": 1,
+      "source_file_ordinal": 7,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.20",
+        "Round": "7",
+        "White": "Karjakin, Sergey",
+        "Black": "Carlsen, Magnus",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2772",
+        "BlackElo": "2853",
+        "ECO": "D10",
+        "Opening": "QGD Slav defence",
+        "WhiteFideId": "14109603",
+        "BlackFideId": "1503014",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 66,
+      "mainline_sha256": "d631baaef2fe206cc43335b0f009a596ee4de0ed68df7235b63a271914e0f658",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "5rk1/5p1p/B3pbp1/8/1p6/1P2P3/P4PPP/2R3K1 w - - 0 24",
+          "recorded_move_uci": "c1c2",
+          "recorded_move_san": "Rc2",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "2rq1rk1/1B3ppp/p3pb2/1p6/1B6/1P2P3/P4PPP/3Q1RK1 w - - 1 20",
+          "recorded_move_uci": "b4f8",
+          "recorded_move_san": "Bxf8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r2q1rk1/1b2bppp/p3p3/1p6/1n2N3/1P2PB2/P4PPP/R1BQ1RK1 w - - 3 16",
+          "recorded_move_uci": "c1a3",
+          "recorded_move_san": "Ba3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r2qk2r/1b3ppp/p1n1pn2/1pb5/8/2N1P3/PP1NBPPP/R1BQ1RK1 w kq - 0 12",
+          "recorded_move_uci": "d2e4",
+          "recorded_move_san": "Nde4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2016-08",
+      "source_id": "wch2016",
+      "within_event_ordinal": 8,
+      "new_group_ordinal": 2,
+      "source_file_ordinal": 8,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.21",
+        "Round": "8",
+        "White": "Carlsen, Magnus",
+        "Black": "Karjakin, Sergey",
+        "Result": "0-1",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2853",
+        "BlackElo": "2772",
+        "ECO": "D05",
+        "Opening": "Queen's pawn game, Rubinstein (Colle-Zukertort) variation",
+        "WhiteFideId": "1503014",
+        "BlackFideId": "14109603",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 104,
+      "mainline_sha256": "f99541c3d738290c6912e5f6d49557e75806ccffebefa3718f6768d2ac8b2f3e",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "3r2k1/4qppp/1p2p1n1/pN6/P1PR2n1/4P3/5PPP/4QBK1 b - - 0 24",
+          "recorded_move_uci": "g4f6",
+          "recorded_move_san": "Nf6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "2rr2k1/4qppp/1pb1p1n1/pNb5/P1N3n1/1P2P3/1B3PPP/2RRQBK1 b - - 0 20",
+          "recorded_move_uci": "c6d5",
+          "recorded_move_san": "Bd5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "2rr2k1/1b1nqppp/1p2pn2/p1b5/2NN4/PP1BP3/1B2QPPP/2RR2K1 b - - 5 16",
+          "recorded_move_uci": "d7f8",
+          "recorded_move_san": "Nf8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r2q1rk1/pb1n1ppp/1p2pn2/2b5/2N5/1P1BPN2/PB2QPPP/R4RK1 b - - 0 12",
+          "recorded_move_uci": "d8e7",
+          "recorded_move_san": "Qe7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2016-09",
+      "source_id": "wch2016",
+      "within_event_ordinal": 9,
+      "new_group_ordinal": 3,
+      "source_file_ordinal": 9,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.23",
+        "Round": "9",
+        "White": "Karjakin, Sergey",
+        "Black": "Carlsen, Magnus",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2772",
+        "BlackElo": "2853",
+        "ECO": "C78",
+        "Opening": "Ruy Lopez",
+        "Variation": "5.O-O",
+        "WhiteFideId": "14109603",
+        "BlackFideId": "1503014",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 148,
+      "mainline_sha256": "4911526e0ff7bd087c404145729d10850b1bf5af0dae6bc344919e4abeb092fb",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "1r1r2k1/5ppp/Rb1q4/7n/3P4/1B2BP2/5P1P/3Q1R1K w - - 2 24",
+          "recorded_move_uci": "f1g1",
+          "recorded_move_san": "Rg1",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "1r3rk1/5ppp/1b1pq3/2p1P2n/3P4/4BP2/1PB2P1P/R2Q1R1K w - - 1 20",
+          "recorded_move_uci": "e5d6",
+          "recorded_move_san": "exd6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "1r1q1rk1/2p2ppp/1b1p1n2/8/3PP3/5b2/1PB2PPP/R1BQ1RK1 w - - 0 16",
+          "recorded_move_uci": "g2f3",
+          "recorded_move_san": "gxf3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "1rbq1rk1/2p2ppp/1bnp1n2/1p2p3/3PP3/NBP2N2/1P3PPP/R1BQ1RK1 w - - 2 12",
+          "recorded_move_uci": "a3b5",
+          "recorded_move_san": "Nxb5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2016-10",
+      "source_id": "wch2016",
+      "within_event_ordinal": 10,
+      "new_group_ordinal": 4,
+      "source_file_ordinal": 10,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.24",
+        "Round": "10",
+        "White": "Carlsen, Magnus",
+        "Black": "Karjakin, Sergey",
+        "Result": "1-0",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2853",
+        "BlackElo": "2772",
+        "ECO": "C65",
+        "Opening": "Ruy Lopez",
+        "Variation": "Berlin defence",
+        "WhiteFideId": "1503014",
+        "BlackFideId": "14109603",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 149,
+      "mainline_sha256": "8cedf6e1b0c5ea96203c0fb59002508ee51396694a578b5444207c121d9c7212",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "r4rk1/1p4p1/2p1p1np/p2pp3/P3P2P/2PPNQP1/1P3P2/R4R1K b - - 0 24",
+          "recorded_move_uci": "f8f3",
+          "recorded_move_san": "Rxf3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "r4rk1/1p4p1/2pppqnp/p3p3/P3P3/2PPN1Pn/1P1NQP1P/R4R1K b - - 1 20",
+          "recorded_move_uci": "d6d5",
+          "recorded_move_san": "d5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "r1b2rk1/pp2npp1/2pp1q1p/4p3/4P3/1BPPNNPn/PP3P1P/R2Q1R1K b - - 1 16",
+          "recorded_move_uci": "e7g6",
+          "recorded_move_san": "Ng6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1b2rk1/ppp1qpp1/2np3p/1B2p3/4Pn2/2PPNN2/PP3PPP/R2Q1RK1 b - - 3 12",
+          "recorded_move_uci": "e7f6",
+          "recorded_move_san": "Qf6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2016-11",
+      "source_id": "wch2016",
+      "within_event_ordinal": 11,
+      "new_group_ordinal": 5,
+      "source_file_ordinal": 11,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.26",
+        "Round": "11",
+        "White": "Karjakin, Sergey",
+        "Black": "Carlsen, Magnus",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2772",
+        "BlackElo": "2853",
+        "ECO": "C84",
+        "Opening": "Ruy Lopez",
+        "Variation": "closed defence",
+        "WhiteFideId": "14109603",
+        "BlackFideId": "1503014",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 67,
+      "mainline_sha256": "b1a88c0232e0646fe85a529e311f92abd0ce6dc409df9a0c8fcd81b44fb3708f",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "4r1k1/6pp/p3q3/1p4Q1/3pp3/P1PP3P/2P3P1/5RK1 w - - 0 24",
+          "recorded_move_uci": "c3d4",
+          "recorded_move_san": "cxd4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "4rrk1/3q2pp/p3pb2/1p1p1P2/3pP1Q1/P1PP3P/2PB2P1/R4RK1 w - - 0 20",
+          "recorded_move_uci": "d2g5",
+          "recorded_move_san": "Bg5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r4rk1/3q2pp/p2ppb2/1pp5/3pPPQ1/P2P4/1PP3PP/R1B2RK1 w - - 2 16",
+          "recorded_move_uci": "f4f5",
+          "recorded_move_san": "f5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r2q1rk1/2p1bppp/p2pbn2/1p1N4/3pP3/PB1P4/1PP2PPP/R1BQ1RK1 w - - 0 12",
+          "recorded_move_uci": "d5f6",
+          "recorded_move_san": "Nxf6+",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2016-12",
+      "source_id": "wch2016",
+      "within_event_ordinal": 12,
+      "new_group_ordinal": 6,
+      "source_file_ordinal": 12,
+      "headers": {
+        "Event": "WCh 2016",
+        "Site": "New York USA",
+        "Date": "2016.11.28",
+        "Round": "12",
+        "White": "Carlsen, Magnus",
+        "Black": "Karjakin, Sergey",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2853",
+        "BlackElo": "2772",
+        "ECO": "C67",
+        "Opening": "Ruy Lopez",
+        "Variation": "Berlin defence, open variation",
+        "WhiteFideId": "1503014",
+        "BlackFideId": "14109603",
+        "EventDate": "2016.11.11"
+      },
+      "game_ply_count": 60,
+      "mainline_sha256": "6365a83dbd834f4ca14ba7394045ec96056ab7ff6ea9425fab81d86e0e0aa5b7",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "r4bk1/pp5p/2p2pp1/3p4/3P1BP1/2P5/PP3P1P/4RK2 b - - 0 24",
+          "recorded_move_uci": "g8f7",
+          "recorded_move_san": "Kf7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "r2q2k1/pp3p1p/2p2bp1/3p4/3P1B2/2P1Q3/PP3PPP/R5K1 b - - 0 20",
+          "recorded_move_uci": "d8e7",
+          "recorded_move_san": "Qe7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "r1bqn1k1/pp3p1p/2p2bp1/3p4/3P1B2/2PB4/PPN2PPP/R3Q1K1 b - - 1 16",
+          "recorded_move_uci": "e8g7",
+          "recorded_move_san": "Ng7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1bq2k1/pppp1ppp/3n1b2/8/3P1B2/8/PPP2PPP/RN2QBK1 b - - 0 12",
+          "recorded_move_uci": "d6e8",
+          "recorded_move_san": "Ne8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-07",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 7,
+      "new_group_ordinal": 1,
+      "source_file_ordinal": 8,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.11",
+        "Round": "2.4",
+        "White": "Kramnik, Vladimir",
+        "Black": "Karjakin, Sergey",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2800",
+        "BlackElo": "2763",
+        "ECO": "C67",
+        "Opening": "Ruy Lopez",
+        "Variation": "Berlin defence, open variation",
+        "WhiteFideId": "4101588",
+        "BlackFideId": "14109603",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 109,
+      "mainline_sha256": "f9d55add2b688fa8f402f0097c50de71af798751476c9bfeb9e65a723928195a",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "r4k1r/ppp2pp1/1n2b3/2p1P1Bp/2P5/P5PP/2P2PK1/3RRN2 w - - 1 24",
+          "recorded_move_uci": "f1e3",
+          "recorded_move_san": "Ne3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "r4k1r/ppp1npp1/4b3/2p1P1Bp/8/P1P4P/2PN1PP1/3RR1K1 w - - 2 20",
+          "recorded_move_uci": "d2f1",
+          "recorded_move_san": "Nf1",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r3k3/ppp2pp1/2p1b2r/4PnNp/5B2/P1b4P/1PP2PP1/3RR1K1 w - - 0 16",
+          "recorded_move_uci": "b2c3",
+          "recorded_move_san": "bxc3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r1b1k2r/ppp1bpp1/2p5/4Pn1p/5B2/2N2N1P/PPP2PP1/R4RK1 w - - 2 12",
+          "recorded_move_uci": "a1d1",
+          "recorded_move_san": "Rad1",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-08",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 8,
+      "new_group_ordinal": 2,
+      "source_file_ordinal": 7,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.11",
+        "Round": "2.3",
+        "White": "Mamedyarov, Shakhriyar",
+        "Black": "Aronian, Levon",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2809",
+        "BlackElo": "2794",
+        "ECO": "E32",
+        "Opening": "Nimzo-Indian",
+        "Variation": "classical variation",
+        "WhiteFideId": "13401319",
+        "BlackFideId": "13300474",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 48,
+      "mainline_sha256": "6978749b041b46d015ab7f4f446c88fb60164b294d1402926af9a53a11a28720",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "r2r2k1/1QRn1pp1/4pq1p/1p1p4/2bP4/P4NP1/4PP1P/R4BK1 b - - 9 24",
+          "recorded_move_uci": "a8b8",
+          "recorded_move_san": "Rab8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "1r1r2k1/2Rn1pp1/4pq1p/Qp1p4/3P4/Pb3NP1/4PP1P/R4BK1 b - - 1 20",
+          "recorded_move_uci": "b3c4",
+          "recorded_move_san": "Bc4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "1r1r2k1/p2n1pp1/bpQ1pq1p/3p4/3P4/P4NP1/1P2PP1P/R1R2BK1 b - - 7 16",
+          "recorded_move_uci": "a6c4",
+          "recorded_move_san": "Bc4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1b2rk1/p2n1pp1/1pp1pq1p/3P4/3P4/P1Q2NPB/1P2PP1P/R3K2R b KQ - 0 12",
+          "recorded_move_uci": "c6d5",
+          "recorded_move_san": "cxd5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-09",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 9,
+      "new_group_ordinal": 3,
+      "source_file_ordinal": 12,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.12",
+        "Round": "3.4",
+        "White": "Aronian, Levon",
+        "Black": "Kramnik, Vladimir",
+        "Result": "0-1",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2794",
+        "BlackElo": "2800",
+        "ECO": "C65",
+        "Opening": "Ruy Lopez",
+        "Variation": "Berlin defence",
+        "WhiteFideId": "13300474",
+        "BlackFideId": "4101588",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 54,
+      "mainline_sha256": "6782ac91e2dd24945ac331f7f35a1251bf6cc78ed3aae01c6340965ea2701c75",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "4k3/pp2q2p/2p1b3/2p3Pn/4P1p1/N1Pr2p1/PP3P2/R1Q2R1K w - - 2 24",
+          "recorded_move_uci": "f1d1",
+          "recorded_move_san": "Rd1",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "r3k3/pp2q2p/2p1b3/2p2prn/Q3P1pP/2P3P1/PP3P2/RN3R1K w q - 0 20",
+          "recorded_move_uci": "h4g5",
+          "recorded_move_san": "hxg5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r1b1k1r1/ppp1qp1p/8/2p4n/3QP1pP/2P3P1/PP3P2/RNB2R1K w q - 0 16",
+          "recorded_move_uci": "d4c4",
+          "recorded_move_san": "Qc4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r1b1k1r1/ppp1qp1p/2pb4/4N2n/3PP1p1/2P4P/PP3PP1/RNBQ1R1K w q - 1 12",
+          "recorded_move_uci": "g2g3",
+          "recorded_move_san": "g3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-10",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 10,
+      "new_group_ordinal": 4,
+      "source_file_ordinal": 9,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.12",
+        "Round": "3.1",
+        "White": "Caruana, Fabiano",
+        "Black": "Mamedyarov, Shakhriyar",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2784",
+        "BlackElo": "2809",
+        "ECO": "B90",
+        "Opening": "Sicilian",
+        "Variation": "Najdorf",
+        "WhiteFideId": "2020009",
+        "BlackFideId": "13401319",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 98,
+      "mainline_sha256": "7f4fa2465b2fa254aba89ebbc7549ef6f69adf413b5a79999a52bf638bf77a3e",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
+          "recorded_move_uci": "h6f4",
+          "recorded_move_san": "Bxf4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "r2q1r1k/3n2pp/p1Np3b/1p1Pp3/5n2/3BBP2/PPPQ3P/1K1R2R1 b - - 9 20",
+          "recorded_move_uci": "d8h4",
+          "recorded_move_san": "Qh4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "r2q1rk1/3n2pp/p2p1b2/1p1Pp2n/8/1N2BP2/PPPQ3P/1K1R1B1R b - - 1 16",
+          "recorded_move_uci": "h5f4",
+          "recorded_move_san": "Nf4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r2q1rk1/1p1nbppp/p2pb3/4p1Pn/4P3/1NN1BP2/PPPQ3P/2KR1B1R b - - 2 12",
+          "recorded_move_uci": "b7b5",
+          "recorded_move_san": "b5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-11",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 11,
+      "new_group_ordinal": 5,
+      "source_file_ordinal": 11,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.12",
+        "Round": "3.3",
+        "White": "Karjakin, Sergey",
+        "Black": "Grischuk, Alexander",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2763",
+        "BlackElo": "2767",
+        "ECO": "C50",
+        "Opening": "Giuoco Pianissimo",
+        "Variation": "Italian four knights variation",
+        "WhiteFideId": "14109603",
+        "BlackFideId": "4126025",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 60,
+      "mainline_sha256": "e4f6a3153a28f989506644446b4b4a2502afd5b086e0f053838839e1e94bb56a",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "4q1k1/1p3pp1/2p3np/3n4/rP1N4/2P4P/2QB1PP1/6K1 w - - 0 24",
+          "recorded_move_uci": "c2a4",
+          "recorded_move_san": "Qxa4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "r2qr1k1/1p3pp1/1pp3np/3n4/1P1p4/P1P2N1P/2QB1PP1/R3R1K1 w - - 0 20",
+          "recorded_move_uci": "e1e8",
+          "recorded_move_san": "Rxe8+",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r2qr1k1/1p3pp1/1pp1bnnp/3pp3/1P2P3/P1PP1N1P/2B2PP1/R1BQR1K1 w - - 0 16",
+          "recorded_move_uci": "e4d5",
+          "recorded_move_san": "exd5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r1bq1rk1/pp3pp1/1bpp1nnp/4p3/NPB1P3/P1PP1N1P/5PP1/R1BQ1RK1 w - - 0 12",
+          "recorded_move_uci": "a4b6",
+          "recorded_move_san": "Nxb6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "candidates2018-12",
+      "source_id": "candidates2018",
+      "within_event_ordinal": 12,
+      "new_group_ordinal": 6,
+      "source_file_ordinal": 10,
+      "headers": {
+        "Event": "FIDE Candidates 2018",
+        "Site": "Berlin GER",
+        "Date": "2018.03.12",
+        "Round": "3.2",
+        "White": "So, Wesley",
+        "Black": "Ding, Liren",
+        "Result": "1/2-1/2",
+        "WhiteTitle": "GM",
+        "BlackTitle": "GM",
+        "WhiteElo": "2799",
+        "BlackElo": "2769",
+        "ECO": "C89",
+        "Opening": "Ruy Lopez",
+        "Variation": "Marshall counter-attack, 11...c6",
+        "WhiteFideId": "5202213",
+        "BlackFideId": "8603677",
+        "EventDate": "2018.03.10"
+      },
+      "game_ply_count": 73,
+      "mainline_sha256": "adb47f4e8113457f333f3379aa27525c90adc514fd436246eb70eaa62dae4a0c",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "2rr2k1/5pp1/3b3p/Rp1p1b2/3B3P/2P3P1/1P1N1P2/4R1K1 b - - 1 24",
+          "recorded_move_uci": "b5b4",
+          "recorded_move_san": "b4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "r2r2k1/5pp1/p1pb3p/1p1n1q2/P2B3P/1BPb1QP1/1P1N1P2/R3R1K1 b - - 0 20",
+          "recorded_move_uci": "a8c8",
+          "recorded_move_san": "Rac8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "r4rk1/5ppp/p1pb4/1p1n1b2/8/1BPPBQPq/PP3P1P/RN2R1K1 b - - 2 16",
+          "recorded_move_uci": "f5d3",
+          "recorded_move_san": "Bxd3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1bq1rk1/4bppp/p1p5/1p1n4/8/1BP5/PP1P1PPP/RNBQR1K1 b - - 1 12",
+          "recorded_move_uci": "e7d6",
+          "recorded_move_san": "Bd6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-07",
+      "source_id": "wch2024",
+      "within_event_ordinal": 7,
+      "new_group_ordinal": 1,
+      "source_file_ordinal": 7,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.03",
+        "Round": "7.1",
+        "White": "Gukesh, D",
+        "Black": "Ding Liren",
+        "Result": "1/2-1/2",
+        "Annotator": "Crowther,Mark",
+        "ECO": "D78",
+        "WhiteElo": "2783",
+        "BlackElo": "2728",
+        "WhiteFideId": "46616543",
+        "BlackFideId": "8603677",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 143,
+      "mainline_sha256": "6be718ee7ebd41f39f4885711200441e63be18b21e1449330b2cd3964db79ef2",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "3r1nk1/p4pbp/5np1/1p1P4/1PpB4/1q3BPP/2NQ1P2/R5K1 w - - 2 24",
+          "recorded_move_uci": "a1a3",
+          "recorded_move_san": "Ra3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "3rrnk1/p4pbp/1q3np1/1p1P4/1Pp2B2/5BPP/P1NQ1P2/R3R1K1 w - - 0 20",
+          "recorded_move_uci": "f4e3",
+          "recorded_move_san": "Be3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r4rk1/p2n1pbp/1q3np1/1ppP4/8/N4BPP/PP3P2/R1BQR1K1 w - - 2 16",
+          "recorded_move_uci": "c1f4",
+          "recorded_move_san": "Bf4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "rn1q1rk1/pp3pbp/4pnp1/2pP4/2p1P3/5bPP/PP1N1PB1/R1BQR1K1 w - - 0 12",
+          "recorded_move_uci": "g2f3",
+          "recorded_move_san": "Bxf3",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-08",
+      "source_id": "wch2024",
+      "within_event_ordinal": 8,
+      "new_group_ordinal": 2,
+      "source_file_ordinal": 8,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.04",
+        "Round": "8.1",
+        "White": "Ding, Liren",
+        "Black": "Gukesh, D",
+        "Result": "1/2-1/2",
+        "Annotator": "Crowther,Mark",
+        "ECO": "A21",
+        "WhiteElo": "2728",
+        "BlackElo": "2783",
+        "WhiteFideId": "8603677",
+        "BlackFideId": "46616543",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 102,
+      "mainline_sha256": "baadaef1fe509eb2a91c0c44c9f5e56db6fa7f2bb62716576e7e09d996afcf23",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "4r1k1/3n1bpp/nqp2p2/pP6/8/B2P1NP1/P3P1BP/1R1Q1K2 b - - 2 24",
+          "recorded_move_uci": "c6b5",
+          "recorded_move_san": "cxb5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "r3r1k1/1pq2bpp/n1p2p2/p3n3/2P1R3/B2P1NP1/P3P1BP/2RQ2K1 b - - 2 20",
+          "recorded_move_uci": "e5d7",
+          "recorded_move_san": "Nd7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "rn1qr1k1/1p4pp/2p1bpn1/p7/2P1R3/B5P1/P2PP1BP/2RQN1K1 b - - 2 16",
+          "recorded_move_uci": "b8a6",
+          "recorded_move_san": "Na6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "rn1q1rk1/1p2n1pp/2p1bp2/p2pp3/2P5/BP4P1/P2PPPBP/2RQNRK1 b - - 1 12",
+          "recorded_move_uci": "f8e8",
+          "recorded_move_san": "Re8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-09",
+      "source_id": "wch2024",
+      "within_event_ordinal": 9,
+      "new_group_ordinal": 3,
+      "source_file_ordinal": 9,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.05",
+        "Round": "9.1",
+        "White": "Gukesh, D",
+        "Black": "Ding, Liren",
+        "Result": "1/2-1/2",
+        "Annotator": "Crowther,Mark",
+        "ECO": "E00",
+        "WhiteElo": "2783",
+        "BlackElo": "2728",
+        "WhiteFideId": "46616543",
+        "BlackFideId": "8603677",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 107,
+      "mainline_sha256": "3eafafbafdc2e81cb14d6c0584ee38955b29e4e71f9c27e09087c243818bb82b",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "1r4k1/q3bppp/rN2pn2/2P5/8/5BP1/4PP1P/1QRR2K1 w - - 1 24",
+          "recorded_move_uci": "b1b5",
+          "recorded_move_san": "Qb5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "3r2k1/2q1bppp/rp2pn2/2p5/2NP4/5BP1/PQ2PP1P/2RR2K1 w - - 1 20",
+          "recorded_move_uci": "b2b5",
+          "recorded_move_san": "Qb5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "r2r2k1/pbq1bppp/1n2pn2/2pp4/2PP4/2B2NP1/PQ1NPPBP/2RR2K1 w - - 2 16",
+          "recorded_move_uci": "c3a5",
+          "recorded_move_san": "Ba5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r4rk1/pbqnbppp/1pp1pn2/3p4/2PP4/2B2NP1/PPQNPPBP/R2R2K1 w - - 4 12",
+          "recorded_move_uci": "a1c1",
+          "recorded_move_san": "Rac1",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-10",
+      "source_id": "wch2024",
+      "within_event_ordinal": 10,
+      "new_group_ordinal": 4,
+      "source_file_ordinal": 10,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.07",
+        "Round": "10.1",
+        "White": "Ding, Liren",
+        "Black": "Gukesh, D",
+        "Result": "1/2-1/2",
+        "Annotator": "Crowther,Mark",
+        "ECO": "D02",
+        "WhiteElo": "2728",
+        "BlackElo": "2783",
+        "WhiteFideId": "8603677",
+        "BlackFideId": "46616543",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 72,
+      "mainline_sha256": "89d58afa482585298d7644043fa3f25387174f99ea1778eefa70ceddfd556c47",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "2R1b3/pp2np1p/4pk2/5p2/8/P3PNP1/1P2BP1P/4K3 b - - 0 24",
+          "recorded_move_uci": "e7c8",
+          "recorded_move_san": "Nxc8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "3rb3/pp3pkp/2n1pp2/8/2B5/P3PN2/1P3PPP/2R2K2 b - - 0 20",
+          "recorded_move_uci": "f6f5",
+          "recorded_move_san": "f5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "r1br2k1/pp3p1p/2n1pp2/8/2B5/4PN2/PP3PPP/R2R2K1 b - - 1 16",
+          "recorded_move_uci": "c8d7",
+          "recorded_move_san": "Bd7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1bq1rk1/pp2bppp/2n1p3/6Bn/2B1N3/4PN2/PP3PPP/R2Q1RK1 b - - 4 12",
+          "recorded_move_uci": "h5f6",
+          "recorded_move_san": "Nf6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-11",
+      "source_id": "wch2024",
+      "within_event_ordinal": 11,
+      "new_group_ordinal": 5,
+      "source_file_ordinal": 11,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.08",
+        "Round": "11.1",
+        "White": "Gukesh, D",
+        "Black": "Ding Liren",
+        "Result": "1-0",
+        "Annotator": "Crowther,Mark",
+        "ECO": "A09",
+        "WhiteElo": "2783",
+        "BlackElo": "2728",
+        "WhiteFideId": "46616543",
+        "BlackFideId": "8603677",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 57,
+      "mainline_sha256": "78a2477d0ecd2604ccfd9c6c84fb6cb3c26a054c65357017776961fab662a779",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 47,
+          "side_to_move": "white",
+          "fen": "4k2r/1pqrpp2/2n3pb/p6p/P1PpQ3/3P2PP/2N2PB1/1R1R2K1 w k - 2 24",
+          "recorded_move_uci": "b1b5",
+          "recorded_move_san": "Rb5",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 39,
+          "side_to_move": "white",
+          "fen": "3rk2r/1p2pp2/1P4pb/p1q1n2p/P1Pp1Q2/3P2PP/5PB1/RN1R2K1 w k - 0 20",
+          "recorded_move_uci": "f4e4",
+          "recorded_move_san": "Qe4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 31,
+          "side_to_move": "white",
+          "fen": "3rkb1r/1pq1pp1p/6p1/pPn1n3/2Pp1Q2/P2P2PP/5PB1/RNBR2K1 w k - 0 16",
+          "recorded_move_uci": "a3a4",
+          "recorded_move_san": "a4",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 23,
+          "side_to_move": "white",
+          "fen": "r3kb1r/1pq1pppp/5n2/pPn5/2Pp4/P2P1QPP/5P2/RNB1KB1R w KQkq - 1 12",
+          "recorded_move_uci": "f1g2",
+          "recorded_move_san": "Bg2",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    },
+    {
+      "id": "wch2024-12",
+      "source_id": "wch2024",
+      "within_event_ordinal": 12,
+      "new_group_ordinal": 6,
+      "source_file_ordinal": 12,
+      "headers": {
+        "Event": "WCh 2024",
+        "Site": "Singapore SIN",
+        "Date": "2024.12.09",
+        "Round": "12.1",
+        "White": "Ding, Liren",
+        "Black": "Gukesh, D",
+        "Result": "1-0",
+        "Annotator": "Crowther,Mark",
+        "ECO": "A13",
+        "WhiteElo": "2728",
+        "BlackElo": "2783",
+        "WhiteFideId": "8603677",
+        "BlackFideId": "46616543",
+        "EventDate": "2024.11.25"
+      },
+      "game_ply_count": 77,
+      "mainline_sha256": "2bd4d1e9ad7042bd7f61deb3dca2b14b9eec185349d093d95aba166b64854130",
+      "position_slots": [
+        {
+          "fullmove_number": 24,
+          "ply": 48,
+          "side_to_move": "black",
+          "fen": "1r1qr1k1/1pp2pp1/1nn3bp/1N6/p1PPpB2/P5PP/1PQ2PBK/3RR3 b - - 0 24",
+          "recorded_move_uci": "b8c8",
+          "recorded_move_san": "Rc8",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 20,
+          "ply": 40,
+          "side_to_move": "black",
+          "fen": "1r1qr1k1/1pp1bpp1/1nn3bp/pN6/2PPp3/P1Q1B1PP/1P3PBK/3RR1N1 b - - 3 20",
+          "recorded_move_uci": "e7f6",
+          "recorded_move_san": "Bf6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 16,
+          "ply": 32,
+          "side_to_move": "black",
+          "fen": "1r1qr1k1/1pp1bpp1/2n2n1p/pN2pb2/2P5/P2PBNPP/1PQ2PBK/3RR3 b - - 8 16",
+          "recorded_move_uci": "f6d7",
+          "recorded_move_san": "Nd7",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        },
+        {
+          "fullmove_number": 12,
+          "ply": 24,
+          "side_to_move": "black",
+          "fen": "r1bq1rk1/1pp1bpp1/2n2n1p/p3p3/2P5/P1NPBNPP/1P3PB1/R2QR1K1 b - - 0 12",
+          "recorded_move_uci": "c8e6",
+          "recorded_move_san": "Be6",
+          "balance": "not evaluated; await frozen v6 unrestricted D16"
+        }
+      ],
+      "unavailable_fullmoves": [],
+      "selected_position": null
+    }
+  ]
+}

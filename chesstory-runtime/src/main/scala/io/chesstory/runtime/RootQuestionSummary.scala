@@ -13,6 +13,14 @@ private[runtime] object RootQuestionSummary:
   import ObservedLineProtocol.{ PreparedPath, PreparedPaths }
   import LineContinuationInvestigation.{ Event, Reading, DirectSupportUse }
 
+  private def remainingDetails(selected: List[CommentaryAnswer.Section], core: List[CommentaryAnswer.Section]) =
+    val included = core.flatMap(_.statements).toSet
+    selected.map { section =>
+      val remaining = section.statements.filterNot(included)
+      val refs = remaining.flatMap(_.references).toSet
+      CommentaryAnswer.Section(remaining, section.required.filter(refs), section.focus.filter(f => refs(f.move)))
+    }.filter(_.statements.nonEmpty)
+
   case class MoveRef(path: PreparedPath, offset: Int):
     def json: JsObject = Json.obj("line_id" -> path.line.ref.id, "occurrence_id" -> path.ids(offset))
   case class Unit(role: String, en: List[String | MoveRef], ko: List[String | MoveRef],
@@ -75,11 +83,19 @@ private[runtime] object RootQuestionSummary:
     // It remains a separate proof, never the current evaluation pair. Only
     // its fully reread board condition and exact legal paths admit that root.
     val conditionalUnits = if question == "functional_response" then allUnits else detailUnits
-    val conditionalPaths = conditionalUnits.flatMap(_.expressed).collect {
+    val retainedChoice = units.flatMap(_.expressed).collect {
+      case CommentaryAnswer.RetainedExchangeFunction(value) if question == "exchange_function" &&
+          value.belongsTo(paths) => value.kept.toList.map(_.path)
+    }.flatten.filterNot(path => pair.exists(primary => primary.ids.head == path.ids.head)).distinct
+    val purposeChoices = units.flatMap(_.expressed).collect {
+      case CommentaryAnswer.ChoicePurpose(value) if question == "move_purpose" && value.belongsTo(paths) =>
+        value.arms.map(_.path)
+    }.flatten
+    val conditionalPaths = (retainedChoice ++ purposeChoices ++ conditionalUnits.flatMap(_.expressed).collect {
       case value: CommentaryAnswer.LegalReplyOption if FunctionalReplyReading.valid(paths, value) &&
           FunctionalReplyReading.relevant(paths, pair, value) =>
         List(value.reference, value.alternative, value.available) ++ value.price.toList
-    }.flatten.distinct
+    }.flatten).distinct
     def valid(ref: MoveRef): Boolean = used.exists(_ eq ref.path) && ref.offset >= 0 &&
       ref.offset < ref.path.moves.size && ref.path.ids == ref.path.declared &&
       ref.path.moves == ref.path.sourceMoves && ref.path.certified.nonEmpty &&
@@ -135,6 +151,8 @@ private[runtime] object RootQuestionSummary:
       }.mkString).mkString(" ")
       Result(text, Json.obj("schema_version" -> 2, "question" -> question, "units" -> units.map(_.json),
         "detail_moves" -> detail.distinct.map(_.json)) ++
+        Option.when(retainedChoice.size == 1)(Json.obj("retained_choice_line_id" ->
+          retainedChoice.head.line.ref.id)).getOrElse(Json.obj()) ++
         Option.when(detailUnits.nonEmpty)(Json.obj("detail_units" -> detailUnits.map(_.json))).getOrElse(Json.obj()) ++
         Option.when(witnesses.nonEmpty)(Json.obj("witness_line_ids" -> witnesses.map(_.line.ref.id))).getOrElse(Json.obj()),
         (evidence ++ used.flatMap(p => p.certified.map(_._1.ref.id).toList ++ p.ids)).distinct)
@@ -331,12 +349,7 @@ private[runtime] object RootQuestionSummary:
       Section(content, content.flatMap(_.references).distinct,
         selected.flatMap(_.focus).filter(f => refs(f.move)).distinctBy(_.move))
     }
-    val included = core.flatMap(_.statements).toSet
-    val details = selected.map { section =>
-      val remaining = section.statements.filterNot(included)
-      val refs = remaining.flatMap(_.references).toSet
-      Section(remaining, section.required.filter(refs), section.focus.filter(f => refs(f.move)))
-    }.filter(_.statements.nonEmpty)
+    val details = remainingDetails(selected, core)
     completePairAnswer(packet, paths, pair, "observed_route_use", core, details)
       .map(answer => answer.copy(evidence = (answer.evidence ++ arms.flatMap(_.proofs)).distinct))
 
@@ -421,12 +434,7 @@ private[runtime] object RootQuestionSummary:
       Section(content, selected.flatMap(_.required).filter(refs).distinct,
         selected.flatMap(_.focus).filter(f => refs(f.move)).distinctBy(_.move))
     }
-    val included = core.flatMap(_.statements).toSet
-    val details = selected.map { section =>
-      val remaining = section.statements.filterNot(included)
-      val refs = remaining.flatMap(_.references).toSet
-      Section(remaining, section.required.filter(refs), section.focus.filter(f => refs(f.move)))
-    }.filter(_.statements.nonEmpty)
+    val details = remainingDetails(selected, core)
     completePairAnswer(packet, paths, pair, "paired_support_use", core, details)
       .map(answer => answer.copy(evidence = (answer.evidence ++ arms.flatMap(_.proofs)).distinct))
 
@@ -624,7 +632,27 @@ private[runtime] object RootQuestionSummary:
     * proof move must be spoken; displayed moves still own their actual costs.
       */
   def realize(paths: PreparedPaths, pair: List[PreparedPath], answer: CommentaryAnswer.Answer): Option[Result] =
+    realizeComplete(paths, pair, answer).orElse {
+      // The basic account still has to prove every selected action, capture,
+      // check response and required condition. Optional old detail may exceed
+      // its own display budget without vetoing that complete basic answer.
+      Option.when(answer.details.nonEmpty)(answer.copy(details = Nil))
+        .flatMap(realizeComplete(paths, pair, _))
+    }
+
+  private def realizeComplete(paths: PreparedPaths, pair: List[PreparedPath], answer: CommentaryAnswer.Answer): Option[Result] =
     def validContent(statement: CommentaryAnswer.Statement): Boolean = statement match
+      case CommentaryAnswer.ReferencePurpose(value) => value.belongsTo(paths) && value.arms.map(_.path).toSet == pair.toSet
+      case CommentaryAnswer.ReferencePosition(value, arm) => value.belongsTo(paths) && value.arms.contains(arm) &&
+        value.arms.map(_.path).toSet == pair.toSet
+      case CommentaryAnswer.FunctionPurpose(value) => value.belongsTo(paths)
+      case CommentaryAnswer.FunctionReply(value, branch) => value.belongsTo(paths) && value.branches.contains(branch)
+      case CommentaryAnswer.ChoicePurpose(value) => value.belongsTo(paths)
+      case CommentaryAnswer.ChoiceReply(value, arm) => value.belongsTo(paths) && value.arms.contains(arm)
+      case CommentaryAnswer.ChoiceNeutralization(value) => value.owner.belongsTo(paths) &&
+        PurposeChoice.neutralization(value.owner, List(value.reply), paths).contains(value)
+      case CommentaryAnswer.ExchangeFunction(value) => value.belongsTo(paths)
+      case CommentaryAnswer.RetainedExchangeFunction(value) => value.belongsTo(paths) && value.kept.nonEmpty
       case value: CommentaryAnswer.LegalReplyOption => FunctionalReplyReading.valid(paths, value)
       case value: CommentaryAnswer.FunctionRealization => FunctionalRealizationReading.valid(paths, value.value)
       case value: CommentaryAnswer.ReserveBreak => RootSubjectComparison.validReserveBreak(paths, value)

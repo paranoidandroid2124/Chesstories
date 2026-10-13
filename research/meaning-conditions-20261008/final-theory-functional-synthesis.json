@@ -1,0 +1,898 @@
+{
+  "schema_version": "theory.functional-final-synthesis.v1",
+  "sealed_utc": "2026-10-08T08:13:06.365231+00:00",
+  "scope": "Independent final synthesis of selected G-drive book scenes, immutable presealed human criteria and already completed standalone H05 research inventories. No engine, production compilation, main/test/UI edit or new product-output reading in this task.",
+  "independence": "The final criterion is not relaxed to fit a result. All earlier independent criteria, v14/v20 readings and the prior final memo remain unchanged. The new H05 audit is a separate post-completion supplement, not a reclassification of its former incomplete runs.",
+  "main39_boundary": "Parent currently owns coordinated main39 compilation/product verification. This review keeps the supplied stable39 source/tests frozen and does not assert that the final product passes before those manifests and human readings arrive.",
+  "central_insight": "The remaining common problem is connecting four separate questions without making an unjustified promotion: what is legally available, what price or defensive function changed, whether a useful continuation survives the strongest counter, and how that fact explains the original mover judgment. A fixed observed route can be evidence for this connection but is not the connection itself.",
+  "source_reads": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\final-theory-synthesis\\source-read.json",
+      "sha256": "9fc1242a49aeb08cc5d81aea48ca4e15a9b3f11d4cd1c8d127f428ba1e2c63d0"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\final-theory-synthesis\\swindler-source-read.json",
+      "sha256": "7b529d947407febb0408c022062e164866395fe0e6fdfdf38afbe7234a3a6a54"
+    }
+  ],
+  "preserved_criteria_and_readings": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-theory-controls.json",
+      "sha256": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-minimum-conditions-refinement.json",
+      "sha256": "09b6e3081043536899a409c2676c1b4a82d0b5607d2dbc2091d38e2f94a89efc"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-basic-v14-human-reading.json",
+      "sha256": "ff7993d5bb9a59b538a8f7e466efb64453ed8a3da738bd564c6e2a88cc6d97d6"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-basic-v20-human-reading.json",
+      "sha256": "3a048c5731d3e29cdf03b01d6128b3e3ea9ddbc1bd8f1917cdc6b62a76ddcad7"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\final-independent-theory-review.json",
+      "sha256": "dca8b139a05a8f081f45afdedc4c3c02e8b9c37f2d116d4d51b45ca51afc787f"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\sg41-priced-capture-and-mover-commentary-criteria.json",
+      "sha256": "ff51aa5c8689d6e5fe478fba3adea3376ab6ece745e7afc5d25eb55b6b8efb05"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\sg41-priced-capture-evidence-admission-contract.json",
+      "sha256": "02ab069d51335fe3e9f91d24e04668a6799e72422bea1cf5f369ce412a5c697a"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\priced-capture-admission-book-controls.json",
+      "sha256": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e"
+    }
+  ],
+  "selected_scenes": [
+    {
+      "id": "SG02",
+      "book": "supergm",
+      "reading_edition_pages": [
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "source_pdf_footer_pages": "53-61",
+      "game": "N.N. - Philip Hurtado, internet blitz 2019",
+      "fen": "2r3k1/1p3rp1/2p4p/1p1b2q1/1Q1P4/P4PB1/1P4PP/2RR2K1 b - - 0 1",
+      "identity_scope": "도표 47을 직접 확인. 최초 수순·실제 반수시계는 제공되지 않아 0 1로 정규화.",
+      "human_question": "왜 비숍이 아닌 룩으로 f3를 잡아야 하며, 상대가 희생을 거절하면 그 선택에서 무엇이 남는가?",
+      "source_author_judgment": "Rxf3가 가장 강한 선택이지만 Qd2! 뒤 최소한의 이점/압박. 정확한 큰 기물 교환으로 거의 무승부에 이르며 강제 승리가 아님.",
+      "required_functions": [
+        "d5 비숍을 남겨 백 왕 주변 밝은 칸을 통제한다. d4 백 폰 때문에 그 비숍을 쉽게 몰아내지 못한다.",
+        "현재 백의 퀸과 룩이 퀸사이드에 치우친 시간을 이용한다. 백이 퀸을 수비로 되돌린 뒤에는 같은 공격 결론을 유지하면 안 된다.",
+        "즉시 gxf3는 Qe3+ 뒤 체크/밝은 칸 공격을 허용한다. 룩 포획 자체는 강제가 아니다.",
+        "Qd2가 Qe3+를 막고 퀸 교환을 요구한다. 이어 Rc3로 큰 기물 교환을 추진하면 공격 기대를 제한된 압박으로 수정해야 한다."
+      ],
+      "source_critical_counters": [
+        {
+          "root_after": "Rxf3",
+          "move": "Qd2",
+          "uci": "b4d2",
+          "why": "저자가 찾은 가장 중요한 거절. 승리 주장을 제한된 이점으로 바꾼다."
+        },
+        {
+          "root_after": "Rxf3 Qd2 Re3",
+          "move": "Rc3",
+          "uci": "c1c3",
+          "why": "큰 기물 교환을 피하기 어렵게 만드는 정확한 후속 방어."
+        },
+        {
+          "root_after": "Rxf3 Qd2 Qg4",
+          "move": "gxf3",
+          "uci": "g2f3",
+          "why": "같은 포획이 처음에는 지지만 퀸 이동 뒤에는 정확한 무승부 수가 될 수 있다. 포획 SAN만으로 같은 위험을 부여하면 안 된다."
+        }
+      ],
+      "honest_comment_boundary": "룩으로 f3를 잡아 d5 비숍의 밝은 칸 통제를 남깁니다. 곧바로 룩을 잡으면 왕이 공격받지만, 백은 Qd2로 체크를 막고 교환을 요구할 수 있습니다. 정확히 교환을 추진하면 흑의 공격은 제한된 압박으로 줄어듭니다.",
+      "invalidation_boundary": "gxf3가 새 국면에서도 벌을 받는지, 남은 비숍이 실제 위협/유리한 교환 뒤 역할을 갖는지 따로 검증한다. 강한 거절이 균형을 유지하면 강제승리 문장을 철회하고 남는 압박만 설명한다.",
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "SG13",
+      "book": "supergm",
+      "reading_edition_pages": [
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152
+      ],
+      "source_pdf_footer_pages": "169-177",
+      "game": "Michael Adams - David Navara, Biel 2015",
+      "fen": "4Q3/5pkp/2Bp1bp1/4p3/1P2P2P/5qP1/5P2/6K1 w - - 2 30",
+      "identity_scope": "도표 146, 본문 148의 착수 1.e4부터 29...Qf3까지 합법 재생. 이전 연구 FEN과 기물 배치/차례 동일하나 정확한 반수시계는 2.",
+      "human_question": "자연스러운 Bd5를 바로 하면 왜 이기지 못하며, 먼저 Qd7을 둔 뒤 상대의 최강 반격 g5를 상대로도 계획이 성립하는가?",
+      "source_author_judgment": "즉시 Bd5?는 Bxh4!의 체크/교환 자원으로 무승부. Qd7!로 먼저 g4 체크를 통제하고 Bd5를 준비한다. 가장 강한 ...g5! 뒤 hxg5?는 이점을 줄이며, 정확한 Bd5!가 승리 유지 수.",
+      "required_functions": [
+        "Bxh4 뒤 gxh4를 강제한다고 설명하지 않는다. gxh4의 Qg4+ 반복 체크와 폰 전진/퀸 교환 시도의 별도 방어를 모두 고려해야 한다.",
+        "Qd7은 g4를 통제해 상대의 즉시 반복 체크 자원을 바꾸며 f7 압박을 준비한다. 모든 체크가 영구히 사라졌다는 의미는 아니다.",
+        "...g5는 흑 왕의 공간과 반격을 만든다. 백이 hxg5로 반응하는 대신 Bd5 뒤 강제 체크를 정밀하게 계산해야 승리 주장을 유지한다.",
+        "뒤에 Qh6 또는 Be6처럼 g4/도주 칸을 통제하는 조용한 수가 다시 필요하다. 체크 수만 오래 나열하면 결정적인 기능을 놓친다."
+      ],
+      "source_critical_counters": [
+        {
+          "root_after": "Bd5",
+          "move": "Bxh4",
+          "uci": "f6h4",
+          "why": "폰 방패를 열고 체크로 무승부를 만드는 자원."
+        },
+        {
+          "root_after": "Qd7",
+          "move": "g5",
+          "uci": "g6g5",
+          "why": "저자가 명시한 최강 시도. 왕 공간과 자체 위협을 만들고 백에게 정확한 계산을 요구."
+        },
+        {
+          "root_after": "Qd7 g5",
+          "compare": [
+            "Bd5",
+            "hxg5"
+          ],
+          "uci": [
+            "c6d5",
+            "h4g5"
+          ],
+          "fen": "8/3Q1pkp/2Bp1b2/4p1p1/1P2P2P/5qP1/5P2/6K1 w - - 0 31",
+          "why": "승리 유지와 이점 감소를 구분하는 실제 선택. 실제 대국의 마지막 승리만으로 hxg5를 정당화하지 않는다."
+        },
+        {
+          "root_after": "Qd7 g5 Bd5 gxh4 Qxf7+ Kh6 Qf8+",
+          "moves": [
+            "Kg6",
+            "Kg5",
+            "Kh5"
+          ],
+          "why": "흑 왕을 전진시킨 반격에 백의 강제 승리 계산이 유지되는지 확인."
+        }
+      ],
+      "honest_comment_boundary": "바로 Bd5를 두면 ...Bxh4 뒤 왕이 반복 체크를 받거나 교환으로 이점이 사라집니다. 먼저 Qd7로 g4 체크를 통제해야 합니다. 흑의 ...g5가 가장 어려운 저항이며, 그 뒤에는 폰을 잡기보다 Bd5와 정확한 체크 수순으로 먼저 결정타를 내야 합니다.",
+      "invalidation_boundary": "...g5 아래 정확한 승리 계산이 확인되지 않으면 Qd7의 예방 기능까지만 인정하고 강제 승리는 미확정. 더 강한 방어가 반복 체크/균형을 확인하면 승리 문장 철회.",
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "IC-SG23",
+      "book": "Think Like a Super-GM",
+      "reading_edition_pages": [
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249
+      ],
+      "source_pdf_footer_pages": "282–291",
+      "game": "Robert James Fischer – Karl Robatsch, Vinkovci 1968, 21.White",
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "identity_scope": "complete_standard_game_history",
+      "complete_standard_history_replayed_exactly": true,
+      "source_history_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "e1g1",
+        "f8e7",
+        "f1e1",
+        "b7b5",
+        "a4b3",
+        "d7d6",
+        "c2c3",
+        "e8g8",
+        "h2h3",
+        "c6b8",
+        "d2d4",
+        "b8d7",
+        "f3h4",
+        "e5d4",
+        "c3d4",
+        "d7b6",
+        "h4f3",
+        "c7c5",
+        "c1f4",
+        "c8b7",
+        "d4c5",
+        "d6c5",
+        "d1d8",
+        "e7d8",
+        "f4d6",
+        "f8e8",
+        "d6c5",
+        "b6d7",
+        "c5d4",
+        "f6e4",
+        "b1c3",
+        "d8f6"
+      ],
+      "primary_move": "Bd5",
+      "human_question": "d5에 어느 기물을 놓아야 흑이 교환과 후퇴로 전부 정리하지 못하고 작은 수동성이 남는가?",
+      "required_functions": [
+        "d5를 사용할 수 있다는 합법성만으로는 부족하다. 흑이 ...Bxd4, e 파일 룩 교환, ...Nec5 등으로 압박을 비용 없이 정리할 수 있는지 확인해야 한다.",
+        "비교 이유를 주장하려면 Bd5 뒤의 주요 방어에서도 흑의 남은 기물에 방어 비용이나 수동성이 남고 백의 활동이 유지되어야 한다.",
+        "그 비용은 e8 나이트의 수동성, b7 나이트의 수동성, c 파일 압박처럼 다른 방식으로 실현될 수 있다. 같은 첫 교환과 같은 종착 칸을 요구하지 않는다.",
+        "저자는 작은 우세를 말한다. 즉시 물질 획득이나 강제 승리를 설명의 필요 결과로 정하지 않는다."
+      ],
+      "nonessential_events": [
+        "21...Bxd5와 22...Bxd4의 정확한 교환 순서",
+        "24...Nxe8이라는 특정 재포획",
+        "25.a4 이후의 실제 경기 전개",
+        "Nc7이 모든 응수에서 실제로 실행되는 것"
+      ],
+      "source_counter_policy": {
+        "primary_counter_types": [
+          "d5를 받아 주되 e 파일 교환으로 나이트 포크를 없애는 방어",
+          "...Nec5처럼 뒤로 움직여 기물 협력을 복구하는 방어",
+          "...Nd6 또는 ...Rac8로 다른 방식의 협력을 만드는 방어"
+        ],
+        "book_specific_resources": [
+          "Nd5 Bxd4 Nxd4 Nec5!",
+          "Bd5 Nd6",
+          "Bd5 Bxd5 Nxd5 Rac8",
+          "Bd5 Bxd5 Nxd5 Bxd4 Nxd4 Nef6"
+        ],
+        "ranking_scope": "...Nec5는 Nd5에 대한 저자의 가장 정확한 중화 수다. Bd5 뒤 전 응수의 최강 순서는 새 엔진/독립 판독 없이 확정하지 않는다."
+      },
+      "multiple_good_moves": {
+        "author_assessment": "Bd5만 작은 우세를 키우는 가장 정확한 선택으로 제시하며 Nd5는 흑이 중화할 수 있다.",
+        "do_not_infer": "Nd5가 물질을 잃는 블런더라는 뜻은 아니다. 현재 엔진 조건에서 작은 우세 차이가 유지되는지는 미확정이다."
+      },
+      "minimal_basic_comment_from_presealed_criteria": "비숍을 d5에 놓아 흑이 교환으로 정리하더라도 남은 나이트의 수동성을 이용할 작은 우세를 남깁니다.",
+      "misleading_risks": [
+        "Nc7이 합법이므로 포크가 반드시 이득이라는 표현",
+        "e8에 실제 나이트가 남지 않은 갱신 수순을 설명 반박으로 처리",
+        "작은 우세를 강제 승리로 바꾸는 표현"
+      ],
+      "source_lines_replayed_legally_now": true,
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "IC-SG41",
+      "book": "Think Like a Super-GM",
+      "reading_edition_pages": [
+        410,
+        411,
+        412,
+        413,
+        414,
+        415,
+        416,
+        417,
+        418
+      ],
+      "source_pdf_footer_pages": "486–497",
+      "game": "Inna Agrest – Li Chao, Internet rapid 2019, 20.White",
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "identity_scope": "complete_standard_game_history",
+      "complete_standard_history_replayed_exactly": true,
+      "source_history_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "d7d6",
+        "c1g5",
+        "e7e6",
+        "f2f4",
+        "f8e7",
+        "d1d2",
+        "a7a6",
+        "e1c1",
+        "c8d7",
+        "f1e2",
+        "b7b5",
+        "e2f3",
+        "a8c8",
+        "c1b1",
+        "d8b6",
+        "h1e1",
+        "h7h6",
+        "g5f6",
+        "g7f6",
+        "f4f5",
+        "b6d4",
+        "d2d4",
+        "c6d4",
+        "d1d4",
+        "h6h5",
+        "h2h4",
+        "c8c5",
+        "a2a3",
+        "e8d8"
+      ],
+      "primary_move": "Red1",
+      "human_question": "f5 폰을 서둘러 교환하지 않으면서, 흑의 응수에 맞춰 나이트 활동과 약점 압박을 어떻게 이어 가는가?",
+      "required_functions": [
+        "f5 폰을 유지하는 것이 백에게 유효해야 한다. 흑의 ...exf5가 합법이라는 사실만으로 폰을 구해야 하는 긴급 문제라고 정하지 않는다.",
+        "...exf5를 허용했을 때 d5 진입과 다른 활동이 가격을 보상하는지 확인한다. 소규모 물질 양보와 약점·기물 활동의 결과를 같이 읽어야 한다.",
+        "Red1은 두 번째 룩을 개선하면서 e 파일 대립의 불편을 피하고 나이트의 경로를 미리 고정하지 않는다. ...a5 뒤 Ne2-g3과 다른 응수 뒤 c3-d5가 서로 다른 증인이 될 수 있다.",
+        "fxe6 뒤 ...fxe6는 중앙 구조를 고치고 f5 칸을 비워 ...f6-f5 및 e7 비숍의 활동을 허용한다. 실제 경기의 모든 후속 교환은 필수 조건이 아니다.",
+        "흑의 ...Re5, ...Rg8, ...Re6와 같은 적극적 자원이 목적의 범위를 바꿀 수 있으므로 '흑이 아무것도 할 수 없다'고 말하지 않는다."
+      ],
+      "nonessential_events": [
+        "나이트가 최종적으로 g3 또는 b4에 반드시 도달하는 것",
+        "Ne2 뒤 Nc3로 돌아가지 않는 것",
+        "흑이 실제 경기처럼 ...Kc7을 택하는 것",
+        "나이트의 변두리 경로를 무조건 나쁜 사건으로 분류하는 것"
+      ],
+      "source_counter_policy": {
+        "primary_counter_types": [
+          "...exf5로 물질을 받아 백의 보상이 충분한지 묻는 방어",
+          "...Re5로 e 파일 대립과 e4 압박을 만드는 방어",
+          "...Rg8 또는 ...Re6-f5로 수동적 비숍을 활성화하는 반격"
+        ],
+        "book_specific_resources": [
+          "Ne2 exf5 Nc3",
+          "Na2 exf5 Nb4 fxe4 Rdxe4 Re5 Nxa6 Re6!",
+          "Red1 a5 Ne2 exf5 Ng3",
+          "fxe6 fxe6 Red1 f5!"
+        ],
+        "ranking_scope": "Red1 뒤 최강 응수 한 개는 저자가 여기서 확정하지 않는다. 새 조사에서는 모든 합법 첫 응수를 보되 위 기능 반론을 먼저 판독한다."
+      },
+      "multiple_good_moves": {
+        "author_assessment": "Red1이 가장 유연한 권고다. a4, Na2, Ne2를 포함해 좋은 수가 여러 개 있으며 Ne2는 저자의 첫 선택이었다.",
+        "do_not_infer": "Ne2나 Na2를 실수로 꾸며 Red1의 우열을 설명하지 않는다."
+      },
+      "minimal_basic_comment_from_presealed_criteria": "룩을 d1에 모으면서 f5의 긴장을 유지합니다. 나이트를 어느 쪽으로 돌릴지는 흑의 다음 수를 보고 결정할 수 있습니다.",
+      "misleading_risks": [
+        "f5가 두 번 공격받으므로 먼저 교환해야 한다는 물질적 단정",
+        "흑의 비숍이 완전히 움직일 수 없다는 표현",
+        "나이트의 특정 경로를 고정해 다른 좋은 실현을 누락",
+        "긴장 유지가 언제나 좋은 일반 규칙이라는 결론"
+      ],
+      "source_lines_replayed_legally_now": true,
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "IC-SG45",
+      "book": "Think Like a Super-GM",
+      "reading_edition_pages": [
+        440,
+        441,
+        442,
+        443,
+        444,
+        445,
+        446
+      ],
+      "source_pdf_footer_pages": "526–534",
+      "game": "Robert James Fischer – Ismet Ibrahimoglu, Siegen Olympiad 1970, 18.White",
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+      "identity_scope": "complete_standard_game_history",
+      "complete_standard_history_replayed_exactly": true,
+      "source_history_uci": [
+        "e2e4",
+        "c7c6",
+        "d2d3",
+        "d7d5",
+        "b1d2",
+        "g7g6",
+        "g1f3",
+        "f8g7",
+        "g2g3",
+        "g8f6",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "b8d7",
+        "f3e2",
+        "d5e4",
+        "d3e4",
+        "d8c7",
+        "a2a4",
+        "a8d8",
+        "d2b3",
+        "b7b6",
+        "c1e3",
+        "c6c5",
+        "a4a5",
+        "e7e5",
+        "b3d2",
+        "f6e8",
+        "a5b6",
+        "a7b6"
+      ],
+      "primary_move": "Rfd1",
+      "human_question": "이미 유리한 구조에서 룩을 개선하며 나이트의 두 좋은 경로를 유지하면 충분하지 않은가?",
+      "required_functions": [
+        "민감한 밝은 칸과 비숍 쌍이라는 지속적 장점이 남아야 한다. Rfd1의 목적은 갑자기 만들어진 강제 전술이 아니다.",
+        "나이트의 즉시 Nc4와 Nb1-c3라는 서로 다른 경로가 모두 실전적으로 유효한 선택이어야 한다. 이미 합법인 수라도 ...b5, ...Nd6, ...Qc6-Nc7 뒤 가격과 활동을 따로 확인한다.",
+        "f1 룩을 d1로 움직이는 것은 다른 룩의 a 파일 선택을 남기고 비숍의 f1 칸을 비운다. 이 개선이 구체적인 전술 손실을 허용하지 않으면 그 목적만으로 정상적인 기본 답이 된다.",
+        "흑의 응수에 따라 Rd6, Qb5, 비숍 개선, a 파일 압박 중 다른 실현으로 바뀌어도 수의 유연한 역할은 남을 수 있다.",
+        "기본 코멘트에 최상위 수 간의 미묘한 점수 차이를 반드시 해명할 필요는 없다. 특정 우열을 주장하려면 새 조사에서 그 차이를 입증해야 한다."
+      ],
+      "nonessential_events": [
+        "백 나이트의 반드시 d5 도착",
+        "a 파일에 룩 두 개를 반드시 모으는 것",
+        "Bf1이 모든 응수에서 실제로 나오는 것",
+        "Fischer가 실제 경기에서 택한 Nb1을 낮은 선택으로 분류하는 것"
+      ],
+      "source_counter_policy": {
+        "primary_counter_types": [
+          "...Nd6로 중앙 협력을 복구하는 방어",
+          "...Qc6-Nc7로 밝은 칸과 a 파일을 정리하는 방어",
+          "...b5로 Nc4 나이트를 밀어내려는 구조적 반격"
+        ],
+        "book_specific_resources": [
+          "Rfd1 Nd6",
+          "Rfd1 Qc6 Nc4 Nc7 Rd6",
+          "Nb1 Qc6! Nc3 Nc7",
+          "Nc4 b5 Na3"
+        ],
+        "ranking_scope": "저자는 Rfd1을 실전적으로 선호하지만 최선 수순 증명을 제공하지 않는다. 독립 엔진 비교 전에는 Rfd1만 유일하게 우세를 유지한다고 말하지 않는다."
+      },
+      "multiple_good_moves": {
+        "author_assessment": "저자는 약 20개의 수가 뚜렷한 장점을 유지한다고 말하며 Rfd1, Nb1, Nc4를 매우 좋은 선택으로 인정한다. Ra6도 백이 여전히 좋다.",
+        "do_not_infer": "책의 컴퓨터 선호, 10/9 점수 또는 현재 엔진 소차를 강제 우열 설명으로 바꾸지 않는다."
+      },
+      "minimal_basic_comment_from_presealed_criteria": "룩을 d파일에 놓고 f1 칸을 비워 비숍의 활동도 준비합니다. 나이트는 Nc4나 Nb1-c3 중 흑의 대응에 맞는 경로를 택할 수 있습니다.",
+      "misleading_risks": [
+        "Rfd1이 Nc4를 처음 가능하게 했다는 표현",
+        "좋은 Nb1을 수동적인 실수로 단정",
+        "평범한 개선 수의 기본 답에 긴 양쪽 PV를 강제",
+        "Ra6 뒤 ...Nc7을 물질 손실이나 평가 역전으로 과장"
+      ],
+      "source_lines_replayed_legally_now": true,
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "IC-SWK62",
+      "book": "The Complete Chess Swindler",
+      "reading_edition_pages": [
+        82,
+        83,
+        84,
+        85,
+        86,
+        87
+      ],
+      "source_pdf_footer_pages": "112–120",
+      "game": "Vladimir Kramnik – Magnus Carlsen, London 2010, 62.White after 61...Rc5",
+      "fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "identity_scope": "visually_read_book_diagram",
+      "complete_standard_history_replayed_exactly": false,
+      "source_history_uci": [],
+      "primary_move": "Rxd6+",
+      "human_question": "기물 하나를 얻는 간단한 단순화가 실제로 승리 과제까지 쉽게 만드는가, 아니면 흑 왕의 활동 때문에 새 정확성이 필요한가?",
+      "required_functions": [
+        "62.Rxd6+ Kxd6 63.Ne4+ Kc6 64.Nxc5 Kxc5 뒤 백이 비숍 하나를 더 갖는 것은 사실이다. 책은 이 수가 여전히 승리하며 객관적으로 최선일 수도 있다고 명시한다.",
+        "흑의 적극적인 Kd4-d3-d2와 a 통과 폰 때문에 백의 왕 이동과 g 폰 돌파의 순서가 중요해진다. 물질 획득만으로 쉬운 변환을 약속하지 않는다.",
+        "승리를 유지한다고 주장하는 설명은 g5 뒤 흑 왕이 f8 봉쇄로 도망가는 자원을 막고, 필요한 왕·비숍의 타이밍을 남겨야 한다.",
+        "70.Kh4는 저자가 승리를 놓치는 실제 평가 오류로 설명하는 별도 시점이다. 62수의 실전적 '?'와 구분한다.",
+        "일부 깊은 승리 경로에 특정 체크 승급 타이밍이 필수일 수 있지만 전체 수순이 같은 사건 순서를 따라야 한다고 일반화하지 않는다."
+      ],
+      "nonessential_events": [
+        "62.Rxd6+가 반드시 엔진 최선이어야 한다는 조건",
+        "다른 쉬운 경로가 정확히 책의 Rd3과 같은 사건으로 끝나는 것",
+        "백이 반드시 69.Kg3을 택하는 것",
+        "강한 사람이 함정을 놓칠 확률을 추정하는 것"
+      ],
+      "source_counter_policy": {
+        "primary_counter_types": [
+          "흑 왕의 적극적 침투로 백의 변환 과제를 바꾸는 반격",
+          "...h5+로 폰 교환을 유도한 뒤 왕이 f8로 돌아가 봉쇄하는 자원",
+          "...g6-g5로 백 왕의 진입과 폰 제거 순서를 고정하는 봉쇄"
+        ],
+        "book_specific_resources": [
+          "65...Kd4!",
+          "70.g5 Ke4 Kg4 Ke3 Ba2 Ke4 g3 Ke3 Bb1 Kf2 g6 h5+",
+          "70.Kh4 Kf2! Bd5 g6 Kh3 g5!"
+        ],
+        "ranking_scope": "실전적 목적은 저자의 해석이다. 상대 실수 확률, Carlsen이 실제로 생각한 내용, mate-in-32는 이 연구에서 직접 확인하지 않는다. 객관적 비교는 부모의 별도 엔진 연구가 맡는다."
+      },
+      "multiple_good_moves": {
+        "author_assessment": "62.Rd3는 더 평범한 변환으로 권고되고 62.Rxd6+도 객관적으로 승리다. 70수에는 g5가 승리를 유지하는 깊은 자원으로 제시된다.",
+        "do_not_infer": "62수의 '?'를 블런더로 바꾸거나 70수의 평가 오류를 단순한 실전 난도로 덮지 않는다."
+      },
+      "minimal_basic_comment_from_presealed_criteria": "이 단순화로 비숍 하나를 더 갖는 엔드게임이 됩니다. 승리는 남지만 흑 왕이 활동적으로 들어올 수 있어, 폰을 밀고 왕을 옮기는 순서를 정확히 잡아야 합니다.",
+      "misleading_risks": [
+        "기물을 얻었으므로 변환도 쉬워졌다는 표현",
+        "책의 '?'를 수치 판정으로 그대로 옮김",
+        "한 폰 돌파가 합법적이므로 봉쇄를 깨고 이긴다고 결론",
+        "책의 승리 경로를 재생한 것을 모든 주요 방어 검증으로 셈"
+      ],
+      "source_lines_replayed_legally_now": true,
+      "source_claim_not_new_product_or_engine_proof": true
+    },
+    {
+      "id": "SG48",
+      "book": "Think Like a Super-GM",
+      "reading_edition_pages": [
+        463,
+        466,
+        467,
+        468,
+        469
+      ],
+      "source_pdf_footer_pages": "557,559-565",
+      "fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2P1N3/4P2B/qP5P/2KR3R w - - 0 1",
+      "identity_scope": "Diagram piece placement/side/rights fixed; halfmove/fullmove counters normalized because prior game history is not printed. All supplied local prefixes are exact legal histories from this anchor.",
+      "same_action": "White original Ne4-f6+; Black original Rf5xf6 in both states.",
+      "changed_defensive_function": "The original Bg7 moves to d4 after Rd4 Bxd4, but Bxf6 itself remains legal. The change is defensive function, not disappearance of every capture.",
+      "necessary_function": "The forcing queen checks must defeat every current defense at the declared reached check position; the bishop/rook interference and king escape squares determine the result.",
+      "nonessential_events": "Black may choose Rxf6,Bxf6,exf6,Kf8 or Kg7. The mating route changes; no requirement that Black choose the printed rook capture or a specific final queen capture.",
+      "all_reached_check_position_legal_black_replies": [
+        {
+          "uci": "d4f6",
+          "san": "Bxf6",
+          "capture": true
+        },
+        {
+          "uci": "e7f6",
+          "san": "exf6",
+          "capture": true
+        },
+        {
+          "uci": "f5f6",
+          "san": "Rxf6",
+          "capture": true
+        },
+        {
+          "uci": "g8f8",
+          "san": "Kf8",
+          "capture": false
+        },
+        {
+          "uci": "g8g7",
+          "san": "Kg7",
+          "capture": false
+        }
+      ],
+      "immediate_white_recaptures": [
+        {
+          "id": "before-defender-relocation",
+          "fen": "rn4k1/pp2p1b1/3p1rP1/6pQ/2P5/4P2B/qP5P/2KR3R w - - 0 2",
+          "legal_prefix_uci": [
+            "e4f6",
+            "f5f6"
+          ],
+          "all_immediate_legal_white_recaptures_of_Rf6": []
+        },
+        {
+          "id": "after-defender-relocation",
+          "fen": "rn4k1/pp2p3/3p1rP1/6pQ/2Pb4/4P2B/qP5P/2K4R w - - 0 3",
+          "legal_prefix_uci": [
+            "d1d4",
+            "g7d4",
+            "e4f6",
+            "f5f6"
+          ],
+          "all_immediate_legal_white_recaptures_of_Rf6": []
+        }
+      ],
+      "honest_basic_comment": "Rd4 answers mate on b2 and covers c4. If Black takes it with the g7 bishop, Nf6+ interferes with the defenses; even Rxf6 is met by Qh7+ and Qh8 mate.",
+      "claims_not_allowed": "No immediate recapture means Rxf6 safely wins the knight; or the conditional mate proves Rd4 is the only winning root choice.",
+      "local_tree_source": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\priced-capture-admission-book-controls.json",
+        "sha256": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e",
+        "id": "PC-SG48-SAME-KNIGHT-CAPTURE-FORCING-REPLY"
+      },
+      "scope": "Book-local forcing tree was legally rechecked in the preserved earlier audit. No engine ran in this final review. The five legal replies are Bxf6,exf6,Rxf6,Kf8,Kg7; not Kh8."
+    },
+    {
+      "id": "H05",
+      "book": "100 Endgame Patterns You Must Know",
+      "game": "Borja Zamarbide-Martin Benitez, La Roda2005",
+      "reading_edition_pages": [
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "source_pdf_footer_pages": "90-99",
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "author_human_judgment": "The author labels early35.g4 an error and recommends35.Ke3. Hold g4 until Black cannot retain an adequate waiting/blockading resource; the point is to reverse the move obligation and gain useful activity.",
+      "book_route": {
+        "prefix_san": [
+          "Ke3",
+          "f6",
+          "Kf3",
+          "Kd6",
+          "Ke2",
+          "Ke5",
+          "Ke3",
+          "Kd6",
+          "Kd2",
+          "b3",
+          "Ke3",
+          "Ke5",
+          "Kf3",
+          "Kd6",
+          "Kf4",
+          "Ke6"
+        ],
+        "prefix_uci": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "e5d6",
+          "e3d2",
+          "b4b3",
+          "d2e3",
+          "d6e5",
+          "e3f3",
+          "e5d6",
+          "f3f4",
+          "d6e6"
+        ],
+        "before43g4": "8/8/4kp2/2p5/p1p1PK2/PpP3P1/1P6/8 w - - 6 43",
+        "after43g4": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+        "all_legal_black_replies": [
+          {
+            "uci": "e6d6",
+            "san": "Kd6",
+            "capture": false
+          },
+          {
+            "uci": "e6d7",
+            "san": "Kd7",
+            "capture": false
+          },
+          {
+            "uci": "e6e7",
+            "san": "Ke7",
+            "capture": false
+          },
+          {
+            "uci": "e6f7",
+            "san": "Kf7",
+            "capture": false
+          },
+          {
+            "uci": "f6f5",
+            "san": "f5",
+            "capture": false
+          }
+        ],
+        "pawn_counter": [
+          {
+            "san": "g4",
+            "uci": "g3g4",
+            "before_fen": "8/8/4kp2/2p5/p1p1PK2/PpP3P1/1P6/8 w - - 6 43",
+            "after_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "f5",
+            "uci": "f6f5",
+            "before_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+            "after_fen": "8/8/4k3/2p2p2/p1p1PKP1/PpP5/1P6/8 w - - 0 44",
+            "capture": false,
+            "check": false,
+            "checkmate": false
+          },
+          {
+            "san": "exf5+",
+            "uci": "e4f5",
+            "before_fen": "8/8/4k3/2p2p2/p1p1PKP1/PpP5/1P6/8 w - - 0 44",
+            "after_fen": "8/8/4k3/2p2P2/p1p2KP1/PpP5/1P6/8 b - - 0 44",
+            "capture": true,
+            "check": true,
+            "checkmate": false
+          }
+        ]
+      },
+      "older_four_king_state": {
+        "criteria_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-book-and-late-wait-human-criteria.json",
+        "criteria_sha256": "097c28663e6e6f3dca36dbcfa95abd2b52fb26e231b532d86ce00d0de08db551",
+        "boundary": "The earlier18ply saved late had WhiteKf3/BlackKe5 and no legal pawn move. Its four-king/noPawnMoves condition does not apply to the current17ply Kf4/Ke6/f6-pawn state."
+      },
+      "necessary_function": "The preserved pawn move must retain the king role and produce valuable activation despite every adequate opponent response, including a remaining pawn break. A viable realization may be king entry, pawn liquidation/check or a supported passer; mere availability or exact king-square arrival is insufficient.",
+      "nonessential_events": "The book b3, current bxc3/bxc3, one fixed triangulation route, permanent Pe4, and direct Kf5 entry in every variation are not invariants of the broader idea.",
+      "presealed_counterexamples": [
+        "After earlyg4 f6, g5 is still legal, but fxg5 is legal and no immediate recapture exists in that reached state; the source word prevents denotes effective restraint, not illegality.",
+        "Ke3 f6 Kf3 Kd6 Kf4 Ke6 g4 b3 is the source too-early-use counterexample. A reserve exists but Black retains a useful answer.",
+        "After correct lateg4, f5 remains legal in both book and current states. exf5+ is legal and forces a king response, but White own pawn occupies f5; requiring the same direct Kf5 event would discard an alternative realization before its value is checked."
+      ],
+      "completed_current_research_evidence": {
+        "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-completed-inventory-theory-audit.json",
+        "sha256": "3ee93c5c9612eef6d11f4a6723273ecb863e6df45ac2ce210f478c27bacd2afa"
+      },
+      "current_research_refinement": "At the current reached 43... position Black has f5 in addition to four king retreats. Kf5 is a useful but nonunique winning-assessed choice after every king retreat, whereas after f5 it is immediately illegal and exf5+ instead returns mate13. e5 after f5 returns0. A successful generic function must allow a changed realization while rejecting that cheap draw counterexample.",
+      "honest_research_comment": "In this reached late position, g4 leaves White a winning-assessed continuation against every legal Black reply in the completed depth24 comparison. A king retreat permits useful Kf5 among several good choices; f5 is met by exf5+ with a returned mating line.",
+      "claim_boundary": "This is research commentary for a sampled descendant, not an automatic product result. It neither establishes that the original Ke3 root forces this history nor proves the full original root winning cause. Original early g4 error, book late b3 route, current late bxc3/bxc3 route and old no-f-pawn four-king state remain separate."
+    }
+  ],
+  "four_annotated_problems": [
+    {
+      "annotation_index": 1,
+      "directive": ":codex-annotation{index=\"1\"}",
+      "problem": "Already legal choices can become more useful even when move legality is unchanged.",
+      "deeper_understanding": "Legality proves availability. A changed immediate price proves only a local difference. Useful play additionally needs an adequate answer to the remaining defender, every legal recapture and the strongest independent defense. A root numerical explanation then needs an owned comparison connecting that benefit to the original choice.",
+      "book_evidence": [
+        "SG41: Nc3-d5 legal with e6 held or moved. Pe6xd5 disappears after exf5, while Rc5xd5 remains. Both Rd4xd5 and Pe4xd5 are immediate recaptures; fxe4 removes Pe4 and can change the adequate rook defender.",
+        "SG48: Rf5xf6 stays legal with identical lack of an immediate White recapture, yet bishop displacement changes a later forcing check/mate defense. Nominal exchange price alone misses the point.",
+        "SG23: Nc7 remains legal after Nd5 Bxd4 Nxd4 Nec5, but e-file exchanges and Rc8 neutralize its apparent fork purpose.",
+        "H05: Kf5 is legal and winning-assessed after four king retreats, but not unique; after f5 the useful realization instead includes exf5+ and a supported passer."
+      ],
+      "common_admission_requirement": "Keep complete legal resources and identity first. Admit a lost-cheap-denial fact without promoting it to safety, usefulness, best move or core ranking. Admit evaluated usefulness only from owned completed comparison evidence covering relevant counter/recapture obligations.",
+      "still_missing": "A factual price unit and a completed descendant engine value do not automatically supply a causal root explanation or a general positional value reader."
+    },
+    {
+      "annotation_index": 2,
+      "directive": ":codex-annotation{index=\"2\"}",
+      "problem": "Countercomparison existed without a reliable strongest-counter-first requirement.",
+      "deeper_understanding": "The reply that resembles the idea is often weaker than an independent refusal, prophylactic move, resource-restoring retreat or pawn break. Named restricted replies can establish only their own values. A completed full legal first-reply pool is the minimum prerequisite for a strongest-first comparison in the declared reached position.",
+      "book_evidence": [
+        "SG02: declining with Qd2 and then Rc3 changes a winning accepted-sacrifice story into limited pressure.",
+        "SG13: g5 is the author's hardest defense, creating king room and threats. Beating Bxh4 alone is insufficient; Bd5/hxg5 and subsequent quiet Qh6/Be6 must be examined.",
+        "SG41: fxe4 is a stronger response than the convenient constructed Rxd5 branch in the exposed Nd5 control.",
+        "H05: the current f5 pawn defense was absent from the older four-king-only example. All5/all32 current pools are now actually complete, with previous failed runs retained."
+      ],
+      "common_admission_requirement": "Prioritize the full current legal opponent pool and verify declared completion before narrowing to the functional reply. Keep a named-only answer, an incomplete pool, an unknown depth and a completed full pool distinct.",
+      "still_missing": "All immediate roots at depth24 do not formally prove every later defense or root causation. Changing the memory profile and finishing a comparison is a research completion, not automatically a shipped explanatory improvement."
+    },
+    {
+      "annotation_index": 3,
+      "directive": ":codex-annotation{index=\"3\"}",
+      "problem": "Withdrawal followed broad returned event lists instead of the core function.",
+      "deeper_understanding": "An exact event realization, the functional condition it witnesses, and the owner/required scope of that condition are separate. Missing optional comparison events do not refute the current root idea. Missing depth or a short unknown path is unresolved, not a factual refutation. But when the necessary condition truly fails, the stronger conclusion must be withdrawn.",
+      "book_evidence": [
+        "SG23: a passive knight on e8, a passive knight on b7, a changed exchange order or c-file pressure can preserve the limited purpose. One actual Nxe8 event is not mandatory.",
+        "SG41: after fxe4 a different rook can adequately defend Nd5; insisting on permanent Pe4 support loses the valid changed realization.",
+        "SG02: Qd2 invalidates the broad forced-win claim but can leave a narrower bishop/pressure purpose. A queen-return defense really changes the attack, so it is not harmless forecast noise.",
+        "H05: after f5 a direct king-entry witness changes to pawn capture/check/promotion. Permanent Pe4 or exact Kf5 arrival is not the general invariant; e5=0 still refutes that particular attempted realization."
+      ],
+      "common_admission_requirement": "Declare the necessary function boundary before reading the result; bind witnesses to exact root/actor/history/owned source. Preserve or replace a realization only when the declared conditions and current receipt support it. Distinguish invalidated current required realization, absent optional realization, short/unknown evidence and a verified alternate realization.",
+      "still_missing": "The latest boundary/source repair fixes concrete receipt and witness scope problems but has not, by itself, implemented every positional or compensation function. Exact identities must remain; global event suppression would recreate false carry."
+    },
+    {
+      "annotation_index": 4,
+      "directive": ":codex-annotation{index=\"4\"}",
+      "problem": "Wide protection and narrow producers accumulated when reducing content lost required facts.",
+      "deeper_understanding": "Protection and centrality answer different questions. A price can be essential to prevent misleading evaluation without every surrounding relation belonging in the lead. Safe reduction requires knowing the human judgment the lead must deliver and which facts keep that judgment honest. Length or candidate count is not a quality metric.",
+      "book_evidence": [
+        "SG45: Rfd1 improves a rook and preserves good options; the source accepts Nc4/Nb1 and many other advantageous moves. A basic improving-move comment can be complete without inventing a subtle numerical cause.",
+        "SG41: held Nd5 needs the actual cheap loss and best recapture price in basic judgment. The moved case needs the strongest fxe4 and an adequate defender before claiming usefulness; merely listing relations cannot answer it.",
+        "SG48: a nominal rook-for-knight material account is misleading when the conditional forcing result is mate.",
+        "SWK62: Rxd6+ may remain objectively winning while becoming difficult to convert. The later Kh4 mistake is a separate judgment, not proof that the earlier simplification lost objectively."
+      ],
+      "common_admission_requirement": "Select an owned mover judgment/purpose, complete only the response and price that change it, and keep checked optional resources as detail unless independently central. Preserve a normal short purpose answer when several good moves need no demonstrated difference.",
+      "still_missing": "The old fixed independent readings and SG41 v35 retain partial judgments/excess. New source or a more compact line must not be counted as user-visible success until final actual basic output is independently read against unchanged criteria."
+    }
+  ],
+  "minimal_honest_evidence_levels": {
+    "a_legal_fact": {
+      "requirement": "Canonical legality at the reached time, original actor/target identity, exact history and complete current resource inventory.",
+      "may_say": "The original pawn can no longer take this knight; the rook can still take it.",
+      "may_not_say": "Therefore the knight is safe, this is the best continuation, or this explains the root score."
+    },
+    "b_verified_local_price": {
+      "requirement": "Every immediate legal recapture, checks/forced replies, changed defender and exact price receipt ownership/completion.",
+      "may_say": "This denial requires the remaining rook capture rather than the vanished pawn capture, with the checked local continuation.",
+      "may_not_say": "A nominal material deficit makes the capture bad irrespective of compensation or a mating attack."
+    },
+    "c_evaluated_utility": {
+      "requirement": "Current strongest complete first-opponent pool and adequate continuation under the declared scope, including independent alternatives. Nonunique good choices remain nonunique.",
+      "may_say": "This is a useful choice in the reached comparison; a named refusal still leaves the declared useful result.",
+      "may_not_say": "This legal move or single favorable PV proves the whole plan; an incomplete opponent pool establishes the strongest defense."
+    },
+    "d_original_move_judgment": {
+      "requirement": "Owned root comparison and evidence connecting the condition/response/price to the original move or error, with completed original-required obligations.",
+      "may_say": "The played move loses this resource and the opponent can exploit it in the verified scope.",
+      "may_not_say": "A valuable later choice uniquely causes the original engine gap or the original root forces a sampled 17/18-ply path."
+    },
+    "e_user_answer": {
+      "requirement": "Basic text alone conveys the mover's role or judgment plus the response/cost needed to keep it accurate; unnecessary relations do not obscure it. Fixed criteria predate output.",
+      "may_say": "An ordinary improving purpose when that is sufficient, or the verified comparison/error reason when the choice needs it.",
+      "may_not_say": "More facts, a shorter sentence, changed PV, or successful completion alone is explanation quality."
+    }
+  },
+  "H05_completed_evidence_summary": {
+    "inventory_audit": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\h05-final-completed-inventory-theory-audit.json",
+      "sha256": "3ee93c5c9612eef6d11f4a6723273ecb863e6df45ac2ce210f478c27bacd2afa"
+    },
+    "current_fen": "8/8/4kp2/2p5/p1p1PKP1/P1P5/8/8 b - - 0 43",
+    "late_black_all5": [
+      "Kd6",
+      "Kd7",
+      "Ke7",
+      "Kf7",
+      "f5"
+    ],
+    "white_options_completed_across_these_defenses": 32,
+    "original_root_complete_depths": [
+      20,
+      24
+    ],
+    "original_root_values": [
+      {
+        "id": "H05-current-root-stability-all-legal-d20",
+        "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "profile": "sf18-smallnet-t2-h16-v1",
+        "depth": 20,
+        "complete_legal_roots": 9,
+        "Ke3": {
+          "kind": "cp",
+          "value": 316
+        },
+        "g4": {
+          "kind": "cp",
+          "value": 0
+        },
+        "result_source": {
+          "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+          "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+        }
+      },
+      {
+        "id": "H05-current-root-stability-all-legal-d24",
+        "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+        "profile": "sf18-smallnet-t2-h16-v1",
+        "depth": 24,
+        "complete_legal_roots": 9,
+        "Ke3": {
+          "kind": "cp",
+          "value": 471
+        },
+        "g4": {
+          "kind": "cp",
+          "value": 0
+        },
+        "result_source": {
+          "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\h05-current-all-defenses\\results.json",
+          "sha256": "f3f38d1e32b782946b8ced9724069a53fc8bc57689840e8010ed5a667be8d3c8"
+        }
+      }
+    ],
+    "required_separation": [
+      "Book b3 route",
+      "Current bxc3/bxc3 late route with the remaining f-pawn",
+      "Older no-f-pawn four-king state",
+      "Original earlyg4 versus Ke3 numerical root comparison",
+      "Automatic product output and its owned receipts"
+    ],
+    "strongest_counter_scope": "The research current all5 opponent pool is complete at depth24, and the 32 immediate White options were also completed at that depth. Later search was unrestricted finite engine search, not exhaustive legal-tree proof.",
+    "completion_cost": "Nine earlier failed attempts are preserved. Two hash16 d24 attempts actually used about20minutes each without reaching requested depth. The separately registered hash128 profile eventually completed all six descendant questions in481.190seconds total; the one-run profile contrast is not a controlled general performance claim.",
+    "metadata_limit": "The f5 query display labels/named list were copied incorrectly; its actual owned work restriction/result roots are correctly8. The audit recomputes labels and preserves the original files."
+  },
+  "positive_evaluation_thresholds": [
+    "A previously unavailable explanation unit is automatically discovered from owned input, with ordinary actor/history/time semantics and meaningful negative controls, rather than a case-ID or SAN branch.",
+    "Required comparisons truly finish; old timeouts and profile changes remain recorded instead of being counted as prior success.",
+    "A changed realization keeps only verified necessary function and price; a false or unknown new route does not borrow a completed value from a different child.",
+    "A strongest independent counter can narrow or invalidate the explanation; legal availability or nominal price never overrules it.",
+    "Basic human reading improves on exposed development controls and fixed independent controls without relaxing the original criteria or erasing price obligations.",
+    "Natural several-good-move cases retain concise purpose comments without unsupported superiority; functional usefulness and original root cause are scored separately."
+  ],
+  "remaining_open_questions": [
+    "SG41 root Red1 flexibility and actual mover Nd5 utility need a general completed/owned functional connection; the lost-guard fact alone is intentionally below that level.",
+    "H05 root earlyg4/Ke3 numerical gap is stable in the saved depth20/24 controls, but original-defenses/root-causal triangulation is not proved merely by completing the sampled late position.",
+    "General small positional value, dynamic compensation and practical conversion difficulty still exceed simple legal/capture predicates.",
+    "Final automatic basic output quality must be read after parent verification; tests and standalone research cannot fill missing human meaning."
+  ]
+}

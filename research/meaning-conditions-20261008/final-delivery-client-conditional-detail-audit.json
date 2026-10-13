@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T03:26:34.528395+00:00",
+  "scope": "Read-only final delivery/client audit; only the new test file and this research record are edited. No child compiler/test/engine runner.",
+  "actual_fixture": {
+    "path": "judgment-evaluation/fixtures/public-commentary-v6/functional-response-sg14-offpair-produced.json.gz",
+    "sha256": "7e744759e4f04b102745e2203d3337c58db2bad3fda36ad21515f733952dcd5f",
+    "provenance": {
+      "source_file": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcBoardOwner16b\\final-snapshots.jsonl.gz",
+      "source_file_sha256": "07f3de38c6386de5e79bf958c2f39382fcb78e72bec8cf9906a89bdc86bda3ab",
+      "source_row_zero_based": 0,
+      "source_row_utf8_sha256": "eb040664a4f16e4f8079b0d35359c2ce0f71d04bf5571f952a9623b804d097fb",
+      "snapshot_canonical_json_sha256": "5f582bf2d017785999719f7acb15289be913f37fc47ac2542e16b61611270fad",
+      "recorded_utc": "2026-10-07T23:17:44.012274+00:00",
+      "producer": "actual meaningv16 mcBoardOwner16b run; no report replay or independent engine receipt inserted",
+      "scope": "The request and snapshot are copied unchanged from the actual MC-SG14 final row. The current numeric pair remains Qb3/Ne5; the named conditional price example is Qb3/O-O. Tests may mutate contract fields but generate no verdict, text or completed engine evidence.",
+      "selected_function_proposal_id": "discovery:1d227a58956c3ebf4a248177904fcb696e875d731ff3f63cfab69b4058749ba5"
+    },
+    "core_units": [
+      {
+        "index": 0,
+        "role": "reply",
+        "english_only": true,
+        "en_parts": 24,
+        "ko_parts": 24,
+        "proof_count": 11,
+        "action_count": 0,
+        "covered": [],
+        "required": [
+          {
+            "root": "a4b3",
+            "offset": 0,
+            "move": "a4b3"
+          },
+          {
+            "root": "a4b3",
+            "offset": 1,
+            "move": "a7a6"
+          },
+          {
+            "root": "a4b3",
+            "offset": 2,
+            "move": "b5c4"
+          },
+          {
+            "root": "a4b3",
+            "offset": 3,
+            "move": "c6d4"
+          },
+          {
+            "root": "a4b3",
+            "offset": 4,
+            "move": "f3d4"
+          },
+          {
+            "root": "e1g1",
+            "offset": 0,
+            "move": "e1g1"
+          },
+          {
+            "root": "e1g1",
+            "offset": 1,
+            "move": "a7a6"
+          },
+          {
+            "root": "e1g1",
+            "offset": 2,
+            "move": "b5c4"
+          },
+          {
+            "root": "e1g1",
+            "offset": 3,
+            "move": "c6d4"
+          },
+          {
+            "root": "e1g1",
+            "offset": 4,
+            "move": "f3d4"
+          },
+          {
+            "root": "e1g1",
+            "offset": 5,
+            "move": "d7a4"
+          }
+        ],
+        "focus": []
+      },
+      {
+        "index": 1,
+        "role": "reply",
+        "english_only": true,
+        "en_parts": 7,
+        "ko_parts": 7,
+        "proof_count": 2,
+        "action_count": 1,
+        "covered": [],
+        "required": [
+          {
+            "root": "f3e5",
+            "offset": 1,
+            "move": "c6e5"
+          }
+        ],
+        "focus": [
+          {
+            "root": "f3e5",
+            "offset": 1,
+            "move": "c6e5",
+            "phase": "after",
+            "squares": [
+              "c6",
+              "e5",
+              "b5"
+            ],
+            "position_id": "9704cab7a54bd6cf3f598941dce80407b9b676a296b6e4a8f0ff057c4f8a51b7"
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "role": "reply",
+        "english_only": true,
+        "en_parts": 3,
+        "ko_parts": 3,
+        "proof_count": 1,
+        "action_count": 1,
+        "covered": [],
+        "required": [
+          {
+            "root": "a4b3",
+            "offset": 0,
+            "move": "a4b3"
+          }
+        ],
+        "focus": []
+      },
+      {
+        "index": 3,
+        "role": "cost",
+        "english_only": true,
+        "en_parts": 7,
+        "ko_parts": 7,
+        "proof_count": 3,
+        "action_count": 3,
+        "covered": [
+          {
+            "root": "f3e5",
+            "offset": 1,
+            "move": "c6e5"
+          },
+          {
+            "root": "f3e5",
+            "offset": 2,
+            "move": "d4e5"
+          }
+        ],
+        "required": [
+          {
+            "root": "f3e5",
+            "offset": 0,
+            "move": "f3e5"
+          },
+          {
+            "root": "f3e5",
+            "offset": 1,
+            "move": "c6e5"
+          },
+          {
+            "root": "f3e5",
+            "offset": 2,
+            "move": "d4e5"
+          }
+        ],
+        "focus": []
+      }
+    ],
+    "detail_unit_count": 4
+  },
+  "new_test": {
+    "path": "lila-docker/repos/lila/ui/analyse/tests/moveReviewConditionalDetail.test.ts",
+    "sha256": "1ee1deca2b05215c19d3916cb2150caa821b7a79c8a1db70402d2937bfc1f3dd",
+    "count": 5,
+    "run_status": "not run by this agent; parent owns the UI runner",
+    "admission_only": true,
+    "numeric_receipts_created": false,
+    "automatic_product_output_created": false,
+    "checks": [
+      "Move the one complete actual conditional Unit from core to detail; selected_comparison admits only its fully supported exact generated board paths",
+      "Deferred function_root numeric comparison does not erase a supported detail-only board proof",
+      "Wrong producer/context/live original/root expected value/declaration reject optional selection without rejecting completed numbers",
+      "Known legal Qc2 path without its supported declaration remains foreign",
+      "Two same-role same-English-only completed actual reply Units may share one 32-part delivery Unit while keeping exact proof/action/required refs, all original costs/details/text, and actual after-Nxe5 focus; a before-position substitution is rejected"
+    ]
+  },
+  "server_client_scope_agreement": {
+    "functional_response": "Supported conditional witnesses may be in core or detail",
+    "other_typed_question": "Only an exact conditional witness present in detail proof refs can receive the supported conditional admission",
+    "core_only_relabel_original_counterexample": "Must remain rejected. Earlier suggestion to change this original expectation was withdrawn.",
+    "primary_numeric_pair": "Unchanged; supplementary O-O example does not explain the Qb3/Ne5 score ranking"
+  },
+  "packing": {
+    "server_seam": "RootQuestionSummary.realize, after independent physical Section closure and exact Statement delivery dedup, before unchanged fromUnits guards",
+    "client_positive_scope": "Admission of a valid packed complete Unit with existing real focus; does not exercise server size>8 trigger",
+    "server_regression_already_present": "Unchanged ReferenceMeaningDeliveryTest actual exchange fixture constructs ten Units and must deliver all required prices, including Nxc3 in detail",
+    "ten_unit_frozen_gate": "Verified both source29/source30 with unchanged tests: exact refs/accounts/content valid, units=10; <=8 guard is the first failure, text bound never reached",
+    "ten_unit_role_focus_table": "Logging-only frozen30 copy is prepared in target/meaning-conditions-20261008/reference-packing-unit-audit30; no runner started in this phase",
+    "limits_preserved": [
+      8,
+      80,
+      4000
+    ],
+    "same_occurrence_different_focus": "Cannot pack into a single Unit because the client owns one exact frame per occurrence",
+    "no_price_deletion": "Keep fxe4, Nxd1, Bxc5, Nxc3 and all owned support prices. No whole history obligation added."
+  },
+  "immutable_baseline_audits": [
+    {
+      "path": "research/meaning-conditions-20261008/reference-regression-v30-baseline-audit-corrected.json",
+      "sha256": "4d76b72540bf6ab6809c496ee552ab1fbc4d2d0015dc700a2307f19a63825234"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/reference-regression-v29-v30-gate-comparison.json",
+      "sha256": "c745acc8d0a7636cca7dcb41a445e493cd590bf1eaf3b9f6de2fc9451a608802"
+    }
+  ],
+  "human_meaning_limit": "Client admission, completion and final delivery packing do not establish improved discovery or strategic utility. Sealed automatic four-case full functional success remains 0/4 until separately measured."
+}

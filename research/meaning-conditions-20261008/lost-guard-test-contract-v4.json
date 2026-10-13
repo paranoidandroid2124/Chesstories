@@ -1,0 +1,761 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T03:25:01.462224+00:00",
+  "scope": "Twelve exposed operation-contract controls. The passing eleven-test source is byte-for-byte unchanged; the previously sealed quiet-arrival negative is appended byte-for-byte. No other assertions, fixtures or product code changed.",
+  "independent_novel_success": false,
+  "scores_and_receipts": "Only synthetic zero-cp depth16 admission lines and explicitly synthetic equal root receipts. No book or completed standalone numerical value is imported.",
+  "fixture_sha256": "b3f1ecac014ce97630596313a5f0ee75194d9c095678445af15a38e1fecc019c",
+  "fixtures": [
+    {
+      "id": "SG41",
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K1R4 b - - 2 20",
+      "full_standard_history": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "d7d6",
+        "c1g5",
+        "e7e6",
+        "f2f4",
+        "f8e7",
+        "d1d2",
+        "a7a6",
+        "e1c1",
+        "c8d7",
+        "f1e2",
+        "b7b5",
+        "e2f3",
+        "a8c8",
+        "c1b1",
+        "d8b6",
+        "h1e1",
+        "h7h6",
+        "g5f6",
+        "g7f6",
+        "f4f5",
+        "b6d4",
+        "d2d4",
+        "c6d4",
+        "d1d4",
+        "h6h5",
+        "h2h4",
+        "c8c5",
+        "a2a3",
+        "e8d8",
+        "e1d1"
+      ],
+      "current_lines": [
+        [
+          "e6f5",
+          "a3a4"
+        ],
+        [
+          "a6a5",
+          "c3e2"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "e6f5",
+            "a3a4"
+          ],
+          "san": [
+            "exf5",
+            "a4"
+          ],
+          "fen_after": "3k3r/3bbp2/p2p1p2/1pr2p1p/P2RP2P/2N2B2/1PP3P1/1K1R4 b - - 0 21",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a6a5",
+            "c3e2"
+          ],
+          "san": [
+            "a5",
+            "Ne2"
+          ],
+          "fen_after": "3k3r/3bbp2/3ppp2/ppr2P1p/3RP2P/P4B2/1PP1N1P1/1K1R4 b - - 1 21",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5"
+          ],
+          "san": [
+            "exf5",
+            "Nd5"
+          ],
+          "fen_after": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "all_legal_captures_to_target": [
+            "c5d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a6a5",
+            "c3d5"
+          ],
+          "san": [
+            "a5",
+            "Nd5"
+          ],
+          "fen_after": "3k3r/3bbp2/3ppp2/pprN1P1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+          "all_legal_captures_to_target": [
+            "c5d5",
+            "e6d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a6a5",
+            "c3d5",
+            "e6d5"
+          ],
+          "san": [
+            "a5",
+            "Nd5",
+            "exd5"
+          ],
+          "fen_after": "3k3r/3bbp2/3p1p2/pprp1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "all_legal_captures_to_target": [
+            "d4d5",
+            "e4d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5",
+            "c5d5"
+          ],
+          "san": [
+            "exf5",
+            "Nd5",
+            "Rxd5"
+          ],
+          "fen_after": "3k3r/3bbp2/p2p1p2/1p1r1p1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "all_legal_captures_to_target": [
+            "d4d5",
+            "e4d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a6a5",
+            "c3d5",
+            "c5d5"
+          ],
+          "san": [
+            "a5",
+            "Nd5",
+            "Rxd5"
+          ],
+          "fen_after": "3k3r/3bbp2/3ppp2/pp1r1P1p/3RP2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+          "all_legal_captures_to_target": [
+            "d4d5",
+            "e4d5"
+          ],
+          "legal_inventory_complete": true
+        }
+      ]
+    },
+    {
+      "id": "SG48",
+      "fen": "rn4k1/pp2p1b1/3p2P1/5rpQ/2PRN3/4P2B/qP5P/2K4R b - - 1 1",
+      "full_standard_history": [],
+      "current_lines": [
+        [
+          "g7d4"
+        ],
+        [
+          "b8c6"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "g7d4"
+          ],
+          "san": [
+            "Bxd4"
+          ],
+          "fen_after": "rn4k1/pp2p3/3p2P1/5rpQ/2PbN3/4P2B/qP5P/2K4R w - - 0 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "b8c6"
+          ],
+          "san": [
+            "Nc6"
+          ],
+          "fen_after": "r5k1/pp2p1b1/2np2P1/5rpQ/2PRN3/4P2B/qP5P/2K4R w - - 2 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "g7d4",
+            "e4f6"
+          ],
+          "san": [
+            "Bxd4",
+            "Nf6+"
+          ],
+          "fen_after": "rn4k1/pp2p3/3p1NP1/5rpQ/2Pb4/4P2B/qP5P/2K4R b - - 1 2",
+          "all_legal_captures_to_target": [
+            "d4f6",
+            "e7f6",
+            "f5f6"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "b8c6",
+            "e4f6"
+          ],
+          "san": [
+            "Nc6",
+            "Nf6+"
+          ],
+          "fen_after": "r5k1/pp2p1b1/2np1NP1/5rpQ/2PR4/4P2B/qP5P/2K4R b - - 3 2",
+          "all_legal_captures_to_target": [
+            "e7f6",
+            "f5f6",
+            "g7f6"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "g7d4",
+            "e4f6",
+            "d4f6"
+          ],
+          "san": [
+            "Bxd4",
+            "Nf6+",
+            "Bxf6"
+          ],
+          "fen_after": "rn4k1/pp2p3/3p1bP1/5rpQ/2P5/4P2B/qP5P/2K4R w - - 0 3",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "b8c6",
+            "e4f6",
+            "g7f6"
+          ],
+          "san": [
+            "Nc6",
+            "Nf6+",
+            "Bxf6"
+          ],
+          "fen_after": "r5k1/pp2p3/2np1bP1/5rpQ/2PR4/4P2B/qP5P/2K4R w - - 0 3",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "g7d4",
+            "e4f6",
+            "f5f6"
+          ],
+          "san": [
+            "Bxd4",
+            "Nf6+",
+            "Rxf6"
+          ],
+          "fen_after": "rn4k1/pp2p3/3p1rP1/6pQ/2Pb4/4P2B/qP5P/2K4R w - - 0 3",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "b8c6",
+            "e4f6",
+            "f5f6"
+          ],
+          "san": [
+            "Nc6",
+            "Nf6+",
+            "Rxf6"
+          ],
+          "fen_after": "r5k1/pp2p1b1/2np1rP1/6pQ/2PR4/4P2B/qP5P/2K4R w - - 0 3",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        }
+      ]
+    },
+    {
+      "id": "PINNED_GUARD",
+      "fen": "4k3/p7/4p3/5P2/8/2N5/8/4R2K b - - 0 1",
+      "full_standard_history": [],
+      "current_lines": [
+        [
+          "e6e5"
+        ],
+        [
+          "a7a6"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "e6e5"
+          ],
+          "san": [
+            "e5"
+          ],
+          "fen_after": "4k3/p7/8/4pP2/8/2N5/8/4R2K w - - 0 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6"
+          ],
+          "san": [
+            "a6"
+          ],
+          "fen_after": "4k3/8/p3p3/5P2/8/2N5/8/4R2K w - - 0 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6e5",
+            "c3d5"
+          ],
+          "san": [
+            "e5",
+            "Nd5"
+          ],
+          "fen_after": "4k3/p7/8/3NpP2/8/8/8/4R2K b - - 1 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6",
+            "c3d5"
+          ],
+          "san": [
+            "a6",
+            "Nd5"
+          ],
+          "fen_after": "4k3/8/p3p3/3N1P2/8/8/8/4R2K b - - 1 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        }
+      ]
+    },
+    {
+      "id": "EQUAL_PRICED_REPLACEMENT",
+      "origin": "composed structural control, no engine or author evaluation",
+      "fen": "4k3/8/2p1pp2/5P2/4P3/2N5/8/3R3K b - - 0 1",
+      "full_standard_history": [],
+      "current_lines": [
+        [
+          "e6f5",
+          "d1d2"
+        ],
+        [
+          "e8f8",
+          "d1d2"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "e6f5",
+            "d1d2"
+          ],
+          "san": [
+            "exf5",
+            "Rd2"
+          ],
+          "fen_after": "4k3/8/2p2p2/5p2/4P3/2N5/3R4/7K b - - 1 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e8f8",
+            "d1d2"
+          ],
+          "san": [
+            "Kf8",
+            "Rd2"
+          ],
+          "fen_after": "5k2/8/2p1pp2/5P2/4P3/2N5/3R4/7K b - - 2 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5"
+          ],
+          "san": [
+            "exf5",
+            "Nd5"
+          ],
+          "fen_after": "4k3/8/2p2p2/3N1p2/4P3/8/8/3R3K b - - 1 2",
+          "all_legal_captures_to_target": [
+            "c6d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e8f8",
+            "c3d5"
+          ],
+          "san": [
+            "Kf8",
+            "Nd5"
+          ],
+          "fen_after": "5k2/8/2p1pp2/3N1P2/4P3/8/8/3R3K b - - 2 2",
+          "all_legal_captures_to_target": [
+            "c6d5",
+            "e6d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e8f8",
+            "c3d5",
+            "e6d5"
+          ],
+          "san": [
+            "Kf8",
+            "Nd5",
+            "exd5"
+          ],
+          "fen_after": "5k2/8/2p2p2/3p1P2/4P3/8/8/3R3K w - - 0 3",
+          "all_legal_captures_to_target": [
+            "d1d5",
+            "e4d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5",
+            "c6d5"
+          ],
+          "san": [
+            "exf5",
+            "Nd5",
+            "cxd5"
+          ],
+          "fen_after": "4k3/8/5p2/3p1p2/4P3/8/8/3R3K w - - 0 3",
+          "all_legal_captures_to_target": [
+            "d1d5",
+            "e4d5"
+          ],
+          "legal_inventory_complete": true
+        }
+      ]
+    },
+    {
+      "id": "COMPLETE_EMPTY_REMAINING_CAPTURERS",
+      "origin": "composed factual inventory control, no book or engine evaluation",
+      "fen": "4k3/p7/4p3/5P2/8/2N5/8/7K b - - 0 1",
+      "full_standard_history": [],
+      "current_lines": [
+        [
+          "e6f5"
+        ],
+        [
+          "a7a6"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "e6f5"
+          ],
+          "san": [
+            "exf5"
+          ],
+          "fen_after": "4k3/p7/8/5p2/8/2N5/8/7K w - - 0 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6"
+          ],
+          "san": [
+            "a6"
+          ],
+          "fen_after": "4k3/8/p3p3/5P2/8/2N5/8/7K w - - 0 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5"
+          ],
+          "san": [
+            "exf5",
+            "Nd5"
+          ],
+          "fen_after": "4k3/p7/8/3N1p2/8/8/8/7K b - - 1 2",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6",
+            "c3d5"
+          ],
+          "san": [
+            "a6",
+            "Nd5"
+          ],
+          "fen_after": "4k3/8/p3p3/3N1P2/8/8/8/7K b - - 1 2",
+          "all_legal_captures_to_target": [
+            "e6d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6",
+            "c3d5",
+            "e6d5"
+          ],
+          "san": [
+            "a6",
+            "Nd5",
+            "exd5"
+          ],
+          "fen_after": "4k3/8/p7/3p1P2/8/8/8/7K w - - 0 3",
+          "all_legal_captures_to_target": [],
+          "legal_inventory_complete": true
+        }
+      ]
+    },
+    {
+      "id": "CAPTURING_ARRIVAL_IS_NOT_QUIET",
+      "origin": "Composed generic quiet-action contract negative; no book or engine value",
+      "fen": "4k3/p7/4p3/3p1P2/8/2N5/8/7K b - - 0 1",
+      "full_standard_history": [],
+      "current_lines": [
+        [
+          "e6f5"
+        ],
+        [
+          "a7a6"
+        ]
+      ],
+      "legal_paths": [
+        {
+          "moves_uci": [
+            "e6f5"
+          ],
+          "steps": [
+            {
+              "uci": "e6f5",
+              "san": "exf5",
+              "capture": true,
+              "promotion": null
+            }
+          ],
+          "fen_after": "4k3/p7/8/3p1p2/8/2N5/8/7K w - - 0 2",
+          "all_legal_captures_to_d5": [
+            "c3d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6"
+          ],
+          "steps": [
+            {
+              "uci": "a7a6",
+              "san": "a6",
+              "capture": false,
+              "promotion": null
+            }
+          ],
+          "fen_after": "4k3/8/p3p3/3p1P2/8/2N5/8/7K w - - 0 2",
+          "all_legal_captures_to_d5": [
+            "c3d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "e6f5",
+            "c3d5"
+          ],
+          "steps": [
+            {
+              "uci": "e6f5",
+              "san": "exf5",
+              "capture": true,
+              "promotion": null
+            },
+            {
+              "uci": "c3d5",
+              "san": "Nxd5",
+              "capture": true,
+              "promotion": null
+            }
+          ],
+          "fen_after": "4k3/p7/8/3N1p2/8/8/8/7K b - - 0 2",
+          "all_legal_captures_to_d5": [],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6",
+            "c3d5"
+          ],
+          "steps": [
+            {
+              "uci": "a7a6",
+              "san": "a6",
+              "capture": false,
+              "promotion": null
+            },
+            {
+              "uci": "c3d5",
+              "san": "Nxd5",
+              "capture": true,
+              "promotion": null
+            }
+          ],
+          "fen_after": "4k3/8/p3p3/3N1P2/8/8/8/7K b - - 0 2",
+          "all_legal_captures_to_d5": [
+            "e6d5"
+          ],
+          "legal_inventory_complete": true
+        },
+        {
+          "moves_uci": [
+            "a7a6",
+            "c3d5",
+            "e6d5"
+          ],
+          "steps": [
+            {
+              "uci": "a7a6",
+              "san": "a6",
+              "capture": false,
+              "promotion": null
+            },
+            {
+              "uci": "c3d5",
+              "san": "Nxd5",
+              "capture": true,
+              "promotion": null
+            },
+            {
+              "uci": "e6d5",
+              "san": "exd5",
+              "capture": true,
+              "promotion": null
+            }
+          ],
+          "fen_after": "4k3/8/p7/3p1P2/8/8/8/7K w - - 0 3",
+          "all_legal_captures_to_d5": [],
+          "legal_inventory_complete": true
+        }
+      ]
+    }
+  ],
+  "root_identity_scope": "SG41 standard history retains original game anchors; functional predicates use reviewed-root witnesses Pe6/Nc3/Rc5, then track those same physical pieces through the declared action.",
+  "sg48_source": "Sealed SG48 diagram follows Rd4; earlier unprovided game history is not invented. Bxd4/Nf6 and Nc6/Nf6 both preserve original bishop Bxf6; no immediate rook recapture is not safety proof.",
+  "requirements": [
+    "Off-PV same action requests bounded functional replay without adding it as a new plan source.",
+    "Guard-as-capturer facts are independently reread; persistent location, same actor, right turn and exact capture identity are necessary.",
+    "Rc5 capture survives, so conditional fact stays in detail and does not change the current core or its comparison scope.",
+    "Complete immediate recapture inventory includes both pawn and rook; these legal facts provide no strongest-response or value receipt.",
+    "SG48, pin, wrong actor/turn, illegal price, foreign historical owner and current White-root scope reject the corresponding claim.",
+    "Existing target-escape and quiet-recapture suites remain unchanged and must run alongside this new suite.",
+    "A remaining original c6 pawn has the same immediate pawn-for-knight capture and both legal recaptures; the lost e6-pawn fact remains detail without making its guard indispensable.",
+    "The statement retains a complete exact sorted and distinct remaining-capturer snapshot; missing, truncated, duplicate, stale or foreign actors cannot certify its caveat.",
+    "Complete Some(Nil) is distinct from missing None; an empty immediate capture set alone supplies no safety or usefulness claim.",
+    "A quiet conditional legal_move must be the exact noncapture and nonpromotion canonical action in both matched contexts; predicate kind alone cannot turn an actual capture into a quiet action."
+  ],
+  "preserved_research_sha256": {
+    "lost-guard-functional-development-plan.json": "1c37842be754b6532e9381ddd4da94998727c6c545fbabce4e6d2b5c2105200e",
+    "sg41-played-nd5-development-plan.json": "fd2bc03e5ee9e0fbb057cff0150a888c2e8c093df0c09509f890dee812fcb5bc",
+    "priced-capture-admission-book-controls.json": "90b4650114e38c3382055402c133d85e75a348e556dfcd5456c2438d9b966c6e",
+    "independent-theory-controls.json": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+    "sg41-priced-capture-evidence-admission-contract.json": "02ab069d51335fe3e9f91d24e04668a6799e72422bea1cf5f369ce412a5c697a"
+  },
+  "frozen_test_sources_sha256": {
+    "FunctionalLostGuardTest": "3f3596c2886ed54a53fd58fdc53aefff1400d2146415d3724d28e0f4af4d7cdd",
+    "FunctionalReplyReadingTest": "74ecc053ea7deacc08ace1d93d5a8f354d00bad1542518b147088493f2dc0327",
+    "FunctionalReplyPriceTest": "5ff0fd78ccfbbd7e79cb4ff368da7435209a7539bbefe46c23dea385be114c8e",
+    "FunctionalQuietRecaptureTest": "4e1bb33daeaac5194b7c5bab156f2fddf60ecca09b58a6969415f8d0155023ba"
+  },
+  "parent_owns_test_runner": true,
+  "test_execution_status": "Twelve-test source not run by child. Parent will run its red baseline against frozen main31a before quiet-validation correction. Original eleven passed in preserved parent focused31a runner; unrelated suite failures remain in its original log.",
+  "previous_seal": {
+    "path": "lost-guard-test-contract-v3.json",
+    "sha256": "a9bb192262a7348ac373c0183c2b7e63284f9d13092dd26bcefd800f615f88ba",
+    "test_source_sha256": "02b31e1b22c3fb8219023d2c0ac181cfbc1673aed8b446519320a5e061539afa"
+  },
+  "test_count": 12,
+  "representation_correction": {
+    "before_test_source_sha256": "819376231630b745a5fe305332eef6a1435028bd9d44c9f43fc6f120b9415fb2",
+    "only_original_source_change": "statement helper wraps the existing constructor in FunctionalReplyReading.withRemainingCaptures(value.paths, value)",
+    "old_nine_assertion_bodies_and_fixtures_exactly_preserved": true,
+    "baseline_red_preservation": "target\\meaning-conditions-20261008\\lost-guard-test-before-snapshot-attachment\\preservation.json",
+    "new_field": "remainingCapturers: Option[List[RelationColoredPieceWitness]]",
+    "new_field_scope": "Exact complete current capturer list at the conditional position; no immediate recapture, exchange-price, safety, utility, strongest-response or root-score assertion"
+  },
+  "snapshot_negative_controls": {
+    "source": "SG41 same owned reference path and original tracked target",
+    "reject": [
+      "None (unattached/unknown)",
+      "Some(Nil) while Rc5 is legal",
+      "duplicate Rc5",
+      "stale square c6 for the rook",
+      "foreign White rook on d4",
+      "relocated original e6 guard"
+    ],
+    "accept": "Some(Nil) in the new complete empty composed position",
+    "ownership_boundary": "An equal piece-value list is not a cross-packet receipt. The existing foreign path/history and current White-root negatives remain in the original nine tests."
+  },
+  "quiet_arrival_negative": {
+    "draft_source_sha256": "a24cb35aad972c29e7071c3a9b2dba4db9dc5703b375f3889166aeeae87ddcd0",
+    "draft_manifest_sha256": "370040c48fa5165cccbefa77b96aea8c81dc16afe7296b1ca40305927803b759",
+    "criterion": "A legal_move predicate naming destination d5 is insufficient for a quiet-action contract when the exact canonical action captures an original pawn on d5 in both contexts. The quiet invariant must be read from the owned action rows, not inferred from predicate kind.",
+    "preserved_other_contract": "The same original Pe6 capture disappears after exf5 and is legal after a6, and the exact pawn-price path is legal. This isolates the incorrect admission of a capturing arrival rather than a missing guard, target, price or turn.",
+    "original_eleven_source_byte_for_byte_preserved": true,
+    "new_negative_byte_for_byte_matches_preseal": true,
+    "passing_baseline_preservation": "target\\meaning-conditions-20261008\\lost-guard-test-before-quiet-negative\\preservation.json",
+    "baseline_runner_run_log_sha256": "7ecdcec6712ee83f95386e35f91bf2a0f6e1afa518ea481025e522da1db683ac",
+    "baseline_runner_manifest_sha256": "9604d93028fb8101a0631e9b9f1c1b75110b7873ef08b0686f4e6db353c66a7b"
+  }
+}

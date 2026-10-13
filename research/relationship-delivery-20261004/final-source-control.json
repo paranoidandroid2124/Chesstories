@@ -1,0 +1,102 @@
+{
+  "checked_at_utc": "2026-10-04T05:36:32.146339+00:00",
+  "freeze_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+  "main_sources": {
+    "count": 71,
+    "mismatches": []
+  },
+  "classes": {
+    "count": 1699,
+    "mismatches": [],
+    "fingerprint": {
+      "file_count": 1699,
+      "sha256": "f93992955c59962aec7744adfa72cbfad0ad3c1519871a9ee00e25e7ddbc6d05"
+    }
+  },
+  "selected_test_sources": {
+    "count": 10,
+    "mismatches": []
+  },
+  "supporting_files": {
+    "count": 47,
+    "unchanged": 46,
+    "approved_post_freeze_change": {
+      "repository": "lila-docker/repos/lila (nested Git repository)",
+      "path": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "before_sha256": "2231644b1ebfd745c807af99ceee8e506f90f5f61efaae5f2894d9df086ab2b0",
+      "after_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+      "added_lines": 9,
+      "removed_lines": 5,
+      "prior_uncommitted_changes_preserved": true,
+      "patch": "--- v6_before\n+++ post_contract_fix\n@@ -6630,12 +6630,16 @@\n                 !control(kept, index + 1, actor.original, after.square)) return;\n             } else if (effect.scope === 'advance_choice') {\n               const [blocked, usedAdvance] = used, blocker = target!;\n-              const destination = `${actor.current.square[0]}${Number(actor.current.square[1]) +\n-                (actor.current.side === 'white' ? 1 : -1)}` as Key;\n+              const destination = effect.square;\n+              const available = position(blocked, index)?.pawn_advances.paths.find(row =>\n+                located(row.piece, actor.current) && row.destination === destination &&\n+                effect.evidence_ids.includes(row.source_id));\n+              if (!available) return;\n+              const traversed = available.traversed_squares;\n               const blockingMove = legal(blocked, index)!, reply = legal(usedAdvance, index + 1);\n               const stopped = position(blocked, index + 1)!;\n               if (actor.current.role !== 'pawn' || blocker.current.role !== 'pawn' ||\n-                actor.current.side === blocker.current.side || effect.square !== destination ||\n+                actor.current.side === blocker.current.side ||\n                 effect.through_plies[0] !== index + 1 || effect.through_plies[1] !== index + 2 ||\n                 blockingMove.uci.slice(0, 2) !== blocker.current.square ||\n                 blockingMove.destination !== destination || blockingMove.captured_square !== undefined ||\n@@ -6643,10 +6647,10 @@\n                 !located(at(blocked, actor.original, index + 1), actor.current) ||\n                 !stopped.pawn_advances.complete || stopped.pawn_advances.paths.some(row =>\n                   located(row.piece, actor.current) && row.destination === destination) ||\n-                !advance(blocked, index, actor.original, destination, [destination]) ||\n+                !advance(blocked, index, actor.original, destination, traversed) ||\n                 !located(at(usedAdvance, actor.original, index + 1), actor.current) ||\n                 !located(at(usedAdvance, blocker.original, index + 2), blocker.current) ||\n-                !advance(usedAdvance, index + 1, actor.original, destination, [destination]) ||\n+                !advance(usedAdvance, index + 1, actor.original, destination, traversed) ||\n                 !reply || reply.uci !== actor.current.square + destination || reply.captured_square !== undefined ||\n                 at(usedAdvance, actor.original, index + 2)?.square !== destination) return;\n             } else if (effect.scope === 'relative_pin') {"
+    },
+    "unapproved_changes": []
+  },
+  "test_record": "v6-tests.json",
+  "frontend_check": {
+    "cases": 33,
+    "regression_cases": 15,
+    "fresh_cases": 18,
+    "publicly_decoded": 33,
+    "summary_candidates": 33,
+    "preserved_summaries": 33,
+    "fully_checked_summaries": 33,
+    "unavailable_notices_checked": 0,
+    "exact_san_actions_checked": 2672,
+    "max_unit_proof_refs": 23,
+    "max_unit_required_refs": 23,
+    "max_unit_covered_refs": 13
+  },
+  "historical_control": {
+    "freeze_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+    "class_fingerprints": {
+      "baseline": {
+        "file_count": 1695,
+        "sha256": "ce6dde6cfa23352cc130390155b2a56e0d8b2f3e336b06dd245a5ac0aa5ca72a"
+      },
+      "v5": {
+        "file_count": 1699,
+        "sha256": "50e5a71e02d5fb05ce006e117b8c5bae6c37c6024a121ac360e0142e90dcf2a3"
+      },
+      "v6": {
+        "file_count": 1699,
+        "sha256": "f93992955c59962aec7744adfa72cbfad0ad3c1519871a9ee00e25e7ddbc6d05"
+      }
+    },
+    "main_sources": {
+      "count": 71,
+      "mismatches": []
+    },
+    "supporting_files": {
+      "count": 47,
+      "mismatches": [
+        "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts"
+      ],
+      "unchanged_count": 46,
+      "approved_post_freeze_changes": [
+        {
+          "path": "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts",
+          "frozen_sha256": "2231644b1ebfd745c807af99ceee8e506f90f5f61efaae5f2894d9df086ab2b0",
+          "actual_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+          "scope": "Parent-authorized frontend mechanical public contract fix; backend sources/classes and saved replay unchanged.",
+          "evidence_record": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\relationship-delivery-20261004\\post-freeze-public-contract-fix.json",
+          "evidence_record_sha256": "8c053d9b5ddbe7a8966c604fff56115d2034e3da6b19137efc7f3d870d6c7294"
+        }
+      ],
+      "unapproved_mismatches": []
+    },
+    "protected_files": {
+      "count": 43,
+      "mismatches": []
+    },
+    "old_manifest_fields": {
+      "count": 13,
+      "mismatches": []
+    }
+  },
+  "diff_whitespace_checks": {
+    "root_repository_exit_code": 0,
+    "nested_lila_repository_exit_code": 0
+  },
+  "scope": "Exact source, compiled backend classes, actual consumer source, and stored-input provenance; no browser, HTTP, Docker, full-stack, official Node24 build, or independent human testing."
+}

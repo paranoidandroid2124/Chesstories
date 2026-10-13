@@ -1,0 +1,310 @@
+{
+  "schema_version": "prior35.final40a-basic-human-addendum.v1",
+  "sealed_utc": "2026-10-08T09:49:08.078704+00:00",
+  "scope": "Four exposed original35 regression inputs only. Independent BASIC-only comparison under unchanged criteria; no original35 human-utility rescore or independent new-cohort success claim.",
+  "sources": {
+    "basic39": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcPrior35Final39-basic.json",
+      "sha256": "243ac5f72d47997a7a8b198f3d979597a436500139207f5cfe13600a1d5680be",
+      "internal_traces_omitted": true
+    },
+    "basic40a": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcPrior35Final40a-basic.json",
+      "sha256": "0db872cbf14e24e678bd90de2220778f2e522a9bc926952569d9974db13e9bd9",
+      "internal_traces_omitted": true
+    },
+    "criteria": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\final39-newly-completed-basic-human-firstpass.json",
+      "sha256": "2b4e5f9a8d5476f3010f437752e21ccb8e98b0d2e849e3dfad6a7ca9c0ea09f8",
+      "criteria_text_sha256": "7eee76b841b1856c57d8fa6491abe7f29c7b960761214d1d022ec66108337ba3",
+      "unchanged_text": "Unchanged minimal human recovery: actual mover role/judgment, first consequential counter, necessary capture/recapture cost, scope of comparative conclusion; excessive unrelated relations recorded separately. Engine label/delta is not an explanation."
+    },
+    "already_sealed_TAT10_reading": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\tat-first-reply40a-basic-human-reading.json",
+      "sha256": "b039c301fcf21900b027524e6a6a530d2e50c668936f95dc8d8b9db5ddb68477"
+    },
+    "TAT10_controlled_basic": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcTATFirstReplyMeaning40a-basic.json",
+      "sha256": "b0c323ae23c652887f7ed03390fe33cf84076a378b00d35abecb8a46ad1d6761"
+    }
+  },
+  "protocol": {
+    "new_main_tests_sources_hidden_audits_proofs_read": false,
+    "engine_or_numeric_accuracy_verified": false,
+    "engines_executed": false,
+    "main_tests_ui_fixtures_edited": false,
+    "earlier_criteria_or_readings_modified": false,
+    "input_hash_scope": "Each hash covers only exported id/current_fen/focus using sorted UTF8 canonical JSON. Full request history/receipts were not read.",
+    "numerical_boundary": "Exported numbers are recorded as observed labels/values. The changed TAT25-09 delta is not attributed to code writing an evaluation; new engine ownership is a separate parent audit."
+  },
+  "cases": [
+    {
+      "id": "candidates2018-12",
+      "visible_input_descriptor": {
+        "id": "candidates2018-12",
+        "current_fen": "2rr2k1/5pp1/3b3p/Rp1p1b2/3B3P/2P3P1/1P1N1P2/4R1K1 b - - 1 24",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "b5b4",
+          "resulting_fen": "2rr2k1/5pp1/3b3p/R2p1b2/1p1B3P/2P3P1/1P1N1P2/4R1K1 w - - 0 25"
+        }
+      },
+      "visible_input_sha256": "c96d4d346da90531c3d871fc82a5a9bad53faec091d7283f09e4a9bcbcee0c4c",
+      "visible_input_equal39": true,
+      "default_question39": "first_target_response",
+      "default_question40a": "first_target_response",
+      "characters39": 460,
+      "characters40a": 589,
+      "basic39_text_sha256": "45fb15f4c6d42d034bb767118044e9dd4495496fdf424aff3cfff0960f5c765f",
+      "basic40a_text_sha256": "5d2b10132d0854c5992c28e5d07f61238aa84b04d7cb8b1df899b3f4f480b6df",
+      "exported_verdict39": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:evidence:candidate-comparison:7b2b3e4f8d636ec323159184a220a362cda24863f496bd248b7480d6720d4f25",
+        "runner_up_verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -4.486118534984101,
+          "kind": "engine_evaluation"
+        }
+      },
+      "exported_verdict40a": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:evidence:candidate-comparison:7b2b3e4f8d636ec323159184a220a362cda24863f496bd248b7480d6720d4f25",
+        "runner_up_verdict_code": "inaccuracy",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -4.486118534984101,
+          "kind": "engine_evaluation"
+        }
+      },
+      "verdict_object_equal": true,
+      "sentence_diff": [
+        "--- basic39",
+        "+++ basic40a",
+        "@@ -1,6 +1,8 @@",
+        " After b4, Black's pawn on b4 now targets White's pawn on c3",
+        " After b4, Black's pawn on b4 is under attack from White's pawn on c3; it is supported by Black's bishop on d6",
+        "-In the b4 line: The recorded continuation is Rxd5 Be6",
+        "+In the b4 line: After Rxd5, White's rook on d5 now targets Black's bishop on f5",
+        "+The recorded continuation is Rxd5 Be6",
+        "+Be6 moves the bishop out of the attack from White's rook on d5",
+        " The compared root choices are b4 and Rb8",
+        " b4 clears b5; later Rxd5 passes through that square in this line",
+        " In the b4 line: Rxd5 captures the black pawn on d5"
+      ],
+      "new_intelligible_reply_unit": "Rxd5 puts White's rook on d5 and attacks Black Bf5; Be6 moves that bishop out of the rook attack. The named Rxd5 Be6 continuation now has its reason stated.",
+      "new_unit_relevance": "Directly explains the recorded first response after played b4, including the fate of an involved Black bishop. It does not falsely claim that b4 itself newly makes Rxd5 attack the bishop.",
+      "bounded_threat_evasion_complete": true,
+      "visible_price_change": "No loss: Rxd5 takes Pd5; the later Rxd5 takes Black Rd5 and Bxd5 recaptures White Rd5. These were present in39 and remain.",
+      "whole_judgment_limit": "Why b4 is better than Rb8, despite conceding the d5 pawn in the recorded route, is still not organized as the root judgment. The b4/c3 attack and support facts plus the later exchange do not themselves establish compensation or exact root value.",
+      "excess_or_stray_claim": "No newly visible unsupported strongest/forced/unique claim. The repeated Rxd5 actions in different moments can still require reconstruction; no frame connects them into the whole comparative cause."
+    },
+    {
+      "id": "wch2024-08",
+      "visible_input_descriptor": {
+        "id": "wch2024-08",
+        "current_fen": "4r1k1/3n1bpp/nqp2p2/pP6/8/B2P1NP1/P3P1BP/1R1Q1K2 b - - 2 24",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c6b5",
+          "resulting_fen": "4r1k1/3n1bpp/nq3p2/pp6/8/B2P1NP1/P3P1BP/1R1Q1K2 w - - 0 25"
+        }
+      },
+      "visible_input_sha256": "0cf786a1ad5572fe1534dc2588a131791fe976737a57ec2afac0184117d66e4d",
+      "visible_input_equal39": true,
+      "default_question39": "first_target_response",
+      "default_question40a": "first_target_response",
+      "characters39": 1119,
+      "characters40a": 1252,
+      "basic39_text_sha256": "8c114365793b8e466c832bf155800f68f90d304cf42e1132a24c18d603564bb6",
+      "basic40a_text_sha256": "0674778bfb6600c4bf14ad33d641fb26699e003983f2b1a4650375863a68946c",
+      "exported_verdict39": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:evidence:candidate-comparison:dcb38aee699b5dea463c5a98343a0af172ddd30ab1c64b1fd5a84d7d6fba542b",
+        "runner_up_verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -36.595532846708444,
+          "kind": "engine_evaluation"
+        }
+      },
+      "exported_verdict40a": {
+        "kind": "best_choice",
+        "comparison_evidence_id": "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:evidence:candidate-comparison:dcb38aee699b5dea463c5a98343a0af172ddd30ab1c64b1fd5a84d7d6fba542b",
+        "runner_up_verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -36.595532846708444,
+          "kind": "engine_evaluation"
+        }
+      },
+      "verdict_object_equal": true,
+      "sentence_diff": [
+        "--- basic39",
+        "+++ basic40a",
+        "@@ -1,5 +1,7 @@",
+        " After cxb5, Black's pawn on b5 is under attack from White's rook on b1; it is supported by Black's queen on b6",
+        "-In the cxb5 line: The recorded continuation is Bh3 Ndc5",
+        "+In the cxb5 line: After Bh3, White's bishop on h3 now targets Black's knight on d7",
+        "+The recorded continuation is Bh3 Ndc5",
+        "+Ndc5 moves the knight out of the attack from White's bishop on h3",
+        " In the Qxb5 line: The recorded continuation is Rxb5",
+        " cxb5 captures the white pawn on b5",
+        " The compared root choices are cxb5 and Qxb5"
+      ],
+      "new_intelligible_reply_unit": "Bh3 attacks Black Nd7; Ndc5 moves that knight out of the bishop attack. The recorded Bh3 Ndc5 response is now understandable.",
+      "new_unit_relevance": "A direct explanation of White's recorded counter and Black's shown answer after cxb5, rather than an unexplained pair of moves.",
+      "bounded_threat_evasion_complete": true,
+      "visible_price_change": "No loss: cxb5/Qxb5 each capture Pb5; Qxb5 Rxb5 costs Black's queen and ...cxb5 recaptures the White rook. The alternative's queen-for-rook price was already explicitly recoverable in39.",
+      "existing_simple_comparison_reason": "The elementary material reason for preferring the pawn capture over the named queen capture is recoverable in both versions: cxb5 retains the queen, while the Qxb5 branch trades it for a rook. This is not newly supplied by the threat/evasion addition.",
+      "whole_judgment_limit": "The text does not establish that cxb5 is globally best against all alternatives or that the displayed win-percent difference is caused solely by this price. A named material comparison is narrower than that claim.",
+      "excess_or_stray_claim": "Later Bd4/Qb7, queen targets and repeated cxb5 captures make the body broad. They do not erase its recoverable simple material reason. No new false uniqueness or strongest-defense claim appears."
+    },
+    {
+      "id": "TAT25-09",
+      "visible_input_descriptor": {
+        "id": "TAT25-09",
+        "current_fen": "1r1q1rk1/p1b2ppp/b1n1p3/3pPn2/2p2B2/2P2N2/PPBNQPPP/1R3RK1 b - - 3 16",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "d5d4",
+          "resulting_fen": "1r1q1rk1/p1b2ppp/b1n1p3/4Pn2/2pp1B2/2P2N2/PPBNQPPP/1R3RK1 w - - 0 17"
+        }
+      },
+      "visible_input_sha256": "a0b4cbd2831c7a47b1bb31e2371462b390429dcdc6ab27182668260d5f6da680",
+      "visible_input_equal39": true,
+      "default_question39": "first_target_response",
+      "default_question40a": "first_target_response",
+      "characters39": 876,
+      "characters40a": 820,
+      "basic39_text_sha256": "4adbd4a197e0c6d16503564dda772ce68fecee8dbf8c0ba1b7bbf3c222999d63",
+      "basic40a_text_sha256": "25da2ac7fb813df60d038ad9fb4d4b169dbdd098675335a9ee78d969ca35eb53",
+      "exported_verdict39": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:candidate-comparison:d6eb8a6c2eda58d709abd7d4864fb5b3c4f22652c75a8c9daa3e9b5160632d9d",
+        "verdict_code": "matches_reference",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": 0.9192472538383925,
+          "kind": "engine_evaluation"
+        }
+      },
+      "exported_verdict40a": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:09dcd5a301af29ccaf6f84797a01c010e9b805e5583b52366a0db743774a332a:31:d5d4:evidence:candidate-comparison:35c02086f365f48f19d4c8fac4e85f407735c7acf548533bee81688134ac090c",
+        "verdict_code": "matches_reference",
+        "verdict_confidence": "engine_backed",
+        "mover": "black",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": 0.7344494036796547,
+          "kind": "engine_evaluation"
+        }
+      },
+      "verdict_object_equal": false,
+      "sentence_diff": [
+        "--- basic39",
+        "+++ basic40a",
+        "@@ -5,8 +5,7 @@",
+        " After Na5, Black's knight on a5 does not support Black's pawn on d4",
+        " Black's queen on d8 and Black's knight on f5 still support Black's pawn on d4",
+        " The compared root choices are h6 and d4",
+        "-d4 clears d5; later Qc5 uses the cleared line to target White's pawn on e5 in this line",
+        "-After Qc5, Black's queen on c5 now targets White's pawn on c4 and White's pawn on e5 and White's pawn on f2",
+        "-In the d4 line: Nxc4 captures the white knight on c4",
+        "-bxc4 recaptures the black knight on c4",
+        "-h6 clears h7; Kh7 later occupies that square in this line.",
+        "+d4 clears d5; later Qxd4 passes through that square in this line",
+        "+After Qxd4, Black's queen on d4 now targets White's bishop on f4 and White's pawn on c4 and White's pawn on e5 and White's pawn on f2",
+        "+In the d4 line: Nxd4 captures the black knight on d4",
+        "+Qxd4 recaptures the white knight on d4."
+      ],
+      "new_intelligible_reply_unit": "No new threat/evasion unit is added. Nxc4 Na5 and the change of Pd4 supporters remain as before.",
+      "new_unit_relevance": "The reader still learns that Black Nc6 leaves Pd4 support on moving to a5, while Qd8/Nf5 continue supporting it. The purpose of Na5 itself is not explained as a threat in the visible text.",
+      "bounded_threat_evasion_complete": false,
+      "visible_price_change": "The initial Nxc4 capture of Black Pc4 remains. The older later Nxc4 capture of White Nc4 and bxc4 recapture of the Black knight are absent. They are replaced by a different explicit later trade: Nxd4 takes Black Nd4 and Qxd4 recaptures the White knight. Thus a knight-trade price remains, but not the same recorded event/recapturer.",
+      "forecast_scope_limit": "This basic-only reading cannot decide whether the old c4 trade remains a required price in the current selected proof. The changed line is treated as a visibly different continuation, not automatically a code omission, a price gate regression or proof that any knight trade substitutes for another.",
+      "whole_judgment_limit": "The h6-versus-d4 choice is labelled but not explained as the actual mover assessment. The changed queen activity and supported pawn account remain relations rather than a clear whole root reason.",
+      "numeric_change": "Both labels remain matches_reference, while displayed mover delta changes from0.9192472538383925 to0.7344494036796547. No attribution of that change to source code or invented assessment is made; the exporter alone does not certify execution ownership. Parent separately reports new owned engine work, which this reading did not inspect.",
+      "excess_or_stray_claim": "The long list of targets after Qxd4 is not connected to why they matter. The earlier h6/h7/Kh7 vacancy sentence disappears; it is not an essential price statement. No new forced-result claim is visible."
+    },
+    {
+      "id": "TAT25-10",
+      "visible_input_descriptor": {
+        "id": "TAT25-10",
+        "current_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P2P2/3PPN2/PBQ1B1PP/R4RK1 w - - 7 16",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e3e4",
+          "resulting_fen": "3r1rk1/pbq1ppbp/1p1n2p1/n1p1N3/2P1PP2/3P1N2/PBQ1B1PP/R4RK1 b - - 0 16"
+        }
+      },
+      "visible_input_sha256": "f7d201efc981bbcb3ce930398c1ec92a345c08a1e827eefd23cbbd0a73c403ca",
+      "visible_input_equal39": true,
+      "default_question39": "first_target_response",
+      "default_question40a": "first_target_response",
+      "characters39": 747,
+      "characters40a": 874,
+      "basic39_text_sha256": "1272a25c86c0d5cb4e19efd6fc3296d5597db1980fcdbf383808df2ee51775c5",
+      "basic40a_text_sha256": "fba5443ac3c80a0ded80551a2ecc822b2e4a4062d6c1b1400cdd352b9137109c",
+      "exported_verdict39": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:candidate-comparison:b5c41f7e6167cae41ecfa683cc20b4c73d2473ae3d03970f76f12d6157d42876",
+        "verdict_code": "playable_loss",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -0.9168970439887829,
+          "kind": "engine_evaluation"
+        }
+      },
+      "exported_verdict40a": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:5f2592219164233324c7706202e553d147e08285dd830cc2b243f4543cae08f3:30:e3e4:evidence:candidate-comparison:b5c41f7e6167cae41ecfa683cc20b4c73d2473ae3d03970f76f12d6157d42876",
+        "verdict_code": "playable_loss",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -0.9168970439887829,
+          "kind": "engine_evaluation"
+        }
+      },
+      "verdict_object_equal": true,
+      "sentence_diff": [
+        "--- basic39",
+        "+++ basic40a",
+        "@@ -1,5 +1,7 @@",
+        " After e4, White's pawn on e4 is under attack from Black's bishop on b7 and Black's knight on d6; it is supported by White's pawn on d3",
+        "-In the e4 line: The recorded continuation is f6 Ng4",
+        "+In the e4 line: After f6, Black's pawn on f6 now targets White's knight on e5",
+        "+The recorded continuation is f6 Ng4",
+        "+Ng4 moves the knight out of the attack from Black's pawn on f6",
+        " The compared root choices are Rae1 and e4",
+        " e4 clears e3; Ne3 later occupies that square in this line",
+        " In the Rae1 line, White's rook on e1 keeps supporting White's bishop on e2 after Qc1 ends the support from White's queen on c2"
+      ],
+      "new_intelligible_reply_unit": "f6 attacks the root White Ne5, and Ng4 escapes that pawn attack. This is exactly the previously sealed controlled40a reading and is now present in the actual final35 body.",
+      "new_unit_relevance": "Explains the named first counter and shown evasion after the played e4. It does not claim e4 uniquely enabled f6 or that Ng4 is forced/unique.",
+      "bounded_threat_evasion_complete": true,
+      "visible_price_change": "No additional loss relative to39: Rae1's Be2 support and Nxe2+/Rxe2 recapture, plus the original e3-pawn capture by hxg6, remain. The unrelated later Nf3 trade is not needed for this selected threat/escape explanation; no essential price from a different outcome is thereby declared optional.",
+      "whole_judgment_limit": "e4's intended purpose and its small numerical loss relative to Rae1 still lack a clear whole root reason. Bounded reply meaning is complete, whole comparative cause remains partial.",
+      "excess_or_stray_claim": "Later vacancy, alternative bishop defense and pawn/check accounts still broaden the text. No new unsupported strongest/forced/unique claim appears."
+    }
+  ],
+  "TAT10_current_final_vs_previous_controlled": {
+    "basic_body_identical": true,
+    "verdict_object_identical": true,
+    "no_new_human_claim_beyond_prior_bounded_reading": true
+  },
+  "overall_bounded_conclusion": [
+    "Three bodies now explicitly explain their recorded threat/evasion pair. This improves intelligibility of the selected first reply, without proving global best defense or the complete numerical root cause.",
+    "wch2024-08 also already offers an understandable simple material comparison against Qxb5. The new first-reply explanation should not be credited with inventing that existing reason.",
+    "TAT25-09 changes the later forecast/trade rather than adding threat/evasion meaning. Its old exact c4 trade and new exact d4 trade must not be conflated; hidden mandatory-price scope was not inspected.",
+    "No new essential price is visibly lost in candidates2018-12, wch2024-08 or TAT25-10 relative to39. TAT25-09 has a scoped uncertainty, not a certified price-preservation failure or success.",
+    "Seven separate controlled book bodies remain parent-reported byte-identical39, and their fixed0/4 full functional-utility result is unchanged. This addendum does not rescore that cohort."
+  ]
+}

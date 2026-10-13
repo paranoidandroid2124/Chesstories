@@ -1,0 +1,503 @@
+{
+  "source": "target/decision-timing-20261006/optionbookdiagnostic1",
+  "exactly_replayed": 4,
+  "records": [
+    {
+      "id": "human-evaluation-SG02",
+      "families": {
+        "C-opponent-choice": 3,
+        "C-action_route": 9,
+        "C-action_support": 17,
+        "C-opponent_access": 2,
+        "C-pawn_passage": 1,
+        "C-sacrifice": 2,
+        "C-support": 6,
+        "C-target_access": 9
+      },
+      "selected": [
+        {
+          "producer": "C-sacrifice",
+          "live": false,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),f7f3,c8e8,None)",
+            "CompareMoves(sacrifice_other_capture,List(),f7f3,d5f3,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_other_capture",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": false,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),f7f3,c8e8,None)",
+            "CompareMoves(sacrifice_other_capture,List(),f7f3,d5f3,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_other_capture",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "stopped",
+              "stop_reason": "not_required_for_decision",
+              "band": null,
+              "relation": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "human-evaluation-SG13",
+      "families": {
+        "C-opponent-choice": 3,
+        "C-action-enablement": 1,
+        "C-action_route": 9,
+        "C-action_support": 12,
+        "C-opponent_access": 3,
+        "C-plan-counter": 2,
+        "C-preparation-alternative": 2,
+        "C-preparation-effect": 2,
+        "C-sacrifice": 3,
+        "C-support": 4,
+        "C-target_access": 4
+      },
+      "selected": [
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(e8d7),f6h4,g7f8,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-preparation-effect",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_immediate,List(),c6d5,e8f7,None)"
+          ],
+          "readings": []
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),c6d5,e8d7,None)",
+            "CompareMoves(sacrifice_decline,List(c6d5, f6h4, e8f7, f3f7, d5f7, h4d8, f7e8, d8c7, g1g2, h7h6, g2h3, c7b6, e8c6),b6f2,b6a5,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "better"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(e8d7),f6h4,g6g5,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-preparation-effect",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_immediate,List(),e8d7,c6d5,None)"
+          ],
+          "readings": []
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),e8d7,c6d5,None)",
+            "CompareMoves(sacrifice_decline,List(e8d7, f6h4),g3h4,d7h3,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),e8d7,c6d5,None)",
+            "CompareMoves(sacrifice_decline,List(e8d7, g7f8, c6d5, f6h4),g3h4,d5c6,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "worse"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "human-evaluation-SW01",
+      "families": {
+        "C-opponent-choice": 2,
+        "C-action-enablement": 5,
+        "C-action_route": 9,
+        "C-action_support": 11,
+        "C-opponent_access": 4,
+        "C-opponent_entry": 4,
+        "C-plan-counter": 5,
+        "C-preparation-alternative": 2,
+        "C-sacrifice": 3,
+        "C-support": 4,
+        "C-target_access": 4,
+        "C-preparation-effect": 2
+      },
+      "selected": [
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(d5h5),f6f7,f6f3,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "not_returned",
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),d5h5,e7e8,None)",
+            "CompareMoves(sacrifice_decline,List(d5h5, f6f7),e7f7,h5h7,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "better"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "supported",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(d5h5),f6f5,f6h6,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "refuted",
+              "stop_reason": null,
+              "band": "close",
+              "relation": "equal"
+            }
+          ]
+        },
+        {
+          "producer": "C-preparation-effect",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_immediate,List(d5h5),f6h6,h7h8q,None)"
+          ],
+          "readings": []
+        },
+        {
+          "producer": "C-preparation-effect",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_immediate,List(),e7e8,a8b8,None)"
+          ],
+          "readings": []
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),d5h5,e7e8,None)",
+            "CompareMoves(sacrifice_decline,List(d5h5, f6f5),h5h7,e7e8,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "better"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(d5h5),f6f7,f6f5,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "refuted",
+              "stop_reason": null,
+              "band": "close",
+              "relation": "equal"
+            }
+          ]
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),d5h5,e7e8,None)",
+            "CompareMoves(sacrifice_decline,List(d5h5, f6h6, h5h6, h7h8q),h6h8,e7e8,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "answered",
+              "stop_reason": null,
+              "band": "separated",
+              "relation": "better"
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "premise_refuted",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "refuted",
+              "stop_reason": null,
+              "band": null,
+              "relation": null
+            }
+          ]
+        },
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(d5h5),f6f7,f6h6,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "refuted",
+              "stop_reason": null,
+              "band": "close",
+              "relation": "equal"
+            }
+          ]
+        },
+        {
+          "producer": "C-plan-counter",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_strength,List(d5h5),f6h6,f6f3,Some(better))"
+          ],
+          "readings": [
+            {
+              "id": "contrast_strength",
+              "state": "stopped",
+              "stop_reason": "investigation_limit",
+              "band": null,
+              "relation": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "human-evaluation-SW02",
+      "families": {
+        "C-opponent-choice": 2,
+        "C-action_route": 4,
+        "C-action_support": 9,
+        "C-preparation-effect": 1,
+        "C-sacrifice": 1,
+        "C-support": 2,
+        "C-target_access": 3
+      },
+      "selected": [
+        {
+          "producer": "C-preparation-effect",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(contrast_immediate,List(),h6h7,g5g6,None)"
+          ],
+          "readings": []
+        },
+        {
+          "producer": "C-sacrifice",
+          "live": true,
+          "comparisons": [
+            "CompareMoves(sacrifice_value,List(),h6h7,c2f2,None)",
+            "CompareMoves(sacrifice_decline,List(h6h7, c5c8, g5g6, f8e7, h8g7),f7g6,e7d6,None)"
+          ],
+          "readings": [
+            {
+              "id": "sacrifice_value",
+              "state": "stopped",
+              "stop_reason": "prerequisite_unresolved",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_decline",
+              "state": "stopped",
+              "stop_reason": "search_budget_exhausted",
+              "band": null,
+              "relation": null
+            },
+            {
+              "id": "sacrifice_current",
+              "state": "stopped",
+              "stop_reason": "search_budget_exhausted",
+              "band": null,
+              "relation": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,344 @@
+{
+  "sealed_utc": "2026-10-09T02:06:32.098022+00:00",
+  "previous_record_unchanged": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-west-choice-d16-first-refutation.json",
+    "sha256": "707a1e6dcfcdbcc5c54ea4408ab7fb7a0b1f56b46e8d272a8543888c0d1e20dd"
+  },
+  "correction": "Calling ...Ke6 weak at the current original43 epoch was unsupported. The current retained-root unrestricted d16 pool returned ...Ke6 and ...f6 tied at +538 White, with ...Ke6 first in the returned order. The original RootOwner forecast is separately owned work1, not this pool.",
+  "incorrect_inference_source": "A prior separate h128/d24 study narrative had been carried across epochs. It is not a current h16 first-defense certificate and does not establish current ...f6 stronger than ...Ke6.",
+  "current_product_source": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\H05Family10hRequiredUI17Ledger1805\\stored-reports.jsonl",
+    "sha256": "a95f3a5dea36691facd07a1b5e07b138778e5ef1d4ea521f40e213589da31586",
+    "root_and_pool_receipts": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\functional-judgment-20261009\\h05-west-choice-independent-study\\sealed-original43-root-and-first-defense-receipts.json",
+      "sha256": "a29a055b66f9dbfdae5a9735bb299a393ac79c8416c585116fae5e7c7101786c"
+    }
+  },
+  "current_43_numeric_and_first_reply_values": [
+    {
+      "work_id": "work:1",
+      "purpose": "root_search",
+      "execution_key": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+      "profile": "sf18-smallnet-t2-h16-v1",
+      "prefix": [],
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "requested_depth": 16,
+      "outcome": "completed",
+      "values": [
+        {
+          "move": "f3e3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 275
+          },
+          "pv": [
+            "f3e3",
+            "e5f6",
+            "e3f4",
+            "f6g6",
+            "e4e5",
+            "f7f5",
+            "e5f6",
+            "g6f6",
+            "g3g4",
+            "b4b3",
+            "g4g5",
+            "f6f7",
+            "f4e5",
+            "f7g6",
+            "e5d5",
+            "g6g5",
+            "d5c4",
+            "g5f4",
+            "c4b5",
+            "c5c4",
+            "b5a4",
+            "f4e4"
+          ]
+        },
+        {
+          "move": "g3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 0
+          },
+          "pv": [
+            "g3g4",
+            "f7f6",
+            "f3e3",
+            "b4b3",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "d6e5"
+          ]
+        },
+        {
+          "move": "f3g4",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": -707
+          },
+          "pv": [
+            "f3g4",
+            "b4a3",
+            "b2a3",
+            "e5e4",
+            "g4g5",
+            "e4d3",
+            "g5f6",
+            "d3c3",
+            "f6f7",
+            "c3b2",
+            "f7e6",
+            "c4c3",
+            "e6d5",
+            "c3c2",
+            "d5c5",
+            "c2c1q",
+            "c5b4",
+            "c1g5",
+            "b4a4",
+            "g5g3",
+            "a4b5",
+            "g3d3",
+            "b5b4",
+            "d3d4",
+            "b4a5"
+          ]
+        }
+      ]
+    },
+    {
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "execution_key": "b1bfa10eac5c3ada25ca439ca7517be9ac64155813ae5f78c5d8a758d154199a",
+      "profile": "sf18-smallnet-t2-h16-v1",
+      "prefix": [
+        "g3g4"
+      ],
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "requested_depth": 16,
+      "outcome": "completed",
+      "values": [
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 23
+          },
+          "pv": [
+            "f7f6",
+            "f3e3",
+            "b4b3",
+            "e3f3",
+            "e5d6",
+            "f3f4",
+            "d6e6",
+            "e4e5",
+            "f6e5",
+            "f4g5",
+            "e5e4",
+            "g5f4",
+            "e6d5",
+            "g4g5",
+            "e4e3",
+            "f4e3",
+            "d5e5",
+            "g5g6",
+            "e5f6",
+            "e3e4",
+            "f6g6",
+            "e4d5",
+            "g6f5",
+            "d5c5",
+            "f5f4"
+          ]
+        },
+        {
+          "move": "e5e6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 564
+          },
+          "pv": [
+            "e5e6",
+            "g4g5",
+            "e6e5",
+            "f3e3",
+            "e5d6",
+            "e3f4",
+            "d6e6",
+            "e4e5",
+            "e6d7",
+            "f4e3",
+            "d7e7",
+            "e3f3",
+            "e7d7",
+            "f3f4",
+            "f7f6"
+          ]
+        },
+        {
+          "move": "e5d6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 567
+          },
+          "pv": [
+            "e5d6",
+            "g4g5",
+            "d6e5",
+            "f3e3",
+            "e5d6",
+            "e3f4",
+            "d6e6",
+            "e4e5",
+            "e6e7",
+            "f4f5",
+            "e7f8",
+            "f5f6",
+            "f8e8",
+            "e5e6",
+            "f7e6",
+            "f6e6",
+            "e8f8",
+            "e6d5",
+            "f8e8"
+          ]
+        }
+      ]
+    },
+    {
+      "work_id": "work:4",
+      "purpose": "response_comparison",
+      "execution_key": "6f4763f9be3514d5314f4c6cd7d4a82cc2fb812b7b2f7751bc1200ccc9aa5294",
+      "profile": "sf18-smallnet-t2-h16-v1",
+      "prefix": [
+        "f3e3"
+      ],
+      "restriction": {
+        "kind": "unrestricted"
+      },
+      "requested_depth": 16,
+      "outcome": "completed",
+      "values": [
+        {
+          "move": "e5e6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 538
+          },
+          "pv": [
+            "e5e6",
+            "e3d2",
+            "e6e5",
+            "c3b4",
+            "e5e4",
+            "d2c3",
+            "f7f5",
+            "b4c5",
+            "e4d5",
+            "c3b4",
+            "d5c6",
+            "b4c4",
+            "c6c7",
+            "c4d5",
+            "c7d7",
+            "c5c6",
+            "d7c7",
+            "d5c5",
+            "c7c8",
+            "c5d6",
+            "c8d8"
+          ]
+        },
+        {
+          "move": "f7f6",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 538
+          },
+          "pv": [
+            "f7f6",
+            "e3f3",
+            "e5d6",
+            "f3e2",
+            "f6f5",
+            "e4f5",
+            "d6e5",
+            "e2f3",
+            "e5f5",
+            "g3g4",
+            "f5g5",
+            "f3g3",
+            "g5g6",
+            "g3f4",
+            "g6f6",
+            "f4e4",
+            "f6g5",
+            "e4f3",
+            "b4c3"
+          ]
+        },
+        {
+          "move": "b4b3",
+          "depth": 16,
+          "white_score": {
+            "kind": "cp",
+            "value": 564
+          },
+          "pv": [
+            "b4b3",
+            "e3f3",
+            "e5f6",
+            "f3f4",
+            "f6e6",
+            "e4e5",
+            "f7f6",
+            "e5f6",
+            "e6f6",
+            "g3g4",
+            "f6e6",
+            "g4g5",
+            "e6e7",
+            "f4e5",
+            "e7d7"
+          ]
+        }
+      ]
+    }
+  ],
+  "numeric_ownership_boundary": {
+    "root_judgment_owner": "work:1",
+    "root_Ke3_white_cp": 275,
+    "root_g4_white_cp": 0,
+    "root_first_forecast_Ke3_reply": "e5f6",
+    "retained_current_pool_owner": "work:4",
+    "retained_current_pool_leading_reply": "e5e6",
+    "retained_current_pool_tied_other": "f7f6",
+    "played_root_current_pool_owner": "work:3",
+    "played_root_current_pool_leading_reply": "f7f6",
+    "cross_query_value_graft_allowed": false
+  },
+  "new_question": "A separate exact original Ke3 history unrestricted h16/d24 Black pool will test whether the current stronger reply or ties change. A separately owned current original g4/Ke3 named d24 query may test the claimed root comparison. Neither replaces work1 or any product43 score.",
+  "local_refutation_scope_survives": "At current Ke3 Ke6 Kd2 Ke5, completed d16 ...bxa3/ ...Kf4 and cxb4/Kxe4 query facts still refute the main f4-denial/e4-safety explanation. This does not prove which original first defense is stronger.",
+  "fixed_criteria_unchanged": true,
+  "product_reports_submitted": 0,
+  "full_product_utility_success": {
+    "original_four": "0/4",
+    "original_eight": "0/8"
+  }
+}

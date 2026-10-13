@@ -1,0 +1,11 @@
+{
+  "scope": "Actual summary_question only, using the checked-in complete local $defs; not the full response schema.",
+  "counts": {
+    "snapshots": 15,
+    "summaries": 15,
+    "valid": 15
+  },
+  "failures": [],
+  "schema_sha256": "68d79c4183e69361f77b4fa54fe8ab5ecf09532ec84e953f3a9b69a069ff3480",
+  "input_sha256": "bba4fac74aa3fd1943cd1880bbb5a14242159c3fb43f0b370413f4bc5db4176f"
+}

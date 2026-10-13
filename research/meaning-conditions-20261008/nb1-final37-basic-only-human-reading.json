@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T06:48:05.878110+00:00",
+  "scope": "First-pass independent reading of final37 NB1 default basic only, sealed before hidden snapshots, actual gates, changed source or other final37 cases.",
+  "case_id": "FC-SG45-NB1",
+  "presealed_form_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\nb1-final37-pre-output-human-reading-form.json",
+  "presealed_form_sha256": "8322df98073de1c5cde1cc4476009eb0fdf9fc3267cc2fa858275142cab69d57",
+  "original_criteria_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\independent-functional-followup-product-inputs.json",
+  "original_criteria_sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+  "original_four_levels": {
+    "legal": "Nc4/Nb1은 이미 합법이고 둘 다 정상적인 좋은 경로다.",
+    "price": "Nc4는 d6 룩을 지켜 Qxd6에 Nxd6로 응답할 수 있다. Nb1 뒤 같은 즉시 Rd6에는 그 재포획자가 없다.",
+    "utility": "Nb1도 Nc3 등 다른 실현으로 유효하다. 구성한 Rd6 반례만으로 Nb1 전체를 나쁜 수로 단정하지 않는다.",
+    "root_judgment": "Rfd1의 유연한 개선은 설명할 수 있으나 작은 최고 평가의 원인이나 유일한 좋은 수를 입증한 것은 아니다."
+  },
+  "original_acceptance_policy": "짧은 정상 목적을 인정한다. 구체적 비교/우열/후속 실행을 주장할 때 그 가격과 강한 반론을 함께 요구한다. 책의 정확한 PV나 모든 관계를 기본 본문에 강제하지 않는다.",
+  "criteria_changed": false,
+  "source_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcFinalControlled37-basic.json",
+  "source_sha256": "ef3cd0378a80cf6cb20fcf7e160e7e96f7fcfdfdb1826c4b9823b9a731a5afc8",
+  "default_question": "functional_response",
+  "exact_basic_text": "Nc4 adds knight control of d6. In the legal variation Nc4 Nef6 Rd6 Qxd6, White can recapture with Nxd6. After Nb1 Nef6 Rd6 Qxd6, that capture with the same knight is unavailable. The recorded continuation is Nc4. The recorded continuation is Nb1. The compared root choices are Nc4 and Nb1. Nb1 clears d2; Qd2 later occupies that square in this line. After Qd2, White's queen on d2 now targets Black's knight on d7. Nc4 clears d2; later Rd6 passes through that square in this line. After Rd6, White's rook on d6 now targets Black's queen on c6 and Black's knight on f6. In the Nc4 line, White's knight on c4 controls the empty d6 square; Rd6 brings White's rook on d6 there under its support. After Qxd6 captures the supported rook, Nxd6 recaptures its capturer with the supporting knight. After Nxd6, White's knight on d6 adds support to White's pawn on e4, which is under attack from Black's knight on f6, and now targets Black's pawn on f7. With Nxd6, the white knight originally on d2 recaptures the black queen originally on c6. With Rxa7, the black rook originally on d8 captures the white rook originally on a1.",
+  "word_count": 198,
+  "character_count": 1117,
+  "basic_only_assessment": {
+    "actual_move_role_recoverable": true,
+    "actual_role_scope": "Actual Nb1 clears d2 and permits the recorded Qd2 occupation. This is a valid role fragment; the text no longer states the Nb1-Nc3 route that old basic had.",
+    "same_physical_rook_realization_recoverable": true,
+    "same_realization_scope": "Both explicitly named hypothetical paths contain Rd6/Qxd6; the subsequent explanation identifies the supported White rook on d6. It is not the unrelated quiet arrival of an enemy queen/knight on an empty d6 square.",
+    "immediate_Qxd6_Nxd6_difference_recoverable": true,
+    "reason": "The opening states that Nc4 adds control of d6, gives Nc4 Nef6 Rd6 Qxd6 Nxd6, and explicitly contrasts Nb1 Nef6 Rd6 Qxd6 where the same knight capture is unavailable. This was absent as a central account in35.",
+    "ordinary_purpose_fragment_valid": true,
+    "matched_conditional_material_mechanism_answered": true,
+    "other_good_Nb1_realization_unfairly_condemned": false,
+    "alternative_plan_limit": "The statements are restricted to the named legal variation. They do not call Nb1 universally bad, Nc4 uniquely good, or the queen capture forced. A different viable Nb1 realization is not explicitly recovered, so the whole useful-route question is still incomplete.",
+    "visible_price_account": [
+      "Qxd6 is said to capture the supported White rook.",
+      "Nxd6 is said to recapture the original Black queen with the original d2 knight.",
+      "Rxa7 explicitly records the later loss of the original White a1 rook to the original Black d8 rook."
+    ],
+    "needed_price_omissions": [],
+    "price_scope_limit": "No plainly omitted capture in the selected narrated support account is visible in basic alone. Rxa7 has no local setup explaining why the other rook was on a7; its relation to the shortest opening hypothetical path is unclear. Hidden ownership completeness is not inferred from this first pass.",
+    "needed_strong_reply_omissions_relative_to_claim": [],
+    "strong_reply_scope_limit": "The prose claims a conditional legal recapture difference, not sufficient utility, safety or superiority against all defense. That factual claim does not require every strongest pool reply in basic. The same text also does not supply the broader value/strongest-defense account needed to count a full useful-choice explanation.",
+    "clear_unnecessary_excess": true,
+    "excess": [
+      "The recorded continuation is Nc4, the recorded continuation is Nb1 and the compared root choices are Nc4/Nb1 are redundant framing.",
+      "The Qxd6/Nxd6 mechanism is repeated in the opening and the retained support-use account.",
+      "Qd2 attacking Nd7 and Nxd6 supporting Pe4/targeting Pf7 add peripheral relations to the central recapture comparison."
+    ],
+    "partial_fact_or_price_success": true,
+    "partial_success_level": "Newly delivered compact matched conditional recapture/price mechanism, stronger than the old ordinary route fragment. This is a specific factual explanation success, not merely shorter text.",
+    "full_original_functional_question_complete": false,
+    "full_utility_limit": "The body establishes the conditional resource difference but does not show how the actual Nb1 route remains a valid different realization or how its usefulness is judged under strongest responses. It makes no such utility claim. The fixed four-level full-utility question is therefore not promoted from this fact alone.",
+    "root_grade_cause_explained": false,
+    "root_grade_limit": "No causal explanation for the numeric Nb1 assessment is given. This is not treated as a false score or a flaw in a deliberately factual conditional statement.",
+    "first_observable_failure": "Matched legal material mechanism now passes; the next missing semantic layer is the broader useful-route/defensive-value account, plus a clearer placement of Rxa7 within its own variation.",
+    "unknowns": [
+      "Exact canonical actor/price owner verification is deliberately postponed until after this first-pass seal.",
+      "Whether any other independently selected core obligation was moved to detail cannot be established from text alone.",
+      "The actual strongest-reply and full valuation records have not been read for this pass."
+    ]
+  },
+  "fixed_counting": {
+    "old_four_case_full_utility_baseline": "0/4 remains unchanged.",
+    "new_NB1_matched_conditional_price_mechanism": 1,
+    "new_NB1_full_functional_utility": 0,
+    "new_NB1_numeric_cause_proof": 0,
+    "reason_for_higher_partial_rating": "The exact same-Rd6 Qxd6/Nxd6 difference is now the opening answer and its selected material captures are explicitly narrated.",
+    "shorter_text_is_not_the_criterion": true
+  },
+  "delivery_metadata_reported_by_parent_only": {
+    "normal_public_caller": true,
+    "same_actual_reports_exactly_matched": 48,
+    "cases": 7,
+    "new_engine_queries": 0,
+    "public_decoder_bodies_core_detail_accepted": "7/7",
+    "semantic_success_implied": false
+  },
+  "reading_boundary": {
+    "other_final37_cases_read_before_seal": false,
+    "actual_gates_read": false,
+    "hidden_snapshots_read": false,
+    "changed_source_read": false,
+    "numeric_verdict_fields_read": false,
+    "main_ui_or_test_edits": false,
+    "runners_or_engines_executed": false
+  }
+}

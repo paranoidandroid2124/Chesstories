@@ -9,7 +9,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from .adapters import CommandSpec, strict_json_loads
+from .adapters import (
+    CommandSpec,
+    process_output_bytes,
+    provider_io_record,
+    strict_json_loads,
+)
 from .capture import ArtifactStore
 from .hashing import json_bytes, read_jsonl, sha256_json
 from .model import ContractError, EndpointResult, IntegrityError, Sample, StageUnavailable
@@ -290,6 +295,17 @@ class EvaluationAdapter(ABC):
     def is_live_command(self) -> bool:
         return False
 
+    def _set_endpoint_policy(self, endpoint_policy: FrozenEndpointPolicy | None) -> None:
+        self.endpoint_policy = endpoint_policy
+        self.endpoint_policy_hash = (
+            endpoint_policy.document_sha256 if endpoint_policy is not None else None
+        )
+        self.endpoint_allowed_set_source = (
+            "pre-unblinding-frozen-run-artifact"
+            if endpoint_policy is not None
+            else "diagnostic-corpus-base-set-sensitivity-only"
+        )
+
 
 class CommandEvaluationUnavailable(StageUnavailable):
     """A live evaluator command failed while retaining provider I/O evidence."""
@@ -445,16 +461,8 @@ class ReplayEvaluationAdapter(EvaluationAdapter):
                 "release evaluation requires an append-only evaluator access log"
             )
         self.usefulness_threshold = usefulness_threshold
-        self.endpoint_policy = endpoint_policy
         self.release_mode = release_mode
-        self.endpoint_policy_hash = (
-            endpoint_policy.document_sha256 if endpoint_policy is not None else None
-        )
-        self.endpoint_allowed_set_source = (
-            "pre-unblinding-frozen-run-artifact"
-            if endpoint_policy is not None
-            else "diagnostic-corpus-base-set-sensitivity-only"
-        )
+        self._set_endpoint_policy(endpoint_policy)
         self.records: dict[tuple[str, str], Mapping[str, Any]] = {}
         for path in paths:
             for line_number, row in enumerate(read_jsonl(path), 1):
@@ -576,18 +584,10 @@ class CommandEvaluationAdapter(EvaluationAdapter):
             )
         self.command = command
         self.usefulness_threshold = float(usefulness_threshold)
-        self.endpoint_policy = endpoint_policy
         self.release_mode = release_mode
         self.access_store = access_store
         self._successful_invocation_index = 0
-        self.endpoint_policy_hash = (
-            endpoint_policy.document_sha256 if endpoint_policy is not None else None
-        )
-        self.endpoint_allowed_set_source = (
-            "pre-unblinding-frozen-run-artifact"
-            if endpoint_policy is not None
-            else "diagnostic-corpus-base-set-sensitivity-only"
-        )
+        self._set_endpoint_policy(endpoint_policy)
 
     def is_live_command(self) -> bool:
         return True
@@ -635,7 +635,7 @@ class CommandEvaluationAdapter(EvaluationAdapter):
                     env=environment,
                 )
         except subprocess.TimeoutExpired as error:
-            provider_io = self._provider_io_record(
+            provider_io = provider_io_record(
                 base_provider_io,
                 returncode=None,
                 stdout=error.stdout,
@@ -650,7 +650,7 @@ class CommandEvaluationAdapter(EvaluationAdapter):
                 provider_io=provider_io,
             ) from error
         except (OSError, TypeError, ValueError) as error:
-            provider_io = self._provider_io_record(
+            provider_io = provider_io_record(
                 base_provider_io,
                 returncode=None,
                 stdout=None,
@@ -666,7 +666,7 @@ class CommandEvaluationAdapter(EvaluationAdapter):
                 f"external evaluator could not start: {type(error).__name__}",
                 provider_io=provider_io,
             ) from error
-        provider_io = self._provider_io_record(
+        provider_io = provider_io_record(
             base_provider_io,
             returncode=completed.returncode,
             stdout=completed.stdout,
@@ -677,7 +677,7 @@ class CommandEvaluationAdapter(EvaluationAdapter):
                 f"external evaluator failed with exit code {completed.returncode}",
                 provider_io=provider_io,
             )
-        stdout_bytes = self._safe_process_bytes(completed.stdout)
+        stdout_bytes = process_output_bytes(completed.stdout)
         try:
             response_text = stdout_bytes.decode("utf-8")
         except UnicodeDecodeError as error:
@@ -855,38 +855,6 @@ class CommandEvaluationAdapter(EvaluationAdapter):
             "chesstory.eval.source-blind-p-view.v1"
         ) or not isinstance(evaluation_view.get("payload"), Mapping):
             raise ContractError("evaluator stdin has an invalid source-blind view schema")
-
-    @staticmethod
-    def _safe_process_bytes(value: str | bytes | None) -> bytes:
-        if value is None:
-            return b""
-        if isinstance(value, bytes):
-            return value
-        return value.encode("utf-8", errors="replace")
-
-    @classmethod
-    def _provider_io_record(
-        cls,
-        base: Mapping[str, Any],
-        *,
-        returncode: int | None,
-        stdout: str | bytes | None,
-        stderr: str | bytes | None,
-        failure: Mapping[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        stdout_bytes = cls._safe_process_bytes(stdout)
-        stderr_bytes = cls._safe_process_bytes(stderr)
-        record = {
-            **base,
-            "returncode": returncode,
-            "stdout": stdout_bytes.decode("utf-8", errors="replace"),
-            "stderr": stderr_bytes.decode("utf-8", errors="replace"),
-            "stdout_base64": base64.b64encode(stdout_bytes).decode("ascii"),
-            "stderr_base64": base64.b64encode(stderr_bytes).decode("ascii"),
-        }
-        if failure is not None:
-            record["failure"] = dict(failure)
-        return record
 
     @staticmethod
     def _minimal_process_environment() -> dict[str, str]:

@@ -1,0 +1,39 @@
+{
+  "created_utc": "2026-10-06T01:13:49.019104+00:00",
+  "rule_freeze_sha256": "8b1d28189bccf7ddee1e611d3fcee3d0d9642798b3c689c6ab13c5508e2182d7",
+  "scope": "Supplemental fifth case, selected after reading the original four. H01 did not supply the planned important quiet contrast. Original four remain in results without replacement. Rules stay timingv14; no product or engine output read for this board before declaration.",
+  "cases": [
+    {
+      "id": "H05",
+      "category": "supplemental_quiet_important",
+      "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "move_prefix_uci": [],
+      "fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "mainline_san": "",
+      "played_san": "g4",
+      "lines": [
+        [
+          "g3g4"
+        ]
+      ],
+      "hypothesis_alternatives": [
+        "f3e3"
+      ],
+      "alternatives_san": [
+        "Ke3"
+      ],
+      "source": "100 Endgame Patterns, personal reading PDF page60, Zamarbide-Benitez La Roda2005, White35g4? versus35Ke3!, diagram visually checked.",
+      "history_limit": "The diagram fixes the board and side. Earlier history and halfmove clock are unavailable; use zero for this research start, no repetition or fifty-move inference.",
+      "human_task": "Test whether immediately spending g3-g4 allows ...f6 and a king blockade, while Ke3 preserves g4 as a later waiting move to gain f5. The move order must matter against the opponent best replies, not only the book line.",
+      "falsifiers": [
+        "If g4 still wins, reject the lost-win hypothesis.",
+        "If Ke3 does not win in bounded searches, do not assume the book judgment is proven.",
+        "Do not call one PV forced or equate a pawn-count difference with the waiting-move mechanism."
+      ],
+      "product_output_previously_read": false,
+      "engine_output_previously_read": false,
+      "provided_future_lines": false,
+      "provided_scores": false
+    }
+  ]
+}

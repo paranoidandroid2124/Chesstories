@@ -1,0 +1,234 @@
+{
+  "created_utc": "2026-10-01T15:14:21.516681+00:00",
+  "request": "Annotated work items 1 through 4: cost closure, selected dependencies, English composition and remaining prose-dependent decisions",
+  "base_commit": "5b6bc8c4d6069360e93c7efd91309ed35d670f08",
+  "status": "Implementation and source-level regression checks completed; overall readability and release/generalization gates remain open",
+  "constraints": {
+    "product_language_model": false,
+    "new_engine_analysis": false,
+    "docker": false,
+    "browser_or_full_stack_run": false,
+    "protected_migration_fixtures_read_or_run": false,
+    "new_graph_or_question_framework": false,
+    "new_dependencies": false,
+    "korean_rewording_in_scope": false
+  },
+  "changes": [
+    {
+      "item": 1,
+      "implementation": "Shared Arm.controlSquare keeps certified original-piece removal distinct from unknown tracking; selected missing support now retains the observed target loss and original-piece account.",
+      "verification": "Both previously omitted costs in the exact archived analyses are visible and covered; incomplete tracking remains unknown in the negative test."
+    },
+    {
+      "item": 2,
+      "implementation": "The existing selected Answer is enriched before realization, on the exact selected use and owned path. Incoming attack/escape, quiet vacancy/entry, certified ray clearance and immediate en-passant predecessor are merged into the use-owning Section. Required references, focus and evidence stay together. Recapture predecessors follow existing certified immediateTrades backward until closure and remain before the selected recapture.",
+      "verification": "Tests reject foreign/sibling paths, interrupted vacancy, unknown resources and an unowned en-passant predecessor; a three-capture chain remains in order. Original details are preserved without adding a new full-path ledger."
+    },
+    {
+      "item": 3,
+      "implementation": "English realization joins the same actor's attack/support at the same occurrence, connects support to its observed capture and recapture, abbreviates only a physically identified prior capturer, and shares matching control contrast subjects. Adjacent single capture plus checker-capture reply is expressed once only when actual movement, path, offset and captured side/role/square agree; sequence anchors remain.",
+      "verification": "9 dedicated English checks pass, including different identity/path/movement, capture promotion and multiple response modes. No selected chess fact or mandatory capture was dropped to shorten prose.",
+      "limit": "Long selected answers can still read as a fact ledger; this is a bounded composition improvement, not a completed importance/readability policy."
+    },
+    {
+      "item": 4,
+      "implementation": "Effect deduplication uses facts, occurrence ownership and observed values rather than English text. Check, mate, castling, terminal and route comparisons use admitted structured content/canonical moves. Legacy contrast and typed core share one formatter; three hardcoded wording-prefix joins were removed. Internal relation proof IDs are translated through their exact Position to eligible graph-record references in the common projection and support/threat callers. Basic and expandable answer units retain the same selected Answer.",
+      "verification": "Tests now assert original identities, owned occurrences, eligibility, obligations and delivered content instead of obsolete full sentences or a rigid unit shape. Text length remains only a delivery bound."
+    }
+  ],
+  "validation": {
+    "tests": {
+      "total_unique": 259,
+      "failed": 0,
+      "suites": [
+        {
+          "name": "MeaningCompositionTest",
+          "tests": 16,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "RootQuestionAnswerTest",
+          "tests": 26,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "RootThreatAnswerTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "CommentaryAnswerTest",
+          "tests": 10,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "CommentaryEnglishCompositionTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "CommentaryIdeaIdentityTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "CommentaryDependencyTest",
+          "tests": 8,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "ReferenceMeaningDeliveryTest",
+          "tests": 41,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "PracticalDecisionTest",
+          "tests": 139,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "name": "CommentaryMaterialAccountTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0
+        }
+      ],
+      "full_run_log": "target/commentary-followup-20261001/tests-final-composition.log",
+      "after_final_canonical_route_change": {
+        "rechecked": 67,
+        "failed": 0,
+        "log": "target/commentary-followup-20261001/tests-canonical-route-final.log"
+      }
+    },
+    "same_input_regression": {
+      "scope": "Same archived analysis; known-position regression, not a new generalization assessment",
+      "cases": 36,
+      "delivered": 36,
+      "changed_questions": 0,
+      "removed_required": 0,
+      "removed_capture_coverage": 0,
+      "missing_cost_checks": [
+        {
+          "root": "Qxc8",
+          "offset": 7,
+          "san": "Bxa3",
+          "was_visible": false,
+          "now_visible": true,
+          "now_covered": true
+        },
+        {
+          "root": "Qd1",
+          "offset": 13,
+          "san": "Bxc3",
+          "was_visible": false,
+          "now_visible": true,
+          "now_covered": true
+        }
+      ]
+    },
+    "detail_scope": {
+      "added_exact_references": 0,
+      "removed_exact_references": 0
+    },
+    "characters": {
+      "before_median": 1599.0,
+      "after_median": 1716.5,
+      "before_max": 3743,
+      "after_max": 3792,
+      "longer_cases": 29,
+      "shorter_cases": 2,
+      "unchanged_cases": 5,
+      "interpretation": "Length is not a quality score. Added mandatory costs/dependencies made 29 of 36 answers longer; broad concise readability remains unproven."
+    },
+    "offline_replay_elapsed_ms": {
+      "fresh": 25924,
+      "r13": 24936
+    },
+    "timing_scope": "Stored report processing only. No Stockfish thinking time, cold browser download or service latency measured.",
+    "compiled_sources_match_replays": true,
+    "git_diff_check": "passed",
+    "independent_human_reader_evaluation": false,
+    "agent_review": "Separate agents implemented/reviewed delivery, English and identity logic; read-only integration reviewers found proof-ID, section ownership, detail-scope and preceding-trade issues that were repaired. This is not independent human reading."
+  },
+  "known_cost_examples": [
+    {
+      "root": "Qxc8",
+      "offset": 7,
+      "san": "Bxa3",
+      "was_visible": false,
+      "now_visible": true,
+      "now_covered": true,
+      "case_id": "tata2020-44f470342e45-48",
+      "before_characters": 2120,
+      "after_characters": 2468
+    },
+    {
+      "root": "Qd1",
+      "offset": 13,
+      "san": "Bxc3",
+      "was_visible": false,
+      "now_visible": true,
+      "now_covered": true,
+      "case_id": "tata2020-d6f08af5fedb-32",
+      "before_characters": 3743,
+      "after_characters": 3792
+    }
+  ],
+  "english_example": {
+    "before": "Nxc1 recaptures the black rook on c1. Nxc1 captures the checking rook on c1.",
+    "after": "Nxc1 recaptures the checking black rook on c1.",
+    "scope": "Qxc8 archived master-game line, exact offset 6; original statement coverage and move ownership retained"
+  },
+  "remaining": [
+    "Action/TargetResponse/PieceRoute can repeat the same attack and escape, and many unrelated selected facts can dominate a long core. Resolve using owned typed relationships; do not erase obligations or use SAN equality as proof.",
+    "Already-covered preceding events placed later in a different selected semantic bundle are not globally reordered by the narrow missing-predecessor repair.",
+    "These 36 analyses were previously opened and are regression cases. A new frozen game-separated balanced master-game evaluation is still required.",
+    "The 14/18 useful and complete answers with zero important-cost omissions release floor is unchanged and has not been established by these checks.",
+    "Automatic threat investigation remains off by default; this turn does not establish that it improves default commentary.",
+    "Actual screen, responsive interaction, first load, cancellation, retry and service environment were not retested in this source-only request."
+  ],
+  "source_hashes": [
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "sha256": "3639d30a54ac2000629570715f91c0ca317be669e149396c35adc4b9f6e39da1"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "sha256": "672ae21d82468ac09e7d9416e7d709bf09f9bbff6a7b671579dda69209c46dc7"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "4fde5c21db96898a8b93f9107bcd9ef59b0ba9de9c38e57a7f74cd36d866c83e"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "d8d914b305704c3c6d9b02afe083519875e8935ebe91aaee67c88ccb4ccc8401"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "afb24c5a0b09983571de32c2dc1e155e7971c52c4b6569baac851052745df702"
+    },
+    {
+      "file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+      "sha256": "0c5eabc42c01d431701040c6a3150cb65bf434cc8bf0199d09682a8e8fbd1eb5"
+    }
+  ],
+  "artifacts": {
+    "before_after_bodies": "target/commentary-followup-20261001/read/same-input-content-diff.json",
+    "fresh_current_replay": "target/commentary-followup-20261001/replays/fresh/product-output.json",
+    "r13_current_replay": "target/commentary-followup-20261001/replays/r13/product-output.json",
+    "probe_driver": "target/commentary-followup-20261001/replay.py",
+    "coverage_check": "target/commentary-followup-20261001/verify_replay.py",
+    "archived_inputs": "target/commentary-followup-20261001/archive",
+    "archive_integrity_manifest": "target/commentary-followup-20261001/restored-manifest.json"
+  }
+}

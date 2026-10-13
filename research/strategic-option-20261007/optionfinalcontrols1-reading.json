@@ -1,0 +1,713 @@
+[
+  {
+    "id": "H02",
+    "result": {
+      "game_id": "H02",
+      "elapsed_ms": 15270,
+      "works": 4,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 1887.328
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 8.151
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 183.559
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.794
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 2066.552
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 103.338
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1266.49
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.428
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 2542.896
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 354.703
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1635.512
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.031
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1536.307
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 485.416
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1142.763
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.12
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1461.467
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 574.054
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "Nd2 clears f3; Bf3 later occupies that square in this line. After Nd2, White's bishop on c1 does not support White's pawn on f4, whereas the c1-bishop does after Re1. After Nd2, White's queen on c2 does not support White's bishop on e2, whereas the c2-queen does after Re1. White's knight on c3 still supports that target. In the Nd2 line: After Bf3, White's bishop on f3 keeps targeting Black's bishop on g4. After Bg4, White's bishop on e2 now targets Black's bishop on g4. Nb6 clears d7; Bd7 later occupies that square in this line. Bd7 moves the bishop out of the attack from White's bishop on f3. After h3, White's pawn on h3 now targets Black's bishop on g4. After Qg3, White's queen on g3 now targets Black's bishop on g4. Bh5 moves the bishop out of the attacks from White's queen on g3 and White's pawn on h3. After Bxg4, the black bishop originally on c8 is still present on g4. After Qh4, the black bishop originally on c8 is still present on h5. In the Re1 line: After Nb6, Black's knight on b6 now targets White's pawn on d5. In the Nd2 line: After Nb6, Black's knight on b6 now targets White's pawn on d5. In the Re1 line: After Nc4, Black's knight on f6 attacks White's pawn on d5. Nc4 moves the knight from b6 to c4, ending its attack on White's pawn on d5. After Nh5, the white pawn originally on d5 is still present on d5. In the Nd2 line: After Qh4, the white pawn originally on d5 is still present on d5. After Qh4, Black's knight on b6 attacks White's pawn on d5. After Nd2, White's knight on d2 adds support to White's pawn on e4, which is under attack from Black's queen on e7, Black's knight on f6. Bxg4 captures the black knight on g4. Bxg4 recaptures the white bishop on g4."
+        ],
+        "detail": [
+          "In the Re1 line, both sides exchange one bishop. Bxd7 captures the black bishop on d7. Qxd7 recaptures the white bishop on d7.",
+          "In the Nd2 line, White gives up one bishop for one knight. Bxg4 captures the black knight on g4. Bxg4 recaptures the white bishop on g4."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C03",
+    "result": {
+      "game_id": "C03",
+      "elapsed_ms": 14049,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 45.172
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 6.76
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 45.032
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.782
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 342.598
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 100.3
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 132.848
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.717
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 273.553
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 139.805
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1070.001
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.481
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 830.094
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 323.042
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 907.483
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.124
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1231.674
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 517.139
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1179.824
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.107
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1363.356
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 644.009
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2215.954
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.358
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1795.007
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 832.072
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "investigated_mechanism",
+        "basic": [
+          "Nbd7 occupies d7, taking that retreat square away from Black's knight on f6. After e5 attacks the knight, the recorded reply is Ne8. Na6 leaves d7 available: against the same e5, Black can play Nd7. In that tested position, Nd7 evaluates above Ne8. After Nd7, Black's knight on d7 attacks White's pawn on e5; after Ne8, Black's knight on e8 does not attack White's pawn on e5."
+        ],
+        "detail": [
+          "In the provided Nbd7 line, the same knight next moves with Ndc5 to c5. After Nbd7, Black's queen on d8 does not support Black's pawn on d5, whereas the d8-queen does after Na6. Black's pawn on c6 and Black's pawn on e6 and Black's knight on f6 still support that target. In the Nbd7 line: After Ndc5, Black's knight on c5 adds support to Black's knight on e6, which is under attack from White's knight on d4. With cxd5, the white pawn originally on c4 captures the black pawn originally on d5; with exd5, the black pawn originally on e6 recaptures that pawn. Nbd7 develops the knight from b8 to d7, controlling e5. After Nbd7, Black's knight on d7 adds support to Black's knight on f6. After e5, White's pawn on e5 now targets Black's knight on f6. Ne8 moves the knight out of the attack from White's pawn on e5. After Ne8, Black's knight on e8 does not support Black's pawn on d5. After e5, White's queen on c2 now targets Black's pawn on h7. After Nf5, White's knight on f5 blocks the line from White's queen on c2 to Black's pawn on h7. After Qxd4, the black pawn originally on h7 is still present on h7. In the Na6 line, Black's knight on a6 controls the empty c5 square; c5 brings Black's pawn on c5 there under its support. After dxc5 captures the supported pawn, Nxc5 recaptures its capturer with the supporting knight. Na6 develops the knight to a6; later Rac8 passes through the vacated b8 square in this line. After Rac8, Black's rook on c8 now targets White's queen on c2. Na6 develops the knight from b8 to a6. In the Nbd7 line: Nxd4 captures the white knight on d4. Qxd4 recaptures the black knight on d4. In the Na6 line, both sides exchange three pawns; White gives up one bishop for one knight. exd5 captures the black pawn on d5. exd5 recaptures the white pawn on d5. dxc5 captures the black pawn on c5. Nxc5 recaptures the white pawn on c5. Bxb4 captures the white pawn on b4. Bxf6 captures the black knight on f6. Qxf6 recaptures the white bishop on f6. cxd5 captures the black pawn on d5. In the Nbd7 line, both sides exchange two pawns and one knight; White gives up one knight for one bishop.",
+          "In the Nbd7 line: cxd5 captures the black pawn on d5. exd5 recaptures the white pawn on d5. cxd4 captures the white pawn on d4. N3xd4 captures the black pawn on d4. Bxd4 recaptures the white knight on d4. Nxd4 recaptures the black bishop on d4. Nxd4 captures the white knight on d4. Qxd4 recaptures the black knight on d4.",
+          "In the Na6 line, both sides exchange three pawns; White gives up one bishop for one knight. exd5 captures the black pawn on d5. exd5 recaptures the white pawn on d5. dxc5 captures the black pawn on c5. Nxc5 recaptures the white pawn on c5. Bxb4 captures the white pawn on b4. Bxf6 captures the black knight on f6. Qxf6 recaptures the white bishop on f6. cxd5 captures the black pawn on d5.",
+          "In the Nbd7 line, both sides exchange two pawns and one knight; White gives up one knight for one bishop. cxd5 captures the black pawn on d5. exd5 recaptures the white pawn on d5. cxd4 captures the white pawn on d4. N3xd4 captures the black pawn on d4. Bxd4 recaptures the white knight on d4. Nxd4 recaptures the black bishop on d4. Nxd4 captures the white knight on d4. Qxd4 recaptures the black knight on d4."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D06",
+    "result": {
+      "game_id": "D06",
+      "elapsed_ms": 4114,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 22.036
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.639
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 23.655
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.756
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 104.789
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 22.718
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 46.441
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.731
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 145.242
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 37.236
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 557.998
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.447
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 256.113
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 77.44
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 192.719
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.003
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 412.349
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 155.394
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 398.167
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.293
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 427.729
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 180.42
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 450.585
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.01
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 377.601
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 190.41
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "observed_terminal_comparison",
+        "basic": [
+          "After Re1, White's rook on e1 does not control f2. In the provided Re1 line: Qf2+ gives check to the White king on g1 with Black's queen on f2. Kh1 moves the king to h1. Qxe1+ captures the white rook on e1. Qxe1+ gives check to the White king on h1 with Black's queen on e1. Kh2 moves the king to h2. In the Re1 line, White loses one rook. After Rh2#, Black wins by checkmate.",
+          "In the Rxf6 line, White gives up one pawn and one rook for one queen."
+        ],
+        "detail": [
+          "In the Rxf6 line, White gives up one pawn and one rook for one queen. Rxf6 captures the black queen on f6. Rxf6 recaptures the white rook on f6. Rxe4 captures the white pawn on e4.",
+          "In the Re1 line, White loses one rook. Qxe1+ captures the white rook on e1. After Rh2#, Black wins by checkmate."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "R01",
+    "result": {
+      "game_id": "R01",
+      "elapsed_ms": 1261,
+      "works": 2,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 11.87
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.002
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 26.596
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.829
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 79.342
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 16.07
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1089.255
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.23
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 14.574
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 15.635
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the g4 line through Kd7, neither side loses material or promotes.",
+          "In the Ke3 line, both sides exchange one pawn; Black also loses one pawn."
+        ],
+        "detail": [
+          "In the g4 line through Kd7, neither side loses material or promotes.",
+          "In the Ke3 line, both sides exchange one pawn; Black also loses one pawn. axb4 captures the black pawn on b4. cxb4 recaptures the white pawn on b4. cxb4 recaptures the black pawn on b4."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "R02",
+    "result": {
+      "game_id": "R02",
+      "elapsed_ms": 5264,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 11.03
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 1.765
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 23.391
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.775
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 115.968
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 24.92
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 702.64
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.344
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 429.952
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 122.538
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 595.003
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.903
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 77.518
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 119.997
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 570.465
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.016
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 329.735
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 156.973
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 613.287
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.04
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 226.43
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 168.186
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 658.139
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.898
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 122.395
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 176.759
+        }
+      ]
+    },
+    "assessment_state": "needs_refresh",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the Kg4 line: After Ke5, Black's king on e5 now targets White's pawn on e4. In the provided Kg4 line, the same king next moves with Kf3 to f3. After Kg4, White's king on g4 does not support White's pawn on e4; after g4, White's king on f4 supports White's pawn on e4. In the Kg4 line: After Kf3, White's king on f3 adds support to White's pawn on e4, which is under attack from Black's king on e5. fxe4 captures the white pawn on e4. Kxe4 captures the black pawn on e4."
+        ],
+        "detail": [
+          "In the Kg4 line, both sides exchange one pawn; Black also loses two pawns. fxe4 captures the white pawn on e4. Kxe4 captures the black pawn on e4. Kxc5 captures the black pawn on c5. Kxc4 captures the black pawn on c4.",
+          "In the g4 line, both sides exchange two pawns; Black also loses three pawns. fxe5 captures the white pawn on e5. Kxe5 recaptures the black pawn on e5. Kxc5 captures the black pawn on c5. Kxg4 captures the white pawn on g4. Kxc4 captures the black pawn on c4. Kxa4 captures the black pawn on a4. Kxb3 captures the black pawn on b3."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T09h3",
+    "result": {
+      "game_id": "T09h3",
+      "elapsed_ms": 7688,
+      "works": 7,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 10.156
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 1.438
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 20.482
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.011
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 80.097
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 18.806
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 806.123
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.426
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 161.251
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 53.205
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 506.509
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.002
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 21.336
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 53.173
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2282.189
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.179
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 287.462
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 128.161
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 249.725
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.505
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 389.603
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 169.101
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 762.941
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.233
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 69.428
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 172.068
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 708.45
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.5
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 499.672
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 214.303
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the Kd2 line, White loses one pawn.",
+          "In the h3 line, White loses two pawns."
+        ],
+        "detail": [
+          "In the Kd2 line, White loses one pawn. gxf4 captures the white pawn on f4.",
+          "In the h3 line, White loses two pawns. Kxf3 captures the white pawn on f3. Kxf4 captures the white pawn on f4."
+        ]
+      }
+    ]
+  }
+]

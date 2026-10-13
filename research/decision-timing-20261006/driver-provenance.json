@@ -1,0 +1,16 @@
+{
+  "recorded_utc": "2026-10-06T01:49:23.749154+00:00",
+  "scope": "Current research drivers only. Older per-run historical harness digests were not recorded and are not reconstructed.",
+  "superseded": "driver-provenance.superseded.json was copied from a prior goal and did not describe this goal; retained for audit.",
+  "driver_sha256": {
+    "fresh.py": "2e35964ec01d8dbe7b380bb0fe19a5349ac99c6f15f57590632327ef31d4b719",
+    "replay.py": "f57de9961c15cb011c5652d93ab1e75f6d5d4efc3ba65c1da33cf57bcb460ea5",
+    "engine_probe.py": "d851c2a165a1393d62b772613e493904f7266d773c43788fe914b1a48c41dcb5",
+    "frontend.py": "1953c5f03775668dd08ec5425af6bc1eab2d794281fcc48b7802795b198c038e",
+    "read_run.py": "8301c675f0784943da66e9809ba0ed4d629424a0f78954241ef44dc887db1b66"
+  },
+  "transport_sha256": "543dba10c7caca77be964b4b818ac8c578994e013da91d57024b25114d2a87c7",
+  "replay_transport_sha256": "fcc01809172551d2a25f4a66d068e61585d31310449b796d8ab0b9f993fffbc6",
+  "engine": "Actual sf18-smallnet-t2-h16-v1 frontend bridge for product jobs; separate single-thread Hash16 UCI probes for independent investigation.",
+  "late_harness_change": "Streaming JSON avoids allocating a duplicate full snapshot string. Earlier MemoryError interruptions are preserved in holdout1 and holdout2."
+}

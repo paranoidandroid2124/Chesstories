@@ -1,0 +1,172 @@
+{
+  "schema_version": "chesstory.evaluation-reference.v1",
+  "status": "completed-scoped-purpose-comparison",
+  "started_utc": "2026-10-13T00:27:16Z",
+  "deadline_utc": "2026-10-13T01:57:16Z",
+  "limits": {
+    "depth_max": 18,
+    "request_ms": 10000,
+    "quality_positions": 2,
+    "minutes": 90
+  },
+  "objective": "Explain the actual evaluation reference and played move through their purposes, the observed opponent replies, and the remaining functional/material difference in the basic answer.",
+  "cases": [
+    {
+      "id": "existing",
+      "game": "Gelfand–Avrukh, Ramat Aviv 1999, after 14.b5",
+      "played": "Bd5",
+      "source_pdf_pages": [
+        292,
+        293
+      ],
+      "minimum": [
+        "Actual reference c6 and played Bd5 must own the basic comparison, rather than substituting Nd5.",
+        "Connect c6 support of b7/d5 and the timing of the bishop exchange to the actual reply/recapture and remaining position.",
+        "A transposing reply can share a purpose but must not erase different replies or prove full equality."
+      ]
+    },
+    {
+      "id": "new",
+      "game": "Gelfand–Avrukh, Ramat Aviv 1999, after 10.b4; book alternative 10...e4",
+      "played": "e4",
+      "fen": "r1bq1rk1/ppp2pbp/1nn3p1/4p3/1P6/2NPBNP1/P3PPBP/R2Q1RK1 b - - 0 10",
+      "source_pdf_pages": [
+        286,
+        287
+      ],
+      "minimum": [
+        "Keep the actual returned evaluation reference, even if it differs from the book main line Nd4.",
+        "Explain what e4 attempts, the observed pawn/bishop/rook exchange and the remaining activity or exposed duty relative to the reference.",
+        "Do not call an observed rook capture a net gain without the pawn/knight and recapture costs."
+      ],
+      "novelty": "A new position selected from the source before any engine output this turn; same game but different move purpose and mechanism."
+    }
+  ],
+  "completion": "Both actual basic screens must make the actual reference/played difference understandable, not merely name both moves or pass tests. Any unmet minimum means incomplete.",
+  "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+  "prior_failures_reviewed": [
+    {
+      "record": "choice-neutralization-20261012.json",
+      "finding": "The prior goal explicitly left c6/Bd5 and the numerical assessment reason unresolved; Bd5/Nd5 content cannot substitute for it."
+    },
+    {
+      "record": "basic-purpose-20261005/result.json",
+      "finding": "345 tests and 35 snapshots already passed without explaining the reason for the evaluation gap. Current contacts alone are insufficient."
+    },
+    {
+      "record": "functional-judgment-20261009/h05-10e-five-local-conflict-cycles.json",
+      "finding": "Repeated local comparison changes produced varying assessments; more searches and a passing suite did not establish the intended explanation."
+    }
+  ],
+  "root_causes": [
+    "MoveWorkProjection returned a played-purpose or same-destination answer before reading the actual assessment pair, relegating c6/Bd5 to a footer.",
+    "When an unrestricted search ranked the played Bd5 first, firstPurposeResponse included Bd5/Nd5 but dropped the other assessed root c6 from the additional comparison. The follow-up could change the assessment question itself.",
+    "Current attacks and supports were not bound to a common post and to the actual opening exchange outcome in both assessed lines. Stopping at the first non-recapture could describe a knight that the selected exchange then removed."
+  ],
+  "implementation": {
+    "common_reading": "ReferencePurposeReading selects the exact primary assessment pair, links a pawn-backed central post to each quiet root purpose, and reads its pawn cover, occupants, retained original mover, and opponent entry after the observed opening exchange.",
+    "scope": "Pawn-backed central posts of bishops/knights with an observed contrast in the actual assessment pair. It is not a general discovery mechanism for every evaluation reason.",
+    "scheduler": "A fully closed and renderable actual-pair answer can finish the short job. If a supplementary choice is still investigated, retain both assessed roots in the same search. Explicit submitted proposals keep their existing agenda.",
+    "proof": "Private owner-bound reading; exact primary line pair; existing material, check, condition, occurrence and display closure; no FEN, move-name or book-ranking branches; no frontend or protocol exception.",
+    "depth": "Policy unchanged: short requests D12; maximum D18."
+  },
+  "source_reading": {
+    "pages": [
+      287,
+      292,
+      293
+    ],
+    "existing": "The book explains c6 as defending b7 and supporting d5, and gives a Bd5 Nge4 c6 transposition. This is not proof that every reply transposes.",
+    "new": "The book gives e4 Nxe4 Bxa1 Qxa1 and dark-square weaknesses; the actual browser engine chose Nxb4. The implementation and screen explain the returned pawn exchange, without inventing the book rook capture."
+  },
+  "development_failures": [
+    "Initial prefix closure stopped after exd4 and named a remaining d5 knight, although selected capture obligations continued through Nxd5 Qxd5. It now consumes consecutive opening captures on different squares before reading the remaining position.",
+    "First fresh existing screen changed to a Bd5/Nd5 assessment after Bd5 edged c6 by 2cp in the root search. This exposed the scheduler dropping c6; the observed report is retained as the rank_flip regression input.",
+    "The first temporary replay helper used a nonexistent evidence field; pattern extraction fixed the helper.",
+    "The frontend test command initially omitted the existing DOM preload, and its pair assertion initially used decoded move fields on raw wire data. The corrected harness reads the actual line IDs and raw move strings; product code did not change for these harness failures."
+  ],
+  "quality_verdict": {
+    "existing": "Met within the scoped purpose comparison. Actual c6/Bd5 owns the basic screen. c6 blocks Bg2 against b7 and gives pawn support to d5, which survives the returned pawn/minor-piece exchanges. Bd5 challenges Bg2 immediately; Bxd5 Nxd5 Bxd4 exd4 Nxd5 Qxd5 leaves a queen on d5 and no pawn support. Complete material costs are included. The final c6 line also gives up the original b3 bishop, so the screen does not falsely claim it is retained.",
+    "new": "Met within the scoped purpose comparison. Actual Nd4/e4 owns the basic screen. Nd4 retains the e5 pawn behind the central knight; e4 attacks d3/f3 but Nxe4 Nxb4 trades the central pawn for b4 and leaves White Ne4 supported by d3. A rook capture was not observed or claimed.",
+    "not_just_tests": "Both basic product screens were read after fresh browser Stockfish searches and Java HTTP responses; Qxd5 was also opened in the product board preview and the queen was visible on d5.",
+    "not_claimed": "This does not prove that this one positional difference quantitatively causes the entire score gap, establish stable move ranking at greater depth, explain every strategic purpose, or make the product release-ready."
+  },
+  "verification": {
+    "cases": [
+      {
+        "id": "existing",
+        "elapsed_ms": 1539.6700000017881,
+        "request_ms": 10000,
+        "depths": [
+          12
+        ],
+        "works": [
+          "root_search"
+        ],
+        "screen": "evaluation-reference-20261013/existing.png"
+      },
+      {
+        "id": "new",
+        "elapsed_ms": 4602.20000000298,
+        "request_ms": 10000,
+        "depths": [
+          12,
+          12
+        ],
+        "works": [
+          "root_search",
+          "focus_comparison"
+        ],
+        "screen": "evaluation-reference-20261013/new.png"
+      }
+    ],
+    "backend": {
+      "suite": "ReferencePurposeReadingTest",
+      "passed": 2,
+      "checks": [
+        "actual pair and root retention when rank flips",
+        "full opening exchange reaches the queen instead of the intermediate knight",
+        "central pawn retention/loss and opponent knight support",
+        "foreign owner and unpaid selected captures rejected"
+      ]
+    },
+    "frontend": {
+      "suite": "moveReviewReferencePurpose.test.ts",
+      "passed": 3,
+      "checks": [
+        "actual basic summaries survive product decoder with the assessed pair",
+        "foreign move occurrence rejected",
+        "selected material coverage removal rejected",
+        "depth-19 work rejected"
+      ]
+    },
+    "build": "Changed Scala production classes and callers compiled; product UI bundle built. No broad regression suite.",
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/evaluation-reference-browser.json.gz",
+    "browser": "Actual product coordinator, decoder, review component and Chessground; fresh Stockfish 18 worker per request, 2 threads, 16MB; Java runtime at localhost. Final new case was first request after server restart; final existing case followed it.",
+    "console": "Only favicon 404 and Stockfish informational logs; no product JavaScript error."
+  },
+  "limitations": [
+    "The new position was chosen from the same reference game before engine output and was then used during development; it is not an independent held-out test.",
+    "The explicit common mechanism currently covers pawn support of a central bishop/knight post and its observed opening continuation, not arbitrary long-term purpose or all evaluation reasons.",
+    "Short D12 searches varied in both PV and c6/Bd5 ranking. These results do not establish a unique best move or the entire cause of its score.",
+    "Two individual live requests do not establish a general latency distribution. Whole Docker Lila integration, the broad regression suite and Korean prose were not tested."
+  ],
+  "finished_utc": "2026-10-13T00:58:19.752026+00:00",
+  "elapsed_minutes": 31.06,
+  "preservation": {
+    "baseline_entries": 384,
+    "unchanged_entries": 378,
+    "intentionally_extended_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "research/README.md"
+    ],
+    "unexpected_changes": [],
+    "previous_README_bytes_preserved": true,
+    "commit_created": false,
+    "temporary_server_stopped": true
+  }
+}

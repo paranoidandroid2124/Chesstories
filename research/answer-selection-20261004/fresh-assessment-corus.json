@@ -1,0 +1,1237 @@
+{
+  "schema_version": "chesstories.frozen-commentary-content-assessment.v1",
+  "cohort": "selectionv9 fresh Corus 2006 nine-game subset",
+  "assessor": "Independent LLM reader; no independent human reader study or browser session was performed.",
+  "oracle_file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+  "oracle_sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+  "product_readings_file": "research/answer-selection-20261004/fresh-product-readings.json",
+  "product_readings_sha256_at_read": "f690e4d775deaf60d2ea325b16280372f2b0a3b799a13e8dbe775b8105471096",
+  "source_version_assessed": "original frozen selectionv9",
+  "denominator": 9,
+  "scope": {
+    "read": "Nine Corus basic_english, detail_english and basic-unit en/covered/proof/required metadata, with the unchanged prewritten oracle and its exact supplied pair facts.",
+    "not_read": "Other cohort prose, final snapshots, journal, new execution logs, product source or test source.",
+    "new_engine_execution": false,
+    "oracle_modified": false,
+    "product_modified": false,
+    "price_rule": "A typed role-level exchange/loss description plus any independently stated captures can preserve the price without spelling out every SAN. Proof-only endpoints and mere SAN occurrence do not themselves describe a capture or require all endpoint events in the basic answer.",
+    "selection_rule": "Coverage of the prewritten primary question is separate from a closed useful local question. Missing a different future event is not a price omission unless it changes a claim actually selected into the basic answer.",
+    "quality_rule": "A closed subanswer can be present inside a poor basic explanation. Presence of that part is not treated as passing the full short, focused, natural-basic release criterion.",
+    "delivery_rule": "The original v9 decoder failures are parent-reported execution findings, kept separate from the semantic content present in this frozen backend reading. These are not independently observed browser failures in this assessment.",
+    "after_freeze_changes": "Parent reports later action_moves/serializer/consumer reference-contract repairs preserve the original v9 English text, selected content, facts and progress. This report assesses the preserved v9 content and does not substitute a new product run.",
+    "finalization": "All nine cases finalized. No new source/prose/log reading, engine replay, oracle revision or additional verification was added during finalization beyond the assessment/oracle files needed to preserve links and counts."
+  },
+  "cases": [
+    {
+      "game_id": "COR06-01",
+      "question": "selected_comparison",
+      "primary_fit": "partial",
+      "primary_useful_complete": false,
+      "primary_reason": "e5 clears e4 and Ne4 actually uses it against ...f6, but the g4 arm's ...h6/Nf3 response is absent. The root comparison is surrounded by common rook attacks, unrelated target histories and multiple support facts.",
+      "registered_auxiliary_useful_complete": false,
+      "additional_closed_local_content": [
+        {
+          "question": "How does e5 give the g5 knight an actual e4 retreat after ...f6?",
+          "useful": true,
+          "complete": true,
+          "status": "A closed subquestion of the frozen primary, not a replacement primary or a new oracle entry.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                7,
+                8
+              ],
+              "line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:8a448ba82e5afc2b41b5bd1fb561e8e64be2162f568ddb9011f5ec1916afc231"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": false,
+      "important_price_omissions": [
+        {
+          "claim": "cxb5 captures the black bishop on b5.",
+          "missing": "The next actual ...Rxe3 removes White's original c1 bishop. Without it this selected bishop-gain statement lacks its other-square bishop price.",
+          "detail_preserves_price": true,
+          "failure_boundary": "selected_content_closure",
+          "scope": "Actual paired bishop gain and loss at candidate offsets 14/15. No claim that g4 forces either capture.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                14,
+                15
+              ],
+              "line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:ccc2e3b1a15651c54112b53ba7e65cdc98e1495cfac28b61ebbf608d3769cee0"
+            }
+          ]
+        }
+      ],
+      "other_primary_gaps": [
+        {
+          "gap": "The candidate knight's ...h6/Nf3 response is missing.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                5,
+                6
+              ],
+              "line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:ccc2e3b1a15651c54112b53ba7e65cdc98e1495cfac28b61ebbf608d3769cee0"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "The same ...Nc7 rook target and a4 rook attack are repeated separately for both arms before any contrast is taught.",
+          "The f6/f5 target and evasion history is repeated with several still-present facts; the direct e4-clearance answer is embedded in it.",
+          "Adding the cxb5 gain at the end opens a new account whose bishop price is only in details."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "Contains a useful closed clearance subanswer, but the root comparison is incomplete and an explicitly selected bishop gain is unclosed.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "finding_source": "Parent reported Corus decoder failures only for 02/work2 and 05/work2; no extra logs read."
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-01"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-01-obligation-facts.json",
+        "sha256": "dd0d84abba814d911ed80d339838b0e0749294c76b2fd7014bf158c0a0e37fd7"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:evidence:candidate-comparison:572cf6433bf09a1e48bfbefeea295732c53a32b1f3fb7184c29871bffb8df662",
+        "reference_line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:8a448ba82e5afc2b41b5bd1fb561e8e64be2162f568ddb9011f5ec1916afc231",
+        "candidate_line_id": "move-review:513335b13d7a094d629f3613309a58077241a7d9a4e20079607cd0579fa00772:30:g3g4:line:ccc2e3b1a15651c54112b53ba7e65cdc98e1495cfac28b61ebbf608d3769cee0"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "partial_primary_subanswer_competing_with_histories",
+      "content_failure_boundaries": [
+        "primary_scope",
+        "selected_content_closure",
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    },
+    {
+      "game_id": "COR06-02",
+      "question": "selected_comparison",
+      "primary_fit": "partial",
+      "primary_useful_complete": false,
+      "primary_reason": "The immediate Nbd5 attack on Bc3/Ba5 response and Bc6 attack on Qa4/Qa5 response are stated. The reference's original Nb4 retention is stated, but the candidate's e4/Nb4/Bxb4 removal of that same original knight is not taught. 'After Bxb4, the white bishop ... is still present on b4' supplies a SAN/endpoint witness, not that missing victim/fate explanation.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "What is actually exchanged by ...Nxd2/Nxd2 and later ...Bxc4 in the Bc6 line?",
+          "useful": true,
+          "complete": true,
+          "reason": "The basic explicitly includes both knight captures at d2 and the recapturing white knight's later loss at c4.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                6,
+                7,
+                13,
+                14
+              ],
+              "line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:7394f43cecd26e7b717f05d1f235809b9affd450a0ef3ff4c17d87b15ae21a6a"
+            }
+          ]
+        },
+        {
+          "question": "What price follows the central pawn capture in the Nbd5 line?",
+          "useful": true,
+          "complete_for_pawn_exchange": true,
+          "complete_for_later_knight_outcome": false,
+          "reason": "dxc5/Bxc5 is preserved, but Bxb4 is only named in a survival sentence about the bishop.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                11,
+                12,
+                13
+              ],
+              "line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:da202259667be7263f4543d6ff15f0b272b275a7db1d09a79e48266d879f7f3e"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "other_primary_gaps": [
+        {
+          "gap": "The root Nb4's later return/removal in the Nbd5 arm is absent as meaning.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "reason_not_price_count": "The text says Nbd5 leaves the current attacks; it does not expressly claim permanent safety or final survival. The later pawn attack and return are a new episode, so the frozen primary's unmet fate comparison must not automatically become a missing price of the initial evasion.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                9,
+                10,
+                13
+              ],
+              "line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:da202259667be7263f4543d6ff15f0b272b275a7db1d09a79e48266d879f7f3e"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "Many pawn support, queen target and unchanged-piece histories intervene between the two root actions and their replies.",
+          "The bishop/queen/knight targets are introduced repeatedly with full color, role and square descriptions.",
+          "'Rb8 uses the cleared line to target Black's knight on b4' uses attack-like wording for a friendly support relation. The later support sentence clarifies it, so this is imprecise diction rather than a proved false tactical claim."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "Useful closed local trades and an immediate root-action comparison are present, but the same-original-knight outcome comparison remains incomplete and the basic reads as a broad history inventory.",
+      "delivery_execution": {
+        "v9_decoder_failure": true,
+        "work_id": "work2",
+        "parent_reported_effect": "Selection disappeared and issued follow-up work was rejected when an endpoint proof was read as an actual capture.",
+        "failure_boundary": "delivery_contract",
+        "independent_browser_confirmation": false,
+        "finding_source": "Parent message; no new logs read.",
+        "content_grade_replaced_by_decoder_failure": false
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-02"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-02-obligation-facts.json",
+        "sha256": "e1f13aef88f6048096ec2ea8eada9080979b4f3796f3d71842c0095ad65195b7"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:evidence:candidate-comparison:5fa8b49b548dac01b8f17305d3c23cd3e8579a2db45098a01195d32ce41fdb19",
+        "reference_line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:7394f43cecd26e7b717f05d1f235809b9affd450a0ef3ff4c17d87b15ae21a6a",
+        "candidate_line_id": "move-review:6985638213d572ae48c2c802a71caa61cfeb847ce978a9754f3da4e0f1e59b98:31:b4d5:line:da202259667be7263f4543d6ff15f0b272b275a7db1d09a79e48266d879f7f3e"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "immediate_actions_selected_but_primary_original_target_outcome_unanswered",
+      "content_failure_boundaries": [
+        "question_selection_or_selected_content_scope",
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    },
+    {
+      "game_id": "COR06-03",
+      "question": "selected_comparison",
+      "primary_fit": "complete_in_fragments",
+      "primary_useful_complete": true,
+      "primary_reason": "The basic shows both original attacks on Nb3 and its Nbd4 evasion, the new e5-pawn attack, the actual checking-pawn recapture, the later bishop-for-pawn capture/removal, and both arms' role prices. Although exd4/Nxd4 and the candidate axb3/fxe6/Rxa2 victims are not all separate literal capture sentences, their typed role-level prices plus the independently stated bishop/pawn gains preserve the early exchange outcome.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "How is the f-pawn recapture answered in the fxe6 continuation?",
+          "useful": true,
+          "complete": true,
+          "reason": "The actual f5 clearance, Bh3 target, Bxe6+ and ...Kh8 are stated. The aggregate candidate price includes the actual a2 pawn loss; Rxa2 is also identified as an actual path use. Absence of a separate 'Rxa2 captures' sentence is not counted as missing that price.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:e32fd14b36e6ae361913b7213aa8b4bc93afb849c79a9435b83108dd3516f530"
+            }
+          ]
+        },
+        {
+          "question": "Why are there a pawn check and another knight recapture at c2?",
+          "useful": true,
+          "complete": true,
+          "reason": "...b3, ...bxc2+ and Nxc2 with the White king on b1 are explained. The earlier knight-for-pawn price prevents interpreting the first Nb3 as a surviving knight.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ],
+              "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:0c2b06e562ccbbd30106c5ce24eedb6ce8332b796dc77bf95252e186a6273904"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "role_price_acceptance": {
+        "reference": "The abstract knight-for-pawn price closes exd4/Nxd4 and the common pawn exchange; the separate axb3 bishop gain and white-pawn recapture must be read with it.",
+        "candidate": "The abstract one-pawn exchange plus extra white pawn/knight loss combines with the separately stated bishop capture and Bxe6+ pawn recovery. Do not treat an individual partial-account sentence as the entire endpoint's net material.",
+        "refs": [
+          {
+            "arm": "reference",
+            "offsets": [
+              3,
+              4,
+              5,
+              6,
+              8,
+              9
+            ],
+            "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:0c2b06e562ccbbd30106c5ce24eedb6ce8332b796dc77bf95252e186a6273904"
+          },
+          {
+            "arm": "candidate",
+            "offsets": [
+              0,
+              1,
+              2,
+              3,
+              5,
+              6
+            ],
+            "line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:e32fd14b36e6ae361913b7213aa8b4bc93afb849c79a9435b83108dd3516f530"
+          }
+        ]
+      },
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "The answer repeatedly introduces temporary support and attack states, although the essential issue is that the original Nb3 is still lost and the bishop gains have prices.",
+          "'fxe6' and 'axb3' denote opposing actors at different occurrences; flat prose switches between them with weak arm/actor grouping.",
+          "Partial prices introduced as 'In the ... line' are distributed among standalone captures. The complete price is recoverable, but the reader must assemble its interval and net meaning.",
+          "The transient doubled e-pawns and surviving remote d7 knight are not developed into a consequential answer."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "The frozen primary and important prices are present semantically; readability remains poor because a closed tactical comparison is delivered as many histories and separately scoped price fragments.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "engine_budget_failure_reported": true,
+        "work_id": "work4",
+        "failure_boundary": "additional_investigation_budget",
+        "finding_source": "Parent message; no new logs read.",
+        "content_grade_replaced_by_budget_failure": false
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-03"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-03-obligation-facts.json",
+        "sha256": "4234b9aa5fdf64188be07a50b6c7108071087fe9c1b26cfb6c7f0355a369bd1a"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:evidence:candidate-comparison:f191be68aaf4d420df5e04eb6e22b7aebb8392e2a698b884cb7714c8fcd6c6cb",
+        "reference_line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:0c2b06e562ccbbd30106c5ce24eedb6ce8332b796dc77bf95252e186a6273904",
+        "candidate_line_id": "move-review:3d4e640923614c10b2de8a529280334ea180329b0e1c53277f80e56a2d0f7e71:30:b3d4:line:e32fd14b36e6ae361913b7213aa8b4bc93afb849c79a9435b83108dd3516f530"
+      },
+      "primary_content_semantically_preserved": true,
+      "primary_center_delivery": "same_original_target_comparison_and_prices_preserved_in_fragments",
+      "content_failure_boundaries": [
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient.",
+      "primary_flow_note": "Primary useful/complete is a semantic comparison judgment: the original Nb3 is addressed in both arms, its actual removal and the consequential bishop/pawn gains are paired with correct role prices. It does not mean the full basic is short, focused or natural."
+    },
+    {
+      "game_id": "COR06-04",
+      "question": "selected_comparison",
+      "primary_fit": "partial",
+      "primary_useful_complete": false,
+      "primary_reason": "Nc6/Qb3 and Nac4/Bf4 identify the different attacked pieces, and the reference queen exchange is explicit. In the Nc6 arm the queen's ...Rb8/Qa6 chase is described, but the selected Qxb7 pawn gain has no actual ...Rxb2 price in basic prose.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "Do ...Qxb5 or ...Rxa1 win an unreturned major piece in the Nac4 line?",
+          "useful": true,
+          "complete": true,
+          "reason": "Qxb5/Nxb5 is explicit. The rook exchange is conveyed by the valid 'both sides exchange one rook' price; the exact Rxa1/Rxa1 SAN pair need not be repeated as capture sentences.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                6,
+                7,
+                20,
+                21
+              ],
+              "line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:2dd0528cf709012991b43020bd3765bd6408e3891eff4e003b7c5a474db2ce84"
+            }
+          ]
+        },
+        {
+          "question": "What happens after Qxb7 in the Nc6 arm?",
+          "useful": true,
+          "complete": false,
+          "reason": "...Rb8/Qa6 is present, but the actual other-square pawn loss Rxb2 is only in details.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                5,
+                6,
+                7,
+                8
+              ],
+              "line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:9999d9b42e52c5756e26771d0d8622dcf5aa9f41eae2203bbd75bdce36ecc834"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": false,
+      "important_price_omissions": [
+        {
+          "claim": "Qxb7 captures the black pawn on b7.",
+          "missing": "...Rxb2 takes White's original b2 pawn immediately after the recorded ...Rb8/Qa6 chase. The selected gain needs this actual counterprice.",
+          "detail_preserves_price": true,
+          "failure_boundary": "selected_content_closure",
+          "scope": "Candidate offsets 5/6/7/8, same source queen chase and actual countercapture. No forced queen destination or root-caused pawn win is asserted.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                5,
+                6,
+                7,
+                8
+              ],
+              "line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:9999d9b42e52c5756e26771d0d8622dcf5aa9f41eae2203bbd75bdce36ecc834"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "The simple root contrast is followed by several knight, bishop, queen and pawn target histories and by distant exchanges.",
+          "Repeated still-present descriptions supply endpoints whose significance is not stated.",
+          "Two different axb3 moves with different colors/original pawns are spread across attack, escape and path-clearance statements; prices are largely correct but actor grouping is hard to follow."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "The root attacks are understandable and several local trades are closed, but the selected Nc6-arm pawn gain is missing its important price and the basic has no stable single focus.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "finding_source": "Parent reported Corus decoder failures only for 02/work2 and 05/work2; no extra logs read."
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-04"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-04-obligation-facts.json",
+        "sha256": "4887532adc6102ff2dadca217cac3ace5f42d4f49766397cfd61891d39cc2921"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:evidence:candidate-comparison:61dce3d77bf9af1db48ca1cbecc0a7284da4933cb865d0af9627844e13d1c844",
+        "reference_line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:2dd0528cf709012991b43020bd3765bd6408e3891eff4e003b7c5a474db2ce84",
+        "candidate_line_id": "move-review:40b55d31caf00d1ee6911a45b66fba373dc90ab8e7b80d285d43eb888fd1367a:31:a5c6:line:9999d9b42e52c5756e26771d0d8622dcf5aa9f41eae2203bbd75bdce36ecc834"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "partial_root_attack_comparison_with_unclosed_selected_gain",
+      "content_failure_boundaries": [
+        "selected_content_closure",
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    },
+    {
+      "game_id": "COR06-05",
+      "question": "selected_comparison",
+      "primary_fit": "substantial_partial",
+      "primary_useful_complete": false,
+      "primary_reason": "The immediate Be4 bishop exchange is correctly conveyed by the role price, and the retained Bd3 bishop's actual Bc4/Bxb3 use is present. The frozen primary's additional Nxc6/Bxc6 minor-piece comparison is not in the basic, but no basic knight-gain claim selects that independent exchange. Its omission is not an important missing price of the bishop question actually presented.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "Does the retained Bd3 bishop gain b3 without any pawn cost?",
+          "useful": true,
+          "complete": true,
+          "reason": "The basic includes the original d-pawn loss/c-pawn recapture, ...Qxd4 removing that new d4 pawn, and Bxb3 taking the black b-pawn. Thus the selected b3 gain is not missing the actual white pawn price.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                1,
+                4,
+                9,
+                12
+              ],
+              "line_id": "move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:line:9b14a26a9857b87f5a0db747727e463e188b18a4c85df41f72ce5d69aa0d755e"
+            }
+          ]
+        }
+      ],
+      "additional_closed_local_content": [
+        {
+          "question": "Does Be4 offer a bishop exchange or win Bb7 for nothing?",
+          "useful": true,
+          "complete": true,
+          "status": "Closed subquestion of the frozen primary.",
+          "reason": "'Both sides exchange one bishop' owns actual Bxe4/Qxe4 and is sufficient price delivery. Two SAN capture sentences are unnecessary.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                1,
+                2
+              ],
+              "line_id": "move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:line:2a3c1830d9f76e5f628b913b2516548e8497d9ef198e9dd990218ed962a5dfcd"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "other_primary_gaps": [
+        {
+          "gap": "The alternative's Nxc6/Bxc6 knight exchange is in details only.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "reason_not_price_count": "The basic does not claim this knight gain or the entire final minor-piece ledger. It chooses the root bishop's use and pawn captures instead.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                5,
+                6,
+                7
+              ],
+              "line_id": "move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:line:9b14a26a9857b87f5a0db747727e463e188b18a4c85df41f72ce5d69aa0d755e"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "The immediate bishop trade is deferred behind h7/g2/a6 support, attack and surviving-pawn histories.",
+          "Root evasion from Pb3 is repeated separately for each move among other facts rather than organizing the later bishop use.",
+          "Temporary screen/alignment and several untaken pawn targets are given as standalone ideas with no consequential outcome."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "Useful, closed bishop and pawn subanswers are present with correct prices; the text does not complete the wider frozen minor-piece comparison and remains an unfocused relation inventory.",
+      "delivery_execution": {
+        "v9_decoder_failure": true,
+        "work_id": "work2",
+        "parent_reported_effect": "Selection disappeared and issued follow-up work was rejected when an endpoint proof was read as an actual capture.",
+        "failure_boundary": "delivery_contract",
+        "independent_browser_confirmation": false,
+        "finding_source": "Parent message; no new logs read.",
+        "content_grade_replaced_by_decoder_failure": false
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-05"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-05-obligation-facts.json",
+        "sha256": "1d2389ae8fe927e6f6de58dab9e227f544216cd7b9ed50dd89802071eba5ba7d"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:evidence:candidate-comparison:e1ef03af7b9f001ef74f607ce632bcb0f6d54882f8403e5b710bab989234ce92",
+        "reference_line_id": "move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:line:2a3c1830d9f76e5f628b913b2516548e8497d9ef198e9dd990218ed962a5dfcd",
+        "candidate_line_id": "move-review:6b40a6b69965fdcf956d2fc194762bc6b2db752153abbbd422786a7736b296fa:30:c2e4:line:9b14a26a9857b87f5a0db747727e463e188b18a4c85df41f72ce5d69aa0d755e"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "closed_primary_bishop_subanswer_competing_with_histories",
+      "content_failure_boundaries": [
+        "primary_scope",
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    },
+    {
+      "game_id": "COR06-08",
+      "question": "selected_comparison",
+      "primary_fit": "not_answered",
+      "primary_useful_complete": false,
+      "primary_reason": "The played Nd7 has no explanation beyond a recorded root SAN. The important central knight exchange and Qxd6/Qxc3 price are only in details. The basic instead selects a Bd7/c8 rook clearance and a current support fact.",
+      "registered_auxiliary_useful_complete": false,
+      "additional_closed_local_content": [
+        {
+          "question": "How does Bd7 free c8 for the b8 rook?",
+          "useful_locally": true,
+          "complete_for_clearance": true,
+          "status": "Unlisted local mechanism observed in basic; it does not replace the frozen primary or become a registered oracle success after reading output.",
+          "reason": "Bd7/Rbc8 is an actual source-owned vacancy and occupation. The current support to Nc6 is not developed into an actual reply/use, and the line does not teach what Nd7 changes.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                12
+              ],
+              "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:51870bda4728077a2627c6f1a3c9b57fda5ecdf6ff594e6c79d8e1c5953cbe8f"
+            },
+            {
+              "arm": "candidate",
+              "offsets": [
+                0
+              ],
+              "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:dbc04a1cd698f9770aea4aad1cd0e000aeb66b8aff40089c41423ec7b7f0e377"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "other_primary_gaps": [
+        {
+          "gap": "Nd7's ...Nxd4/Qxd4 and Qxd6/Qxc3 exchange explanation is absent from the basic.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "reason_not_price_count": "The basic makes no Qxd6 bishop-gain claim to which the missing Qxc3 could be a price. This is missing primary content, not deletion of a price from an asserted basic gain.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                2,
+                3,
+                7,
+                8,
+                9,
+                10
+              ],
+              "line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:dbc04a1cd698f9770aea4aad1cd0e000aeb66b8aff40089c41423ec7b7f0e377"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "not_an_information_sea_but_wrong_scope",
+        "repetition": "mild",
+        "grammar_errors": [],
+        "issues": [
+          "'Bd7 develops the bishop from c8 to d7' largely repeats the already named clearance move.",
+          "'The recorded continuation is Nd7' gives the played root without an answer about its function or observed price.",
+          "Shortness here does not demonstrate a useful complete played-move comparison."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "A real, bounded local clearance is explained, but the played move and the central comparison are essentially unanswered. No selected basic gain has a missing price.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "engine_budget_failure_reported": true,
+        "work_id": "work3",
+        "failure_boundary": "additional_investigation_budget",
+        "finding_source": "Parent message; no new logs read.",
+        "content_grade_replaced_by_budget_failure": false
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-08"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-08-obligation-facts.json",
+        "sha256": "7419d833f306a0ee18f1c97c8445f42c940eff1511e1b45044c0a81c5b4cd002"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:evidence:candidate-comparison:0190f441dfa60337e9831e4c546f826d8061eea9f7b55637ab6e1e2bb639d378",
+        "reference_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:51870bda4728077a2627c6f1a3c9b57fda5ecdf6ff594e6c79d8e1c5953cbe8f",
+        "candidate_line_id": "move-review:f32c74c6e43b13282e53196d55a1558965d6150580810ee8d85221d94518188b:31:f6d7:line:dbc04a1cd698f9770aea4aad1cd0e000aeb66b8aff40089c41423ec7b7f0e377"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "different_local_scope_with_played_root_unexplained",
+      "content_failure_boundaries": [
+        "question_selection_or_selected_content_scope"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    },
+    {
+      "game_id": "COR06-09",
+      "question": "selected_comparison",
+      "primary_fit": "complete_in_fragments",
+      "primary_useful_complete": true,
+      "primary_reason": "The basic contains the root bishop evasion, ...Nd4/Nxd4/exd4, both arms' Nxe7+ and exact check replies, the c3 arm's bishop/knight exchange, and the candidate's role-level bishop exchange/knight-for-bishop price. Bxb3/cxb3 need not be separately narrated because that exact typed price preserves the moving bishop's loss. The late c3-arm Nf3 presence and candidate f3-knight removal establish the remaining-knight difference.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "How is c3 actually used in the d4 pawn exchange?",
+          "useful": true,
+          "complete": true,
+          "reason": "The basic explicitly links control of d4, arrival of the original d3 pawn, its capture and the supporting c-pawn's actual recapture. It also records that original c2 pawn later on d5.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                4,
+                5,
+                8,
+                16
+              ],
+              "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:d75e5f00cde6ecdce03205be7d75833271e1f844a0d431d57f3fe5280684a828"
+            }
+          ]
+        },
+        {
+          "question": "Does Bb3 keep the bishop through the whole supplied line?",
+          "useful": true,
+          "complete": true,
+          "reason": "The exact role-level common bishop exchange and the c-pawn's later b3 identity provide the observed outcome. Missing literal Bxb3/cxb3 capture sentences are not counted as missing the bishop price.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                11,
+                12,
+                14
+              ],
+              "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:251b8b47d7058e581a6c7f93a99fedca679e89adfbcc53ccb26f05042eedbf87"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "role_price_acceptance": {
+        "scope": "The candidate's common bishop exchange is exact Bxb3/cxb3; the separate knight-for-bishop price is Nxe7+/Qxe7, and Nxd4/exd4 is explicitly a different knight exchange. These statements together close the actual selected minor-piece claims.",
+        "refs": [
+          {
+            "arm": "candidate",
+            "offsets": [
+              2,
+              3,
+              6,
+              7,
+              11,
+              12
+            ],
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:251b8b47d7058e581a6c7f93a99fedca679e89adfbcc53ccb26f05042eedbf87"
+          },
+          {
+            "arm": "reference",
+            "offsets": [
+              1,
+              2,
+              6,
+              7
+            ],
+            "line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:d75e5f00cde6ecdce03205be7d75833271e1f844a0d431d57f3fe5280684a828"
+          }
+        ]
+      },
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "Attack/escape/departure/still-present facts repeatedly revisit the same knights and bishops before and after their trades.",
+          "The actual support-use sentence is more connected than the surrounding histories, but it competes with many unrelated targets and endpoint facts.",
+          "'After cxd4 captures the supported pawn, cxd4 recaptures its capturer' is syntactically acceptable but uses identical SAN for opposing actors without naming their sides.",
+          "The minor-piece prices are correct but split across long function histories and separate outcome sentences."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "The primary chess content and its important prices are present, including a good actual support-use relation, but their hierarchy is obscured by repeated histories.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "finding_source": "Parent reported Corus decoder failures only for 02/work2 and 05/work2; no extra logs read."
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-09"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-09-obligation-facts.json",
+        "sha256": "cefc12630da188be48c0d855c8eaa1ed3249cb461532b32af173ce4b335d2ab9"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:evidence:candidate-comparison:251c4a6efb1b5741a3169fe8a869298daf92ad6a720b94b68f0cddeb23ff6923",
+        "reference_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:d75e5f00cde6ecdce03205be7d75833271e1f844a0d431d57f3fe5280684a828",
+        "candidate_line_id": "move-review:d4f0373d5ad02be97fe8a569a8050ff6f42cff0e12fba537d2ff151298198666:30:d5b3:line:251b8b47d7058e581a6c7f93a99fedca679e89adfbcc53ccb26f05042eedbf87"
+      },
+      "primary_content_semantically_preserved": true,
+      "primary_center_delivery": "primary_material_relationships_preserved_but_no_selected_central_flow",
+      "content_failure_boundaries": [
+        "primary_selection_and_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient.",
+      "primary_flow_note": "The same original bishop/knight outcomes and their actual role prices are conveyed in basic, so they are not counted as missing costs. The primary is not selected and organized as a central answer; the reader must assemble the relationship from independent histories and accounts. This is a selection/organization failure with content present, not a semantic-price failure or an asserted exact upstream caller diagnosis."
+    },
+    {
+      "game_id": "COR06-10",
+      "question": "selected_comparison",
+      "primary_fit": "substantial_partial",
+      "primary_useful_complete": false,
+      "primary_reason": "The observed exact transposition and both bishop-for-knight exchange prices are correct and are a useful complete bounded comparison. The frozen primary's separate realized d8 clearance for Rfc8 is not explained as a function; merely listing Qd7/Rfc8 does not supply that meaning.",
+      "registered_auxiliary_useful_complete": true,
+      "registered_auxiliary_matches": [
+        {
+          "question": "Does ...Bxd5 win the knight for nothing?",
+          "useful_as_comparison_closure": true,
+          "complete": true,
+          "reason": "Bxd5/exd5 explicitly preserves the bishop price in both orders. The routine exchange is useful here because it supports the actual observed equivalence, not merely because it is a recapture.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                6,
+                7
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:25d2d446d5ff3237e149ce5c32ac174d5c0564e95f2d0f9576e28ae92dfd0d37"
+            },
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                1
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:fa1c0957890c6f07b7502f9d6c316e573a30565039a25e975ab88b0a88fc5b16"
+            }
+          ]
+        }
+      ],
+      "additional_closed_local_content": [
+        {
+          "question": "Do Qd7 first and Bxd5 first reach the same recorded position?",
+          "useful": true,
+          "complete": true,
+          "status": "Closed substantive subquestion of the frozen primary.",
+          "reason": "The basic explicitly states a common recorded position after the two supplied orders, exactly matching the fixed FEN comparison. It does not infer a unique late material difference from the longer arm.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                8
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:25d2d446d5ff3237e149ce5c32ac174d5c0564e95f2d0f9576e28ae92dfd0d37"
+            },
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                8
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:fa1c0957890c6f07b7502f9d6c316e573a30565039a25e975ab88b0a88fc5b16"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "other_primary_gaps": [
+        {
+          "gap": "Qd7's actual d8 route clearance for Rfc8 is not expressed.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                0,
+                2
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:25d2d446d5ff3237e149ce5c32ac174d5c0564e95f2d0f9576e28ae92dfd0d37"
+            },
+            {
+              "arm": "candidate",
+              "offsets": [
+                2,
+                4
+              ],
+              "line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:fa1c0957890c6f07b7502f9d6c316e573a30565039a25e975ab88b0a88fc5b16"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "absent",
+        "repetition": "moderate",
+        "grammar_errors": [],
+        "issues": [
+          "The same Bxd5/exd5 capture pair is narrated twice after the equivalence sentence, with the second arm unlabelled in flat prose.",
+          "Both full move orders are used as sentence subjects; the meaning is clear to a SAN reader but the list is still implementation-like.",
+          "The compact observed conclusion is preserved and the later distinct endpoint prices remain in details."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "A useful, focused, closed observed move-order comparison with exact prices; incomplete only relative to the oracle's additional Qd7-function question. Repeated identical exchange narration is the main remaining presentation defect.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "finding_source": "Parent reported Corus decoder failures only for 02/work2 and 05/work2; no extra logs read."
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-10"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-10-obligation-facts.json",
+        "sha256": "9e33c7c907316846ef7833e0d6ea70dd124b680eb67f480c16f9038ef488ca9e"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:evidence:candidate-comparison:f0f540378276f13a4f99e105ef423a562197c4cf3e498a2f1c44bce6f418dac3",
+        "reference_line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:25d2d446d5ff3237e149ce5c32ac174d5c0564e95f2d0f9576e28ae92dfd0d37",
+        "candidate_line_id": "move-review:484b05636cfd8188419c2a9ee55a41ca98c5cc0cdf4f550df3a750e28e9da6d8:31:d8d7:line:fa1c0957890c6f07b7502f9d6c316e573a30565039a25e975ab88b0a88fc5b16"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "focused_closed_observed_equivalence_subquestion",
+      "content_failure_boundaries": [
+        "additional_primary_function_unexpressed",
+        "repeated_exchange_delivery"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient.",
+      "primary_flow_note": "The focused observed-equivalence question is an independently useful closed subquestion of the unchanged oracle. It is not counted as completing the oracle's additional Qd7 route-function question, nor does the routine recapture alone create an important independent explanation."
+    },
+    {
+      "game_id": "COR06-11",
+      "question": "selected_comparison",
+      "primary_fit": "substantial_partial",
+      "primary_useful_complete": false,
+      "primary_reason": "a6's attack on b7 and axb7/Qxb7 exchange are explicit and closed, so the played a-pawn's price is delivered. The alternative's later a6/...b6 and retained a-pawn are not taught; instead the Ne4 arm is described through untaken c6 targets and a separate rook trade.",
+      "registered_auxiliary_useful_complete": false,
+      "additional_closed_local_content": [
+        {
+          "question": "Does a6 obtain b7 at the cost of the original white a-pawn?",
+          "useful": true,
+          "complete": true,
+          "status": "Closed substantive subquestion of the frozen primary.",
+          "reason": "Both pawn captures are stated. The later queen exchange Qxa3/bxa3 is also closed; it is not mistaken for a free queen capture.",
+          "refs": [
+            {
+              "arm": "candidate",
+              "offsets": [
+                0,
+                1,
+                2,
+                3,
+                11,
+                12
+              ],
+              "line_id": "move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:line:b056c1d071fd3ebebc1714edfe4d1969492a8bc7609587fcfb2d1134bfef1542"
+            }
+          ]
+        },
+        {
+          "question": "Does ...Rxd1+ win a free rook in the Ne4 arm?",
+          "useful_as_selected_price_closure": true,
+          "complete": true,
+          "status": "A routine exchange is kept as closure, not treated as an independent important commentary because it is a recapture.",
+          "reason": "Rxd1+/Qxd1 preserves the actual rook price.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                10,
+                11,
+                12
+              ],
+              "line_id": "move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:line:d6da72622abf5c1dd59c4e1c14ddb5c0855b6773cfbd060741384af17a73767f"
+            }
+          ]
+        }
+      ],
+      "selected_claim_cost_complete": true,
+      "important_price_omissions": [],
+      "other_primary_gaps": [
+        {
+          "gap": "The reference a-pawn's ...b6/retention is omitted.",
+          "failure_boundary": "question_selection_or_selected_content_scope",
+          "is_important_price_omission": false,
+          "reason_not_price_count": "The basic does not claim the alternative a-pawn was exchanged, captured, or gained extra material; this is a missing comparison target outcome.",
+          "refs": [
+            {
+              "arm": "reference",
+              "offsets": [
+                6,
+                7,
+                14
+              ],
+              "line_id": "move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:line:d6da72622abf5c1dd59c4e1c14ddb5c0855b6773cfbd060741384af17a73767f"
+            }
+          ]
+        }
+      ],
+      "unsupported_cause_threat_resolution": [],
+      "readability": {
+        "center_dilution": "material",
+        "repetition": "material",
+        "grammar_errors": [],
+        "issues": [
+          "Ra8, Pe2 and Pc6 surviving/untaken target histories interrupt the actual a-pawn exchange explanation.",
+          "Ne4/Nc3 and the rook trade are shown without relating them to the same a-pawn outcome in the alternative.",
+          "The basic has accurate local prices but its current support and target lists do not establish why those facts are central."
+        ],
+        "length_used_as_failure_rule": false
+      },
+      "overall_basic_judgment": "A useful closed played a-pawn exchange is present, but the two-arm target-outcome comparison is incomplete and surrounded by peripheral histories.",
+      "delivery_execution": {
+        "v9_decoder_failure": false,
+        "engine_budget_failure_reported": true,
+        "work_id": "work3",
+        "failure_boundary": "additional_investigation_budget",
+        "assessment_currency": "needs_refresh: source reading reports child_challenge target depth 27 stopped at completed depth 16 with search_budget_exhausted.",
+        "finding_source": "Parent message and existing reading metadata; no new logs read.",
+        "content_grade_replaced_by_budget_failure": false
+      },
+      "frozen_oracle_case": {
+        "file": "research/answer-selection-20261004/fresh-obligations-corus.json",
+        "sha256": "8a3fd1be602772833c65c66160ed433cdc04a80724e0c94558e1f7a9324d4aea",
+        "game_id": "COR06-11"
+      },
+      "facts": {
+        "file": "target/answer-selection-20261004/fresh-run/COR06-11-obligation-facts.json",
+        "sha256": "f721b53e7a450fb4b25625aac04cb8ef6ea6e9e4aaeafb7d7eda225e2256e695"
+      },
+      "comparison_pair": {
+        "candidate_id": "comparison:move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:evidence:candidate-comparison:0a22af4c888e9903292da41f43552290229163d7740ec6d7abbc45778f22f671",
+        "reference_line_id": "move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:line:d6da72622abf5c1dd59c4e1c14ddb5c0855b6773cfbd060741384af17a73767f",
+        "candidate_line_id": "move-review:632ac72405f760fa27d9eaeed15471c4c152260fbb94cdc6c2a2f43006cd44e3:30:a5a6:line:b056c1d071fd3ebebc1714edfe4d1969492a8bc7609587fcfb2d1134bfef1542"
+      },
+      "primary_content_semantically_preserved": false,
+      "primary_center_delivery": "closed_played_target_price_but_alternative_target_outcome_unanswered",
+      "content_failure_boundaries": [
+        "primary_scope",
+        "content_organization"
+      ],
+      "primary_relation_criterion": "The basic must teach the same original subject or the actual root mechanism in both supplied arms, with the price of the selected claim. Merely exposing facts in detail, naming a SAN, or holding an endpoint proof is insufficient."
+    }
+  ],
+  "findings": [
+    {
+      "id": "role-price-delivery-works",
+      "conclusion": "The role-level Material prices already preserve important actual exchanges in 03, 05 and 09 without a separate sentence for every SAN. Requiring all capture SAN strings would falsely report omissions and reintroduce event-list pressure.",
+      "games": [
+        "COR06-03",
+        "COR06-05",
+        "COR06-09"
+      ]
+    },
+    {
+      "id": "explicit-gains-still-unclosed",
+      "conclusion": "Two selected basic gains have actual other-square prices only in details: cxb5/Rxe3 in 01 and Qxb7/Rxb2 in 04. These are selected-content closure failures, separate from what primary question was chosen.",
+      "games": [
+        "COR06-01",
+        "COR06-04"
+      ]
+    },
+    {
+      "id": "selection-not-all-price-omissions",
+      "conclusion": "02's later original-knight removal, 08's absent Nd7 exchange question, and 11's absent alternative a-pawn retention are genuine primary scope gaps. They are not automatically important price omissions of every narrower instantaneous evasion, clearance or first pawn exchange actually asserted in basic.",
+      "games": [
+        "COR06-02",
+        "COR06-08",
+        "COR06-11"
+      ]
+    },
+    {
+      "id": "correct-content-without-hierarchy",
+      "conclusion": "03 and 09 largely preserve their primary chess answer, but independent histories, temporary relations and scattered account sentences hide the answer. The remaining problem is content admission and ownership/grouping, not primarily sentence syntax.",
+      "games": [
+        "COR06-03",
+        "COR06-09"
+      ]
+    },
+    {
+      "id": "bounded-equivalence-positive",
+      "conclusion": "10 states the real early transposition and preserves the common bishop-for-knight price. Longer-arm endpoint trades stay in details and are not falsely claimed as root-move consequences. The duplicated exchange narration is redundant, not a missing price.",
+      "games": [
+        "COR06-10"
+      ]
+    },
+    {
+      "id": "short-does-not-mean-complete",
+      "conclusion": "08 has a valid short Bd7 rook-clearance explanation but gives the played Nd7 only as a root SAN. A closed local mechanical answer must not be reported as completing the frozen central comparison.",
+      "games": [
+        "COR06-08"
+      ]
+    },
+    {
+      "id": "reference-contract-separate",
+      "conclusion": "02 and 05 have parent-confirmed original v9 decoder failures from reading endpoint proof as actual capture. Frozen prose still needs content grading, while actual delivery is failed separately. The reference audit's absence of Corus issues does not prove ownership semantics or frontend execution.",
+      "games": [
+        "COR06-02",
+        "COR06-05"
+      ]
+    }
+  ],
+  "limits": [
+    "This report does not mark the whole phase-one release complete, and does not infer an overall 18-case score from this nine-case subset.",
+    "A registered auxiliary match, a useful primary subquestion and an unlisted mechanical observation are counted separately. Their presence does not automatically turn the whole unfocused basic into a good short answer.",
+    "Price closure is evaluated for selected claims and exact observed episodes, not for every capture in the final provided ledger.",
+    "No unsupported evaluation cause, forced threat, universal safety or terminal-result claim was found in the nine basic texts. This does not certify such claims in unexamined product outputs.",
+    "No clear subject/verb or syntactic grammar failure was found. Repetition, ambiguous same-SAN actors, friendly support described as targeting, and weak hierarchy remain substantial English presentation issues.",
+    "Parent handles separate typed-source owner validation. This assessment does not assert the source caller responsible for the identified semantic omission.",
+    "Current attacks, temporary doubled pawns and retained pieces are read at their stated source occurrence; they are not silently upgraded to permanent states or causal engine judgments.",
+    "No engine, corpus rerun, product patch, oracle revision or actual browser inspection was performed for this assessment.",
+    "The counts are distinct, overlapping diagnostic categories. A primary semantic closure, registered auxiliary closure, or local mechanism is not summed into an overall product-quality pass rate."
+  ],
+  "finalized_at_utc": "2026-10-04T16:06:14.597720+00:00",
+  "assessment_state": "final_frozen_no_further_execution",
+  "reference_resolution": "Per-judgment arm/offset refs include their exact line_id. Offsets are zero-based facts paths[].steps indices; occurrence/SAN/original-current identity are resolved in the linked SHA-frozen facts. Full moves and all evidence are not copied here.",
+  "counts": {
+    "reviewed": 9,
+    "denominator": 9,
+    "excluded": 0,
+    "primary_semantically_useful_and_complete": {
+      "count": 2,
+      "case_ids": [
+        "COR06-03",
+        "COR06-09"
+      ],
+      "definition": "The unchanged primary chess comparison is meaningfully conveyed with required prices, even if distributed across basic fragments. This is not a whole-basic readability or release-pass count."
+    },
+    "registered_auxiliary_useful_and_complete": {
+      "count": 6,
+      "case_ids": [
+        "COR06-02",
+        "COR06-03",
+        "COR06-04",
+        "COR06-05",
+        "COR06-09",
+        "COR06-10"
+      ],
+      "definition": "At least one useful closed auxiliary question prewritten in the unchanged oracle. This overlaps the primary count and is not added to it."
+    },
+    "closed_subquestion_of_primary_without_full_primary": {
+      "count": 4,
+      "case_ids": [
+        "COR06-01",
+        "COR06-05",
+        "COR06-10",
+        "COR06-11"
+      ],
+      "definition": "Useful complete subquestion of the unchanged primary, not a replacement primary or a post-hoc oracle success."
+    },
+    "unlisted_closed_local_mechanism": {
+      "count": 1,
+      "case_ids": [
+        "COR06-08"
+      ],
+      "definition": "An observed local mechanism absent from the prewritten success questions. Recorded separately and not promoted to a primary/registered-auxiliary pass."
+    },
+    "important_selected_claim_price_omissions": {
+      "count": 2,
+      "case_ids": [
+        "COR06-01",
+        "COR06-04"
+      ],
+      "definition": "Same supplied source contains a reply/loss price that changes an actual basic gain claim and is only in details. No requirement to narrate all PV captures."
+    },
+    "primary_not_selected_or_organized_boundary_examples": {
+      "count": 3,
+      "case_ids": [
+        "COR06-02",
+        "COR06-08",
+        "COR06-09"
+      ],
+      "definition": "Selected basic scope misses the same-original-target answer in 02, substitutes a different mechanism in 08, and preserves primary content without selecting it as the central flow in 09. These are not three extra price omissions."
+    },
+    "unsupported_cause_threat_or_resolution_claims": {
+      "count": 0,
+      "case_ids": [],
+      "definition": "Explicit unsupported causal, forced-threat, permanent-safety or resolution claim found in this nine-case basic reading."
+    },
+    "clear_syntactic_grammar_failures": {
+      "count": 0,
+      "case_ids": [],
+      "definition": "Clear syntax or subject-verb error found by this LLM reading. Zero does not mean idiomatic, unambiguous or readable English."
+    },
+    "material_center_dilution": {
+      "count": 7,
+      "case_ids": [
+        "COR06-01",
+        "COR06-02",
+        "COR06-03",
+        "COR06-04",
+        "COR06-05",
+        "COR06-09",
+        "COR06-11"
+      ],
+      "definition": "Histories, transient relations or scattered price fragments materially hide the selected comparison. No character-count threshold is used."
+    },
+    "material_repetition": {
+      "count": 7,
+      "case_ids": [
+        "COR06-01",
+        "COR06-02",
+        "COR06-03",
+        "COR06-04",
+        "COR06-05",
+        "COR06-09",
+        "COR06-11"
+      ],
+      "definition": "Substantial repeated targets, supports, survival histories or standalone descriptions; semantic price closure is judged separately."
+    },
+    "moderate_repetition": {
+      "count": 1,
+      "case_ids": [
+        "COR06-10"
+      ],
+      "definition": "Correct bounded comparison retains duplicate exchange narration."
+    },
+    "mild_repetition": {
+      "count": 1,
+      "case_ids": [
+        "COR06-08"
+      ],
+      "definition": "Small repetition in an otherwise short answer, which may still have a scope failure."
+    },
+    "parent_reported_v9_decoder_failures": {
+      "count": 2,
+      "case_ids": [
+        "COR06-02",
+        "COR06-05"
+      ],
+      "definition": "Original v9 actual frontend reference-contract failure reported by parent: endpoint proof interpreted as actual capture. Not independently observed here and not substituted for content grading."
+    },
+    "parent_reported_additional_engine_budget_failures": {
+      "count": 3,
+      "case_ids": [
+        "COR06-03",
+        "COR06-08",
+        "COR06-11"
+      ],
+      "definition": "Actual additional investigation budget failure reported by parent. The admitted finite comparison is still assessed, without expanding into a stronger verified evaluation claim."
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "status": "research_and_design_only",
+  "question_ko": "주요 수순이 바뀌면 유효한 선택의 설명이 사라지는 문제와 조사 한도를 어떻게 근본적으로 개선할 것인가",
+  "product_modified": false,
+  "annotation_index": 1,
+  "diagnosis": [
+    {
+      "issue": "Observed continuation and valuable available choice have different truth conditions",
+      "evidence": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala:638",
+      "detail": "The primary entry validator still requires the tested waited path to contain the original actual king entry. The later LastPawnWait branch already permits a legally available entry absent from the PV. Removing the primary path match without a separate owned value comparison would be unsound."
+    },
+    {
+      "issue": "Discovery samples an observed entry and one legal pawn counter",
+      "evidence": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala:1236",
+      "detail": "Entry discovery starts from witnessedActionPaths. The pawn counter is sorted by move and take(1) at line1263. A completed comparison of that sample cannot establish coverage of the strongest counter in its class."
+    },
+    {
+      "issue": "Scheduling has independent per-work, exploration-count and total-time limits",
+      "evidence": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala:2579",
+      "detail": "Two exploratory comparisons normally stop expansion; linked reserve questions may extend it below four. The 2.5/5/8-second work allowances and delivery reserves are separate. A new entry-value obligation needs explicit dependency scheduling, not merely a larger time constant."
+    },
+    {
+      "issue": "A failed higher-depth request does not carry completed lower-depth evidence",
+      "evidence": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts:1530",
+      "detail": "Only the exact requested depth plus the preceding complete depth can produce success. Executor failure sends only failure_code. In this experiment, one depth20 request ended with a complete depth18 pair but is correctly retained as failed20. Reusing lower-depth evidence would require an explicit protocol and proof-policy change."
+    }
+  ],
+  "existing_building_blocks": [
+    "CommentaryProposal.CompareMoves and FactGroup",
+    "TargetResponseInvestigation.Search.pairAnswer for an exact child history",
+    "TargetResponseInvestigation.Search.representativePair for a whole legal class",
+    "RootSubjectComparison.strongestReserveHold as a precedent against weak-challenger selection",
+    "Owned full histories, certified piece identities, completed comparison receipts, price completion"
+  ],
+  "experiment": {
+    "plan": "target/option-validation-20261007/fixed-local-v1/plan.json",
+    "results": "target/option-validation-20261007/fixed-local-v1/results.json",
+    "summary": "target/option-validation-20261007/fixed-local-v1/summary.json",
+    "configurations_predeclared": 6,
+    "required_depth_completed": 5,
+    "depth20_completed": 3,
+    "depth20_requested": 4,
+    "product_reports_submitted": 0,
+    "readings": [
+      "H05R2 depth20 original order: Kf4 +769cp, Ke4 +825cp. Reverse order: Kf4 +711cp, Ke4 +918cp.",
+      "H05R3 depth20 original order: exhausted with last complete depth18, not a depth20 success. Reverse order: Kf5 and e5 both +1017cp.",
+      "Depth16 reverse-order repeats were not exact ties: H05R2 Kf4 +531cp vs Ke4 +525cp; H05R3 Kf5 +613cp vs e5 +502cp.",
+      "All completed comparisons leave the named entry strongly favorable for White, but exact equality and fine ordering are not stable. This does not prove the original root cause or robustness across opponent defenses.",
+      "The four depth20 configurations used about five seconds each. The two depth16 configurations used 573ms and287ms. These are local queries on one machine, not full-product latency or a population estimate.",
+      "Two engine threads were used; differences cannot be attributed solely to root input ordering. No retry-until-success was performed."
+    ]
+  },
+  "proposed_claim_levels": [
+    {"claim": "legal_available", "needs": "An exact legal position and move witness"},
+    {"claim": "useful_choice", "needs": "A matched owned value comparison, suitable outcome, and necessary prices; equality is not required"},
+    {"claim": "comparable_or_preferred", "needs": "Matched comparison with the relevant strongest alternative and adequate stability for the stated precision"},
+    {"claim": "restricts_defense", "needs": "The strongest relevant preserving, conceding and counterplay responses; scope of coverage remains explicit"},
+    {"claim": "explains_root_difference", "needs": "A supported connection from the original alternatives to the useful option and changed defenses, not just two favorable local scores"}
+  ],
+  "recommended_implementation_order": [
+    "At the existing exact decision history, retain the entry as a proposed option when the next PV move changes. Request an ordinary CompareMoves receipt for that entry versus the refreshed relevant alternative. Keep played-move and available-option references distinct.",
+    "Reuse whole-class search to seek the strongest counter to the claim. Refine only the branch where a counter changes the claim. An unsearched response stays unknown; a stronger counter invalidates or narrows the claim.",
+    "Allocate time to the small set of still-required comparisons for one selected claim. Reuse exact completed evidence and keep the total deadline, delivery reserve and duplicate/cycle guards. Replace family-name exceptions incrementally with dependency accounting.",
+    "If useful evidence is repeatedly lost on deeper requests, extend the executor contract to preserve the last wholly completed common-depth iteration separately from target completion. Declare minimum and target depths before search, verify identity/bounds/history, and never label a failed target as completed.",
+    "Only after those checks deliver the reason, connect it to the original choice and inspect the default explanation. Useful options irrelevant to the root decision should not enlarge the basic commentary."
+  ],
+  "acceptance_checks": [
+    "A favorable entry absent from a refreshed PV can be independently tested and expressed as available, without fabricating that it was played.",
+    "An entry that loses after a stronger reply is rejected even if it remains legal.",
+    "An extra opponent pawn wait prevents an all-king-replies claim.",
+    "A stronger counter hidden behind the first sorted pawn move is selected by coverage-aware search.",
+    "Same board placement with different relevant history cannot reuse another history's proof.",
+    "When a later comparison changes the root judgment, only still-valid conditional statements survive; an invalid root reason is withdrawn.",
+    "The required last comparison can receive remaining time despite the old exploration count, within the original total deadline.",
+    "A partial higher-depth request stays incomplete; a lower completed iteration can support only explicitly admitted weaker claims if the new protocol is implemented.",
+    "Frozen10s/30s H05 andT20 replays, prior price preservation, and predeclared new sacrifice/defense/move-order cases are evaluated separately from the local research probes."
+  ],
+  "references": [
+    {
+      "url": "https://official-stockfish.github.io/docs/stockfish-wiki/UCI-Protocol-and-Stockfish-Commands.html",
+      "use": "searchmoves restricts the root alternatives; MultiPV reports several lines. These are sufficient engine primitives for the proposed local queries."
+    },
+    {
+      "url": "https://arxiv.org/html/1207.5879",
+      "use": "Metareasoning chooses computations for expected decision improvement relative to cost; single-step policies can stop too early when several computations jointly change the decision. Applying this to commentary dependencies is our design inference, not a theorem about this product."
+    },
+    {
+      "url": "https://www.ijcai.org/proceedings/2023/0541.pdf",
+      "use": "Section3.4 distinguishes global concept probing from explaining individual examples. It does not supply a ready solution for a particular root evaluation difference."
+    },
+    {
+      "url": "https://www.cs.cmu.edu/~emc/papers/Conference%20Papers/Counterexample-guided%20Abstraction%20Refinement.pdf",
+      "use": "Counterexample-guided refinement informs the proposed pattern of testing a claim's strongest challenge and refining only where it fails. The finite engine queries here do not inherit model-checking proof guarantees."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "source_sha256": "1934786bf02fd27249bf30bd3b34a58bfbf1d36281b3bbfc50f686e71375d063",
+  "run": "h05-10b-prefix-consolidation-research-only",
+  "internal_traces_omitted": true,
+  "cases": [
+    {
+      "id": "H05",
+      "current_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "g3g4",
+        "resulting_fen": "8/5p2/8/2p1k3/ppp1P1P1/P1P2K2/1P6/8 b - - 0 35"
+      },
+      "verdict": {
+        "kind": "move_verdict",
+        "comparison_evidence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:candidate-comparison:59634c0d64ea1adc65ef89b82a04186236a375e759b2dd6a97a159227f590024",
+        "verdict_code": "blunder",
+        "verdict_confidence": "engine_backed",
+        "mover": "white",
+        "delta": {
+          "candidate_win_percent_delta_for_mover": -20.06847027264081,
+          "kind": "engine_evaluation"
+        }
+      },
+      "text": "g4 advances the pawn from g3; Ke3 defers that advance. After Ke3 f6, prefer Kf3 to an immediate g4. A leading tested reply to g4 is b3; after Kf3 it is Kd6. After b3, the white pawn originally on g3 is still present on g4.After Kd6, the white pawn originally on g3 is still present on g3. The compared root choices are Ke3 and g4. g4 spends a pawn move that Ke3 keeps available. After Ke3 f6, the tested Kf3 evaluates above an immediate g4. In the recorded king manoeuvre, Kf3 Kd6 Ke2 Ke5 Ke3 restores the same piece placement with Black to move, while the pawn stays on g3. The king manoeuvre hands over the move without spending the pawn advance.",
+      "default_question": "functional_response"
+    }
+  ]
+}

@@ -1,0 +1,520 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-10",
+  "scope": "Existing research files only; product code, test fixture bytes, success criteria and historical source records unchanged.",
+  "base_commit": "c73eb64117ae2fde3bde9267c935e092b6672d9b",
+  "source_root": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+  "snapshot": {
+    "path": "C:\\Users\\양자\\.codex\\task-artifacts\\chesstories-research-curation-20261010\\research-originals.zip",
+    "sha256": "a3c0edab0b5cbdbf073fd2735b81cfa401af48ed60252e3da50406c8efe22622",
+    "bytes": 38692006,
+    "verified_original_files": 1339,
+    "contains": "Every inventoried original, including retained originals, plus manifest and selection rationale."
+  },
+  "before": {
+    "files": 1339,
+    "bytes": 328470780,
+    "text_lines": 6139888
+  },
+  "dispositions": {
+    "keep": {
+      "files": 399,
+      "tracked_files": 115,
+      "bytes": 50819098,
+      "text_lines": 553372
+    },
+    "archive": {
+      "files": 940,
+      "tracked_files": 16,
+      "bytes": 277651682,
+      "text_lines": 5586516
+    }
+  },
+  "index": "retention-index.tsv",
+  "study_reasons": {
+    "annotated-games-20261003": {
+      "title": "기보와 사람의 독해를 대조한 연구",
+      "reason": "중요도 판단의 미해결 결론, 원 기보, 독립 독해와 반례를 남긴다. 전 수의 반복 응답과 기계 대조표는 보관본에서 확인한다.",
+      "entry": "findings.json",
+      "counts": {
+        "keep": {
+          "files": 16,
+          "bytes": 2505352
+        },
+        "archive": {
+          "files": 16,
+          "bytes": 61341019
+        }
+      }
+    },
+    "answer-boundaries-20261005": {
+      "title": "중심 답과 필요한 가격의 경계",
+      "reason": "최종 결과와 검증 범위를 유지한다. 버전별 진단 덤프, 빌드 번들 및 일회성 도구는 보관한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 5,
+          "bytes": 9221407
+        },
+        "archive": {
+          "files": 17,
+          "bytes": 9461388
+        }
+      }
+    },
+    "answer-selection-20261004": {
+      "title": "후보 자격·선택과 실패한 축소 실험",
+      "reason": "selectionv3의 잘못된 대체와 selectionv5의 가격 누락을 남겨 같은 실패를 반복하지 않도록 한다. 사전 질문과 최종 독해도 함께 보존한다.",
+      "entry": "development-decisions.json",
+      "counts": {
+        "keep": {
+          "files": 20,
+          "bytes": 1639086
+        },
+        "archive": {
+          "files": 59,
+          "bytes": 11787534
+        }
+      }
+    },
+    "basic-purpose-20261005": {
+      "title": "평범한 수의 충분한 목적 설명",
+      "reason": "합성 입력과 실제 엔진 판정을 혼동하지 않도록 사례·사전 독해·최종 독해·검증 한계를 함께 유지한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 6,
+          "bytes": 124096
+        },
+        "archive": {
+          "files": 17,
+          "bytes": 2812426
+        }
+      }
+    },
+    "beginner-explanation-20261005": {
+      "title": "초심자에게 필요한 설명의 범위",
+      "reason": "교육 자료의 출처와 정상적인 짧은 설명의 기준을 보존한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 15415
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "bottleneck-resolution-20261006": {
+      "title": "병목과 과거 접근의 재검토",
+      "reason": "과거 시도와 실패 원인, 제안과 구현의 구분을 보존한다.",
+      "entry": "audit.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 12143
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "commentary-followup-20261001": {
+      "title": "초기 후속 수정과 남은 문제",
+      "reason": "초기 변경의 범위 및 남은 문제를 확인하는 작은 결과 기록을 유지한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 11026
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "commentary-reconstruction-20261001": {
+      "title": "초기 해설 재구성 체크포인트",
+      "reason": "구현 및 내용 검증의 당시 기준점을 유지한다.",
+      "entry": "checkpoint.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 4139
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "commentary-salience-20261004": {
+      "title": "설명 중요도와 책의 사례",
+      "reason": "중요도 분류가 품질 점수는 아니라는 경계, 책의 출처, 사람의 관찰과 코드적 한계를 유지한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 7,
+          "bytes": 1602848
+        },
+        "archive": {
+          "files": 2,
+          "bytes": 22938
+        }
+      }
+    },
+    "content-selection-20261002": {
+      "title": "내용 선택과 제한된 구현",
+      "reason": "정책 가설과 실제 구현의 차이, 아직 조사하지 못한 범위를 유지한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 2,
+          "bytes": 232350
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "critical-comparison-20261007": {
+      "title": "핵심 비교 우선순위와 수순 변경",
+      "reason": "T20의 완료와 H05의 의미 미해결을 구분하고, 고정 입력·규칙·검증 및 기본 출력 대조를 남긴다.",
+      "entry": "completion.json",
+      "counts": {
+        "keep": {
+          "files": 21,
+          "bytes": 725216
+        },
+        "archive": {
+          "files": 68,
+          "bytes": 3904306
+        }
+      }
+    },
+    "current-duty-20261006": {
+      "title": "현재 의무·실수와 설명 근거",
+      "reason": "수치 판정의 원인을 입증하지 못한 사례를 성공으로 바꾸지 않도록 사전 기준과 최종 독해를 유지한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 10,
+          "bytes": 609911
+        },
+        "archive": {
+          "files": 22,
+          "bytes": 3586516
+        }
+      }
+    },
+    "decision-timing-20261006": {
+      "title": "질문 구성·조사 시간과 C03/H05",
+      "reason": "사전 질문, 사람의 판독, 최종 규칙과 검증을 유지한다. 수십 회 반복한 전체 읽기 출력은 별도 보관한다.",
+      "entry": "human-reading.json",
+      "counts": {
+        "keep": {
+          "files": 15,
+          "bytes": 165153
+        },
+        "archive": {
+          "files": 134,
+          "bytes": 66822818
+        }
+      }
+    },
+    "functional-judgment-20261009": {
+      "title": "선택 가치·원래 판단·깊이 18의 최종 경계",
+      "reason": "현재 인계, 원래 성공 기준, 기본 해설 독해, 반증·정정, 깊이 제한 및 휴대 가능한 최종 실행 근거를 유지한다. 완료된 일회성 실행 도구와 이전 중간 덤프는 보관한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 131,
+          "bytes": 21580727
+        },
+        "archive": {
+          "files": 23,
+          "bytes": 3201280
+        }
+      }
+    },
+    "human-evaluation-20261006": {
+      "title": "사람의 수 평가와 해설 읽기",
+      "reason": "사전 허용 기준·이론적 근거·최종 읽기·최종 비교를 보존한다. 반복된 중간 버전과 UI 덤프는 보관한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 7,
+          "bytes": 686881
+        },
+        "archive": {
+          "files": 30,
+          "bytes": 12799779
+        }
+      }
+    },
+    "importance-expression-audit-20261005": {
+      "title": "중요도·표현 문제의 실패 이력",
+      "reason": "이전 개발 이력과 해결로 인정할 조건을 유지한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 16138
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "meaning-conditions-20261008": {
+      "title": "기능의 성립 조건과 강한 반론",
+      "reason": "실행 완료와 의미 해명을 구분한다. 최종 미해결 결론, 장시간 실패와 완료 비용, 이론 근거·반례·사전 판독 기준·최종 기본 출력·가격 누락을 보존한다.",
+      "entry": "final-medium-goal-outcome.json",
+      "counts": {
+        "keep": {
+          "files": 52,
+          "bytes": 3148826
+        },
+        "archive": {
+          "files": 317,
+          "bytes": 15935758
+        }
+      }
+    },
+    "next-decision-20261006": {
+      "title": "평가값과 확인된 이유의 불일치",
+      "reason": "다음 과제를 정한 근거와 입증하지 못한 원인을 유지한다. 새 검증 결과로 취급하지 않는다.",
+      "entry": "proposal.json",
+      "counts": {
+        "keep": {
+          "files": 2,
+          "bytes": 126881
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "option-validation-20261007": {
+      "title": "주요 수순에 없는 선택지의 가치",
+      "reason": "기존 시도와 합법성·가치·원래 판단의 구분을 유지한다.",
+      "entry": "findings.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 8705
+        },
+        "archive": {
+          "files": 1,
+          "bytes": 4178
+        }
+      }
+    },
+    "ordinary-move-progress-2026-09-06": {
+      "title": "현재 UI 테스트의 연구 입력",
+      "reason": "moveReviewCoordinator 테스트가 직접 읽는 파일이다. 위치와 바이트를 유지한다.",
+      "entry": "pc-games.json",
+      "counts": {
+        "keep": {
+          "files": 2,
+          "bytes": 3831055
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "relation-coverage-map-20261004": {
+      "title": "관계 범위와 출처 지도",
+      "reason": "자료 출처와 개념 범위, 품질로 과장하면 안 되는 한계를 보존한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 10,
+          "bytes": 482295
+        },
+        "archive": {
+          "files": 3,
+          "bytes": 28394
+        }
+      }
+    },
+    "relation-ownership-20261004": {
+      "title": "관계 소유권과 안전한 축소의 실패",
+      "reason": "최종 평가와 continuous recovery 제한의 안전성 정정, 같은 입력의 최종 비교를 유지한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 15,
+          "bytes": 1362871
+        },
+        "archive": {
+          "files": 9,
+          "bytes": 913821
+        }
+      }
+    },
+    "relationship-delivery-20261004": {
+      "title": "가격 소유권·전달과 새 사례 판독",
+      "reason": "가격 보존과 내용 품질의 차이, 사전 질문 및 새 사례 판독·검증 경계를 보존한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 35,
+          "bytes": 1474214
+        },
+        "archive": {
+          "files": 33,
+          "bytes": 781379
+        }
+      }
+    },
+    "reserve-choice-20261006": {
+      "title": "보존한 선택과 상대 방어",
+      "reason": "H05/H02의 가설, 최종 규칙과 입력, 마지막 보통 예산 실행의 실제 출력을 유지한다. 각 버전의 질문 목록·반복 출력·중간 규칙 동결은 보관한다.",
+      "entry": "verification.json",
+      "counts": {
+        "keep": {
+          "files": 14,
+          "bytes": 254209
+        },
+        "archive": {
+          "files": 140,
+          "bytes": 2220832
+        }
+      }
+    },
+    "role-discovery-2026-09-06": {
+      "title": "이전 역할 발견의 고정 입력",
+      "reason": "작은 고정 입력의 현재 위치를 유지한다.",
+      "entry": "evaluation-inputs.json",
+      "counts": {
+        "keep": {
+          "files": 1,
+          "bytes": 3487
+        },
+        "archive": {
+          "files": 0,
+          "bytes": 0
+        }
+      }
+    },
+    "selection-cause-audit-20261005": {
+      "title": "비교 질문의 첫 실패 지점",
+      "reason": "COR06-02·08·09의 직접 구성 대조와 기존 시도 실패를 보존한다.",
+      "entry": "report.html",
+      "counts": {
+        "keep": {
+          "files": 3,
+          "bytes": 618707
+        },
+        "archive": {
+          "files": 1,
+          "bytes": 88153
+        }
+      }
+    },
+    "strategic-option-20261007": {
+      "title": "PV 밖의 유효한 진입 검증",
+      "reason": "진입의 가치 검증과 원래 평가의 인과 설명을 구분한 결론, 기본 예산 실패, 책의 반례와 최종 입력·출력을 유지한다.",
+      "entry": "findings.json",
+      "counts": {
+        "keep": {
+          "files": 17,
+          "bytes": 204870
+        },
+        "archive": {
+          "files": 27,
+          "bytes": 675243
+        }
+      }
+    },
+    "structural-patterns-20261004": {
+      "title": "구조 패턴 연구의 범위",
+      "reason": "큰 개별 결과 덤프는 보관하고 결과의 요약·대조 조건·한계를 별도 발췌해 남긴다.",
+      "entry": "curated-summary.json",
+      "counts": {
+        "keep": {
+          "files": 0,
+          "bytes": 0
+        },
+        "archive": {
+          "files": 3,
+          "bytes": 4592363
+        }
+      }
+    },
+    "subject-comparison-20261005": {
+      "title": "공통 대상의 양쪽 비교 답",
+      "reason": "최종 결론과 마지막 보고서를 유지한다. 6개 버전의 대형 전체 비교 JSON과 이전 보고서는 보관한다.",
+      "entry": "result.json",
+      "counts": {
+        "keep": {
+          "files": 2,
+          "bytes": 151090
+        },
+        "archive": {
+          "files": 18,
+          "bytes": 76671557
+        }
+      }
+    }
+  },
+  "generated_files": [
+    "README.md",
+    "retention-index.tsv",
+    "curation-20261010.json",
+    "structural-patterns-20261004/curated-summary.json"
+  ],
+  "limits": [
+    "The archive is local, outside Git; it is not a remote backup.",
+    "External books, ignored target executions and sources missing before this curation are not included in this research snapshot. Existing final portable evidence packages are retained.",
+    "Archives preserve history, not a promise that old binaries/runners work against current source.",
+    "The 25 committed production fixture files causing most of the one-million-line branch diff are outside this research cleanup.",
+    "No engine work, product behavior change or reevaluation of historical success was performed."
+  ],
+  "archived_categories": {
+    "historical-run-output-full-original-in-archive": {
+      "files": 272,
+      "bytes": 220946044
+    },
+    "historical-supporting-detail-full-original-in-archive": {
+      "files": 395,
+      "bytes": 50892559
+    },
+    "completed-run-tool-log-or-code-snapshot": {
+      "files": 273,
+      "bytes": 5813079
+    }
+  },
+  "verification": {
+    "all_1339_original_archive_hashes_verified": true,
+    "retained_original_hashes_verified": 399,
+    "protected_evaluation_and_new_test_file_hashes_verified": 65,
+    "original_ui_research_input_paths_and_hashes_preserved": true,
+    "outside_research_diff_unchanged": true,
+    "retained_html_local_links_checked": 90,
+    "new_readme_links_checked": 37,
+    "index_rows_checked": 1339,
+    "remaining_research_files_including_four_new": 403,
+    "all_remaining_json_parsed": true,
+    "git_diff_check": "passed",
+    "product_test_rerun": false,
+    "new_engine_queries": 0,
+    "commit_created": false,
+    "archived_file_restore_samples": [
+      "research/subject-comparison-20261005/subjectv9-comparison.json",
+      "research/decision-timing-20261006/reservefinalreplay42-reading.json",
+      "research/functional-judgment-20261009/run_fresh_native_bounded18.py"
+    ],
+    "retained_source8_portable_zip_crc": "passed"
+  }
+}

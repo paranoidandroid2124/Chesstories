@@ -1,0 +1,21 @@
+{
+  "scope": "Development criteria fixed before the first production edit. Opened cases are not an independent quality score; new cases will be generated only after rule freeze.",
+  "started_utc": "2026-10-05T21:12:25Z",
+  "deadline_utc": "2026-10-06T12:12:25Z",
+  "human_tasks": [
+    {"case":"B09", "task":"The attacked e5 pawn and actual Nxe5 matter before routine Bc5 development. Compare the root defensive difference with Nc6, without claiming that the two different finite continuations prove a forced win or universal safety.", "needed":"Actual move's immediate consequence, current support difference, actual captures and necessary recovery prices.", "excess":"Long alternative first; final existence of unrelated original attacker."},
+    {"case":"B03", "task":"Find evidence for the actual inaccuracy before explaining its cause. Development and e4 support alone do not answer the grade.", "needed":"Identify the first unsupported stage; provide only a verified reason if one can be obtained.", "excess":"A long future attack/block/exchange list presented as if it explains the evaluation gap."},
+    {"case":"B10", "task":"Retain the immediate Rxf6 capture opportunity and the actual Re1 support. This is a positive control for an already available consequential contrast.", "needed":"Observed capture opportunity and its recorded price; no unsupported compensation or forcing claim."},
+    {"case":"B05,B13", "task":"Distinguish missing present pawn-purpose evidence from a present answer hidden by future detail.", "needed":"Only board-grounded present purposes; close evaluation alone does not prove strategic intent."},
+    {"case":"B08", "task":"Use the complex tactical episode as a boundary against unsafe shortening.", "needed":"Preserve required check replies, actual support uses and subsequent losses. Do not count preserved events as a clear explanation unless the central reason is recoverable."}
+  ],
+  "invariants": [
+    "No case ID or SAN specific production branching.",
+    "No forced continuation or evaluation cause inferred from one observed PV.",
+    "A newly selected smaller answer must close its own captures, check replies, used providers and lost duties before other facts move to detail.",
+    "Existing opened35 mandatory prices and important replies remain in basic output.",
+    "All previous facts remain accessible; coverage, delivery, need and excess are assessed separately.",
+    "Ordinary adequate purposes and multiple sound choices do not acquire artificial superiority.",
+    "Evidence insufficiency remains an explicit limitation and is not counted as explanation success."
+  ]
+}

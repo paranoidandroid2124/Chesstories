@@ -1,0 +1,215 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: Chesstories
+    - generic [ref=e5]: Game & commentary
+    - generic [ref=e6]:
+      - combobox "Language" [ref=e7] [cursor=pointer]:
+        - option "한국어"
+        - option "English" [selected]
+      - button "Dark" [ref=e54] [cursor=pointer]
+  - main [ref=e9]:
+    - region "Board and game" [ref=e55]:
+      - generic [ref=e11]:
+        - heading "Gelfand – Avrukh" [level=1] [ref=e81]
+        - generic [ref=e13]: 14… Bd5
+      - generic [ref=e16]:
+        - generic [ref=e17] [cursor=pointer]
+        - generic:
+          - generic: "1"
+          - generic: "2"
+          - generic: "3"
+          - generic: "4"
+          - generic: "5"
+          - generic: "6"
+          - generic: "7"
+          - generic: "8"
+        - generic:
+          - generic: a
+          - generic: b
+          - generic: c
+          - generic: d
+          - generic: e
+          - generic: f
+          - generic: g
+          - generic: h
+      - navigation "Game navigation" [ref=e57]:
+        - button "First position" [ref=e58] [cursor=pointer]: ⏮
+        - button "Previous move" [ref=e59] [cursor=pointer]: ←
+        - button "Next move" [disabled] [ref=e60]: →
+        - button "Last position" [disabled] [ref=e61]: ⏭
+        - button "Flip board" [ref=e62] [cursor=pointer]
+      - generic [ref=e24]:
+        - textbox "Enter move" [ref=e63]:
+          - /placeholder: e4, Nf3, e2e4
+        - button "Play move" [ref=e64] [cursor=pointer]
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - heading "Engine reference" [level=2] [ref=e29]
+          - button "Engine / On" [pressed] [ref=e110] [cursor=pointer]
+        - paragraph [ref=e31]: Ready · D16 · Stockfish 18 · 2 threads
+        - paragraph [ref=e117]:
+          - strong [ref=e118]: "+0.80"
+          - generic [ref=e119]: Bxd5 Nxd5 Bxd4 exd4 Nxd5 Qxd5 Nf3 Rac8 Qa2 Qd7 Rfc1 c6
+        - paragraph [ref=e120]:
+          - strong [ref=e121]: "+0.52"
+          - generic [ref=e122]: Nge4 c6 Qb2 Rb8 Rfb1 Qc7 Nxd5 cxd5 Ng5 Rbc8 Bxd4 exd4
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Game score" [level=2] [ref=e65]
+          - button "Download PGN" [ref=e66] [cursor=pointer]
+        - generic [ref=e36]:
+          - button "1. c4" [ref=e82] [cursor=pointer]
+          - button "1… Nf6" [ref=e83] [cursor=pointer]
+          - button "2. Nc3" [ref=e84] [cursor=pointer]
+          - button "2… d5" [ref=e85] [cursor=pointer]
+          - button "3. cxd5" [ref=e86] [cursor=pointer]
+          - button "3… Nxd5" [ref=e87] [cursor=pointer]
+          - button "4. g3" [ref=e88] [cursor=pointer]
+          - button "4… g6" [ref=e89] [cursor=pointer]
+          - button "5. Bg2" [ref=e90] [cursor=pointer]
+          - button "5… Nb6" [ref=e91] [cursor=pointer]
+          - button "6. Nf3" [ref=e92] [cursor=pointer]
+          - button "6… Bg7" [ref=e93] [cursor=pointer]
+          - button "7. O-O" [ref=e94] [cursor=pointer]
+          - button "7… O-O" [ref=e95] [cursor=pointer]
+          - button "8. d3" [ref=e96] [cursor=pointer]
+          - button "8… Nc6" [ref=e97] [cursor=pointer]
+          - button "9. Be3" [ref=e98] [cursor=pointer]
+          - button "9… e5" [ref=e99] [cursor=pointer]
+          - button "10. b4" [ref=e100] [cursor=pointer]
+          - button "10… Nd4" [ref=e101] [cursor=pointer]
+          - button "11. a4" [ref=e102] [cursor=pointer]
+          - button "11… Be6" [ref=e103] [cursor=pointer]
+          - button "12. Ng5" [ref=e104] [cursor=pointer]
+          - button "12… Bb3" [ref=e105] [cursor=pointer]
+          - button "13. Qb1" [ref=e106] [cursor=pointer]
+          - button "13… a5" [ref=e107] [cursor=pointer]
+          - button "14. b5" [ref=e108] [cursor=pointer]
+          - button "14… Bd5" [ref=e109] [cursor=pointer]
+      - group [ref=e37]:
+        - generic "Import PGN · FEN" [ref=e67] [cursor=pointer]
+        - textbox "PGN or FEN" [ref=e75]:
+          - /placeholder: Paste a PGN game or FEN position.
+          - text: "[Event \"Ramat Aviv 1999\"] [Site \"?\"] [Date \"????.??.??\"] [Round \"?\"] [White \"Gelfand\"] [Black \"Avrukh\"] [Result \"*\"] 1. c4 Nf6 2. Nc3 d5 3. cxd5 Nxd5 4. g3 g6 5. Bg2 Nb6 6. Nf3 Bg7 7. O-O O-O 8. d3 Nc6 9. Be3 e5 10. b4 Nd4 11. a4 Be6 12. Ng5 Bb3 13. Qb1 a5 14. b5 Bd5 *"
+        - generic [ref=e76]:
+          - button "Import" [ref=e77] [cursor=pointer]
+          - generic [ref=e78] [cursor=pointer]:
+            - text: Choose file
+            - button "Choose file" [ref=e79]
+        - paragraph [ref=e80]: Import one game at a time. Variations and comments are preserved in PGN downloads.
+      - group [ref=e39]:
+        - generic "Current FEN" [ref=e68] [cursor=pointer]
+    - region "Commentary" [ref=e69]:
+      - generic [ref=e42]:
+        - heading "Why this move" [level=2] [ref=e70]
+        - button "Explain · 10 seconds" [ref=e71] [cursor=pointer]
+      - status [ref=e45]: completed · 1.78s
+      - region [ref=e72]:
+        - generic [ref=e47]:
+          - heading "Last move review" [level=2] [ref=e73]
+          - status [ref=e123]: Last move review complete.
+        - generic [ref=e124]:
+          - 'region "Playable: Bd5" [ref=e125]':
+            - generic [ref=e126]:
+              - generic [ref=e127]: Bd5
+              - heading "Playable" [level=3] [ref=e128]
+          - group [ref=e129]:
+            - generic "Evaluation details +" [ref=e130] [cursor=pointer]
+        - article [ref=e132]:
+          - heading "Comparison of the two choices" [level=3] [ref=e133]
+          - paragraph [ref=e134]:
+            - text: The evaluation compares
+            - button "c6 · Explore position" [ref=e135] [cursor=pointer]: c6
+            - text: with
+            - button "Bd5 · Explore position" [ref=e136] [cursor=pointer]: Bd5
+            - text: . The reference move prepares piece play on d5 with support from Black's pawn on c6. It also blocks White's bishop on g2 from attacking Black's pawn on b7. The played move instead uses Black's bishop on d5 to attack White's bishop on g2; d5 has no pawn support. The replies distinguish preparation from committing the piece or pawn now.
+          - paragraph [ref=e137]:
+            - text: The recorded continuation is
+            - button "c6 · Explore position" [ref=e138] [cursor=pointer]: c6
+            - button "Rc1 · Explore position" [ref=e139] [cursor=pointer]: Rc1
+            - button "Rb8 · Explore position" [ref=e140] [cursor=pointer]: Rb8
+            - text: . After
+            - button "Rb8 · Explore position" [ref=e141] [cursor=pointer]: Rb8
+            - text: ", d5 is still covered by Black's pawn on c6."
+          - paragraph [ref=e142]:
+            - text: The recorded continuation is
+            - button "Bd5 · Explore position" [ref=e143] [cursor=pointer]: Bd5
+            - button "Nge4 · Explore position" [ref=e144] [cursor=pointer]: Nge4
+            - button "Rb8 · Explore position" [ref=e145] [cursor=pointer]: Rb8
+            - text: . After
+            - button "Rb8 · Explore position" [ref=e146] [cursor=pointer]: Rb8
+            - text: ", d5 still has no pawn support; Black's bishop on d5 occupies it."
+          - generic [ref=e147]:
+            - button "Alternative · c6 · Replay" [ref=e148] [cursor=pointer]
+            - button "Played move · Bd5 · Replay" [ref=e149] [cursor=pointer]
+        - group [ref=e150]:
+          - generic "Evaluation and observation records +" [ref=e151] [cursor=pointer]
+          - text: + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+          - option "Choose a square" [selected]
+          - option "a1"
+          - option "b1"
+          - option "c1"
+          - option "d1"
+          - option "e1"
+          - option "f1"
+          - option "g1"
+          - option "h1"
+          - option "a2"
+          - option "b2"
+          - option "c2"
+          - option "d2"
+          - option "e2"
+          - option "f2"
+          - option "g2"
+          - option "h2"
+          - option "a3"
+          - option "b3"
+          - option "c3"
+          - option "d3"
+          - option "e3"
+          - option "f3"
+          - option "g3"
+          - option "h3"
+          - option "a4"
+          - option "b4"
+          - option "c4"
+          - option "d4"
+          - option "e4"
+          - option "f4"
+          - option "g4"
+          - option "h4"
+          - option "a5"
+          - option "b5"
+          - option "c5"
+          - option "d5"
+          - option "e5"
+          - option "f5"
+          - option "g5"
+          - option "h5"
+          - option "a6"
+          - option "b6"
+          - option "c6"
+          - option "d6"
+          - option "e6"
+          - option "f6"
+          - option "g6"
+          - option "h6"
+          - option "a7"
+          - option "b7"
+          - option "c7"
+          - option "d7"
+          - option "e7"
+          - option "f7"
+          - option "g7"
+          - option "h7"
+          - option "a8"
+          - option "b8"
+          - option "c8"
+          - option "d8"
+          - option "e8"
+          - option "f8"
+          - option "g8"
+          - option "h8"
+  - contentinfo [ref=e52]:
+    - status [ref=e53]: Game imported.
+    - text: Autosaved in this browser. Download the PGN to keep a portable copy.

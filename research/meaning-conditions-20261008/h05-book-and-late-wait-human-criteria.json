@@ -1,0 +1,417 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T01:06:28.918862+00:00",
+  "scope": "H05 theory reading and legal-condition audit; original early g4 judgment versus conditional useful g4 in a known development descendant. This is not a new independent success criterion or completed root causal proof.",
+  "independence_and_limits": {
+    "main_code_or_tests_read_or_changed": false,
+    "new_engine_jobs_run": 0,
+    "new_engine_result_files_or_current_product_internal_outputs_read": false,
+    "prior_h05_development_exposure": true,
+    "parent_supplied_actual_prefix_and_partial_engine_status_before_reading": true,
+    "not_new_engine_blind_or_product_blind_success_control": true,
+    "original_eight_criteria_or_new_four_reading_changed": false,
+    "parent_value_reports_are_not_own_verified_engine_results": true,
+    "no_full_book_or_global_forced_win_claim": true
+  },
+  "preserved_records_sha256": {
+    "independent-theory-controls.json": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+    "independent-basic-v14-human-reading.json": "ff7993d5bb9a59b538a8f7e466efb64453ed8a3da738bd564c6e2a88cc6d97d6",
+    "independent-minimum-conditions-refinement.json": "09b6e3081043536899a409c2676c1b4a82d0b5607d2dbc2091d38e2f94a89efc",
+    "independent-basic-v20-human-reading.json": "3a048c5731d3e29cdf03b01d6128b3e3ea9ddbc1bd8f1917cdc6b62a76ddcad7",
+    "independent-functional-followup-product-inputs.json": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+    "functional-followup-basic-v24b-human-reading.json": "a426cb0c2194f51c6a9c368a019236cd928a9def49061b203a24c64e365ef0df"
+  },
+  "source": {
+    "book": "100 Endgame Patterns You Must Know",
+    "author": "Jesús de la Villa",
+    "pdf_path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\100 Endgame Patterns.pdf",
+    "pdf_sha256": "ac478cdeaaf469d2964403f0e262d020b84647ab22ae8a35cac4e48908e12cb3",
+    "pdf_page_count": 486,
+    "game": "Borja Zamarbide–Martin Benitez, La Roda 2005",
+    "reading_edition_pages_read": [
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+    ],
+    "focused_pages": [
+      58,
+      59,
+      60,
+      61,
+      62
+    ],
+    "diagrams_visually_checked_this_phase": [
+      60,
+      61
+    ],
+    "source_pdf_footer_pages": {
+      "pattern_intro": "90–94",
+      "H05": "94–99"
+    },
+    "extracted_neighborhood_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\h05-book-neighborhood-source.json",
+    "extracted_neighborhood_sha256": "031005356debd1c3d283f5dcafd4e3eacc961166dd4915da2d25e7867bf2e2e3",
+    "book_legal_controls_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\books\\h05-book-legal-controls.json",
+    "book_legal_controls_sha256": "1b5d4d595ec755f2136312acb67ed8f488acc384f31f55dac7692ce13c8e36b6",
+    "source_scope": "독서판의 해당 절과 연결 문맥을 읽고 도표 및 수순을 확인했다. 완독이나 모든 최선 수의 독립 증명이 아니다."
+  },
+  "author_human_judgment": [
+    {
+      "pages": [
+        58,
+        59
+      ],
+      "meaning": "여유 수의 목적은 상대에게 차례를 넘겨 유리한 왕 위치를 얻는 것이다. 남은 폰 수의 개수나 합법성만으로 유효한 여유 수를 정의하지 않는다. 구체적 진입·대응·가격에 따라 쓰는 시점이 달라진다."
+    },
+    {
+      "pages": [
+        60
+      ],
+      "meaning": "35.g4?는 폰 다수만 믿고 남은 대기 수를 너무 일찍 쓰는 판단이다. 흑은 ...f6로 g5 돌파를 억제하고 왕으로 f5 진입을 막는다. 실제 게임의 추가 돌파로도 백이 이기지 못한다는 것이 저자의 판정이다."
+    },
+    {
+      "pages": [
+        60,
+        61
+      ],
+      "meaning": "35.Ke3!는 g4를 남기며 왕으로 기다리고 삼각 기동한다. Kd2에서 b4 포획을 위협해 상대가 봉쇄를 유지하며 기다리던 자원을 먼저 쓰도록 한다. 단순 왕 순환의 존재만으로 강제 승리를 설명하지 않는다."
+    },
+    {
+      "pages": [
+        61
+      ],
+      "meaning": "37.Kf4 Ke6 38.g4?에는 ...b3!가 여전히 있어 왕을 Ke6에 둔다. 왕 응수들이 모두 f5를 허용하더라도 상대가 왕을 움직일 필요가 없다면 그 진입 주장은 충분하지 않다."
+    },
+    {
+      "pages": [
+        61,
+        62
+      ],
+      "meaning": "흑이 b3로 유효한 대기 자원을 먼저 쓰고 나면 43.g4!는 왕을 f4에 둔 채 봉쇄를 깨고 Kf5로 지배적인 왕 위치를 얻는 수다. 저자는 그 뒤 폰 돌파와 왕의 침투로 승리한다고 판단한다."
+    }
+  ],
+  "original_early_g4_comment_criteria": {
+    "question": "왜 자연스러운 폰 전진이 실수이고, 왕을 먼저 움직이는 것이 더 유용한가?",
+    "necessary_answer": [
+      "폰 다수의 목적 자체는 정상이나 지금 바로 g4를 쓰면 이후 유리한 왕 위치를 유지하며 차례를 넘길 수단을 잃는다는 판단을 말한다.",
+      "흑의 실제 ...f6 및 왕 봉쇄, 상대에게 남은 유효한 여유 수를 연결한다. g4가 단지 새 칸을 공격한다는 사실은 실수의 원인이 아니다.",
+      "Ke3로 여유 수를 남겨 상대의 방어 자원이 소진될 때 쓰는 계획을 설명한다. 책의 정확한 전체 수순을 기본 본문에 강제하지 않는다.",
+      "저자의 실수·무승부 판정과 현재 엔진 수치 및 원래 모든 응수의 독립 검증 여부를 구분한다."
+    ],
+    "minimum_comment": "지금 g4를 쓰면 흑이 ...f6로 폰 돌파를 억제하고 왕의 진입을 막을 때, 왕을 그대로 둔 채 차례를 넘길 수가 없어집니다. 먼저 왕으로 움직이며 g4를 남겨 두고, 흑의 유효한 대기 수를 먼저 소진시켜야 합니다.",
+    "misleading_comments": [
+      "폰 다수이므로 g4를 밀면 저절로 먼 통과폰이 이긴다.",
+      "g4는 언제나 나쁘다.",
+      "King cycle 한 번이 있으므로 Ke3 이후 모든 주요 응수에서도 승리가 증명됐다."
+    ]
+  },
+  "actual_saved_late_position": {
+    "provenance": "Parent supplied legal development prefix from the saved mcExisting23 run; no internal output file was read.",
+    "initial_fen": "8/5p2/8/2p1k3/ppp1P3/P1P2KP1/1P6/8 w - - 0 35",
+    "prefix_uci": [
+      "f3e3",
+      "f7f6",
+      "e3f3",
+      "e5d6",
+      "f3e2",
+      "d6e5",
+      "e2e3",
+      "e5d6",
+      "e3d2",
+      "b4a3",
+      "b2a3",
+      "d6e5",
+      "d2e3",
+      "f6f5",
+      "e4f5",
+      "e5f5",
+      "e3f3",
+      "f5e5"
+    ],
+    "prefix_san": [
+      "Ke3",
+      "f6",
+      "Kf3",
+      "Kd6",
+      "Ke2",
+      "Ke5",
+      "Ke3",
+      "Kd6",
+      "Kd2",
+      "bxa3",
+      "bxa3",
+      "Ke5",
+      "Ke3",
+      "f5",
+      "exf5",
+      "Kxf5",
+      "Kf3",
+      "Ke5"
+    ],
+    "prefix_ply_count": 18,
+    "prefix_legally_replayed": true,
+    "prefix_is_proved_forced": false,
+    "before_g4_fen": "8/8/8/2p1k3/p1p5/P1P2KP1/8/8 w - - 2 44",
+    "after_g4_fen": "8/8/8/2p1k3/p1p3P1/P1P2K2/8/8 b - - 0 44",
+    "f5_is_empty_before_g4": true,
+    "white_Kf4_legal_before_g4": false,
+    "white_attacks_f5_before_g4": false,
+    "white_attacks_f5_after_g4": true,
+    "g4_preserves_white_king_f3": true,
+    "actual_root_actor_changes": [
+      {
+        "ply": 10,
+        "san": "bxa3",
+        "uci": "b4a3",
+        "moving_book_root_actor_id": "b-P@b4",
+        "captured_book_root_actor_id": "w-P@a3",
+        "before_fen": "8/8/3k1p2/2p5/ppp1P3/P1P3P1/1P1K4/8 b - - 7 39",
+        "after_fen": "8/8/3k1p2/2p5/p1p1P3/p1P3P1/1P1K4/8 w - - 0 40"
+      },
+      {
+        "ply": 11,
+        "san": "bxa3",
+        "uci": "b2a3",
+        "moving_book_root_actor_id": "w-P@b2",
+        "captured_book_root_actor_id": "b-P@b4",
+        "before_fen": "8/8/3k1p2/2p5/p1p1P3/p1P3P1/1P1K4/8 w - - 0 40",
+        "after_fen": "8/8/3k1p2/2p5/p1p1P3/P1P3P1/3K4/8 b - - 0 40"
+      },
+      {
+        "ply": 15,
+        "san": "exf5",
+        "uci": "e4f5",
+        "moving_book_root_actor_id": "w-P@e4",
+        "captured_book_root_actor_id": "b-P@f7",
+        "before_fen": "8/8/8/2p1kp2/p1p1P3/P1P1K1P1/8/8 w - - 0 42",
+        "after_fen": "8/8/8/2p1kP2/p1p5/P1P1K1P1/8/8 b - - 0 42"
+      },
+      {
+        "ply": 16,
+        "san": "Kxf5",
+        "uci": "e5f5",
+        "moving_book_root_actor_id": "b-K@e5",
+        "captured_book_root_actor_id": "w-P@e4",
+        "before_fen": "8/8/8/2p1kP2/p1p5/P1P1K1P1/8/8 b - - 0 42",
+        "after_fen": "8/8/8/2p2k2/p1p5/P1P1K1P1/8/8 w - - 0 43"
+      }
+    ],
+    "actor_id_anchor": "Initial book FEN; not reconstructed starting-game square.",
+    "last_legal_reply_survey": {
+      "fen": "8/8/8/2p1k3/p1p3P1/P1P2K2/8/8 b - - 0 44",
+      "king_moves": [
+        "Kf6",
+        "Ke6",
+        "Kd6",
+        "Kd5"
+      ],
+      "pawn_moves": []
+    },
+    "per_legal_king_reply": [
+      {
+        "black_king_reply": "Kf6",
+        "before_Kf4_fen": "8/8/5k2/2p5/p1p3P1/P1P2K2/8/8 w - - 1 45",
+        "white_Kf4_legal": true,
+        "after_Kf4_fen": "8/8/5k2/2p5/p1p2KP1/P1P5/8/8 b - - 2 45",
+        "white_king_supports_next_g5_square": true
+      },
+      {
+        "black_king_reply": "Ke6",
+        "before_Kf4_fen": "8/8/4k3/2p5/p1p3P1/P1P2K2/8/8 w - - 1 45",
+        "white_Kf4_legal": true,
+        "after_Kf4_fen": "8/8/4k3/2p5/p1p2KP1/P1P5/8/8 b - - 2 45",
+        "white_king_supports_next_g5_square": true
+      },
+      {
+        "black_king_reply": "Kd6",
+        "before_Kf4_fen": "8/8/3k4/2p5/p1p3P1/P1P2K2/8/8 w - - 1 45",
+        "white_Kf4_legal": true,
+        "after_Kf4_fen": "8/8/3k4/2p5/p1p2KP1/P1P5/8/8 b - - 2 45",
+        "white_king_supports_next_g5_square": true
+      },
+      {
+        "black_king_reply": "Kd5",
+        "before_Kf4_fen": "8/8/8/2pk4/p1p3P1/P1P2K2/8/8 w - - 1 45",
+        "white_Kf4_legal": true,
+        "after_Kf4_fen": "8/8/8/2pk4/p1p2KP1/P1P5/8/8 b - - 2 45",
+        "white_king_supports_next_g5_square": true
+      }
+    ],
+    "passed_g_pawn_fact": "흑 폰은 a/c 파일에만 남아 g폰은 통과폰이다. Kf4에 간 왕은 다음 g5 칸을 지원할 수 있다.",
+    "value_limits": "Kf4가 합법이라는 것은 가치 보장이 아니다. 부모는 여러 승리 선택과 깊은 조사 일부 완료를 보고했지만 이 독해에서 새 엔진 결과를 재검증하지 않았다. Kf4의 독점성·g4의 유일성·전체18ply의 강제성은 주장하지 않는다."
+  },
+  "actual_late_g4_minimum_functional_conditions": {
+    "question": "g4를 이제 쓰는 것이 왜 유용하며, 어떤 조건이 그 효과를 만드는가?",
+    "necessary_for_this_specific_explanation": [
+      "같은 원래 g3 폰의 g4가 합법이며 왕을 현재 활동 위치 f3에 남긴다.",
+      "왕 f3와 c3 폰이 흑의 아래쪽 우회 칸을 막은 상태에서, g4 폰이 빈 f5를 새로 제어하여 Kf5로 f4 봉쇄를 유지하는 경로를 없앤다.",
+      "실제 흑의 모든 합법 응수가 검사 범위에 있어야 한다. 이 상태에는 폰 응수가 없어 남은 Kd5/Kd6/Ke6/Kf6 네 왕 응수만으로 이동해야 한다.",
+      "그 네 왕 응수 뒤 f4 진입이 합법일 뿐 아니라 중요한 가격 없이 통과폰 지원 또는 다른 가치 있는 활동을 남기는지 확인해야 한다.",
+      "Kf4는 여러 유용한 대응 가운데 하나일 수 있다. 특정 엔진 주 수순에서 안 나와도 그 선택의 가치가 확인되면 조건부 목적을 유지한다."
+    ],
+    "generalized_condition_narrower_than_event_list": "상대가 같은 봉쇄를 가치 있게 유지하는 대체 응수가 남지 않고, 내 대기 수가 현재 왕의 필요한 역할을 보존하면서 가치 있는 후속 활동을 만든다는 기능 조건이 핵심이다. 상대의 특정 b3 사건, 중앙 폰의 영구 존재, 고정18ply는 필수 사건이 아니다.",
+    "minimum_factual_comment": "지금 g4는 왕을 f3에 둔 채 f5를 제어해 흑이 Kf5로 봉쇄를 유지하지 못하게 합니다. 흑에게는 폰 응수가 없어 왕을 물려야 하고, 백은 f4로 전진해 통과폰의 다음 전진을 지원할 수 있습니다.",
+    "if_value_confirmed_comment_extension": "그 진입이 강한 왕 응수들에서도 유리한 결과를 유지한다고 확인되면 승리에 도움이 되는 계획이라고 말할 수 있습니다. 유일한 승리 수나 원래 작은 점수 차이의 단독 원인이라고 확대하지 않습니다.",
+    "if_value_not_confirmed_revision": "왕 진입이 열리는 사실과 그 진입의 실효성을 구분해 조건부 설명으로 남긴다. 합법성 전칭만으로 이기는 이유라고 말하지 않는다."
+  },
+  "same_idea_different_implementation": {
+    "book": "...b3를 먼저 쓰게 하고 왕 f4를 유지하는 g4로 f5 진입을 얻는다.",
+    "actual_saved_line": "...bxa3-bxa3로 흑 b폰이 제거되고, ...f5-exf5-Kxf5로 중앙 폰들도 제거된다. 왕 f3를 유지하는 g4가 새 f5 제어로 상대의 Kf5 봉쇄를 없애 f4 활동을 만든다.",
+    "shared_function": "대기 수를 남겼다가 상대의 유효한 응수가 좁아진 때 현재 왕의 역할을 보존하며 상대에게 차례를 넘기고 가치 있는 활동을 얻는다.",
+    "not_automatically_shared": "진입 칸, 소모된 폰의 이동 방식, 정확한 강제 수순, 엔진 평가 차이의 크기와 원인."
+  },
+  "cheap_legal_counter_controls": [
+    {
+      "id": "all-king-replies-open-entry-but-pawn-can-wait",
+      "book_state": {
+        "id": "premature_later_g4",
+        "prefix_san": [
+          "Ke3",
+          "f6",
+          "Kf3",
+          "Kd6",
+          "Kf4",
+          "Ke6",
+          "g4"
+        ],
+        "fen": "8/8/4kp2/2p5/ppp1PKP1/P1P5/1P6/8 b - - 0 38",
+        "black_legal_king_replies": [
+          "Kf7",
+          "Ke7",
+          "Kd7",
+          "Kd6"
+        ],
+        "black_legal_pawn_replies": [
+          "bxc3",
+          "bxa3",
+          "f5",
+          "b3"
+        ],
+        "per_king_white_Kf5_legality": [
+          {
+            "black_king_reply": "Kf7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Ke7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Kd7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Kd6",
+            "white_Kf5_legal": true
+          }
+        ],
+        "scope": "Legal move enumeration only; a legal pawn reply is not automatically a value-preserving spare move."
+      },
+      "book_counter": "...b3! keeps Black Ke6 guarding f5.",
+      "meaning": "모든 왕 응수의 진입 허용만으로 상대가 왕을 움직여야 함을 증명하지 못한다."
+    },
+    {
+      "id": "zero-legal-pawn-moves-not-necessary-in-book",
+      "book_state": {
+        "id": "book_late_g4",
+        "prefix_san": [
+          "Ke3",
+          "f6",
+          "Kf3",
+          "Kd6",
+          "Ke2",
+          "Ke5",
+          "Ke3",
+          "Kd6",
+          "Kd2",
+          "b3",
+          "Ke3",
+          "Ke5",
+          "Kf3",
+          "Kd6",
+          "Kf4",
+          "Ke6",
+          "g4"
+        ],
+        "fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 43",
+        "black_legal_king_replies": [
+          "Kf7",
+          "Ke7",
+          "Kd7",
+          "Kd6"
+        ],
+        "black_legal_pawn_replies": [
+          "f5"
+        ],
+        "per_king_white_Kf5_legality": [
+          {
+            "black_king_reply": "Kf7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Ke7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Kd7",
+            "white_Kf5_legal": true
+          },
+          {
+            "black_king_reply": "Kd6",
+            "white_Kf5_legal": true
+          }
+        ],
+        "scope": "Legal move enumeration only; a legal pawn reply is not automatically a value-preserving spare move."
+      },
+      "legal_pawn_counter": "...f5 remains legal; exf5+ is a legal White reply.",
+      "meaning": "책의 43.g4!는 ...f5가 합법이어도 저자가 승리로 평가한다. 법적 pawn move0는 실제 late의 충분 조건이지 모든 좋은 여유 수의 필수 조건이 아니다. ...f5의 전체 가치와 정확한 전환을 새로 계산한 것은 아니다."
+    },
+    {
+      "id": "f5-control-alone-without-held-king-role",
+      "legal_actual_descendant_control": {
+        "root_fen": "8/8/8/2p1k3/p1p5/P1P2KP1/8/8 w - - 2 44",
+        "moves": [
+          "Kg4",
+          "Ke4"
+        ],
+        "final_fen": "8/8/8/2p5/p1p1k1K1/P1P3P1/8/8 w - - 4 45"
+      },
+      "facts": "Kg4도 f5를 제어하지만 f3 왕의 e4 제어를 잃어 ...Ke4가 합법이며 Kf4를 여전히 막는다.",
+      "meaning": "f5 제어 하나만으로 같은 진입 효과를 인증하면 안 된다. 이는 Kg4가 나쁘거나 지는 수라는 가치 판정이 아니다."
+    },
+    {
+      "id": "same-placement-black-turn-geometry-only",
+      "survey": {
+        "fen": "8/8/8/2p1k3/p1p5/P1P2KP1/8/8 b - - 2 44",
+        "king_moves": [
+          "Kf6",
+          "Ke6",
+          "Kd6",
+          "Kf5",
+          "Kd5"
+        ],
+        "pawn_moves": []
+      },
+      "Kf5_then_white_Kf4_legal": false,
+      "scope": "차례를 바꾼 합성 기하 관찰이다. 실제18ply의 도달 이력이나 엔진 가격 비교로 계산하지 않는다.",
+      "meaning": "g4 이전에는 같은 배치의 Black Kf5가 f4 봉쇄를 유지할 수 있고 g4 뒤에는 이 경로가 폰의 제어로 금지된다."
+    }
+  ],
+  "what_all_king_replies_yield_f4_sentence_omits": [
+    "왜 모든 합법 응수가 왕 수인지, 그리고 남은 유효한 폰 대기 응수가 없는지.",
+    "g4가 왕 위치를 보존하는 것과 f5를 새로 제한하는 두 역할의 결합.",
+    "Kf4가 합법인 뒤 통과폰 지원과 실제 가치가 남는지; 여러 승리 선택 중 하나라는 범위.",
+    "이 마지막 조건을 처음 Ke3의 판단으로 연결할 때 전체 도달 경로와 다른 주요 응수의 별도 검증이 필요하다는 점."
+  ],
+  "causal_connection_limits": {
+    "local_statement_supported_by_own_legal_reading": "고정된 마지막 국면에서 g4가 응수 집합을 줄이고 왕을 유지해 모든 법적 상대 응수 뒤 f4 진입을 가능하게 한다.",
+    "value_statement_pending_external_verification": "강한 왕 응수 뒤 Kf4와 다른 유용한 활동이 승리를 유지하는지의 깊은 비교는 부모가 담당한다.",
+    "root_statement_not_proved_by_eight_last_position_queries": "35.Ke3 뒤 이18ply가 강제임, 모든 초기 흑 응수에서 같은 후속 진입을 얻음, 원래g4vsKe3 차이의 독점 원인임을 마지막 국면의 조사만으로 증명할 수 없다.",
+    "book_author_label_not_own_independent_engine_proof": "원래 35.g4?와 35.Ke3!의 오류/승리 평가는 책의 판단으로 출처를 붙인다. 실제 late의 국소 검증과 분리한다."
+  }
+}

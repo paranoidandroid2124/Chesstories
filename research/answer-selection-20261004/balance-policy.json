@@ -1,0 +1,93 @@
+{
+  "id": "answer-selection-initial-balance-sf18-smallnet-d16-t2-h16-v1",
+  "frozen_at_utc": "2026-10-04T12:23:16.989463+00:00",
+  "frozen_before": "Any new candidate engine score or product execution/output reading",
+  "preparation_file": "research/answer-selection-20261004/generalization-preparation.json",
+  "preparation_sha256": "13cf305c8db7240805cb2af4a3def71e97a25b7390b6050dd9d5ab3f00abeec6",
+  "selection_policy_sha256": "ee79101b0bb68672f0af618e902d905c9f92e2b2eb6a5b2b1e1142013cfb8307",
+  "candidate_identity_sha256": "e81881d30ebc7731f25a542b968399a806d59a6b5d5a4c4e5105580c206f2cc2",
+  "assets": [
+    {
+      "path": "C:/Program Files/nodejs/node.exe",
+      "bytes": 85588976,
+      "sha256": "fdddbf4581e046b8102815d56208d6a248950bb554570b81519a8a5dacfee95d"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/uci.mjs",
+      "bytes": 820,
+      "sha256": "a07d19f326574047553949cf2fcd33bb734cf3416132bd4a9a88f1eed17ea706"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/sf_18_smallnet.js",
+      "bytes": 28643,
+      "sha256": "0eebbd7d5108348cbf51b868adf4af0d33a866ef68217b2d6d9259c7573d8287"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/sf_18_smallnet.wasm",
+      "bytes": 596247,
+      "sha256": "7a759da6e6a19b86853e107f3212b070298e9e1515ed6959783a89c65e88a195"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/nn-4ca89e4b3abf.nnue",
+      "bytes": 15054352,
+      "sha256": "4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/package.json",
+      "bytes": 769,
+      "sha256": "9171ec6654d6f09e78101402a9bfb120b8915415dd8ddd89ef9515b7132be307"
+    },
+    {
+      "path": "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/README.md",
+      "bytes": 4383,
+      "sha256": "261c2a3649bb60a45ff74a1ed0507e6100f1d5784189131186d64a1ebda15ffb"
+    }
+  ],
+  "engine_label": "Cached Stockfish18 smallnet WebAssembly; README identifies sscg13/threat-small patch. This is identified as the cached smallnet build, not unmodified native Stockfish18.",
+  "engine_profile": "sf18-smallnet-t2-h16-v1",
+  "command": [
+    "C:/Program Files/nodejs/node.exe",
+    "C:/Users/양자/.codex/worktrees/8f44/Chesstories/target/annotated-games-20261003/engine/uci.mjs"
+  ],
+  "parameters": {
+    "search_depth": 16,
+    "root_search": "unrestricted;no searchmoves",
+    "Threads": 2,
+    "Hash_MB": 16,
+    "MultiPV": 1,
+    "UCI_LimitStrength": false,
+    "UCI_Chess960": false,
+    "SyzygyPath": "empty/default none",
+    "Skill_Level": "default full strength20",
+    "uci_newgame_per_position": true,
+    "clear_hash_per_position": true,
+    "position_encoding": "position startpos moves exact prefix_before_uci;initial standard board retained in python-chess move_stack",
+    "hard_timeout_seconds": 30,
+    "partial_depth_or_timeout_score_admitted": false
+  },
+  "consumption": {
+    "source_order": [
+      "corus-a-2006",
+      "tata-masters-2025"
+    ],
+    "candidate_order": "eligible_game_ordinal1..18 per source",
+    "stop_at_admitted_per_source": 9,
+    "admission": "completed D16 absolute White-perspective cp<=100 inclusive;mate/unknown/timeout/depth-incomplete distinct non-admissions",
+    "cap_positions": 36,
+    "no_within_game_replacement": true,
+    "after_actualmove_evaluation_not_used": true,
+    "no_candidate_retry_for_success": true
+  },
+  "pending_jobs": {
+    "schema_version": 6,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "budget_ms": 30000,
+    "automatic_threats": false,
+    "after_fen": "legal actual selected move after exact history"
+  },
+  "product_execution": false,
+  "product_output_read": false,
+  "commentary_content_oracle": false,
+  "protected_corpus_read": false,
+  "policy_sha256": "1565777642bf1682780191bdd275b12075efc4b539c3e8b4c3d27153fd78ff49"
+}

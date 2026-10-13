@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T18:07:02.078264+00:00",
+  "purpose": "Supplemental human reading contract for an unchanged useful function with a different plan or friendly user. This is not a revision or rescore of the old SG45 four-input criterion.",
+  "sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\independent-functional-followup-product-inputs.json",
+      "sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd",
+      "read_scope": "Frozen FC-SG45-NC4/NB1 human question, four levels and acceptance policy."
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\meaning-conditions-20261008\\final-theory-functional-synthesis.json",
+      "sha256": "0965ddb81ca0132614c9451b72d149b32dd5809a6d933285d840ca8c0248c1b3",
+      "read_scope": "IC-SG45 selected scene, central insight, annotated problem requirements and minimal honest evidence levels."
+    }
+  ],
+  "original_contract_retained": {
+    "root_fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "rook_specific_price": "Nc4 supports a rook occupying d6 and permits Nxd6 after Qxd6. In the fixed immediate Rd6 realization after Nb1, that same knight recapture is absent.",
+    "different_good_plan": "Nb1–c3 and other source plans remain valid possibilities. The constructed direct Rd6 price counterexample does not prove the whole Nb1 move is bad.",
+    "ordinary_purpose": "Rfd1 improves a rook while preserving several good routes; a concise purpose answer can suffice. Specific superiority or later realization needs its relevant counter and price.",
+    "original_judgment_scope": "The source did not prove a unique best move or cause of the small original numerical difference.",
+    "earlier_four_full_utility_reading": "0/4 unchanged. The prior criterion and every historical reading remain immutable."
+  },
+  "parent_reported_current_context": {
+    "provenance": "Parent message only; current receipts, main code and fresh results were not opened for this task.",
+    "root_values_reported": "Nc4 +179 versus Nb1 +119 in the parent-mentioned h16 comparison.",
+    "changed_user_reported": "The current preferred continuation uses Qd3/Ra8/Qd6/Qxd6/Nxd6 rather than an immediate rook Rd6.",
+    "limits": "The supplied abbreviated stem omits its exact prior Black reply and full owned history. It does not establish every current legal recapturer, forced play, completed strongest defense or the cause of the root gap. No score is used to relax the criterion."
+  },
+  "distinctions": {
+    "function": "A friendly occupation of d6 has a current adequate reply to an enemy capture there; Nc4 can supply Nxd6 and a useful choice of recapture/continuing activity.",
+    "plan": "The occupant may reach d6 through immediate Rd6, a later queen maneuver or another legal route. The old exact plan is evidence, not an invariant.",
+    "user": "The friendly rook or queen occupying d6 is a distinct original actor. Preserve that exact current user in the transaction rather than treating the old rook proof as a proof about a new queen.",
+    "provider": "The original c4 knight and its c4–d6 action must still be tracked exactly. A different provider is allowed only with a new canonical valid witness.",
+    "price": "Losing a rook to Qxd6 and trading a queen with Qxd6 have different costs and ensuing choices. Retaining the geometrical support function does not retain the old numerical or material valuation."
+  },
+  "four_human_claim_levels": [
+    {
+      "level": "local useful choice/purpose",
+      "requirement": "A current legally available d6 use with its relevant reply/price, sufficient to describe a concrete option; acknowledge another sound Nb1 plan when applicable.",
+      "may_say": "Nc4 supports d6 and, in this checked continuation, lets White answer the queen capture with Nxd6.",
+      "may_not_say": "The same support proves the entire plan, makes the knight the only defender, or means Nb1 is generally poor."
+    },
+    {
+      "level": "constraint on the opponent defense",
+      "requirement": "Exact capture transaction, every immediate legal friendly recapture, every consequential reply/check and an adequate current defender. Distinguish denied free capture from a legal equal exchange.",
+      "may_say": "The capture cannot win the displayed occupant without the verified recapture cost; Nxd6 is one checked choice.",
+      "may_not_say": "Black cannot play Qxd6, or Qxd6 is a bad defense merely because Nxd6 is legal."
+    },
+    {
+      "level": "part of the original move judgment",
+      "requirement": "Owned root comparison plus an adequate current opponent survey connecting this option/price to the choice of Nc4 versus Nb1. Check alternative recapturers and alternative good plans rather than presuming their absence.",
+      "may_say": "This explains a verified useful aspect of Nc4 or a particular weakness of the direct Nb1–Rd6 realization, within that scope.",
+      "may_not_say": "A single good descendant option explains all of Nc4’s preference over Nb1, or the earlier Rfd1 root assessment."
+    },
+    {
+      "level": "sole numerical cause",
+      "requirement": "Additional evidence separating the supported occupation from other activity, replies and price changes in the actual owned root comparison. A changed best PV or reported root centipawns is insufficient.",
+      "may_say": "Only the specifically established causal scope; otherwise leave the sole-cause question unresolved.",
+      "may_not_say": "Nc4 is +179 rather than +119 because it supports d6, solely because the new PV now uses Qd6, or because the author supplied an earlier Rd6 example."
+    }
+  ],
+  "new_user_checks_before_admitting_the_function": [
+    "Bind exact original friendly user, enemy capturer, support provider, root owner, complete current history and decision time.",
+    "Enumerate all currently legal captures and immediate recaptures at the new user’s d6 square; never import the rook-user inventory or price into the queen-user realization.",
+    "If the d-file is clear after Qd6/Qxd6, test whether Rd1xd6 is already legal independently of Nc4. The abbreviated parent stem does not settle this. Another adequate rook recapture changes an exclusive-protection claim into an additional-recapture-choice claim.",
+    "After Nxd6 or an alternative Rxd6, check the resulting defender, enemy recaptures/checks and subsequent useful activity. Mere same-square knight geometry does not certify the same result.",
+    "Check the current strongest independent refusal or resource-restoring defense. The opponent may choose a queen exchange rather than lose material or may refuse the advertised occupation.",
+    "Accept a changed plan/user if the necessary function and declared value survive. Withdraw or narrow the judgment when an adequate counter changes the value even though Nxd6 remains legal."
+  ],
+  "meaningful_negative_boundaries": [
+    {
+      "condition": "Same Nc4 support, friendly rook replaced by queen",
+      "must_not_infer": "Identical material price, identical utility or the same root cause."
+    },
+    {
+      "condition": "Qxd6/Nxd6 appears in one current PV",
+      "must_not_infer": "Qxd6 is forced, is the strongest defense or is necessarily unfavorable to Black."
+    },
+    {
+      "condition": "Another adequate Rxd6 recapture exists without Nc4",
+      "must_not_infer": "Nc4 uniquely prevents loss of the queen. Its additional choice or better ensuing activity needs separate evidence."
+    },
+    {
+      "condition": "Exact immediate Rd6 after Nb1 has no knight recapture",
+      "must_not_infer": "Every Nb1–c3 realization is bad or the whole Nb1 move must be a mistake."
+    },
+    {
+      "condition": "The old rook-user proof is complete but the new queen-user path is short/unknown",
+      "must_not_infer": "The new transaction is proved, or that missing new evidence disproves the old limited function."
+    },
+    {
+      "condition": "Same support relation exists but changed defender permits an adequate check/mating counter",
+      "must_not_infer": "Geometrical support or nominal recapture price alone proves safety or usefulness."
+    }
+  ],
+  "basic_reading_acceptance": {
+    "bounded_function_answer": "A coherent purpose plus the current reply/price may count as a bounded mechanism even with a different plan/user. The old exact rook arrival is not mandatory.",
+    "whole_judgment_answer": "Still requires the actual move’s useful or premature role, adequate consequential defense and necessary cost to be recoverable from basic prose; no hidden receipt can fill a missing explanation.",
+    "ordinary_move": "A short useful purpose remains acceptable where several good choices need no proved difference. Explicit comparative superiority raises the evidence requirement.",
+    "no_reclassification": "This supplement does not retroactively count the old four outputs as successes or change any book criterion. Future product reading must state bounded-function versus full-judgment success separately."
+  },
+  "work_scope": "Only the two frozen research sources were inspected. New JSON research record only; no engine, main/test/UI edit, current source/receipt/diagnostic inspection or product-output read.",
+  "unresolved": [
+    "Exact current new-user capture/recapture inventory",
+    "Whether the queen exchange constrains the strongest defense favorably",
+    "Whether Nc4 adds a superior choice when a rook recapture is also available",
+    "How much this function contributes to the original numerical root margin"
+  ]
+}

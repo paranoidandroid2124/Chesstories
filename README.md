@@ -1,0 +1,55 @@
+# Chesstories
+
+기보 입력, 체스판, 브라우저 분석, 수 해설을 **Lila 서버와 Docker 없이** 실행합니다.
+현재 기본 실행 경로는 `chesstory-web/` + `chesstory-runtime/`입니다.
+
+## Windows에서 시작
+
+저장소 루트의 **`Start-Chesstories.cmd`**를 실행한 뒤
+<http://127.0.0.1:8787>을 엽니다. 처음에는 필요한 패키지와 엔진 자료를 준비하고 빌드합니다.
+이후에는 준비된 앱과 Java 해설 서버만 실행합니다. 종료는 실행 창에서 `Ctrl+C`입니다.
+
+필요한 도구는 Node.js 22 이상, Java 21, sbt 1.11.7입니다. sbt는 최초 빌드 및 Scala 수정 후 재빌드에 사용하며 앱 실행 중에는 떠 있지 않습니다.
+MongoDB, Redis, Caddy, Lila, Docker는 필요하지 않습니다.
+
+직접 실행하거나 소스를 수정한 뒤 재빌드하려면:
+
+```powershell
+cd chesstory-web
+npm ci
+npm run build:runtime
+npm run build
+npm start
+```
+
+## 사용
+
+1. **PGN · FEN 불러오기**에서 기보를 붙여 넣거나 파일을 선택합니다.
+2. 기보에서 수를 선택하거나 판 위에서 합법 수를 둡니다. 수 입력 칸으로도 입력할 수 있습니다.
+3. **Engine / On**은 현재 국면을 분석하고, **해설 · 10초**는 선택한 직전 수를 해설합니다.
+4. 해설 속 수를 누르면 정확한 수순의 이전·이후 국면을 확인하고 메인 판에 표시할 수 있습니다.
+5. 기보·변형·주석은 이 브라우저에 자동 저장됩니다. **PGN 저장**으로 파일을 보관할 수 있습니다.
+
+일반 분석은 D16까지, 해설은 기존 10초 요청 정책을 사용하며 모든 해설 발급·수락 경계의 D18 상한을 유지합니다.
+일반 분석과 해설은 동시에 엔진을 점유하지 않습니다.
+
+## 코드 위치
+
+- `chesstory-web/src/review/`: 기존 해설 계약·검증·작업 조정·화면의 공통 원본
+- `chesstory-web/src/engine/`: 공통 엔진 프로토콜과 독립 브라우저 실행기
+- `chesstory-web/src/game.ts`: PGN/FEN, 합법 착수, 변형·주석 보존
+- `chesstory-runtime/`: 독립 Scala 해설 서버
+- `judgment-evaluation/`: 평가 기준 및 실제 실행 근거
+- `research/README.md`: 이전 실패 이력과 이번 분리의 확인 범위
+- `chesstory-web/tests/regression/`: 독립 앱으로 옮긴 기존 해설·수순 소속 검사
+
+독립 앱의 빌드는 `lila-docker/`나 임시 `target/` 연구 캐시에서 소스를 읽으면 실패하도록 검사합니다.
+Lila의 계정, 온라인 대국, 서버 스터디 저장·공동 편집은 이번 독립 앱에 포함하지 않습니다.
+체스판·규칙·엔진 라이브러리의 출처는 [chesstory-web/PROVENANCE.md](chesstory-web/PROVENANCE.md)에 남깁니다.
+
+옛 `lila-docker/` 실행 트리와 호환 경로는 제품 폴더에서 정리했습니다.
+기존 미커밋 소스, 아직 옮기지 않은 서버 전용 검사, 과거 실패 기록의
+복구 방법은 [정리·보존 안내](research/standalone-cleanup-20261013/README.md)에 있습니다.
+현재 제품 수정과 실행은 `chesstory-web/`와 `chesstory-runtime/`에서 진행합니다.
+
+해설 품질의 일반화·평가값 전체의 원인 설명은 여전히 진행 중입니다. 실행 구조의 독립을 해설 연구 전체나 출시 준비 전체의 완료로 취급하지 않습니다.

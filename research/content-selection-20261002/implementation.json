@@ -1,0 +1,152 @@
+{
+  "scope": "Content-selection implementation using existing typed answers, physical identity and ledger accounts.",
+  "not_assessed": [
+    "Optimal importance among independent closed answers",
+    "Independent held-out generalization",
+    "Human-reader evaluation",
+    "Production app startup or mobile performance",
+    "Full-stack release readiness"
+  ],
+  "new_engine_invoked": false,
+  "browser_or_http_invoked": false,
+  "docker_invoked": false,
+  "implementation": [
+    "A single verified QuestionFocus owns only its exact condition, actual physical use, specific contrasting duty and complete relevant price accounts.",
+    "Existing graph effects and Arm.account are reused; no new selector, ranker, graph or SAN-specific priority is added.",
+    "Convergence ends the original comparison; later independent choices are detail while immediate recovery stays in core.",
+    "Target survival is kept as a result; a final quiet coordinate witness is detail unless it changes the target or is needed for capture/check closure.",
+    "Quiet one-move certified paths remain available to evidence reading; display filtering is confined to delivery and public trajectory links name published candidates."
+  ],
+  "focused_question": {
+    "basis": "Existing focusedPreparation test, supplied and certified reports; not a new master-game quality sample.",
+    "without_verified_focus": "After h6, Black's pawn on h6 adds support to Black's pawn on g5, which is under attack from White's bishop on e3. The recorded line stops after f5; no following reply is recorded.",
+    "with_verified_focus": "After h6, Black's pawn on h6 adds support to Black's pawn on g5, which is under attack from White's bishop on e3. In the h6 line, Black's pawn on h6 keeps supporting Black's pawn on g5 even after f5 ends the support from Black's pawn on f6. After f5, Black's pawn on f5 does not support Black's pawn on g5; after h6, Black's pawn on f6 supports Black's pawn on g5. The recorded line stops after f5; no following reply is recorded.",
+    "checks": [
+      "Exact h6 support and later original f-pawn departure remain in core.",
+      "The alternative f5 loses that same provider duty; this contrast is in core.",
+      "Independent h5 control is detail.",
+      "Introductory wording changes do not change selected content.",
+      "Stale question, branch, physical action and receipt ownership are rejected.",
+      "The quiet one-move alternative is read without inventing a following reply or an empty public card."
+    ],
+    "remaining_issue": "Condition and use are correctly selected but repeated piece/target descriptions remain; no prose-joining heuristic was introduced."
+  },
+  "master_replay": {
+    "case_count": 6,
+    "already_opened": true,
+    "independent_evaluation": false,
+    "basic_changed": 2,
+    "same_stored_paths": true,
+    "exact_move_reference_checks": 175,
+    "source_and_compiled_hashes_match": true,
+    "elapsed_ms": 9053,
+    "timing_scope": "Six stored-report offline JVM cases including JVM startup; not engine or web latency.",
+    "manifest": "target\\content-selection-20261002\\verified\\manifest.json",
+    "baseline": "target\\commentary-concision-20261002\\after\\product-output.json",
+    "cases": [
+      {
+        "id": "london2017-c02ee2bcdbd5-38",
+        "question": "selected_comparison",
+        "basic_changed": false,
+        "before": "After Nxe4, White's knight on e4 now targets Black's pawn on c5 and Black's bishop on d6, and adds support to White's bishop on g3. After Qe3, White's queen on e3 now targets Black's pawn on c5. In the Nxe4 line: After Bxe4, Black's bishop on e4 now targets White's pawn on c2. Nxe4 clears c3; c3 later occupies that square in this line. c3 moves the pawn out of the attack from Black's bishop on e4. Bxe5 moves the bishop out of the attack from White's knight on e4. After Nxe4, Black's bishop on b7 now targets White's knight on e4. Bxe5 clears g3; Ng3 later occupies that square in this line. Ng3 moves the knight from e4 to g3, ending its attack on Black's pawn on c5. After Bb3, the black pawn originally on c5 is still present on c5. Nxe4 keeps the line from White's queen on e2 toward e5 blocked: after Nxe4, White's knight on e4 remains in that line as its sole blocker. In the same provided line, Bxe5 brings Black's bishop on e5 there while that line is still blocked. After Bxe5, Black's bishop on e5 now targets White's bishop on g3 and White's pawn on b2. After Bxe5, the white bishop originally on g3 is still present on e5. After Bxe5, Black's queen on c7 attacks White's bishop on e5. The white pawn originally on b2 is still present on b2 after Bxe5 and after Bb3. Nxe4 keeps the line from White's queen on e2 toward e5 blocked: after Nxe4, White's knight on e4 remains in that line as its sole blocker. In the same provided line, Qxe5 brings Black's queen on e5 there while that line is still blocked. After Nxe4, White's queen on e2 adds support to White's knight on e4, which is under attack from Black's bishop on b7. After Qxe5, Black's queen on e5 now targets White's knight on e4 and White's pawn on b2 and White's pawn on h2. After Ng3, White's queen on e2 now targets Black's queen on e5. Qf4 moves the queen out of the attack from White's queen on e2. Nf1 moves the knight out of the attack from Black's queen on f4. After Ng3, Black's queen on e5 attacks White's knight on g3. After Bb3, the white knight originally on c3 is still present on e3. Qf4 moves the queen from e5 to f4, ending its attack on White's pawn on b2. After Ng3, White's knight on g3 blocks the line from Black's queen on e5 to White's pawn on h2. Qe4 moves the queen from f4 to e4, ending its attack on White's pawn on h2. After Bb3, the white pawn originally on h2 is still present on h2. In the provided Nxe4 line, the same knight next moves with Ng3 to g3. After Ng3, White's knight on g3 adds support to White's queen on e2, which is under attack from Black's queen on e5. Ng3 moves the knight out of the attack from Black's bishop on b7. After Nxe4, White's knight on e4 does not support White's queen on e2. After Qe3, White's queen on e3 keeps targeting Black's knight on e4, and adds support to White's knight on c3, which is under attack from Black's knight on e4, and adds support to White's bishop on g3, which is under attack from Black's knight on e4. Nxg3 moves the knight out of the attack from White's knight on c3. After Nxg3, White's queen on e3 attacks Black's knight on g3. Nxe4 captures the black knight on e4. Bxe5 captures the white knight on e5. Bxe5 recaptures the black bishop on e5. Qxe5 recaptures the white bishop on e5. Qxe4 captures the black queen on e4. Bxe4 recaptures the white queen on e4. In the Qe3 line: Nxg3 captures the white bishop on g3. hxg3 recaptures the black knight on g3.",
+        "after": "After Nxe4, White's knight on e4 now targets Black's pawn on c5 and Black's bishop on d6, and adds support to White's bishop on g3. After Qe3, White's queen on e3 now targets Black's pawn on c5. In the Nxe4 line: After Bxe4, Black's bishop on e4 now targets White's pawn on c2. Nxe4 clears c3; c3 later occupies that square in this line. c3 moves the pawn out of the attack from Black's bishop on e4. Bxe5 moves the bishop out of the attack from White's knight on e4. After Nxe4, Black's bishop on b7 now targets White's knight on e4. Bxe5 clears g3; Ng3 later occupies that square in this line. Ng3 moves the knight from e4 to g3, ending its attack on Black's pawn on c5. After Bb3, the black pawn originally on c5 is still present on c5. Nxe4 keeps the line from White's queen on e2 toward e5 blocked: after Nxe4, White's knight on e4 remains in that line as its sole blocker. In the same provided line, Bxe5 brings Black's bishop on e5 there while that line is still blocked. After Bxe5, Black's bishop on e5 now targets White's bishop on g3 and White's pawn on b2. After Bxe5, the white bishop originally on g3 is still present on e5. After Bxe5, Black's queen on c7 attacks White's bishop on e5. The white pawn originally on b2 is still present on b2 after Bxe5 and after Bb3. Nxe4 keeps the line from White's queen on e2 toward e5 blocked: after Nxe4, White's knight on e4 remains in that line as its sole blocker. In the same provided line, Qxe5 brings Black's queen on e5 there while that line is still blocked. After Nxe4, White's queen on e2 adds support to White's knight on e4, which is under attack from Black's bishop on b7. After Qxe5, Black's queen on e5 now targets White's knight on e4 and White's pawn on b2 and White's pawn on h2. After Ng3, White's queen on e2 now targets Black's queen on e5. Qf4 moves the queen out of the attack from White's queen on e2. Nf1 moves the knight out of the attack from Black's queen on f4. After Ng3, Black's queen on e5 attacks White's knight on g3. After Bb3, the white knight originally on c3 is still present on e3. Qf4 moves the queen from e5 to f4, ending its attack on White's pawn on b2. After Ng3, White's knight on g3 blocks the line from Black's queen on e5 to White's pawn on h2. Qe4 moves the queen from f4 to e4, ending its attack on White's pawn on h2. After Bb3, the white pawn originally on h2 is still present on h2. In the provided Nxe4 line, the same knight next moves with Ng3 to g3. After Ng3, White's knight on g3 adds support to White's queen on e2, which is under attack from Black's queen on e5. Ng3 moves the knight out of the attack from Black's bishop on b7. After Nxe4, White's knight on e4 does not support White's queen on e2. After Qe3, White's queen on e3 keeps targeting Black's knight on e4, and adds support to White's knight on c3, which is under attack from Black's knight on e4, and adds support to White's bishop on g3, which is under attack from Black's knight on e4. Nxg3 moves the knight out of the attack from White's knight on c3. After Nxg3, White's queen on e3 attacks Black's knight on g3. Nxe4 captures the black knight on e4. Bxe5 captures the white knight on e5. Bxe5 recaptures the black bishop on e5. Qxe5 recaptures the white bishop on e5. Qxe4 captures the black queen on e4. Bxe4 recaptures the white queen on e4. In the Qe3 line: Nxg3 captures the white bishop on g3. hxg3 recaptures the black knight on g3.",
+        "content_checks": [
+          "Basic explanation unchanged; this replay supplies no verified QuestionFocus context."
+        ],
+        "basic_characters_before": 3419,
+        "basic_characters_after": 3419
+      },
+      {
+        "id": "candidates2018-15fbd4a92e5a-26",
+        "question": "selected_comparison",
+        "basic_changed": false,
+        "before": "In the b4 line: After Rd8, Black's rook on d8 now targets White's queen on d1. Qa4 moves the queen out of the attack from Black's rook on d8. b4 clears b3; later Qa4 passes through that square in this line. After b4, White's bishop on a3 does not attack Black's knight on c5, whereas the a3-bishop does after Qd2. In the b4 line: After Qa4, White's queen on a4 adds support to White's pawn on c4, which is under attack from Black's knight on e5, and now targets Black's knight on c6 and Black's pawn on a6. After e5, White's bishop on g2 now targets Black's knight on c6. Nc6 clears d4; Nd4 later occupies that square in this line. Nd4 moves the knight out of the attack from White's bishop on g2. Nd4 moves the knight out of the attack from White's queen on a4. After Red1, White's rook on d1 now targets Black's knight on d4. Ndf3+ moves the knight out of the attack from White's rook on d1. After Kh1, the black knight originally on c5 is still present on f3. In the provided b4 line, the same pawn next moves with b5 to b5. After b5, White's pawn on b5 now targets Black's pawn on a6. After b5, Black's pawn on a6 now targets White's pawn on b5. bxc6 moves the pawn out of the attack from Black's pawn on a6. bxc6 moves the pawn from b5 to c6, ending its attack on Black's pawn on a6. After Kh1, the black pawn originally on a6 is still present on a6. After b4, White's pawn on b4 now targets Black's knight on c5. Ncd7 moves the knight out of the attack from White's pawn on b4. b4 moves the pawn out of the attack from Black's knight on c5. Qd2 clears d1; Rad1 later occupies that square in this line. In the b4 line: bxc6 captures the black bishop on c6. Nxc6 recaptures the white pawn on c6.",
+        "after": "In the b4 line: After Rd8, Black's rook on d8 now targets White's queen on d1. Qa4 moves the queen out of the attack from Black's rook on d8. b4 clears b3; later Qa4 passes through that square in this line. After b4, White's bishop on a3 does not attack Black's knight on c5, whereas the a3-bishop does after Qd2. In the b4 line: After Qa4, White's queen on a4 adds support to White's pawn on c4, which is under attack from Black's knight on e5, and now targets Black's knight on c6 and Black's pawn on a6. After e5, White's bishop on g2 now targets Black's knight on c6. Nc6 clears d4; Nd4 later occupies that square in this line. Nd4 moves the knight out of the attack from White's bishop on g2. Nd4 moves the knight out of the attack from White's queen on a4. After Red1, White's rook on d1 now targets Black's knight on d4. Ndf3+ moves the knight out of the attack from White's rook on d1. After Kh1, the black knight originally on c5 is still present on f3. In the provided b4 line, the same pawn next moves with b5 to b5. After b5, White's pawn on b5 now targets Black's pawn on a6. After b5, Black's pawn on a6 now targets White's pawn on b5. bxc6 moves the pawn out of the attack from Black's pawn on a6. bxc6 moves the pawn from b5 to c6, ending its attack on Black's pawn on a6. After Kh1, the black pawn originally on a6 is still present on a6. After b4, White's pawn on b4 now targets Black's knight on c5. Ncd7 moves the knight out of the attack from White's pawn on b4. b4 moves the pawn out of the attack from Black's knight on c5. Qd2 clears d1; Rad1 later occupies that square in this line. In the b4 line: bxc6 captures the black bishop on c6. Nxc6 recaptures the white pawn on c6.",
+        "content_checks": [
+          "Basic explanation unchanged; this replay supplies no verified QuestionFocus context."
+        ],
+        "basic_characters_before": 1699,
+        "basic_characters_after": 1699
+      },
+      {
+        "id": "tata2021-05a9323f7168-47",
+        "question": "selected_comparison",
+        "basic_changed": true,
+        "before": "Rc6 e7 Re8 Ba5 Kf7 Bd8 Re6 Rxe6 and Rfe8 Ba5 Rc6 e7 Kf7 Bd8 Re6 Rxe6 reach the same recorded position. Later, the Rc6 line continues with Ra4; the Rfe8 line instead continues with Kh2. In the Rc6 line: Rxe6 captures the black rook on e6. Kxe6 recaptures the white rook on e6. In the Rfe8 line: Rxe6 captures the black rook on e6. Kxe6 recaptures the white rook on e6.",
+        "after": "Rc6 e7 Re8 Ba5 Kf7 Bd8 Re6 Rxe6 and Rfe8 Ba5 Rc6 e7 Kf7 Bd8 Re6 Rxe6 reach the same recorded position. In the Rc6 line: Rxe6 captures the black rook on e6. Kxe6 recaptures the white rook on e6. In the Rfe8 line: Rxe6 captures the black rook on e6. Kxe6 recaptures the white rook on e6.",
+        "content_checks": [
+          "Both approaches to the common position and the immediate Kxe6 recapture remain in core.",
+          "Later Ra4 versus Kh2 after convergence is retained in detail."
+        ],
+        "basic_characters_before": 367,
+        "basic_characters_after": 285
+      },
+      {
+        "id": "tata2021-2353d51b486b-63",
+        "question": "selected_comparison",
+        "basic_changed": false,
+        "before": "In the provided Ng3 line, the same knight next moves with Nf5 to f5. After Nf5, Black's knight on f5 now targets White's knight on d4 and White's pawn on e3. Nxd4 moves the knight from f5 to d4, ending its attack on White's pawn on e3. After Ng7, the white pawn originally on e3 is still present on d4. Nxd4 captures the white knight on d4. exd4 recaptures the black knight on d4. The recorded continuation is Ke7.",
+        "after": "In the provided Ng3 line, the same knight next moves with Nf5 to f5. After Nf5, Black's knight on f5 now targets White's knight on d4 and White's pawn on e3. Nxd4 moves the knight from f5 to d4, ending its attack on White's pawn on e3. After Ng7, the white pawn originally on e3 is still present on d4. Nxd4 captures the white knight on d4. exd4 recaptures the black knight on d4. The recorded continuation is Ke7.",
+        "content_checks": [
+          "Basic explanation unchanged; this replay supplies no verified QuestionFocus context."
+        ],
+        "basic_characters_before": 414,
+        "basic_characters_after": 414
+      },
+      {
+        "id": "qatar2023-9a3eab5a9a1f-45",
+        "question": "selected_comparison",
+        "basic_changed": false,
+        "before": "In the provided Na4 line, the same knight next moves with Nc5 to c5. Na4 moves the knight out of the attack from White's rook on b3. After Nc5, Black's knight on c5 now targets White's rook on b3. Nc5 moves the knight out of the attack from White's bishop on b5. Rbb1 moves the rook out of the attack from Black's knight on c5. After a5, Black's pawn on a5 now targets White's rook on b4. Na4 clears b6; Rb6 later occupies that square in this line. Rb6 moves the rook out of the attack from Black's pawn on a5. After fxe4, the white rook originally on b3 is still present on b6. After Na4, Black's rook on b8 now targets White's rook on b3. After Nd5, Black's rook on b8 now targets White's rook on b3. In the Na4 line: After Bb5, White's bishop on b5 blocks the line from Black's rook on b8 to White's rook on b3. In the Nd5 line: After Rxb6, the white rook originally on b3 is still present on b6. After Rxb6, Black's pawn on a7 attacks White's rook on b6. After Rxb6, Black's knight on d5 attacks White's rook on b6. In the Na4 line: After Bb5, White's bishop on b5 now targets Black's knight on a4. After Bd3, White's bishop on d3 now targets Black's knight on e4. Nd6 moves the knight out of the attack from White's bishop on d3. After fxe4, the black knight originally on b6 is still present on d6. In the Nd5 line, Black's knight on d5 controls the empty b6 square; Rb6 brings Black's rook on b6 there under its support. After Rxb6 captures the supported rook, Nxb6 recaptures its capturer with the supporting knight. Nd5 moves the knight out of the attack from White's rook on b3. After Rxb6, Black's knight on d5 now targets White's rook on b6. Nd5 clears b6; Rb6 later occupies that square in this line. After Rb6, Black's rook on b6 now targets White's bishop on a6. After Nc5, Black's knight on c5 now targets White's bishop on a6. Bc4 moves the bishop out of the attack from Black's knight on c5. After Nc5, Black's knight on c5 now targets White's bishop on d3. After Bd3, Black's rook on d8 now targets White's bishop on d3. Bc4 moves the bishop out of the attack from Black's rook on d8. Bc4 moves the bishop out of the attack from Black's knight on c5. In the Nd5 line: After Rxb6, the white bishop originally on a6 is still present on a6. After Bc4, the white bishop originally on a6 is still present on c4. In the Na4 line: fxe4 captures the black pawn on e4. fxe4 recaptures the white pawn on e4.",
+        "after": "In the provided Na4 line, the same knight next moves with Nc5 to c5. Na4 moves the knight out of the attack from White's rook on b3. After Nc5, Black's knight on c5 now targets White's rook on b3. Nc5 moves the knight out of the attack from White's bishop on b5. Rbb1 moves the rook out of the attack from Black's knight on c5. After a5, Black's pawn on a5 now targets White's rook on b4. Na4 clears b6; Rb6 later occupies that square in this line. Rb6 moves the rook out of the attack from Black's pawn on a5. After fxe4, the white rook originally on b3 is still present on b6. After Na4, Black's rook on b8 now targets White's rook on b3. After Nd5, Black's rook on b8 now targets White's rook on b3. In the Na4 line: After Bb5, White's bishop on b5 blocks the line from Black's rook on b8 to White's rook on b3. In the Nd5 line: After Rxb6, the white rook originally on b3 is still present on b6. After Rxb6, Black's pawn on a7 attacks White's rook on b6. After Rxb6, Black's knight on d5 attacks White's rook on b6. In the Na4 line: After Bb5, White's bishop on b5 now targets Black's knight on a4. After Bd3, White's bishop on d3 now targets Black's knight on e4. Nd6 moves the knight out of the attack from White's bishop on d3. After fxe4, the black knight originally on b6 is still present on d6. In the Nd5 line, Black's knight on d5 controls the empty b6 square; Rb6 brings Black's rook on b6 there under its support. After Rxb6 captures the supported rook, Nxb6 recaptures its capturer with the supporting knight. Nd5 moves the knight out of the attack from White's rook on b3. After Rxb6, Black's knight on d5 now targets White's rook on b6. Nd5 clears b6; Rb6 later occupies that square in this line. After Rb6, Black's rook on b6 now targets White's bishop on a6. After Nc5, Black's knight on c5 now targets White's bishop on a6. Bc4 moves the bishop out of the attack from Black's knight on c5. After Nc5, Black's knight on c5 now targets White's bishop on d3. After Bd3, Black's rook on d8 now targets White's bishop on d3. Bc4 moves the bishop out of the attack from Black's rook on d8. Bc4 moves the bishop out of the attack from Black's knight on c5. In the Nd5 line: After Rxb6, the white bishop originally on a6 is still present on a6. After Bc4, the white bishop originally on a6 is still present on c4. In the Na4 line: fxe4 captures the black pawn on e4. fxe4 recaptures the white pawn on e4.",
+        "content_checks": [
+          "Basic explanation unchanged; this replay supplies no verified QuestionFocus context."
+        ],
+        "basic_characters_before": 2416,
+        "basic_characters_after": 2416
+      },
+      {
+        "id": "candidates2022-0eaa9418e3c0-37",
+        "question": "selected_target_response",
+        "basic_changed": true,
+        "before": "g4 attacks the f3-knight. Nd2 moves that knight out of the attack. After Rf6, the targeted white knight is still present on d2. After Bc4 Rfd1, g4 attacks the f3-knight. Nd4 moves that knight out of the attack. With exd4, the black pawn originally on e5 captures the white knight originally on f3. In the exd4 Qxd4 … Qxc4 sequence, White gives up one knight for one pawn and one bishop.",
+        "after": "g4 attacks the f3-knight. Nd2 moves that knight out of the attack. That knight remains at the end of the line. After Bc4 Rfd1, g4 attacks the f3-knight. Nd4 moves that knight out of the attack. With exd4, the black pawn originally on e5 captures the white knight originally on f3. In the exd4 Qxd4 … Qxc4 sequence, White gives up one knight for one pawn and one bishop.",
+        "content_checks": [
+          "Survival remains in core; the final quiet Rf6 coordinate witness moves to detail.",
+          "The knight loss at exd4 and the pawn/bishop recovery at Qxd4 and Qxc4 remain covered in core."
+        ],
+        "basic_characters_before": 386,
+        "basic_characters_after": 369
+      }
+    ]
+  },
+  "changed_product_sources_since_retained_baseline": [
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\LineContinuationInvestigation.scala",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\MoveWorkProjection.scala",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootQuestionSummary.scala",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RuntimeProtocol.scala"
+  ],
+  "targeted_tests": {
+    "passed_unique": 7,
+    "names": [
+      "a verified question keeps its exact condition and use in the root answer, with independent content in detail",
+      "a question dependency cannot move to another question, branch or physical action",
+      "a common-position answer survives a full detailed record",
+      "a certified move-order answer keeps convergence in core and the later divergence in detail",
+      "a target answer retains survival and exchange costs while moving a quiet end coordinate to detail",
+      "the answered preparation keeps its exact condition and test with their evidence ownership",
+      "a bare root capture asks for replies before a supplied compensation line exists, while quiet paths add no template"
+    ],
+    "logs": [
+      "target/content-selection-20261002/tests.log",
+      "target/content-selection-20261002/final-tests.log"
+    ]
+  },
+  "remaining_work": [
+    "The expanded-master replay has no QuestionFocus or full investigations; it cannot show production question selection improvement.",
+    "Nxe4/Qe3, b4/Qd2 and Na4/Nd5 still expose long histories. Ng3/Ke7 still has a short alternative whose continuation is unknown.",
+    "Selection among several verified questions remains the existing policy; no arbitrary first-question fallback is added.",
+    "Without a verified usable focus or complete accounts, the old broad physical fallback remains.",
+    "Next work must trace specific uses, responses and outcomes into a justified core for that fallback, without shortening away mandatory prices."
+  ]
+}

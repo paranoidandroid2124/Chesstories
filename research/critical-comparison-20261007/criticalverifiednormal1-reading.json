@@ -1,0 +1,2096 @@
+[
+  {
+    "id": "H05R1",
+    "result": {
+      "game_id": "H05R1",
+      "elapsed_ms": 7752,
+      "works": 2,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 2829.817,
+      "begin_journal": 1.993,
+      "engine_rpc": 1240.099,
+      "engine_journal": 2.3289999999999997,
+      "report_rpc": 3546.447,
+      "report_journal": 130.368
+    },
+    "text": "In the provided Ke3 line, the same king next moves with Kd2 to d2. After Kd2, White's king on d2 adds support to White's pawn on c3, which is under attack from Black's pawn on b4. The recorded continuation is g4.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "reply",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 191,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 16,
+          "nodes": 50124,
+          "engineTimeMs": 61,
+          "executorElapsedMs": 186,
+          "bestmoveUci": "f3e3"
+        },
+        "roots_returned": [
+          {
+            "move": "f3e3",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 85
+            }
+          },
+          {
+            "move": "g3g4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 47
+            }
+          },
+          {
+            "move": "f3f2",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -243
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 1011,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 54,
+          "nodes": 2330683,
+          "engineTimeMs": 943,
+          "executorElapsedMs": 1008,
+          "bestmoveUci": "f3e3"
+        },
+        "roots_returned": [
+          {
+            "move": "f3e3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 224
+            }
+          },
+          {
+            "move": "g3g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "a3b4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -681
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T20R1",
+    "result": {
+      "game_id": "T20R1",
+      "elapsed_ms": 6679,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 42.984,
+      "begin_journal": 3.559,
+      "engine_rpc": 3873.5820000000003,
+      "engine_journal": 6.662,
+      "report_rpc": 2404.182,
+      "report_journal": 341.057
+    },
+    "text": "The recorded continuation is g5 … f4+ Kf3 g4+ Kf2 … g3+ Kf1 … Qh7+ Kb8. After f5, Black's pawn on f5 now targets White's pawn on g4. gxh5 moves the pawn out of the attack from Black's pawn on f5. gxh5 captures the black pawn on h5. Kxc5 captures the white pawn on c5. h8=Q promotes to a queen. In the Kd6 line: After Kf5, White's king on f5 now targets Black's pawn on g5. gxh4 moves the pawn out of the attack from White's king on f5. In the Kd6 line, both sides exchange three pawns. After Kxh4, the game is drawn because neither side can give checkmate.",
+    "question": "observed_terminal_comparison",
+    "unit_roles": [
+      "cost",
+      "cost"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 62,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 20,
+          "nodes": 59228,
+          "engineTimeMs": 36,
+          "executorElapsedMs": 60,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 8
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 15
+            }
+          },
+          {
+            "move": "f6f5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 35
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 152,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 20,
+          "nodes": 290784,
+          "engineTimeMs": 117,
+          "executorElapsedMs": 152,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 21
+            }
+          },
+          {
+            "move": "g6g5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 319
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 170,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 48,
+          "nodes": 373585,
+          "engineTimeMs": 130,
+          "executorElapsedMs": 167,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 8
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:3",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 799,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 799,
+          "observedNodes": 2000814,
+          "engineTimeMs": 741,
+          "diagnostic": "{\"lastDepth\":13,\"pvDepths\":[13,13],\"bounds\":[null,\"upperbound\"],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      },
+      {
+        "id": "work:4",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 2456,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 40,
+          "nodes": 5947552,
+          "engineTimeMs": 2402,
+          "executorElapsedMs": 2455,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 27
+            }
+          },
+          {
+            "move": "g6g5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 589
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "H05R2",
+    "result": {
+      "game_id": "H05R2",
+      "elapsed_ms": 8125,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 28.717,
+      "begin_journal": 2.126,
+      "engine_rpc": 5754.693,
+      "engine_journal": 4.217,
+      "report_rpc": 2079.901,
+      "report_journal": 249.555
+    },
+    "text": "In the Ke3 line through Ke6, neither side loses material or promotes. In the g4 line through Kd6, neither side loses material or promotes.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "reply",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "f3g4",
+              "b4a3",
+              "b2a3",
+              "e5e4",
+              "g4g5",
+              "e4d3",
+              "g5f6",
+              "d3c3"
+            ],
+            "reference_move": "f6e5",
+            "alternative_move": "g3g4",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e3",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "f3e3"
+            ],
+            "reference_move": "e5e6",
+            "alternative_move": "f7f6",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e3",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "f3g4"
+            ],
+            "reference_move": "b4a3",
+            "alternative_move": "f7f6",
+            "work_id": null,
+            "stop_reason": "search_budget_exhausted",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3g4",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 31,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 14,
+          "nodes": 30580,
+          "engineTimeMs": 13,
+          "executorElapsedMs": 31,
+          "bestmoveUci": "g3g4"
+        },
+        "roots_returned": [
+          {
+            "move": "g3g4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 54
+            }
+          },
+          {
+            "move": "f3e3",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 33
+            }
+          },
+          {
+            "move": "c3b4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -97
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 474,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 35,
+          "nodes": 1302723,
+          "engineTimeMs": 434,
+          "executorElapsedMs": 473,
+          "bestmoveUci": "f3e3"
+        },
+        "roots_returned": [
+          {
+            "move": "f3e3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 208
+            }
+          },
+          {
+            "move": "g3g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "f3g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -608
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "f7f6"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 5096,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 5095,
+          "observedNodes": 16018375,
+          "engineTimeMs": 5000,
+          "diagnostic": "{\"lastDepth\":14,\"pvDepths\":[14,14],\"bounds\":[null,null],\"nodesOver\":false,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      }
+    ]
+  },
+  {
+    "id": "T20R2",
+    "result": {
+      "game_id": "T20R2",
+      "elapsed_ms": 6233,
+      "works": 4,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 32.528,
+      "begin_journal": 3.151,
+      "engine_rpc": 4773.293000000001,
+      "engine_journal": 4.461,
+      "report_rpc": 1159.844,
+      "report_journal": 251.399
+    },
+    "text": "After g5, Black's pawn on g5 now targets White's pawn on h4. hxg4 clears h5; h5 later occupies that square in this line. h5 moves the pawn out of the attack from Black's pawn on g5. After Kb4, the white pawn originally on h4 has promoted to a queen and is still present on c8. After g4, White's pawn on g4 now targets Black's pawn on h5. After hxg4, the black pawn originally on h5 is still present on g4. After Kb4, the black pawn originally on h5 is still present on g2. After g5, Black's pawn on f6 adds support to Black's pawn on g5, which is under attack from White's pawn on h4. hxg4 captures the white pawn on g4. The recorded continuation is Kd6.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "cost",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 32,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 15,
+          "nodes": 18444,
+          "engineTimeMs": 9,
+          "executorElapsedMs": 30,
+          "bestmoveUci": "e5e6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 1
+            }
+          },
+          {
+            "move": "g6g5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 10
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 150,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 44,
+          "nodes": 334407,
+          "engineTimeMs": 115,
+          "executorElapsedMs": 149,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 1
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 4
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 4
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 913,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 913,
+          "observedNodes": 2000150,
+          "engineTimeMs": 849,
+          "diagnostic": "{\"lastDepth\":14,\"pvDepths\":[14,14],\"bounds\":[null,\"upperbound\"],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      },
+      {
+        "id": "work:3",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 3524,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 30,
+          "nodes": 8766588,
+          "engineTimeMs": 3476,
+          "executorElapsedMs": 3523,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 49
+            }
+          },
+          {
+            "move": "g6g5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 624
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "H05R3",
+    "result": {
+      "game_id": "H05R3",
+      "elapsed_ms": 6148,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 12.123,
+      "begin_journal": 1.933,
+      "engine_rpc": 4169.664,
+      "engine_journal": 4.748,
+      "report_rpc": 1641.9299999999998,
+      "report_journal": 312.271
+    },
+    "text": "In the Ke3 line: bxc3 moves the pawn out of the attack from White's pawn on a3. In the Ke3 line, both sides exchange two pawns; Black also loses one pawn. In the g4 line through Ke2, neither side loses material or promotes.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "cost",
+      "reply"
+    ],
+    "verification": {
+      "state": "complete",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": 16,
+      "stop_reason": null
+    },
+    "reserves": [
+      {
+        "producer": "C-reserve-hold",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_start",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_king",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_current",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "hold_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_hold",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "f3e2",
+              "b4c3",
+              "b2c3",
+              "e5e4"
+            ],
+            "reference_move": "e2d1",
+            "alternative_move": "g3g4",
+            "work_id": null,
+            "stop_reason": "no_executable_work",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "stopped",
+            "prefix_moves_uci": [
+              "f3e2"
+            ],
+            "reference_move": "b4c3",
+            "alternative_move": "f7f6",
+            "work_id": null,
+            "stop_reason": "no_executable_work",
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e2",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-response",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e3",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_spent_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_retained_reply",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response_context",
+            "kind": "fact_group",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_response",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [
+              "f3e3"
+            ],
+            "reference_move": "e5e6",
+            "alternative_move": "f7f6",
+            "work_id": "work:2",
+            "stop_reason": null,
+            "evaluation_relation": null
+          }
+        ]
+      },
+      {
+        "producer": "C-reserve-use",
+        "requirements": [
+          {
+            "id": "reserve_root",
+            "kind": "compare_moves",
+            "state": "answered",
+            "prefix_moves_uci": [],
+            "reference_move": "g3g4",
+            "alternative_move": "f3e3",
+            "work_id": "work:1",
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_before",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_after",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_kept",
+            "kind": "fact",
+            "state": "supported",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": null,
+            "evaluation_relation": null
+          },
+          {
+            "id": "reserve_use",
+            "kind": "fact",
+            "state": "stopped",
+            "prefix_moves_uci": null,
+            "reference_move": null,
+            "alternative_move": null,
+            "work_id": null,
+            "stop_reason": "no_executable_work",
+            "evaluation_relation": null
+          }
+        ]
+      }
+    ],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 29,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 12,
+          "nodes": 29350,
+          "engineTimeMs": 12,
+          "executorElapsedMs": 29,
+          "bestmoveUci": "f3e3"
+        },
+        "roots_returned": [
+          {
+            "move": "f3e3",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 84
+            }
+          },
+          {
+            "move": "g3g4",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 74
+            }
+          },
+          {
+            "move": "f3f2",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": -196
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 653,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 34,
+          "nodes": 1827612,
+          "engineTimeMs": 623,
+          "executorElapsedMs": 652,
+          "bestmoveUci": "f3e3"
+        },
+        "roots_returned": [
+          {
+            "move": "f3e3",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 235
+            }
+          },
+          {
+            "move": "g3g4",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 0
+            }
+          },
+          {
+            "move": "f3e2",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": -622
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "response_comparison",
+        "anchor": {
+          "root_move": "f3e3",
+          "root_occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+          "position_id": "68df1608c1f2a1afc2b50ec869ba49d3d21c9e82e33d706efb25ebc8270a8bcd",
+          "prefix_moves_uci": [
+            "f3e3"
+          ]
+        },
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "f7f6"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 3339,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 36,
+          "nodes": 9985011,
+          "engineTimeMs": 3250,
+          "executorElapsedMs": 3338,
+          "bestmoveUci": "e5e6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 443
+            }
+          },
+          {
+            "move": "f7f6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 500
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T20R3",
+    "result": {
+      "game_id": "T20R3",
+      "elapsed_ms": 5144,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false
+    },
+    "stages": {
+      "begin_rpc": 28.5,
+      "begin_journal": 2.253,
+      "engine_rpc": 3857.428,
+      "engine_journal": 6.538,
+      "report_rpc": 908.595,
+      "report_journal": 332.944
+    },
+    "text": "After g5, Black's pawn on g5 now targets White's pawn on h4. hxg4 clears h5; h5 later occupies that square in this line. h5 moves the pawn out of the attack from Black's pawn on g5. After g3, the white pawn originally on h4 is still present on h5. After g4, White's pawn on g4 now targets Black's pawn on h5. After hxg4, the black pawn originally on h5 is still present on g4. After g3, the black pawn originally on h5 is still present on g3. After g5, Black's pawn on f6 adds support to Black's pawn on g5, which is under attack from White's pawn on h4. hxg4 captures the white pawn on g4. The recorded continuation is Kd6.",
+    "question": "selected_comparison",
+    "unit_roles": [
+      "cost",
+      "reply"
+    ],
+    "verification": {
+      "state": "stopped",
+      "target_depth": 16,
+      "reason": "initial_verification",
+      "trigger_work_ids": [],
+      "completed_depth": null,
+      "stop_reason": "search_budget_exhausted"
+    },
+    "reserves": [],
+    "works": [
+      {
+        "id": "work:0",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 51,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 21,
+          "nodes": 43602,
+          "engineTimeMs": 27,
+          "executorElapsedMs": 50,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          },
+          {
+            "move": "e5e6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 46
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:1",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5d6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 8,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 100,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 8,
+          "selectiveDepth": 19,
+          "nodes": 46056,
+          "engineTimeMs": 55,
+          "executorElapsedMs": 99,
+          "bestmoveUci": "e5d6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5d6",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 24
+            }
+          },
+          {
+            "move": "g6g5",
+            "depth": 8,
+            "score": {
+              "kind": "cp",
+              "value": 148
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:2",
+        "purpose": "root_search",
+        "anchor": null,
+        "roots": {
+          "kind": "unrestricted"
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "lease_ms": 6000,
+        "elapsed_ms": 124,
+        "outcome": {
+          "kind": "completed",
+          "completedDepth": 16,
+          "selectiveDepth": 41,
+          "nodes": 267331,
+          "engineTimeMs": 94,
+          "executorElapsedMs": 123,
+          "bestmoveUci": "e5e6"
+        },
+        "roots_returned": [
+          {
+            "move": "e5e6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          },
+          {
+            "move": "e5d6",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 9
+            }
+          },
+          {
+            "move": "e5f5",
+            "depth": 16,
+            "score": {
+              "kind": "cp",
+              "value": 10
+            }
+          }
+        ]
+      },
+      {
+        "id": "work:3",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 817,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 817,
+          "observedNodes": 2000534,
+          "engineTimeMs": 753,
+          "diagnostic": "{\"lastDepth\":15,\"pvDepths\":[15,15],\"bounds\":[null,\"upperbound\"],\"nodesOver\":true,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      },
+      {
+        "id": "work:4",
+        "purpose": "focus_comparison",
+        "anchor": null,
+        "roots": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e5e6",
+            "g6g5"
+          ]
+        },
+        "limits": {
+          "depth": 16,
+          "nodes": 20000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "lease_ms": 3500,
+        "elapsed_ms": 2545,
+        "outcome": {
+          "kind": "executor_failed",
+          "failureCode": "search_budget_exhausted",
+          "executorElapsedMs": 2545,
+          "observedNodes": 6785453,
+          "engineTimeMs": 2500,
+          "diagnostic": "{\"lastDepth\":15,\"pvDepths\":[15,15],\"bounds\":[null,\"upperbound\"],\"nodesOver\":false,\"timeOver\":false,\"leaseExpired\":false}"
+        },
+        "roots_returned": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T05:20:53.205519+00:00",
+  "scope": "Independent human reading of current35 MOVED basic first against the original SG41 mover/price utility criterion, followed by controlled comparison to v32/v33. One exposed development control, not a goal-wide success claim.",
+  "case_id": "FC-SG41-ND5-MOVED",
+  "reading_order": [
+    "Current mcNd5MovedReplay35-basic.json and original fixed criteria",
+    "Current raw owned summary and price scope",
+    "Old v32/v33 readings and same-report baseline"
+  ],
+  "criteria": {
+    "played_move_criterion_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\sg41-played-nd5-development-plan.json",
+    "played_move_criterion_sha256": "fd2bc03e5ee9e0fbb057cff0150a888c2e8c093df0c09509f890dee812fcb5bc",
+    "sealed_utc": "2026-10-08T01:57:07.258803+00:00",
+    "price_and_mover_criterion_sha256": "ff51aa5c8689d6e5fe478fba3adea3376ab6ece745e7afc5d25eb55b6b8efb05",
+    "minimum_utility_unit_sha256": "fbffeab879262ef10d639c2cafad6920076b493026bd31a5a6ac902710904ce3",
+    "criterion_text": {
+      "human_question": "What has the actually played Nd5 gained or lost against Black's best defense, given the e6 pawn's current location?",
+      "same_legal_action": "The original White b1 knight is already on c3 and plays the same legal c3-d5 move in both cases.",
+      "cheap_denial": "With Pe6 held, direct ...exd5 can exchange that pawn for the knight even when White chooses its best legal recapture. With Pe6 moved to f5, that direct pawn capture is unavailable.",
+      "remaining_capture_price": "Rc5xd5 stays legal. All immediate legal White recaptures must be considered, including Pe4xd5; a voluntary inferior rook-only chain is not forced.",
+      "stronger_defense": "Under the moved condition, judge the option against strong ...fxe4 and other owned major alternatives rather than only against constructed ...Rxd5. After R4xe4, Rd1 can replace the removed Pe4 as defender; later ...Be6 may require a different knight realization.",
+      "claim_scope": "Explain the actual White move's conditional judgment, not Black's earlier Bc6 ranking, a compulsory Nd5, a forced win, or the exclusive cause of the original Red1 numerical judgment.",
+      "acceptance": "A concise ordinary purpose is a valid fragment. A mistake or superiority explanation requires consequential price and stronger defensive choices. Do not require the book's exact realization or a fixed numerical category.",
+      "case_specific_minimum": "Explain that Nd5 can now be a usable activity choice because the cheap pawn capture is gone, while handling ...fxe4, changed adequate support and necessary prices. Do not treat a remaining legal rook capture as equivalent denial or promise a forced win."
+    },
+    "criteria_modified_or_rescored_after_output": false
+  },
+  "provenance": {
+    "basic_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\meaning-conditions-20261008\\mcNd5MovedReplay35-basic.json",
+    "basic_sha256": "b3fcc115bda383a25aad3375bcd0450b2e916a2dff2e29b1ebbc779839da00ac",
+    "snapshot_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\mcNd5MovedReplay35\\final-snapshots.jsonl.gz",
+    "snapshot_sha256": "ce6aca437358b7a7139aa320c46bc2c5b5ffc586f2dbc2c03d9c569aff0c098a",
+    "results_sha256": "ce93f02c8dd82135ae11c21420e25244afc9b95d7c46e958b899adb0d9f3d7c0",
+    "manifest_sha256": "b4bf1895bc9d2ff3a339b503ff787c06eec507d2d3bb52c5fc8b2caf19d5eb9f",
+    "runtime_version": "meaningv35",
+    "completed_reports_replayed": 7,
+    "every_whole_issued_work_matched_original_report": true,
+    "new_engine_queries": 0,
+    "phase": "completed",
+    "next_pending_work": null,
+    "unmatched_or_noncompleted_report_submitted": false,
+    "public_frontend_decoder_verified_by_this_reading": false,
+    "frontend_status": "Parent verification pending at this reading; Java summary acceptance and extraction alone are not client delivery."
+  },
+  "actual_basic_text": "After Nd5, White's knight on d5 now targets Black's bishop on e7 and Black's pawn on f6. After Nd5, White's knight on d5 is under attack from Black's rook on c5; it is supported by White's rook on d4 and White's pawn on e4. In the Nd5 line: The recorded continuation is fxe4 Rxe4. After Rxe4, White's rook on e4 does not support White's knight on d5. After Rxe4, White's rook on d1 supports White's knight on d5. The recorded continuation is a4 … Nd5. In the Nd5 line, White's rook on d4 keeps supporting White's pawn on e4 after Nd5 ends the support from White's knight on c3. When fxe4 captures that pawn, Rxe4 recaptures its capturer with the supporting rook. After Rxe4, White's rook on e4 now targets Black's bishop on e7.",
+  "default_question": "first_target_response",
+  "character_count": 727,
+  "word_count": 134,
+  "basic_facts_and_prices": [
+    {
+      "meaning": "Actual Nc3-d5 moves into activity against Be7 and Pf6. Existing Rc5 attack and White Rd4/Pe4 support are named.",
+      "basic_recoverable": true,
+      "claim_limit": "Geometric activity and attack inventories do not certify utility, safety, or superior root value."
+    },
+    {
+      "meaning": "The owned strongest returned first Black reply is ...fxe4 at the completed d16 unrestricted first-child pool, and White actual first own action is d4e4.",
+      "basic_recoverable": true,
+      "basic_wording": "The recorded continuation is fxe4 Rxe4; the text does not claim an all-depth best move.",
+      "owned_full_pool": {
+        "response_inquiry_id": "target-response:818ddf323a228c1448baa534a7494ca1783bdc8ff8bcb21bc94550d769b5384f",
+        "full_pool_work_id": "work:3",
+        "full_pool_execution_key_sha256": "1fcbd439001fbe0bb6b980c900e25346e1af5d7eb4d6cdff5453f8aa71dcf1a1",
+        "capture_decline_work_id": "work:5",
+        "capture_decline_execution_key_sha256": "cb7c6fb12b22629a030827225f8b97b38a52914da43b0fc1cd9c97ed30066a13"
+      },
+      "claim_limit": "Top3 d16 is a returned leader receipt, not all later replies or a general theorem."
+    },
+    {
+      "meaning": "White Pe4 is captured by the pawn on f5; original White Rd4 recaptures that pawn. The initial pawn price remains in basic in the protected support-use account.",
+      "basic_recoverable": true,
+      "covered_move_refs": [
+        {
+          "line_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:line:3da425b047ba2f2df62c984343de5be71662304e41bdae6a8f230a5de19b69f9",
+          "occurrence_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:evidence:transition:22c40eae5fb928254744d73bd7b1f9ec33325094f3af0e1dd2198a673935dd2b",
+          "offset": 1,
+          "uci": "f5e4"
+        },
+        {
+          "line_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:line:3da425b047ba2f2df62c984343de5be71662304e41bdae6a8f230a5de19b69f9",
+          "occurrence_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:evidence:transition:1ac7d161d487cd84f472c464bdf0a703faf6470ed2cff1941abd04b5e9092c4a",
+          "offset": 2,
+          "uci": "d4e4"
+        }
+      ],
+      "price_owner_core_unit": 3,
+      "new_lead_unit_has_covered_moves": false,
+      "new_lead_not_hiding_price": "The new lead and retained support-use account share the same actual actions; the retained cost unit owns the two exact capture refs."
+    },
+    {
+      "meaning": "After d4e4, Rd4-now-e4 no longer defends Nd5 and Rd1 newly defends it.",
+      "basic_recoverable": true,
+      "unchanged_provider_claim": false,
+      "claim_limit": "The fact alone does not show every capture can be answered economically or that Nd5 remains useful against all pressure."
+    },
+    {
+      "meaning": "The independently selected root support-duty survives: Nd5 removes Nc3 support of Pe4, while Rd4 supplies the recapture actually used.",
+      "basic_recoverable": true,
+      "scope_limit": "Repeated fxe4/Rxe4 wording is excess expression, but deleting this independently selected duty and its exact prices would be a different, unsupported simplification."
+    }
+  ],
+  "exact_role_inference_separate_from_utility": {
+    "initial_root_actor": "Same actual White knight originally on c3 at this product root; game-initial b1 identity remains research provenance.",
+    "own_recapturer": "Exact body move2 d4e4. Canonical legal SAN Rxe4 refers to the original White rook on d4, not the rook on d1.",
+    "new_guard": "After fxe4, Rd1 is still blocked by Rd4. It becomes a direct controller of d5 only after Rd4 moves to e4.",
+    "before_and_after_complete_inventories": [
+      {
+        "path_move_count": 1,
+        "after_uci": "c3d5",
+        "position_id": "c3ad382aa50216011a7b45f299cb0184d0fa05078dd3284b6a04a3009e5966f9",
+        "fen": "3k3r/3bbp2/p2p1p2/1prN1p1p/3RP2P/P4B2/1PP3P1/1K1R4 b - - 1 21",
+        "inventory_complete": true,
+        "white_direct_controllers_of_d5": [
+          {
+            "side": "white",
+            "role": "rook",
+            "square": "d4"
+          },
+          {
+            "side": "white",
+            "role": "pawn",
+            "square": "e4"
+          }
+        ]
+      },
+      {
+        "path_move_count": 2,
+        "after_uci": "f5e4",
+        "position_id": "092bf1673d4b43e676efdfaa997dbf828d365e7419c0e09696bfb560a79b3e6c",
+        "fen": "3k3r/3bbp2/p2p1p2/1prN3p/3Rp2P/P4B2/1PP3P1/1K1R4 w - - 0 22",
+        "inventory_complete": true,
+        "white_direct_controllers_of_d5": [
+          {
+            "side": "white",
+            "role": "rook",
+            "square": "d4"
+          }
+        ]
+      },
+      {
+        "path_move_count": 3,
+        "after_uci": "d4e4",
+        "position_id": "d064f7ede60aa1ddc25167a6434dcac58a0a11b52b1e2548539bd12dbf0b125b",
+        "fen": "3k3r/3bbp2/p2p1p2/1prN3p/4R2P/P4B2/1PP3P1/1K1R4 b - - 0 22",
+        "inventory_complete": true,
+        "white_direct_controllers_of_d5": [
+          {
+            "side": "white",
+            "role": "rook",
+            "square": "d1"
+          }
+        ]
+      }
+    ],
+    "f5_pawn_history": "The current f5 pawn is the prior Pe6 in this saved actual history; the basic text does not explicitly explain that relocation or the cheap e6xd5 capture it removed.",
+    "cannot_infer": [
+      "Adequate defense from a controller count alone",
+      "Nd5 immunity because one cheap capturer is absent",
+      "No other Black option from a top3 pool",
+      "Root ranking causation from the child leader evaluation"
+    ]
+  },
+  "retained_conditional_detail": {
+    "named_capture_path_first_moves": [
+      "c3d5",
+      "c5d5",
+      "e4d5"
+    ],
+    "covered_move_refs": [
+      {
+        "line_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:line:3d6f2d89249b2d58ecc475fbe453c8e3fe4bdc52cdfabc141ee5220863ec549b",
+        "occurrence_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:evidence:transition:cb95ca3670fb5f9f501e44032e0db71e633534ffcef0e3b1cd06b4e9a4faa221",
+        "offset": 1,
+        "uci": "c5d5"
+      },
+      {
+        "line_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:line:3d6f2d89249b2d58ecc475fbe453c8e3fe4bdc52cdfabc141ee5220863ec549b",
+        "occurrence_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:evidence:transition:6ec811b0459375adab766e47dd2fe1d197199aa2fb5b69f4af3feccef1bceac5",
+        "offset": 2,
+        "uci": "e4d5"
+      }
+    ],
+    "basic_capture_claim": false,
+    "human_meaning": "The separate Rc5xd5/Pe4xd5 price remains available as a conditional tested alternative: rook for knight before subsequent compensation. It is retained in detail rather than used to assert equivalent denial or forced play.",
+    "later_selected_original_knight_price": "The actual later ...Bxd5/Bxd5 exchange and additional f7 pawn price remain in existing material detail; they are not stated as a guaranteed future result in the new basic."
+  },
+  "required_continuation_vs_full_functional_utility": {
+    "narrow_owned_first_reply_and_first_own_price_organized": true,
+    "changed_defender_recoverable": true,
+    "ordinary_purpose_fragment_valid": true,
+    "complete_usable_activity_explanation_under_original_criterion": false,
+    "full_root_grade_cause_explained": false,
+    "missing_from_basic": [
+      "The original Pe6 cheap capture of Nd5 is gone because that pawn moved to f5.",
+      "The remaining Rc5xd5 capture has a materially different Pe4xd5 price; it is not the same cheap denial.",
+      "Why the new Rd1 support leaves an adequate tested option, including its recapture role rather than geometry alone.",
+      "How useful knight activity adapts to later major pressure such as ...Be6, with any necessary prices, without demanding a fixed book PV."
+    ],
+    "missing_root_cause": "No causal explanation for the original a4-versus-Nd5 small numerical difference or earlier Black exf5/a5 ranking is established. The earlier bad optional Nd5 after a5 does not turn a5 into forced winning play.",
+    "narrow_case_count": {
+      "owned_first_reply_basic": 1,
+      "new_independent_general_utility_success": 0,
+      "complete_moved_utility": 0,
+      "complete_root_cause": 0
+    },
+    "held_or_other_cases_rescored_here": false
+  },
+  "excess_and_scope": {
+    "unrelated_prior_lead_moved_to_detail": "The a4-side b5 history and later Rxc4/bxc4 exchange no longer precede the actual Nd5 task in basic.",
+    "remaining_excess": [
+      "After Nd5 is repeated for purpose and target defense.",
+      "After Rxe4 is repeated for the lost and gained defender.",
+      "fxe4/Rxe4 is named as a continuation and again inside the protected support-duty account.",
+      "The a4…Nd5 frame remains to identify the selected two-root comparison; this reading does not assume it can be erased without checking its contract."
+    ],
+    "detail_repetition": "The old broad comparison, full material inventory and selected subject history are still repeated in some detail units.",
+    "shorter_is_not_the_success_metric": true,
+    "basis_for_narrow_positive": "The actual actor, response, own action and required first pawn price are now recoverable before unrelated later exchange history."
+  },
+  "comparison_to_old_same_report_readings": {
+    "v32_basic_sha256": "c5191dc306d2f8e876c2d2ee1bce2aa966cb20a33dad72a789d777ee057b4d47",
+    "v32_human_reading_sha256": "0563aa9828af377b321b734b521a4e952919d4e410d635d8073f19fcf1feb396",
+    "v33_basic_sha256": "273fabfb6a5b1f255749ee67ae0020850ea1c0114302e9f6ad1995e0b5014db4",
+    "v33_human_reading_sha256": "73d447e408aa2289f70538d9c2a1886a159e757b2f7ba338e3a34977e946cbf3",
+    "v32_chars": 821,
+    "v32_words": 148,
+    "v33_chars": 953,
+    "v33_words": 172,
+    "v35_chars": 727,
+    "v35_words": 134,
+    "v32_limitation": "Actual first-target comparison was completed, but default led with the b5 pawn history and did not show the changed Nd5 guard.",
+    "v33_gain": "The changed defender fact was appended to the same broad initial account, preserving prices; full utility remained unresolved.",
+    "v35_gain": "The existing completed first-target evidence is now organized as the initial actual Nd5 reading with preserved first prices and separate conditional capture detail.",
+    "still_same_full_utility_limit": true
+  },
+  "original_numeric_assessment_preserved": {
+    "whole_primary_object_matches_v32": true,
+    "primary": {
+      "kind": "move_verdict",
+      "comparison_evidence_id": "move-review:341e9128871c84dc0c3232886a1e3b75721740dc8cac1c12a3f94f62e906ee56:40:c3d5:evidence:candidate-comparison:6e0cae63c05a806e638506f9a304424045801d15c4196fb8da17e7b4039dc895",
+      "verdict_code": "playable_loss",
+      "verdict_confidence": "engine_backed",
+      "mover": "white",
+      "delta": {
+        "candidate_win_percent_delta_for_mover": -0.27193416608173493,
+        "kind": "engine_evaluation"
+      },
+      "reference_endpoint": {
+        "kind": "engine_search",
+        "moves": [
+          "a3a4",
+          "d8e8",
+          "a4a5",
+          "e8f8",
+          "c3d5",
+          "f5e4",
+          "f3e4",
+          "f6f5",
+          "b2b4",
+          "c5c4",
+          "d4c4",
+          "b5c4",
+          "e4f3",
+          "e7h4",
+          "d5c7",
+          "d7c8",
+          "b4b5",
+          "a6b5",
+          "a5a6",
+          "h4f2",
+          "d1d6",
+          "f8g7",
+          "c7b5",
+          "h5h4"
+        ],
+        "win_percent_for_mover": 56.317641764335946,
+        "depth": 16
+      },
+      "played_endpoint": {
+        "kind": "engine_search",
+        "moves": [
+          "c3d5",
+          "f5e4",
+          "d4e4",
+          "d7e6",
+          "e4d4",
+          "e6d5",
+          "f3d5",
+          "f6f5",
+          "d5f7",
+          "c5e5",
+          "f7d5",
+          "d8d7",
+          "a3a4",
+          "e7f6",
+          "d5b7"
+        ],
+        "win_percent_for_mover": 56.04570759825421,
+        "depth": 16
+      }
+    },
+    "child_rank_borrowed_as_root_cause": false,
+    "previous_d24_research_receipts_grafted": false
+  },
+  "limits": [
+    "Only current MOVED basic was evaluated here; no new multi-case score or goal-wide success claim.",
+    "Criteria are exposed source/development criteria, not a newly independent blind test.",
+    "All selected first comparison reports are genuinely complete at d16, but completing them and organizing them does not finish the larger functional utility question.",
+    "No new engine, compiler or test runner was executed by this reading.",
+    "Frontend delivery remains parent-owned and was not verified by this agent."
+  ],
+  "separate_authorized_test_repair": {
+    "rationale_sha256": "336bd833cc02a93168b0e6f6ba4207de1c261f6bbf644c66a9947b0b4f76d06d",
+    "description": "A separate requested repair replaces two noncanonical SAN test literals with owned canonical SAN plus exact original-rook tracking; no human utility criterion changed."
+  },
+  "main_or_ui_edits_by_this_reading": false,
+  "test_assertions_changed_to_rescore_human_utility": false,
+  "new_engine_queries_by_this_agent": 0,
+  "runners_by_this_agent": 0,
+  "UI_delivery": {
+    "recorded_utc": "2026-10-08T05:35:51.166457+00:00",
+    "verified_by": "Parent-run public UI tests; this agent read the preserved manifest and log, without running tools or changing decoder code.",
+    "manifest_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\uiFirstTargetAnswer35\\manifest.json",
+    "manifest_sha256": "c6d8256e7380556556a20d679bca15d9b78fa83f32252e3fc434834d68872160",
+    "run_log_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\meaning-conditions-20261008\\uiFirstTargetAnswer35\\run.log",
+    "run_log_sha256": "59814309707b63ce37f56435f499e3ff8b9744cabdbdb83fa943ec3a3a3313c5",
+    "current_actual_body_tests_passed": 7,
+    "current_actual_body_tests_failed": 0,
+    "cases": [
+      "FC-SG41-ND5-HELD",
+      "FC-SG41-ND5-MOVED"
+    ],
+    "positive_and_negative_test_outcomes": [
+      "ok 189 - both actual first-target bodies retain completed owners, first reply, price and original root assessment",
+      "ok 190 - a first-target name alone cannot replace its exact five-field completed ownership",
+      "ok 191 - first-target metadata cannot borrow another work, execution key or restricted pool",
+      "ok 192 - an observed, deferred or stopped mover inquiry does not certify a completed first-target body",
+      "ok 193 - a first-target body keeps the actual original mover, root occurrence and child",
+      "ok 194 - detail-only first response and own action cannot pass as the selected first-target core",
+      "ok 195 - a first-target label does not bypass the necessary fxe4 and Rxe4 material price"
+    ],
+    "scope": "Both unchanged actual snapshots accepted with exact five-field ownership, required first reply/own action and prices. Foreign owners, unready inquiries, detail-only actions and omitted material prices rejected.",
+    "full_ui_suite": {
+      "tests": 195,
+      "passed": 129,
+      "failed": 66,
+      "exit_code": 1,
+      "global_green": false,
+      "controlled_inherited_failure_comparison": "Parent is recording the same inherited failure names; this reading makes no claim that all historical failures are fixed."
+    },
+    "initial_human_reading_and_criteria_unchanged": true,
+    "full_functional_utility_success": false
+  }
+}

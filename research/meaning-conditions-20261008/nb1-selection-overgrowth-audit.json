@@ -1,0 +1,2857 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-08T01:30:45.671863+00:00",
+  "scope": "NB1 real selection overgrowth; source/report audit plus legal identity replay. Main edits, engines, compiler and test execution are owned by the parent and were not performed here.",
+  "product_sources_modified": false,
+  "engine_executed": false,
+  "compiler_executed": false,
+  "test_runner_executed": false,
+  "sources": [
+    {
+      "path": "target/meaning-conditions-20261008/nb1Realize24/manifest.json",
+      "sha256": "a248c1d0daf54a7bcaf999f6e3cbfb06c90152cd57adba3638d52409db0ce617"
+    },
+    {
+      "path": "target/meaning-conditions-20261008/nb1Realize24/snapshots.jsonl",
+      "sha256": "a3d0b722b512f13529aff6ca37ff25dd578e99082ca362dd9d5557e485286e46"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/functional-followup-basic-v24b-human-reading.json",
+      "sha256": "a426cb0c2194f51c6a9c368a019236cd928a9def49061b203a24c64e365ef0df"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/independent-functional-followup-product-inputs.json",
+      "sha256": "8519140962629d0faca89e1306d1815a22317605f3790de4e6f62866846b06dd"
+    },
+    {
+      "path": "research/meaning-conditions-20261008/independent-minimum-comparisons-semantic-reading.json",
+      "sha256": "cd84018cf264e9842d19c7c7aeb0753f2ea8d6605016f28eb4d081486f3e9e80"
+    },
+    {
+      "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/PhysicalEpisodeBoundaryTest.scala",
+      "sha256": "f0b6546fabd60ec62a1fe18d9835719bf48cb2be7941465b78d7559ac42ca858"
+    }
+  ],
+  "mutable_main_read_not_a_sealed_replay_source": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256_at_read": "eea98c78bc9184de25be3730f033fefbfd8de7e17b562e313d95fd5a04cf4f09"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+      "sha256_at_read": "d0e86e400b445d05e5c86f8c2d0b3d2cac16e39d24ec94e6fe02889c92cca54c"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/BasicPurposeReading.scala",
+      "sha256_at_read": "0723b722d0f33cbc42eec6616bfaadee145fbac9d605c21dc5026ed21c63d120"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalReplyReading.scala",
+      "sha256_at_read": "f694d5d12cca6c8337c188acb7c05fb5d9456cc3e69f228c3e23d92bfb024391"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256_at_read": "76d419eac8a8e8ad90f85b3aa5b1fbecb494abd749b225acf8d0a4b88918d64b"
+    }
+  ],
+  "code_reference_version_limit": "Line references below describe the source read before the parent changed physical Section construction in meaningv26. The mutable-source hashes are collected at record time and must not be treated as the sealed meaningv24 replay sources or proof that the former flattening still exists after the fix.",
+  "actual_replay_frames": [
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:0",
+      "actual_public_selection_count": 0,
+      "stages": [],
+      "limit": "No root commentary selection existed in this replay frame."
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:1",
+      "actual_public_question": "selected_comparison",
+      "actual_public_summary_present": true,
+      "actual_public_unavailable": null,
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 7,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "root_question_realize",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 2409,
+            "text_bound_valid": true,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 3,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              11,
+              7
+            ],
+            "detail_part_counts": [
+              11,
+              11
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:2",
+      "actual_public_question": "selected_comparison",
+      "actual_public_summary_present": true,
+      "actual_public_unavailable": null,
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 7,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            31
+          ],
+          "required_count": 13,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 2,
+          "core_statement_counts": [
+            33,
+            1
+          ],
+          "required_count": 15,
+          "completion_source_count": 31
+        },
+        {
+          "stage": "root_question_realize",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 2409,
+            "text_bound_valid": true,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 3,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              11,
+              7
+            ],
+            "detail_part_counts": [
+              11,
+              11
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:3",
+      "actual_public_question": null,
+      "actual_public_summary_present": false,
+      "actual_public_unavailable": {
+        "question": "selected_comparison",
+        "reason": "answer_not_delivered"
+      },
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 8,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "root_question_realize",
+          "present": false,
+          "question": null,
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 4148,
+            "text_bound_valid": false,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 2,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              63
+            ],
+            "detail_part_counts": [
+              7,
+              21
+            ]
+          }
+        }
+      ],
+      "selected_seed_statements": [
+        {
+          "kind": "PieceRoute",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 6,
+              "move_uci": "b1c3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 6,
+              "move_uci": "b1c3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlContrast",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlContrast",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 6,
+              "move_uci": "b1c3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 6,
+              "move_uci": "b1c3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlState",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "SquareReoccupation",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "covered": [],
+          "condition_uses": [
+            {
+              "condition": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+                "offset": 0,
+                "move_uci": "d2b1"
+              },
+              "use": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+                "offset": 4,
+                "move_uci": "d3d2"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 4,
+              "move_uci": "d3d2"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 7,
+              "move_uci": "d7f6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 7,
+              "move_uci": "d7f6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 0,
+              "move_uci": "d2b1"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "BlockedAttack",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 2,
+              "move_uci": "e2d3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 2,
+              "move_uci": "e2d3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlState",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 2,
+              "move_uci": "e2d3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 2,
+              "move_uci": "e2d3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlState",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "AttackWithdrawal",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 5,
+              "move_uci": "b6b5"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 5,
+              "move_uci": "b6b5"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 5,
+              "move_uci": "b6b5"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 5,
+              "move_uci": "b6b5"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 7,
+              "move_uci": "b5b4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 8,
+              "move_uci": "a3c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 8,
+              "move_uci": "a3c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "AttackWithdrawal",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 6,
+              "move_uci": "c4a3"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlState",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ClearedRoute",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": [
+            {
+              "condition": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+                "offset": 0,
+                "move_uci": "d2c4"
+              },
+              "use": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+                "offset": 2,
+                "move_uci": "d1d6"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 2,
+              "move_uci": "d1d6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 3,
+              "move_uci": "c6c7"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 3,
+              "move_uci": "c6c7"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 3,
+              "move_uci": "c6c7"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 3,
+              "move_uci": "c6c7"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 14,
+              "move_uci": "d6a6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ControlState",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "PiecePresence",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "ClearedRoute",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 4,
+              "move_uci": "a1d1"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 0,
+              "move_uci": "d2c4"
+            },
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 4,
+              "move_uci": "a1d1"
+            }
+          ],
+          "covered": [],
+          "condition_uses": [
+            {
+              "condition": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+                "offset": 0,
+                "move_uci": "d2c4"
+              },
+              "use": {
+                "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+                "offset": 4,
+                "move_uci": "a1d1"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "Action",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 4,
+              "move_uci": "a1d1"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 4,
+              "move_uci": "a1d1"
+            }
+          ],
+          "covered": [],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 19,
+              "move_uci": "a8a6"
+            }
+          ],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:5b7c2489e7b208db2cac6a3319fc6ac3194f00311cd7f10ed0cfafd026c1d864",
+              "offset": 20,
+              "move_uci": "a1a6"
+            }
+          ],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 9,
+              "move_uci": "f6d5"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 9,
+              "move_uci": "f6d5"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 9,
+              "move_uci": "f6d5"
+            }
+          ],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 10,
+              "move_uci": "e4d5"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 10,
+              "move_uci": "e4d5"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 10,
+              "move_uci": "e4d5"
+            }
+          ],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 12,
+              "move_uci": "d5e6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 12,
+              "move_uci": "d5e6"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 12,
+              "move_uci": "d5e6"
+            }
+          ],
+          "condition_uses": []
+        },
+        {
+          "kind": "MaterialEvents",
+          "references": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 15,
+              "move_uci": "f7e6"
+            }
+          ],
+          "actions": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 15,
+              "move_uci": "f7e6"
+            }
+          ],
+          "covered": [
+            {
+              "line_id": "move-review:048883946a57f22da86f8a7098bab776225ad3eb87a39db426b1c383af626199:36:d2b1:line:a65ff03e9252a1b9ac8a468d039a76b8480da43aac049cfa6bc68db12b1acfd0",
+              "offset": 15,
+              "move_uci": "f7e6"
+            }
+          ],
+          "condition_uses": []
+        }
+      ]
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:4",
+      "actual_public_question": null,
+      "actual_public_summary_present": false,
+      "actual_public_unavailable": {
+        "question": "selected_comparison",
+        "reason": "answer_not_delivered"
+      },
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 8,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "root_question_realize",
+          "present": false,
+          "question": null,
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 4148,
+            "text_bound_valid": false,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 2,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              63
+            ],
+            "detail_part_counts": [
+              7,
+              21
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "work:5",
+      "actual_public_question": null,
+      "actual_public_summary_present": false,
+      "actual_public_unavailable": {
+        "question": "selected_comparison",
+        "reason": "answer_not_delivered"
+      },
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 8,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "root_question_realize",
+          "present": false,
+          "question": null,
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 4148,
+            "text_bound_valid": false,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 2,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              63
+            ],
+            "detail_part_counts": [
+              7,
+              21
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "FC-SG45-NB1",
+      "work": "final",
+      "actual_public_question": null,
+      "actual_public_summary_present": false,
+      "actual_public_unavailable": {
+        "question": "selected_comparison",
+        "reason": "answer_not_delivered"
+      },
+      "actual_pipeline_not_approximation": true,
+      "candidate_presence": {
+        "terminal": false,
+        "convergence": false,
+        "exchange": false,
+        "investigated": false,
+        "legacy": false,
+        "threat": false,
+        "contact": false,
+        "subject": false,
+        "physical": true
+      },
+      "physical_bundle_count": 8,
+      "request_function_count": 0,
+      "stages": [
+        {
+          "stage": "answer_choice",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_root_actions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_immediate_defense",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reply_space",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_break",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_entry",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_hold",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_reserve_tempo",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "with_functional_reply",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            48
+          ],
+          "required_count": 20,
+          "completion_source_count": null
+        },
+        {
+          "stage": "complete_selected_conditions",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "basic_purpose_simplify",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "with_material_contrast",
+          "present": true,
+          "question": "selected_comparison",
+          "core_sections": 1,
+          "core_statement_counts": [
+            63
+          ],
+          "required_count": 24,
+          "completion_source_count": 48
+        },
+        {
+          "stage": "root_question_realize",
+          "present": false,
+          "question": null,
+          "core_sections": 0,
+          "core_statement_counts": [],
+          "required_count": 0,
+          "completion_source_count": null,
+          "realization": {
+            "question": "selected_comparison",
+            "all_content_valid": true,
+            "core_content_complete": true,
+            "missing_core_required": [],
+            "units_present": true,
+            "from_units_called": true,
+            "from_units_gate": true,
+            "text_length": 4148,
+            "text_bound_valid": false,
+            "unit_contracts": {
+              "pair_count": 2,
+              "unit_count": 2,
+              "detail_unit_count": 2,
+              "witness_count": 0,
+              "pair_roots_mentioned": true,
+              "references_valid": true,
+              "core_visible_account": true,
+              "detail_visible_account": true,
+              "witness_ownership_valid": true,
+              "all_unit_contracts_valid": true
+            },
+            "core_part_counts": [
+              79,
+              63
+            ],
+            "detail_part_counts": [
+              7,
+              21
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "first_failure": {
+    "actual_stage": "root_question_realize / text_bound",
+    "earliest_observed_affected_report": "work:3",
+    "text_length": 4148,
+    "text_limit": 4000,
+    "all_content_and_required_refs_complete": true,
+    "visible_material_accounts_and_witness_ownership_valid": true,
+    "selection_failure_vs_delivery_failure": "48 source statements were already selected as a single physical core section. Common completion expands them to 63 statements and preserves 48 original completion seeds. Delivery then fails its text bound; this is not absent facts or an incomplete price account.",
+    "not_inferred": [
+      "the original numeric mistake is wrong",
+      "the word limit is the chess bottleneck",
+      "extra running time alone fixes content selection"
+    ]
+  },
+  "legal_identity_replay": {
+    "fen": "3rnrk1/3n1pbp/1pq3p1/2p1p3/4P3/4B1PP/1PPNQPB1/R2R2K1 w - - 2 19",
+    "rows": {
+      "reference_Nc4_actual_d16": {
+        "moves": [
+          "d2c4",
+          "e8f6",
+          "d1d6",
+          "c6c7",
+          "a1d1",
+          "b6b5",
+          "c4a3",
+          "b5b4",
+          "a3c4",
+          "f8e8",
+          "e2f3",
+          "h7h6",
+          "g2f1",
+          "g7f8",
+          "d6a6",
+          "g8g7",
+          "h3h4",
+          "d8a8",
+          "d1a1",
+          "a8a6",
+          "a1a6"
+        ],
+        "all_moves_legal": true,
+        "trace": [
+          {
+            "offset": 0,
+            "uci": "d2c4",
+            "san": "Nc4",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 1,
+            "uci": "e8f6",
+            "san": "Nef6",
+            "original_actor": "n@e8",
+            "original_victim": null
+          },
+          {
+            "offset": 2,
+            "uci": "d1d6",
+            "san": "Rd6",
+            "original_actor": "R@d1",
+            "original_victim": null
+          },
+          {
+            "offset": 3,
+            "uci": "c6c7",
+            "san": "Qc7",
+            "original_actor": "q@c6",
+            "original_victim": null
+          },
+          {
+            "offset": 4,
+            "uci": "a1d1",
+            "san": "Rad1",
+            "original_actor": "R@a1",
+            "original_victim": null
+          },
+          {
+            "offset": 5,
+            "uci": "b6b5",
+            "san": "b5",
+            "original_actor": "p@b6",
+            "original_victim": null
+          },
+          {
+            "offset": 6,
+            "uci": "c4a3",
+            "san": "Na3",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 7,
+            "uci": "b5b4",
+            "san": "b4",
+            "original_actor": "p@b6",
+            "original_victim": null
+          },
+          {
+            "offset": 8,
+            "uci": "a3c4",
+            "san": "Nc4",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 9,
+            "uci": "f8e8",
+            "san": "Rfe8",
+            "original_actor": "r@f8",
+            "original_victim": null
+          },
+          {
+            "offset": 10,
+            "uci": "e2f3",
+            "san": "Qf3",
+            "original_actor": "Q@e2",
+            "original_victim": null
+          },
+          {
+            "offset": 11,
+            "uci": "h7h6",
+            "san": "h6",
+            "original_actor": "p@h7",
+            "original_victim": null
+          },
+          {
+            "offset": 12,
+            "uci": "g2f1",
+            "san": "Bf1",
+            "original_actor": "B@g2",
+            "original_victim": null
+          },
+          {
+            "offset": 13,
+            "uci": "g7f8",
+            "san": "Bf8",
+            "original_actor": "b@g7",
+            "original_victim": null
+          },
+          {
+            "offset": 14,
+            "uci": "d6a6",
+            "san": "Ra6",
+            "original_actor": "R@d1",
+            "original_victim": null
+          },
+          {
+            "offset": 15,
+            "uci": "g8g7",
+            "san": "Kg7",
+            "original_actor": "k@g8",
+            "original_victim": null
+          },
+          {
+            "offset": 16,
+            "uci": "h3h4",
+            "san": "h4",
+            "original_actor": "P@h3",
+            "original_victim": null
+          },
+          {
+            "offset": 17,
+            "uci": "d8a8",
+            "san": "Ra8",
+            "original_actor": "r@d8",
+            "original_victim": null
+          },
+          {
+            "offset": 18,
+            "uci": "d1a1",
+            "san": "Rda1",
+            "original_actor": "R@a1",
+            "original_victim": null
+          },
+          {
+            "offset": 19,
+            "uci": "a8a6",
+            "san": "Rxa6",
+            "original_actor": "r@d8",
+            "original_victim": "R@d1"
+          },
+          {
+            "offset": 20,
+            "uci": "a1a6",
+            "san": "Rxa6",
+            "original_actor": "R@a1",
+            "original_victim": "r@d8"
+          }
+        ]
+      },
+      "played_Nb1_actual_d16": {
+        "moves": [
+          "d2b1",
+          "e8c7",
+          "e2d3",
+          "c5c4",
+          "d3d2",
+          "c7e6",
+          "b1c3",
+          "d7f6",
+          "c3d5",
+          "f6d5",
+          "e4d5",
+          "c6b5",
+          "d5e6",
+          "d8d2",
+          "d1d2",
+          "f7e6",
+          "a1a7",
+          "b5b2",
+          "d2d7",
+          "g7f6",
+          "e3h6",
+          "b2c2",
+          "h6f8"
+        ],
+        "all_moves_legal": true,
+        "trace": [
+          {
+            "offset": 0,
+            "uci": "d2b1",
+            "san": "Nb1",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 1,
+            "uci": "e8c7",
+            "san": "Nc7",
+            "original_actor": "n@e8",
+            "original_victim": null
+          },
+          {
+            "offset": 2,
+            "uci": "e2d3",
+            "san": "Qd3",
+            "original_actor": "Q@e2",
+            "original_victim": null
+          },
+          {
+            "offset": 3,
+            "uci": "c5c4",
+            "san": "c4",
+            "original_actor": "p@c5",
+            "original_victim": null
+          },
+          {
+            "offset": 4,
+            "uci": "d3d2",
+            "san": "Qd2",
+            "original_actor": "Q@e2",
+            "original_victim": null
+          },
+          {
+            "offset": 5,
+            "uci": "c7e6",
+            "san": "Ne6",
+            "original_actor": "n@e8",
+            "original_victim": null
+          },
+          {
+            "offset": 6,
+            "uci": "b1c3",
+            "san": "Nc3",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 7,
+            "uci": "d7f6",
+            "san": "Nf6",
+            "original_actor": "n@d7",
+            "original_victim": null
+          },
+          {
+            "offset": 8,
+            "uci": "c3d5",
+            "san": "Nd5",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 9,
+            "uci": "f6d5",
+            "san": "Nxd5",
+            "original_actor": "n@d7",
+            "original_victim": "N@d2"
+          },
+          {
+            "offset": 10,
+            "uci": "e4d5",
+            "san": "exd5",
+            "original_actor": "P@e4",
+            "original_victim": "n@d7"
+          },
+          {
+            "offset": 11,
+            "uci": "c6b5",
+            "san": "Qb5",
+            "original_actor": "q@c6",
+            "original_victim": null
+          },
+          {
+            "offset": 12,
+            "uci": "d5e6",
+            "san": "dxe6",
+            "original_actor": "P@e4",
+            "original_victim": "n@e8"
+          },
+          {
+            "offset": 13,
+            "uci": "d8d2",
+            "san": "Rxd2",
+            "original_actor": "r@d8",
+            "original_victim": "Q@e2"
+          },
+          {
+            "offset": 14,
+            "uci": "d1d2",
+            "san": "Rxd2",
+            "original_actor": "R@d1",
+            "original_victim": "r@d8"
+          },
+          {
+            "offset": 15,
+            "uci": "f7e6",
+            "san": "fxe6",
+            "original_actor": "p@f7",
+            "original_victim": "P@e4"
+          },
+          {
+            "offset": 16,
+            "uci": "a1a7",
+            "san": "Ra7",
+            "original_actor": "R@a1",
+            "original_victim": null
+          },
+          {
+            "offset": 17,
+            "uci": "b5b2",
+            "san": "Qxb2",
+            "original_actor": "q@c6",
+            "original_victim": "P@b2"
+          },
+          {
+            "offset": 18,
+            "uci": "d2d7",
+            "san": "Rdd7",
+            "original_actor": "R@d1",
+            "original_victim": null
+          },
+          {
+            "offset": 19,
+            "uci": "g7f6",
+            "san": "Bf6",
+            "original_actor": "b@g7",
+            "original_victim": null
+          },
+          {
+            "offset": 20,
+            "uci": "e3h6",
+            "san": "Bh6",
+            "original_actor": "B@e3",
+            "original_victim": null
+          },
+          {
+            "offset": 21,
+            "uci": "b2c2",
+            "san": "Qxc2",
+            "original_actor": "q@c6",
+            "original_victim": "P@c2"
+          },
+          {
+            "offset": 22,
+            "uci": "h6f8",
+            "san": "Bxf8",
+            "original_actor": "B@e3",
+            "original_victim": "r@f8"
+          }
+        ]
+      },
+      "declared_conditional_Nc4": {
+        "moves": [
+          "d2c4",
+          "e8f6",
+          "d1d6",
+          "c6d6",
+          "c4d6"
+        ],
+        "all_moves_legal": true,
+        "trace": [
+          {
+            "offset": 0,
+            "uci": "d2c4",
+            "san": "Nc4",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 1,
+            "uci": "e8f6",
+            "san": "Nef6",
+            "original_actor": "n@e8",
+            "original_victim": null
+          },
+          {
+            "offset": 2,
+            "uci": "d1d6",
+            "san": "Rd6",
+            "original_actor": "R@d1",
+            "original_victim": null
+          },
+          {
+            "offset": 3,
+            "uci": "c6d6",
+            "san": "Qxd6",
+            "original_actor": "q@c6",
+            "original_victim": "R@d1"
+          },
+          {
+            "offset": 4,
+            "uci": "c4d6",
+            "san": "Nxd6",
+            "original_actor": "N@d2",
+            "original_victim": "q@c6"
+          }
+        ]
+      },
+      "declared_conditional_Nb1": {
+        "moves": [
+          "d2b1",
+          "e8f6",
+          "d1d6",
+          "c6d6"
+        ],
+        "all_moves_legal": true,
+        "trace": [
+          {
+            "offset": 0,
+            "uci": "d2b1",
+            "san": "Nb1",
+            "original_actor": "N@d2",
+            "original_victim": null
+          },
+          {
+            "offset": 1,
+            "uci": "e8f6",
+            "san": "Nef6",
+            "original_actor": "n@e8",
+            "original_victim": null
+          },
+          {
+            "offset": 2,
+            "uci": "d1d6",
+            "san": "Rd6",
+            "original_actor": "R@d1",
+            "original_victim": null
+          },
+          {
+            "offset": 3,
+            "uci": "c6d6",
+            "san": "Qxd6",
+            "original_actor": "q@c6",
+            "original_victim": "R@d1"
+          }
+        ]
+      }
+    }
+  },
+  "three_claim_levels": {
+    "normal_role": "The book supports both Nc4 and Nb1-c3 as good reorganizations, and the independent registered d24 study retains White advantage in both. This does not assert equal root evaluations.",
+    "conditional_execution": "Nc4 supports a particular Rd6; after Qxd6 the same original Nd2 can recapture from c4. After Nb1 and the same legal local tail, the capture is still legal but that recapture is absent. This is a local price witness, not the total reason for the root score.",
+    "numerical_judgment": "The actual d16 NB1 comparison remains mistake, with -5.672810041897051 mover win-percent delta. Neither the book nor the isolated bad Rd6 branch disproves that numerical assessment. The cause of that grade is not fully established by this audit.",
+    "strongest_reply": "The independent all-legal d24 query after supported Rd6 chooses Qb7 rather than Qxd6. Therefore the capture/recovery example is conditional; the adversary need not volunteer the queen loss. The separate unsupported Rd6 after Nb1 Nc7 is refuted, while Nb1-c3 remains an available good plan."
+  },
+  "code_findings": [
+    {
+      "file": "MoveWorkProjection.scala",
+      "lines": [
+        2255,
+        2258,
+        2644,
+        2650
+      ],
+      "finding": "histories.nonEmpty and effect.use.nonEmpty make explainable lifetime bundles core without establishing that they answer the present judgment. Physical content is chosen before prose admission."
+    },
+    {
+      "file": "MoveWorkProjection.scala",
+      "lines": [
+        2825,
+        2881,
+        2897,
+        2910
+      ],
+      "finding": "Original physical bundles have separate Sections until lead flattens selectedSections and globally appended capture/check statements into one Section."
+    },
+    {
+      "file": "FunctionalReplyReading.scala",
+      "lines": [
+        233,
+        243
+      ],
+      "finding": "A valid compact conditional answer moves old contents to detail but protects previous.core. It receives the already flattened physical section, so protection cannot isolate its independent old questions."
+    },
+    {
+      "file": "MoveWorkProjection.scala",
+      "lines": [
+        3194,
+        3202
+      ],
+      "finding": "A quiet used rook moving away before its later loss does not satisfy the stationary used-piece account. None conservatively preserves the old price episode. This safety condition is not the defect."
+    },
+    {
+      "file": "RootSubjectComparison.scala",
+      "lines": [
+        1076,
+        1105
+      ],
+      "finding": "Protection and price closure already operate per Section. If closure is unavailable and that Section contains a price/check episode, the whole Section is retained. When it contains all physical bundles, one deferred account retains all unrelated facts."
+    },
+    {
+      "file": "BasicPurposeReading.scala",
+      "lines": [
+        28,
+        35,
+        60,
+        70,
+        85,
+        103
+      ],
+      "finding": "Routine purposes replace the full lifetime only for exact close numerical comparisons with no changed threatened defence/new other-piece attack. Mistake is deliberately excluded. Adding mistake to that gate would hide unresolved cause behind a purpose."
+    },
+    {
+      "file": "MoveWorkProjection.scala",
+      "lines": [
+        3286,
+        3289,
+        3340,
+        3352
+      ],
+      "finding": "Common completion freezes source seeds, closes selected actual actions, and keeps intrinsic capture/check/trade duties. It should continue doing this after Section ownership becomes narrower."
+    }
+  ],
+  "smallest_safe_change": {
+    "location": "MoveWorkProjection.scala original physical Section construction, before lead at 2907; do not change the text gate or stationary user guard.",
+    "preserve": "Keep part/Section association and each original root use's price episode through fallback and functional replacement. Associate each physical history's actual capture offsets with its owner Section, together with that episode's checks and replies.",
+    "price_ownership": "Separate material-only trailing Sections are insufficient: an unavailable close would then see no local hasEpisode and could discard the price. Actual prices must stay with the corresponding episode before protection. Shared actual capture can join those dependent episodes or use the existing single-owner closure; a shared quiet root, endpoint, PV or wording must not join unrelated lifetimes.",
+    "required_and_focus": "Retain each episode's owned required/focus refs, and do not globally union them before deciding which episode survives.",
+    "completion_sources": "Successfully narrowed episodes contribute their original selected uses/actions only; generated closure prices are duties, not new seeds. A deferred episode contributes its original retained source contents. Repeat completion must not enlarge either set.",
+    "numeric_and_conditional": "Keep original primary pair and score receipt unchanged. A conditional function can coexist with a mistake whose entire reason is unconfirmed; it cannot label the supplied local Rd6 branch as the actual mistake cause.",
+    "sufficiency_limit": "Boundary preservation alone does not reduce the existing broad fallback selection. It enables a valid compact functional answer to move unrelated episodes to detail and prevents a single unavailable account from reviving the entire core. The general importance gate remains a separate unresolved task."
+  },
+  "meaningful_regressions": [
+    "Functional replacement with two independent old root questions: one relocated quiet user's account unavailable, the other stationary user's actual loss/recovery complete. Keep the former full price episode, narrow only the latter and send its endpoint background to detail.",
+    "Missing intermediate physical identity must retain that specific old episode; completing another episode cannot fabricate safety or remove its capture/check price.",
+    "Original actual root capture, immediate check reply, promotion identity, support user's loss and required rook exchange stay visible with one capture owner.",
+    "Completion sources are idempotent and generated prices cannot seed unrelated attack/escape stories.",
+    "NB1 actual numerical mistake stays unchanged; a purpose-only reading must not replace the unexplained numerical cause. Conditional supported/unsupported Rd6 is named as a local example.",
+    "Change principal variation/reply with the same original board condition: preserve the local conditional proof. Remove the essential control or use an illegal/foreign original actor: reject the proof.",
+    "A different legal recapturer keeps the local fact true but prevents provider-specific central promotion; strong Qb7 defence prevents a forced queen-loss claim.",
+    "Append unrelated quiet lifetime facts to a different closed episode: keep them in detail rather than changing the chosen compact answer. An actually connected selected new price must remain core.",
+    "Replay the exact old NB1 reports and a fresh product run after the implementation: compare original numeric receipts, candidate/fallback stages, per-episode closure, required prices, delivered core and human recovery separately."
+  ],
+  "prepared_test": {
+    "path": "chesstory-runtime/src/test/scala/io/chesstory/runtime/PhysicalEpisodeBoundaryTest.scala",
+    "count": 2,
+    "engine_receipts": "Scores +175/+109 and current rows match the recorded d16 comparison; the separate retained legal branch is synthetic conditional input, with no engine investigation answer injected.",
+    "scope_limit": "This fixture explicitly supplies the original two Sections and integrates functional/protection/final completion. It does not claim to test automatic production of physical bundle boundaries upstream.",
+    "status": "Prepared and legally replayed in Python. Parent reports first test passed at meaningv26; second initially failed at absent public primary due to fixture assembleOccurrences. Original source/failure preserved before correction to existing assemble(retained). No child compiler/runner execution or corrected test pass claimed.",
+    "preserved_original": "target/meaning-conditions-20261008/physical-episode-boundary-before-primary26/manifest.json"
+  },
+  "parent_reported_later_product_observation": {
+    "version": "meaningv26",
+    "child_executed": false,
+    "message_evidence": "Parent reported fresh four-case run had no quiet-function default semantic improvement; NB1 remained None and the current best changed to h4/Bc6, so the Nc4/Nb1 resource comparison is no longer the actual primary pair.",
+    "interpretation": "A passing local two-Section protection test does not establish automatic discovery, selection or product delivery on the unchanged human criteria. A valid local conditional fact cannot be passed off as the cause of a different primary comparison."
+  },
+  "not_to_count_as_success": [
+    "raising 4000",
+    "dropping strings without removing their selected semantic obligations",
+    "purpose alone passed as the cause of a mistake",
+    "book good means engine exact grade false",
+    "price-comparison completion means every strongest response is answered",
+    "Section count or shorter text means the root judgment was explained"
+  ]
+}

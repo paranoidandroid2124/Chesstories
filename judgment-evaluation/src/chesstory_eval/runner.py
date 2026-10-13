@@ -317,7 +317,8 @@ class ExperimentRunner:
                 observed_clusters = len(
                     {str(value["atomic_cluster_id"]) for value in sample_universe}
                 )
-                if observed_clusters < required_clusters:
+                underpowered = observed_clusters < required_clusters
+                if underpowered:
                     experiment_status = (
                         "fresh-confirm-underpowered"
                         if self.context.split == "fresh-confirm"
@@ -327,28 +328,6 @@ class ExperimentRunner:
                             else "completed-diagnostic"
                         )
                     )
-                    if self.context.split in {
-                        "diagnostic-explore",
-                        "diagnostic-confirm",
-                    }:
-                        attribution = deterministic_attribution_decision(
-                            split=self.context.split,
-                            contrasts=contrasts,
-                            preregistration=self.preregistration,
-                            oracle_chains=self._oracle_chains(),
-                            observed_atomic_clusters=observed_clusters,
-                            foundation_passed=True,
-                            ceiling_passed=True,
-                        )
-                    else:
-                        attribution = {
-                            "status": "indeterminate",
-                            "reason": (
-                                f"effective atomic clusters {observed_clusters} are below the "
-                                f"preregistered minimum {required_clusters}"
-                            ),
-                            "production_bottleneck": None,
-                        }
                 else:
                     experiment_status = (
                         "completed-fresh-confirm"
@@ -359,36 +338,42 @@ class ExperimentRunner:
                             else "completed-diagnostic"
                         )
                     )
-                    if self.context.split in {
-                        "diagnostic-explore",
-                        "diagnostic-confirm",
-                    }:
-                        attribution = deterministic_attribution_decision(
-                            split=self.context.split,
-                            contrasts=contrasts,
-                            preregistration=self.preregistration,
-                            oracle_chains=self._oracle_chains(),
-                            observed_atomic_clusters=observed_clusters,
-                            foundation_passed=True,
-                            ceiling_passed=True,
-                        )
-                    else:
-                        attribution = {
-                            "status": (
-                                "requires-fresh-confirm-qualification"
-                                if self.context.split == "fresh-confirm"
-                                else "final-blind-performance-ready"
-                            ),
-                            "reason": (
-                                "fresh-confirm contrasts require the separately signed effect-direction, "
-                                "equivalence, and release-metric qualification decision"
-                                if self.context.split == "fresh-confirm"
-                                else (
-                                    "blind execution is finalized under the signed candidate and run attestation"
-                                )
-                            ),
-                            "production_bottleneck": None,
-                        }
+                if self.context.split in {"diagnostic-explore", "diagnostic-confirm"}:
+                    attribution = deterministic_attribution_decision(
+                        split=self.context.split,
+                        contrasts=contrasts,
+                        preregistration=self.preregistration,
+                        oracle_chains=self._oracle_chains(),
+                        observed_atomic_clusters=observed_clusters,
+                        foundation_passed=True,
+                        ceiling_passed=True,
+                    )
+                elif underpowered:
+                    attribution = {
+                        "status": "indeterminate",
+                        "reason": (
+                            f"effective atomic clusters {observed_clusters} are below the "
+                            f"preregistered minimum {required_clusters}"
+                        ),
+                        "production_bottleneck": None,
+                    }
+                else:
+                    attribution = {
+                        "status": (
+                            "requires-fresh-confirm-qualification"
+                            if self.context.split == "fresh-confirm"
+                            else "final-blind-performance-ready"
+                        ),
+                        "reason": (
+                            "fresh-confirm contrasts require the separately signed effect-direction, "
+                            "equivalence, and release-metric qualification decision"
+                            if self.context.split == "fresh-confirm"
+                            else (
+                                "blind execution is finalized under the signed candidate and run attestation"
+                            )
+                        ),
+                        "production_bottleneck": None,
+                    }
         else:
             experiment_status = "foundation-not-passed"
             attribution = {

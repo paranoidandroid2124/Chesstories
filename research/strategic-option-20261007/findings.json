@@ -1,0 +1,190 @@
+{
+  "recorded_utc": "2026-10-07T15:30:33.417914+00:00",
+  "product": "optionv3",
+  "objective": "수순 밖 선택의 가치, 강한 반격, 최초 수의 의미를 구별하고 필요한 검증을 실제 기본 해설로 전달한다.",
+  "study": {
+    "books": [
+      "Think Like a Super-GM",
+      "The Complete Chess Swindler"
+    ],
+    "closely_read": "Super-GM 퍼즐1·2·13과 후보 선택/반증 장; Swindler 도입부의 Furman, Liu–Wohl, Marshall, Mammadova, Sevian–Gareyev, Muzychuk–Ovod 장면.",
+    "reading_edition_pages": {
+      "supergm": [
+        "14–19",
+        "28–30",
+        "39–54",
+        "146–152",
+        "471–476"
+      ],
+      "swindler": [
+        "9–24"
+      ]
+    },
+    "scope": "선택한 장면과 논의를 공부했다. 완독이나 독립된 초심자 독해 실험을 주장하지 않는다."
+  },
+  "changes": [
+    "원래 발견한 왕 진입이 새 주요 수순에 없으면 같은 정확한 결정 국면에서 새 첫 수와 별도 비교한다. 동등하거나 유효한 평가를 확인한 경우에만 가능한 선택으로 설명한다.",
+    "폰 방어는 조용한 첫 수 하나 대신 합법적인 전체 폰 수를 검색 범위에 넣는다. 포획과 승격도 검색한다. 설명하지 못하는 더 강한 반격은 기존 이야기를 차단한다.",
+    "기존 질문의 전체 사실을 복제하지 않고 빠진 비교 하나를 추가한다. 595/600개의 요구 항목이 찬 실제 입력에서 추가 비교가 다시 접수된다.",
+    "선택된 진입의 가치 비교는 일반 탐색 네 번 뒤에도 원래 마감과 전달 여유 안에서 한 번 시도한다.",
+    "포획 반격과 즉시 되잡기 뒤의 마지막 대기 수를 추적하며 양쪽 포획과 사용한 폰의 후속 손실을 보존한다.",
+    "화면 검증도 왕 응수 전체와 폰 응수 전체를 같은 소유권 검증으로 받아들인다."
+  ],
+  "controlled_available_entry": {
+    "source": "optionavailablefinal",
+    "archived_reports": 6,
+    "additional_actual_reports": 1,
+    "final_replay": "7/7 exact under optionv3",
+    "comparison": "Kf5 versus e5 after the same 22-ply prefix",
+    "depth": 16,
+    "white_cp": [
+      625,
+      625
+    ],
+    "delivered": true,
+    "interpretation": "가치가 남은 진입을 제품 안에서 별도 검증하고 가능한 선택으로 전달한 성공. 전체 국면의 유일한 승리 원인이나 정상 응답 시간의 성공률을 증명하지 않는다.",
+    "regression": "새 일정 검사 5개 중 기존 optionv1은 추가 비교 검사 하나만 실패, optionv3는 5개 통과."
+  },
+  "final_cohort": {
+    "total": 24,
+    "engine": "same browser engine profile and frozen rule set; engine runs sequentially",
+    "H05_30s": {
+      "full": 1,
+      "partial": 2,
+      "trials": 3
+    },
+    "H05_10s": {
+      "full": 0,
+      "partial": 0,
+      "trials": 3
+    },
+    "T20_30s": {
+      "full": 3,
+      "trials": 3
+    },
+    "T20_10s": {
+      "full": 3,
+      "trials": 3
+    },
+    "books": {
+      "full": 0,
+      "trials": 6
+    },
+    "controls": {
+      "trials": 6,
+      "C03": "retreat-value mechanism delivered",
+      "D06": "actual forcing checks and rook cost delivered",
+      "H02": "central reason still missing",
+      "R01": "no reserve mechanism invented",
+      "R02": "needs_refresh retained",
+      "T09h3": "no reserve mechanism invented"
+    },
+    "scope": "사전에 정한 작은 의도 표본을 구현자가 판독했다. 엔진 수순 변동과 실행 환경이 달라 이전 실행 대비 성공률 차이를 코드만의 효과로 해석할 수 없다."
+  },
+  "validation": {
+    "runtime_tests": 344,
+    "runtime_passed": 327,
+    "runtime_failed": 17,
+    "new_runtime_failure_names": [],
+    "directly_related_runtime_tests": 40,
+    "UI_related_passed": 82,
+    "UI_selection_existing_failures": 66,
+    "type_check": "full analyse TypeScript build passed; post-freeze type-only annotation emits byte-identical JS",
+    "delivery": [
+      {
+        "group": "extended",
+        "snapshots": 6,
+        "rejected_mutations": 12,
+        "exact_move_links": 172
+      },
+      {
+        "group": "normal",
+        "snapshots": 6,
+        "rejected_mutations": 13,
+        "exact_move_links": 152
+      },
+      {
+        "group": "books",
+        "snapshots": 6,
+        "rejected_mutations": 10,
+        "exact_move_links": 210
+      },
+      {
+        "group": "controls",
+        "snapshots": 6,
+        "rejected_mutations": 13,
+        "exact_move_links": 132
+      },
+      {
+        "group": "available",
+        "snapshots": 1,
+        "rejected_mutations": 10,
+        "exact_move_links": 28
+      }
+    ],
+    "legacy": {
+      "records": 49,
+      "fully_replayed": 47,
+      "pending": 2,
+      "lost_covered_branches": 0,
+      "moved_to_detail": 0,
+      "missing_mandatory": 0,
+      "lost_delivery": 0,
+      "text_changed": 0
+    },
+    "git_diff_check": "passed"
+  },
+  "books": {
+    "SG01": {
+      "result": "미해결",
+      "needed": "Rd8로 통과 폰을 뒤에서 돕고, 백왕이 봉쇄를 맡으면서 룩의 활동성을 지키는 과제를 설명해야 한다.",
+      "observed": "공격·룩 이동·양쪽 폰 손실은 남았지만, 누가 통과 폰을 맡아야 하는지는 중심 답이 아니다."
+    },
+    "SG02": {
+      "result": "미해결",
+      "needed": "Rxf3는 비숍을 남긴다. 잡는 수순의 전술뿐 아니라 Qd2로 거절할 때 남는 압박과 제한된 이득을 설명해야 한다.",
+      "observed": "Qd2, 비숍의 생존과 교환은 출력에 있지만 긴 관계 목록 속에 있다. 내부 희생 후보 두 개의 비교는 완료됐으나 현재 후보에서는 철회됐다.",
+      "diagnostic": "C-sacrifice는 처음 관측한 손실·회수·체크·열린 파일을 묶어 현재 수순에 다시 요구한다. 일부 옛 포획 사건이 새 수순에서 사라지면 전체 후보가 철회된다. 이것만으로 Rxf3의 전략적 아이디어가 반증됐다고 할 수 없다."
+    },
+    "SG13": {
+      "result": "미해결",
+      "needed": "자연스러운 Bd5에 Bxh4와 체크 자원이 있다. Qd7의 g4 통제가 그 자원에 미치는 영향과 더 강한 g5 방어를 함께 검증해야 한다.",
+      "observed": "기본 답은 f7 폰의 공격과 퀸 교환을 골랐다. Qd7 뒤 Bxh4와 g5를 비교하는 후보는 존재하지만 investigation_limit로 중단됐다.",
+      "diagnostic": "같은 보고서 6개를 정확히 재생한 내부 추적에서 C-plan-counter의 contrast_strength(List(e8d7),f6h4,g6g5)가 미완료다. 실제 실행은 30초 중 8.820초였다. 횟수 제한과 중심 질문의 선택이 모두 관련되며, 그 비교 하나를 끝내면 영구 체크의 설명까지 해결된다는 뜻은 아니다."
+    },
+    "SW01": {
+      "result": "부분 사실",
+      "needed": "승격을 막는 Rh5·Rd8·Re8이 같은 가치가 아니다. 스테일메이트를 피하려면 백왕의 수를 남기는 위치와 흑왕의 이동까지 봐야 한다.",
+      "observed": "Rh5 쪽의 실제 스테일메이트와 대가는 전달했다. Re8의 장점을 열린 파일이라는 기본 목적 이상으로 설명하지 못했다."
+    },
+    "SW02": {
+      "result": "미해결·평가 갱신 필요",
+      "needed": "h7의 수비 자원은 유혹적인 폰 전진뿐 아니라 Rc8을 상대로도 살펴야 한다. Rf2를 포함한 더 강한 수비는 별도 검증해야 한다.",
+      "observed": "g6의 공격과 폰 교환, h7을 기록했지만 구제 수단의 핵심을 말하지 못했다. 갱신이 끝나지 않았다는 상태는 유지했다.",
+      "diagnostic": "희생 거절 비교가 search_budget_exhausted, 그 선행 비교가 prerequisite_unresolved로 남았다."
+    },
+    "SW03": {
+      "result": "미해결",
+      "needed": "상대의 e4 실수 뒤 Ra3가 룩을 유인해 b폰의 승격을 돕는 이유를 설명한다. 앞선 b6가 상대 실수를 강제했다고 말하지 않는다.",
+      "observed": "룩 공격과 실제 포획을 기록했으나, 유인과 승격의 연결을 기본 답으로 조직하지 못했다."
+    }
+  },
+  "remaining": [
+    "새 수순에서 처음부터 왕 순환이나 대기 수 사용이 나오지 않으면 H05 후보가 없거나 부분 답만 남는다. 별도 가치 검증은 이미 발견한 진입을 지키는 문제를 해결했다.",
+    "전체 폰 수를 검색해도 상위 세 수에 기준 왕 수가 없으면 같은 비교를 완성하지 못할 수 있다. 승격 등 아직 의미 모델에 없는 강한 반격도 미해결로 남는다.",
+    "한 질문에 진입 가치 비교 하나만 붙인다. 이후 다시 다른 수순으로 바뀌면 기존 비교를 자동으로 무한 갱신하지 않는다.",
+    "기본 10초 H05는 이번 세 번 모두 핵심 이유를 전달하지 못했다.",
+    "독립된 두 후속 수순의 Kxg5 대가가 같은 Ke3 줄기로 표시돼 반복처럼 보인다. 정확한 수순 연결은 보존됐지만 문장 구분은 더 명확해져야 한다.",
+    "희생의 보상, 체크 자원의 억제, 스테일메이트 방지 등에서 핵심 질문을 구성하고 중요한 반박을 우선 검증하는 능력은 부족하다.",
+    "실전적 함정과 객관적으로 건전한 수는 구별해야 한다. Swindler의 심리적 해설에서 상대 실수 확률이나 엔진상 좋은 수라는 주장을 만들어 내지 않았다."
+  ],
+  "next_concrete_question": "SG02의 남겨 둔 비숍과 SG13의 g4 체크 자원에 대해, 전체 사건 목록 대신 판단을 바꾸는 최소 조건과 가장 강한 반론을 먼저 정하고 현재 비교 도구로 검증한다. 새로운 문장 형식 추가 전에 그 조건이 상대의 최선 방어를 견디는지 확인해야 한다.",
+  "retained_failed_attempts": [
+    "optionbookbefore1: wrong research adapter, no usable engine reports",
+    "optionh05r2prefix1: exact fifth-work mismatch, retained without rewritten identity",
+    "optionh05r2prefix2: actual four-root UI admission failure before fix",
+    "optionscheduling4: test-only compile used a field absent from public trait; corrected to issued work identity",
+    "tests/tests2: broad research compile omitted helper source and then used its object name as filename; corrected in tests3",
+    "full TypeScript first check: inferred Set<Key> incompatible with string slice; explicit Set<string>, emitted code identical"
+  ]
+}

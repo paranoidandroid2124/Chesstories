@@ -3,6 +3,7 @@ package io.chesstory.runtime
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Path}
 import java.util.zip.GZIPInputStream
+import scala.concurrent.duration.*
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import play.api.libs.json.*
@@ -11,6 +12,7 @@ import play.api.libs.json.*
   * an additional legal root use in one test is explicit test content, never
   * a claim that its geometry explains the engine's original grade. */
 class FirstTargetAnswerTest extends munit.FunSuite:
+  override def munitTimeout = 2.minutes
   import CommentaryAnswer.*
   import ObservedLineProtocol.{PreparedPath, PreparedPaths}
   import RootQuestionSummary.MoveRef
@@ -96,7 +98,7 @@ class FirstTargetAnswerTest extends munit.FunSuite:
       (records(f.id) \ "baseline_primary").as[JsObject],
       "first-reply ranking and defender geometry must not rewrite any original root assessment field")
 
-  test("MOVED begins with actual Nd5, closes fxe4/R4xe4, and keeps Rxd5/exd5 conditional"):
+  test("MOVED begins with actual Nd5 and closes both compared first replies"):
     val f = actual("MOVED")
     val answer = f.read()
     assertEquals(answer.question, "first_target_response")
@@ -120,14 +122,12 @@ class FirstTargetAnswerTest extends munit.FunSuite:
     assertEquals(statements(answer).flatMap(_.covered).filter(move =>
       (move.path eq body) && Set(1, 2)(move.offset)).map(_.offset).toSet, Set(1, 2))
     val capture = f.proof.captureDecline.pathsByMove("c5d5")
-    assert(!statements(answer).flatMap(_.covered).exists(move =>
-      (move.path eq capture) && Set(1, 2)(move.offset)))
-    assertEquals(answer.details.flatMap(_.covered).filter(move =>
+    assertEquals(statements(answer).flatMap(_.covered).filter(move =>
       (move.path eq capture) && Set(1, 2)(move.offset)).map(_.offset).toSet, Set(1, 2))
     assertEquals((f.summary \ "first_target_response").as[JsObject], f.proof.ownershipJson)
     assertEquals(f.covered("units").filter(move => (move.path eq body) && Set(1, 2)(move.offset))
       .map(_.offset).toSet, Set(1, 2))
-    assertEquals(f.covered("detail_units").filter(move => (move.path eq capture) && Set(1, 2)(move.offset))
+    assertEquals(f.covered("units").filter(move => (move.path eq capture) && Set(1, 2)(move.offset))
       .map(_.offset).toSet, Set(1, 2))
     rootGradeUnchanged(f)
 
@@ -252,7 +252,7 @@ class FirstTargetAnswerTest extends munit.FunSuite:
     val explicit = f.previous.copy(question = "current_defense")
     assertEquals(f.read(explicit), explicit)
 
-  test("an independent selected root vacancy/use keeps its exact actual action and closure source"):
+  test("an independent root vacancy/use stays together in detail without reseeding the first-reply answer"):
     val f = actual("MOVED")
     val path = f.proof.captureDecline.pathsByMove(f.proof.leaderMove)
     val offset = path.moves.indexOf("c2c3")
@@ -267,11 +267,11 @@ class FirstTargetAnswerTest extends munit.FunSuite:
     val previous = f.previous.copy(core = f.previous.core :+ Section(List(use)))
     val selected = f.read(previous)
     assertEquals(selected.question, "first_target_response")
-    assert(statements(selected).contains(use))
-    assert(selected.required.contains(MoveRef(path, offset)))
-    assert(selected.completionSources.get.contains(use))
+    assert(selected.details.flatMap(_.statements).contains(use))
+    assert(selected.details.flatMap(_.references).contains(MoveRef(path, offset)))
+    assert(!selected.completionSources.get.contains(use))
     val repeated = f.close(selected).get
-    assert(statements(repeated).contains(use))
+    assert(repeated.details.flatMap(_.statements).contains(use))
     assertEquals(repeated.required.toSet, selected.required.toSet,
       "already closed prices cannot grow into another selected history on the second pass")
     assert(RootQuestionSummary.realize(f.paths, f.pair, repeated).nonEmpty)

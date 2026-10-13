@@ -1,0 +1,575 @@
+{
+  "recorded_utc": "2026-10-05T14:16:57.742732+00:00",
+  "version": "purposev7",
+  "objective": "기본 목적 설명과 비교 설명을 함께 정상 답으로 인정하고, 과잉 설명과 필수 내용 누락을 따로 판독한다.",
+  "worktree": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories",
+  "frozen_cases_sha256": "7f8cc8f6ecd035be890f2720faa340334d4801ecba2605ec7c21b55951b3dbdd",
+  "tests": {
+    "passed": 345,
+    "suites": 12
+  },
+  "stored_regression": {
+    "positions": 35,
+    "fully_replayed": 35,
+    "upstream_unchanged": 35,
+    "raw_observed_facts_unchanged": 35,
+    "lost_delivery": 0,
+    "text_changed": 12,
+    "prices_moved_to_detail": 0,
+    "prices_lost_everywhere": 0,
+    "duplicate_core_price_cases": 0,
+    "missing_mandatory": 0
+  },
+  "frontend": {
+    "public": {
+      "snapshots": 13,
+      "exact_click_frames": 248,
+      "rejected_negative_mutations": 10
+    },
+    "regression": {
+      "snapshots": 35,
+      "exact_click_frames": 1782,
+      "rejected_negative_mutations": 10
+    }
+  },
+  "changed_source_sha256": {
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\BasicPurposeTest.scala": "9213a8ea49d6a629c5d6fee1d0e222e69a2146d90cf03ceb405a087a5ab0753a",
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\CommentaryDependencyTest.scala": "52622b8c2e164f99aef639e5a5b849d57c0b16745e89f8ad0e50a3aa22635708",
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\RootSubjectComparisonTest.scala": "662d97a75e9154e232fc8a50896a40d2c71bb22220a755372ed9c07f97908895",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\MoveWorkProjection.scala": "7c50633a55b3938c58d5ea5d7535be7fa64330c462ae880f825dc5e26c6fffd2",
+    "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootSubjectComparison.scala": "2585346422ecfa6b815daab4d0baa997e4bc1e41f78594f289f9ee29111b3e01"
+  },
+  "implementation": [
+    "기존 현재 국면 사실에서 전개·캐슬링·열린 파일 배치의 목적이 빠진 첫 수만 보완한다.",
+    "파일 배치의 빈 칸 공동 통제와 물질 변화 없음은 기본 목적을 밀어내지 않는다.",
+    "기본 문장에서 뺀 보조 관계는 해당 문장의 화면 강조에서도 제외하고 정확한 수의 국면을 연결한다.",
+    "실제 사용을 보호하되 포획·체크 에피소드의 완료가 입증되지 않은 부분 절삭은 거절한다.",
+    "선택된 실제 행동이 체크에 대한 응수라면 바로 앞 체크도 완료 범위에 넣는다."
+  ],
+  "observations": [
+    {
+      "id": "B01",
+      "kind": "basic",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3",
+          "f8g7"
+        ],
+        [
+          "f1e2",
+          "f8g7"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 Bg7",
+        "Be2 Bg7"
+      ],
+      "needed": "각 나이트/비숍을 전개한다는 현재 목적. 중앙 참여가 확인되면 함께 설명.",
+      "avoid": "미래 전술을 찾아야만 완결된 답으로 인정하거나 모든 새 지원 대상을 열거하지 않는다.",
+      "assessment": {
+        "id": "B01",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "기존에도 나이트·비숍의 전개 목적을 짧게 전달했다. 그 경로를 보존한다."
+      },
+      "before": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Be2 develops the bishop from f1 to e2.",
+      "after": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Be2 develops the bishop from f1 to e2.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B02",
+      "kind": "plan_continuation",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3",
+          "f8g7",
+          "f1e2",
+          "e8g8",
+          "e1g1",
+          "a7a6",
+          "c1e3",
+          "b7b5"
+        ],
+        [
+          "f1e2",
+          "f8g7",
+          "c1e3",
+          "e8g8",
+          "g1f3",
+          "a7a6",
+          "e1g1",
+          "b7b6"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 Bg7 Be2 O-O O-O a6 Be3 b5",
+        "Be2 Bg7 Be3 O-O Nf3 a6 O-O b6"
+      ],
+      "needed": "초기 전개 목적과 필요한 주요 응수. 이어지는 다른 기물 전개를 모두 초기 수의 효용으로 귀속하지 않는다.",
+      "avoid": "계속 같은 기물을 지원하거나 다른 기물이 움직이는 모든 이력을 본문으로 늘리지 않는다.",
+      "assessment": {
+        "id": "B02",
+        "needed": "met",
+        "excess": "remaining",
+        "note": "양쪽 첫 수의 전개 목적이 복구됐다. 같은 배치로 합류한다는 정확한 사실은 보존했지만 긴 기보를 한꺼번에 보여주는 표현은 남아 있다."
+      },
+      "before": "Nf3 Bg7 Be2 O-O O-O a6 Be3 and Be2 Bg7 Be3 O-O Nf3 a6 O-O reach the same recorded position.",
+      "after": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Be2 develops the bishop from f1 to e2. Nf3 Bg7 Be2 O-O O-O a6 Be3 and Be2 Bg7 Be3 O-O Nf3 a6 O-O reach the same recorded position.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B03",
+      "kind": "several_choices",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "lines": [
+        [
+          "b1c3",
+          "g8f6"
+        ],
+        [
+          "d2d4",
+          "e5d4",
+          "f3d4",
+          "g8f6"
+        ]
+      ],
+      "readable_lines": [
+        "Nc3 Nf6",
+        "d4 exd4 Nxd4 Nf6"
+      ],
+      "needed": "Nc3의 전개와 d4의 중앙 폰 교환. 양쪽의 목적을 회수한다.",
+      "avoid": "서로 다른 목적을 근거 없이 한쪽의 결정적 우월성으로 표현하지 않는다.",
+      "assessment": {
+        "id": "B03",
+        "needed": "met",
+        "excess": "remaining",
+        "note": "Nc3의 전개와 d4의 폰 교환을 모두 회수할 수 있고 허구의 우열은 없다. 평범한 폰 교환에 붙는 회피 설명과 말미 존재 설명은 여전히 과하다."
+      },
+      "before": "Compare what happens to the black pawn originally on e5 in the recorded Nc3 and d4 lines. The recorded continuation is Nc3 Nf6. After Nf6, the black pawn originally on e5 is still present on e5. After d4, White's pawn on d4 now targets Black's pawn on e5. With exd4, the black pawn originally on e5 captures the white pawn originally on d2. exd4 moves the pawn out of the attack from White's pawn on d4. With Nxd4, the white knight originally on f3 recaptures the black pawn originally on e5.",
+      "after": "Nc3 develops the knight from b1 to c3, controlling d5 and e4. Compare what happens to the black pawn originally on e5 in the recorded Nc3 and d4 lines. The recorded continuation is Nc3 Nf6. After Nf6, the black pawn originally on e5 is still present on e5. After d4, White's pawn on d4 now targets Black's pawn on e5. With exd4, the black pawn originally on e5 captures the white pawn originally on d2. exd4 moves the pawn out of the attack from White's pawn on d4. With Nxd4, the white knight originally on f3 recaptures the black pawn originally on e5.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B04",
+      "kind": "basic",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "f8c5",
+        "d2d3",
+        "g8f6"
+      ],
+      "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 1 5",
+      "lines": [
+        [
+          "e1g1",
+          "d7d6",
+          "b1c3"
+        ],
+        [
+          "b1c3",
+          "d7d6",
+          "e1g1"
+        ]
+      ],
+      "readable_lines": [
+        "O-O d6 Nc3",
+        "Nc3 d6 O-O"
+      ],
+      "needed": "캐슬링과 미전개 나이트 전개 및 실제 같은 배치에 이른다는 사실.",
+      "avoid": "캐슬링만으로 일반적인 안전 보장을 단정하지 않는다.",
+      "assessment": {
+        "id": "B04",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "캐슬링·나이트 전개·동일 배치 도달이 모두 보인다. 캐슬링의 일반적인 안전을 보장하지 않는다."
+      },
+      "before": "O-O d6 Nc3 and Nc3 d6 O-O reach the same recorded position.",
+      "after": "O-O castles, bringing the rook from h1 to f1. Nc3 develops the knight from b1 to c3, controlling d5 and e4. O-O d6 Nc3 and Nc3 d6 O-O reach the same recorded position.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B05",
+      "kind": "basic",
+      "initial_fen": "r4rk1/pp3ppp/2p5/8/8/2P2N2/PP3PPP/R4RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "r4rk1/pp3ppp/2p5/8/8/2P2N2/PP3PPP/R4RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "h7h6"
+        ],
+        [
+          "f1d1",
+          "h7h6"
+        ]
+      ],
+      "readable_lines": [
+        "Rfe1 h6",
+        "Rfd1 h6"
+      ],
+      "needed": "실제로 열린 파일에 룩을 배치하는 현재 목적.",
+      "avoid": "열린 파일 진입 자체를 안전한 침입/승리/상대 위협의 부재로 승격하지 않는다.",
+      "assessment": {
+        "id": "B05",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "실제로 열린 각 파일에 룩을 둔다는 두 문장이 기본 답이다. 빈 중앙 칸의 공동 통제와 물질 변화 없음은 세부 설명에 남긴다. 기본 문장을 눌렀을 때에도 생략한 공동 통제 관계를 다시 강조하지 않는다."
+      },
+      "before": "In the Rfe1 line through h6, neither side loses material or promotes. In the Rfd1 line through h6, neither side loses material or promotes.",
+      "after": "Rfe1 places the rook on the open e-file. Rfd1 places the rook on the open d-file.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B06",
+      "kind": "local_dependency",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "lines": [
+        [
+          "b8c6",
+          "b1c3"
+        ],
+        [
+          "d7d6",
+          "b1c3"
+        ]
+      ],
+      "readable_lines": [
+        "Nc6 Nc3",
+        "d6 Nc3"
+      ],
+      "needed": "e5 폰의 방어와 Nc6의 전개. 실제 공격받는 대상의 방어는 주변 지원과 구별한다.",
+      "avoid": "초기 e5 방어를 지우면서 근거 없이 단순 전개로만 설명하지 않는다.",
+      "assessment": {
+        "id": "B06",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "전개와 공격받는 e5 폰의 방어를 함께 보존했다. 중요한 현재 방어를 단순 전개로 대체하지 않는다."
+      },
+      "before": "Nc6 develops the knight from b8 to c6, controlling d4 and e5. After Nc6, Black's knight on c6 adds support to Black's pawn on e5, which is under attack from White's knight on f3. After d6, Black's pawn on d6 adds support to Black's pawn on e5, which is under attack from White's knight on f3.",
+      "after": "Nc6 develops the knight from b8 to c6, controlling d4 and e5. After Nc6, Black's knight on c6 adds support to Black's pawn on e5, which is under attack from White's knight on f3. After d6, Black's pawn on d6 adds support to Black's pawn on e5, which is under attack from White's knight on f3.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B07",
+      "kind": "price_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "e5d4"
+      ],
+      "fen": "r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4",
+      "lines": [
+        [
+          "f3d4",
+          "c6d4",
+          "d1d4"
+        ],
+        [
+          "d1d4",
+          "c6d4"
+        ]
+      ],
+      "readable_lines": [
+        "Nxd4 Nxd4 Qxd4",
+        "Qxd4 Nxd4"
+      ],
+      "needed": "관찰된 되잡기와 필요한 후속 교환, 대안의 퀸 손실.",
+      "avoid": "되잡기라는 이름 때문에 알려진 후속 손실을 감추지 않는다.",
+      "assessment": {
+        "id": "B07",
+        "needed": "met",
+        "excess": "remaining",
+        "note": "양쪽 교환과 대안의 퀸 손실은 보존했다. 반복되는 같은 기보와 기물 존재 문장 때문에 두 갈래를 초심자가 쉽게 구분하는지는 추가 판독이 필요하다."
+      },
+      "before": "Compare what happens to the black pawn originally on d4 in the recorded Nxd4 and Qxd4 lines. With Nxd4, the white knight originally on f3 recaptures the black pawn originally on d4; with Nxd4, the black knight originally on c6 recaptures that piece; with Qxd4, the white queen originally on d1 recaptures that piece. After Qxd4, the white queen originally on d1 is still present on d4. With Qxd4, the white queen originally on d1 recaptures the black pawn originally on d4; with Nxd4, the black knight originally on c6 recaptures that piece. After Nxd4, Black's knight on d4 now targets White's knight on f3. After Nxd4, the black knight originally on c6 is still present on d4. After Nxd4, the white knight originally on f3 is still present on f3.",
+      "after": "Compare what happens to the black pawn originally on d4 in the recorded Nxd4 and Qxd4 lines. With Nxd4, the white knight originally on f3 recaptures the black pawn originally on d4; with Nxd4, the black knight originally on c6 recaptures that piece; with Qxd4, the white queen originally on d1 recaptures that piece. After Qxd4, the white queen originally on d1 is still present on d4. With Qxd4, the white queen originally on d1 recaptures the black pawn originally on d4; with Nxd4, the black knight originally on c6 recaptures that piece. After Nxd4, Black's knight on d4 now targets White's knight on f3. After Nxd4, the black knight originally on c6 is still present on d4. After Nxd4, the white knight originally on f3 is still present on f3.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B08",
+      "kind": "tactical_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1c4",
+        "g8f6",
+        "f3g5",
+        "d7d5",
+        "e4d5"
+      ],
+      "fen": "r1bqkb1r/ppp2ppp/2n2n2/3Pp1N1/2B5/8/PPPP1PPP/RNBQK2R b KQkq - 0 5",
+      "lines": [
+        [
+          "f6d5",
+          "g5f7",
+          "e8f7",
+          "d1f3",
+          "f7e6",
+          "b1c3"
+        ],
+        [
+          "c6a5",
+          "c4b5",
+          "c7c6",
+          "d5c6",
+          "b7c6"
+        ]
+      ],
+      "readable_lines": [
+        "Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3",
+        "Na5 Bb5+ c6 dxc6 bxc6"
+      ],
+      "needed": "자연스러운 되잡기 뒤 실제 희생·킹 포획·체크를 유지한다.",
+      "avoid": "단순 Nxd5 행동 설명으로 응수와 대가를 대체하지 않는다.",
+      "assessment": {
+        "id": "B08",
+        "needed": "met",
+        "excess": "remaining",
+        "note": "Nxf7·Kxf7와 빠졌던 Qf3+·Ke6의 체크/응수를 보존했다. 무관한 h7 지원 차이는 본문에서 빠졌다. 공격·회피·체크를 겹쳐 설명하는 부분과 여러 간접 관계는 여전히 길다."
+      },
+      "before": "Compare what happens to the black knight originally on c6 and the white pawn originally on d5 in the recorded Nxd5 and Na5 lines. With Nxd5, the black knight originally on f6 recaptures the white pawn originally on d5. After Nxd5, Black's queen on d8 now targets White's knight on g5. Nxf7 moves the knight out of the attack from Black's queen on d8. The recorded continuation is Nxf7. After Nc3, the black knight originally on c6 is still present on c6. Na5 moves the knight out of the attack from White's pawn on d5. After Na5, Black's knight on a5 now targets White's bishop on c4. Bb5+ moves the bishop out of the attack from Black's knight on a5. The recorded continuation is Bb5+. dxc6 moves the pawn out of the attacks from Black's knight on f6 and Black's queen on d8. With dxc6, the white pawn originally on d5 captures the black pawn originally on c7; with bxc6, the black pawn originally on b7 recaptures that piece. After bxc6, the black knight originally on c6 is still present on a5. In the Nxd5 line: Nxf7 captures the black pawn on f7. Kxf7 recaptures the white knight on f7. In the Na5 line: The recorded continuation is c6. Nxd5 keeps the line from White's bishop on c4 toward f7 blocked: after Nxd5, Black's knight on d5 remains in that line as its sole blocker. In the same provided line, Kxf7 brings Black's king on f7 there while that line is still blocked. After Nxd5, Black's knight on d5 does not support Black's pawn on h7; after Na5, Black's knight on f6 supports Black's pawn on h7. Nxd5 keeps the line from White's bishop on c4 toward e6 blocked: after Nxd5, Black's knight on d5 remains in that line as its sole blocker. In the same provided line, Ke6 brings Black's king on e6 there while that line is still blocked. Na5 clears c6; c6 later occupies that square in this line. In the provided Na5 line: Bb5+ gives check to the Black king on e8 with White's bishop on b5; c6 blocks the check on c6. After c6, Black's pawn on c6 now targets White's bishop on b5 and White's pawn on d5. The white bishop originally on c4 is still present on b5 after dxc6 and after bxc6. After dxc6, the white pawn originally on d5 is still present on c6. After dxc6, Black's knight on a5 attacks White's pawn on c6. After dxc6, Black's pawn on b7 attacks White's pawn on c6.",
+      "after": "Compare what happens to the black knight originally on c6 and the white pawn originally on d5 in the recorded Nxd5 and Na5 lines. With Nxd5, the black knight originally on f6 recaptures the white pawn originally on d5. After Nxd5, Black's queen on d8 now targets White's knight on g5. Nxf7 moves the knight out of the attack from Black's queen on d8. The recorded continuation is Nxf7. After Nc3, the black knight originally on c6 is still present on c6. Na5 moves the knight out of the attack from White's pawn on d5. After Na5, Black's knight on a5 now targets White's bishop on c4. Bb5+ moves the bishop out of the attack from Black's knight on a5. The recorded continuation is Bb5+. dxc6 moves the pawn out of the attacks from Black's knight on f6 and Black's queen on d8. With dxc6, the white pawn originally on d5 captures the black pawn originally on c7; with bxc6, the black pawn originally on b7 recaptures that piece. After bxc6, the black knight originally on c6 is still present on a5. In the Nxd5 line: Nxf7 captures the black pawn on f7. Kxf7 recaptures the white knight on f7. In the Na5 line: The recorded continuation is c6. Nxd5 keeps the line from White's bishop on c4 toward f7 blocked: after Nxd5, Black's knight on d5 remains in that line as its sole blocker. In the same provided line, Kxf7 brings Black's king on f7 there while that line is still blocked. After Qf3+, White's queen on f3 now targets Black's king on f7. Ke6 moves the king out of the attack from White's queen on f3. In the provided Qf3+ line: Qf3+ gives check to the Black king on f7 with White's queen on f3; Ke6 moves the king to e6. Nxd5 keeps the line from White's bishop on c4 toward e6 blocked: after Nxd5, Black's knight on d5 remains in that line as its sole blocker. In the same provided line, Ke6 brings Black's king on e6 there while that line is still blocked. Na5 clears c6; c6 later occupies that square in this line. In the provided Na5 line: Bb5+ gives check to the Black king on e8 with White's bishop on b5; c6 blocks the check on c6. After c6, Black's pawn on c6 now targets White's bishop on b5 and White's pawn on d5. The white bishop originally on c4 is still present on b5 after dxc6 and after bxc6. After dxc6, the white pawn originally on d5 is still present on c6. After dxc6, Black's knight on a5 attacks White's pawn on c6. After dxc6, Black's pawn on b7 attacks White's pawn on c6.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B09",
+      "kind": "development_counterexample",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3"
+      ],
+      "fen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "lines": [
+        [
+          "f8c5",
+          "f3e5"
+        ],
+        [
+          "b8c6",
+          "b1c3"
+        ]
+      ],
+      "readable_lines": [
+        "Bc5 Nxe5",
+        "Nc6 Nc3"
+      ],
+      "needed": "Bc5의 전개와 동시에 남겨진 실제 e5 폰 포획을 보인다.",
+      "avoid": "미전개 기물이 나왔다는 사실만으로 온전한 좋은 수 설명을 만들지 않는다.",
+      "assessment": {
+        "id": "B09",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "Bc5의 전개 목적을 추가하면서 실제 Nxe5 폰 손실과 Nc6의 방어를 남겼다. 전개라는 이름으로 좋은 수를 보장하지 않는다."
+      },
+      "before": "Compare what happens to the black pawn originally on e5 in the recorded Bc5 and Nc6 lines. The recorded continuation is Bc5. With Nxe5, the white knight originally on f3 captures the black pawn originally on e5. After Nc6, Black's knight on c6 adds support to Black's pawn on e5, which is under attack from White's knight on f3. The recorded continuation is Nc3. After Nc3, the black pawn originally on e5 is still present on e5.",
+      "after": "Bc5 develops the bishop from f8 to c5, controlling d4. Compare what happens to the black pawn originally on e5 in the recorded Bc5 and Nc6 lines. The recorded continuation is Bc5. With Nxe5, the white knight originally on f3 captures the black pawn originally on e5. After Nc6, Black's knight on c6 adds support to Black's pawn on e5, which is under attack from White's knight on f3. The recorded continuation is Nc3. After Nc3, the black pawn originally on e5 is still present on e5.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B10",
+      "kind": "used_support",
+      "initial_fen": "7k/8/5n2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "7k/8/5n2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "h8h7",
+          "c3b5",
+          "f6e4",
+          "e1e4"
+        ],
+        [
+          "g1h1",
+          "h8h7"
+        ]
+      ],
+      "readable_lines": [
+        "Re1 Kh7 Nb5 Nxe4 Rxe4",
+        "Kh1 Kh7"
+      ],
+      "needed": "선택된 룩의 지원이 실제 Nxe4/Rxe4로 쓰이는 관계.",
+      "avoid": "열린 파일이라는 짧은 설명으로 실제 사용과 가격을 지우지 않는다.",
+      "assessment": {
+        "id": "B10",
+        "needed": "met",
+        "excess": "remaining",
+        "note": "실제로 사용한 룩 지원, 기존 지원 기물의 이탈, Nxe4/Rxe4를 보존했다. 중립적인 킹 이동과 말미 존재 문장은 기본 답에서 더 정리할 여지가 있다."
+      },
+      "before": "Compare what happens to the white pawn originally on e4 in the recorded Re1 and Kh1 lines. In the Re1 line: The recorded continuation is Kh7. The recorded continuation is Kh1 Kh7. After Kh7, the white pawn originally on e4 is still present on e4. After Kh7, the black knight originally on f6 is still present on f6. After Re1, White's rook on e1 adds support to White's pawn on e4, which is under attack from Black's knight on f6. In the Re1 line, White's rook on e1 keeps supporting White's pawn on e4 after Nb5 ends the support from White's knight on c3. When Nxe4 captures that pawn, Rxe4 recaptures its capturer with the supporting rook.",
+      "after": "Compare what happens to the white pawn originally on e4 in the recorded Re1 and Kh1 lines. After Re1, White's rook on e1 adds support to White's pawn on e4, which is under attack from Black's knight on f6. The recorded continuation is Kh7. The recorded continuation is Kh1 Kh7. After Kh7, the white pawn originally on e4 is still present on e4. After Kh7, the black knight originally on f6 is still present on f6. In the Re1 line, White's rook on e1 keeps supporting White's pawn on e4 after Nb5 ends the support from White's knight on c3. When Nxe4 captures that pawn, Rxe4 recaptures its capturer with the supporting rook.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B11",
+      "kind": "file_counterexample",
+      "initial_fen": "4r1k1/pp3ppp/2p5/8/8/2P5/PP3PPP/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "fen": "4r1k1/pp3ppp/2p5/8/8/2P5/PP3PPP/5RK1 w - - 0 1",
+      "lines": [
+        [
+          "f1e1",
+          "e8e1"
+        ],
+        [
+          "f1a1",
+          "h7h6"
+        ]
+      ],
+      "readable_lines": [
+        "Re1 Rxe1#",
+        "Ra1 h6"
+      ],
+      "needed": "열린 파일 진입 뒤 룩 포획과 메이트.",
+      "avoid": "열린 파일 배치라는 긍정적 목적만 남기지 않는다.",
+      "assessment": {
+        "id": "B11",
+        "needed": "met_with_consistent_terminal_report",
+        "excess": "acceptable",
+        "note": "동결한 cp=0 개발 입력은 메이트 끝과 불일치하여 root 비교가 성립하지 않는다. 같은 수순을 실제 메이트와 일치하는 별도 합성 보고서로 공개 입력 경로에 넣어 룩 손실과 체크메이트를 확인한다. 입력 보정은 제품 개선 성공으로 세지 않는다."
+      },
+      "before": null,
+      "after": "In the Ra1 line through h6, neither side loses material or promotes. In the Re1 line, White loses one rook. After Rxe1#, Black wins by checkmate.",
+      "verification_path": "consistent_terminal_report"
+    },
+    {
+      "id": "B12",
+      "kind": "limited_evidence",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "d7d6",
+        "d2d4",
+        "g8f6",
+        "b1c3",
+        "g7g6"
+      ],
+      "fen": "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4",
+      "lines": [
+        [
+          "g1f3"
+        ],
+        [
+          "f1e2"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3",
+        "Be2"
+      ],
+      "needed": "현재 전개 사실은 설명 가능. 뒤의 대응 비교는 관찰되지 않았다.",
+      "avoid": "초기 한 수를 실제 응수 완료나 전술 부재의 증거로 간주하지 않는다.",
+      "assessment": {
+        "id": "B12",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "현재 전개 사실과 그다음 응수 미관찰을 모두 보존한다. 짧은 기록을 안전이나 응수 완료의 증거로 삼지 않는다."
+      },
+      "before": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Be2 develops the bishop from f1 to e2. The recorded line stops after Nf3; no following reply is recorded. The recorded line stops after Be2; no following reply is recorded.",
+      "after": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Be2 develops the bishop from f1 to e2. The recorded line stops after Nf3; no following reply is recorded. The recorded line stops after Be2; no following reply is recorded.",
+      "verification_path": "same_input_and_public_root_reports"
+    },
+    {
+      "id": "B13",
+      "kind": "plan_continuation",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [],
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "lines": [
+        [
+          "g1f3",
+          "d7d5",
+          "g2g3",
+          "g8f6",
+          "f1g2",
+          "g7g6"
+        ],
+        [
+          "b1c3",
+          "d7d5",
+          "d2d4",
+          "g8f6",
+          "g1f3",
+          "g7g6"
+        ]
+      ],
+      "readable_lines": [
+        "Nf3 d5 g3 Nf6 Bg2 g6",
+        "Nc3 d5 d4 Nf6 Nf3 g6"
+      ],
+      "needed": "초기 나이트 전개 목적. 이후 여러 기본 행동은 초기 나이트의 모든 효과로 늘리지 않는다.",
+      "avoid": "모든 단순 접촉과 이력을 출력해야 성공이라고 판단하지 않는다.",
+      "assessment": {
+        "id": "B13",
+        "needed": "met",
+        "excess": "acceptable",
+        "note": "기존에도 두 나이트의 전개만으로 기본 답이 성립했다. 뒤의 모든 전개를 초기 나이트의 효용으로 늘리지 않는 경로를 보존한다."
+      },
+      "before": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Nc3 develops the knight from b1 to c3, controlling d5 and e4.",
+      "after": "Nf3 develops the knight from g1 to f3, controlling d4 and e5. Nc3 develops the knight from b1 to c3, controlling d5 and e4.",
+      "verification_path": "same_input_and_public_root_reports"
+    }
+  ],
+  "manual_reading_scope": "동결한 기대 내용과 실제 기본 해설을 같은 연구자가 대조한 개발 판독이다. 독립 사용자 평가나 엔진 수질 평가는 아니다. 필요한 내용의 보존과 과도한 설명을 별도 축으로 기록한다.",
+  "unresolved": [
+    "평범한 교환을 굳이 장기적인 기물 운명 질문으로 조직하는 경우의 중요도 판단",
+    "이미 확인된 공격·회피·체크의 중복 표현과 두 갈래의 읽기 쉬운 구분",
+    "같은 계획의 긴 기보를 보여주는 양과 독자가 이미 배운 내용의 반영",
+    "포획·체크 에피소드가 섞인 기존 묶음의 더 좁은 완료 범위: 독립적인 완료 증명 전에는 생략하지 않는다"
+  ],
+  "limits": [
+    "초심자 설명 사례 13개는 개발용 공개·합성 사례이며 독립 사용자 평가가 아니다.",
+    "교육 입력의 합성 점수는 전송 조건이다. 엔진이 좋은 수라고 평가했다는 근거가 아니다.",
+    "공개 경로 검증은 발급된 작업과 일치하는 합성 초기 보고서를 사용했다. 새 엔진 실행이 아니다.",
+    "공개 교육 사례 중 12개는 추가 조사가 대기 중이다. 전체 작업 완료로 세지 않는다.",
+    "B11의 중립 보고서는 메이트와 불일치한다. 같은 수순의 일관된 메이트 보고서는 별도 검증이며 제품 개선으로 세지 않는다.",
+    "기존 35개의 저장 보고서 재실행과 화면 연결 검사는 내용 품질 점수가 아니다."
+  ]
+}

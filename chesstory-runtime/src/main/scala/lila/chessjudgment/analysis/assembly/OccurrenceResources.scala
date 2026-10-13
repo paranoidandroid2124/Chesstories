@@ -172,6 +172,18 @@ final class PositionResourceView private[assembly] (
     }
 
 object OccurrenceResources:
+  def planningKnightControls(square: String, side: chess.Color): Set[String] =
+    lila.chessjudgment.model.position.BoardGeometry.fixedPatternControls(chess.Knight,
+      chess.Square.fromKey(square).get, side).map(_.key).toSet
+
+  /** Planning-only geometry; displayed facts still require admitted resources. */
+  def planningControllers(board: chess.Board, side: chess.Color, target: chess.Square): Set[String] =
+    val geometry = lila.chessjudgment.model.position.BoardGeometry
+    val rays = geometry.controlsFromSliderRays(geometry.sliderRays(board))
+    board.occupied.squares.filter(from => board.pieceAt(from).exists(piece => piece.color == side &&
+      rays.getOrElse(from, geometry.fixedPatternControls(piece.role, from, side)).contains(target)))
+      .map(_.key).toSet
+
   /** A local inspection owns exact replay calculations but has no admitted graph identity. */
   final class ProbePath private[OccurrenceResources] (
       private[assembly] val rootHistory: CanonicalPositionHistory,

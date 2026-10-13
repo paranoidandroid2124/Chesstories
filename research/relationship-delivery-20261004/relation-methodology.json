@@ -1,0 +1,42 @@
+{
+  "scope": "Question-owned observed differences and prices from legal supplied continuations; no product language model, no new graph or generic selector framework.",
+  "patterns": [
+    {
+      "name": "One original attacker, multiple original targets",
+      "question": "What does the selected escape or exchange actually preserve, and what is exchanged instead?",
+      "source_conditions": ["Selected typed Evades/TargetResponse", "Same original attacker and target identities across both arms", "Actual source capture and verified continuous relevant attack", "Actual capturer removal if claiming recovery"],
+      "example": "Nb3 preserves the original knight but gives up a bishop for the attacking knight; Nxe6 exchanges the original knights.",
+      "limits": "Root-only ownership does not yet bind every later newly activated multi-target attack to the main answer. The f6 attack on e5 bishop and g5 knight is an observed later counterexample."
+    },
+    {
+      "name": "Same provider and target, different support state",
+      "question": "Is support actually used, and what price changes the meaning of that support?",
+      "source_conditions": ["Restore original provider, target and opposition from the exact path owner", "Confirmed support or confirmed absence, kept separate from unknown", "Actual support use or actual loss", "Recovery owned by the real capture link rather than capture signs"],
+      "example": "cxd5 gains a knight but the supporting rook is captured; the recorded recovery and additional pawn price remain in the account.",
+      "limits": "The first frozen implementation had a provider-loss first-reply/use-next-reply admission gate. The final revision replaces this distance gate with continuous owned attack/support and stable current roles."
+    },
+    {
+      "name": "Original identity and current role",
+      "question": "Which physical piece was promoted, captured or retained?",
+      "source_conditions": ["Same original victim on the same exact source path", "Verified pawn-to-promoted-role transition", "Captured role matches the current source role", "Capture-only Cost still rejects a promotion interval"],
+      "example": "c8=Q precedes Nxc8; Qxc8 is played by the other original queen. The new queen is not treated as an original queen that simply disappeared.",
+      "limits": "This restores context of an already selected capture; it is not a general promotion-importance policy."
+    },
+    {
+      "name": "Expressed content and retained proof",
+      "question": "What chess content is said, and which moves prove it or replay it?",
+      "source_conditions": ["English renderer returns typed statements it actually expresses", "Required original content checked before display-container splitting", "Exact owned proof references remain available even when not all SAN is inline", "Cost/source membership and check/trade closure remain validated"],
+      "example": "A role-count trade can replace four capture sentences while all four exact occurrences remain in proof and detail.",
+      "limits": "A returned typed receipt proves structural ownership, not independent natural-language comprehension. Separate valid price accounts can still be confusing when their claim scopes are not composed."
+    }
+  ],
+  "failure_separation": [
+    "Question selection or scope: useful source evidence exists but the selected body follows many unrelated facts or an unhelpful relation.",
+    "Construction or delivery: the selected claim loses an actual response, price, identity context, known source limit or the whole answer.",
+    "Expression scope: facts and prices are retained but a reader cannot tell which account a statement summarizes.",
+    "Evidence limit: additional investigation failed or a real continuation ends before a response; it is not evidence of threat absence or a completed tactical result."
+  ],
+  "admission_vs_quality": "Specific SAN, square names, sentence count, character count and all-proof-SAN visibility are not admission or success proxies. Stable roles, actual source ownership, legal occurrence references and necessary capture/recovery/ending context are safety conditions.",
+  "midterm_stop": "After the final relation-boundary revision, one final 18-game corpus, saved-report regression, source/protocol/frontend checks and final reporting end this work unit. The unchanged 14/18 useful+complete and zero-important-price-omission target is reported separately from structural-stage completion.",
+  "next_question": "Use existing QuestionFocus and actual action-response links to give one selected episode ownership of its later activated subjects and prices. Do not make every later event of the same piece or capturer part of the answer."
+}

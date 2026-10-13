@@ -1,0 +1,920 @@
+--- starting/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala
++++ final/chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala
+@@ -282,41 +282,6 @@
+     // Current support/evasion is already read locally. Only an actual use in
+     // this same certified arm extends it; a plan name or another arm cannot.
+     lazy val continuations = paths.continuationReadings.map(reading => reading.path.line.ref.id -> reading).toMap
+-    def checkSteps(path: ObservedLineProtocol.PreparedPath, offsets: List[Int], initialResponse: Option[Int])
+-        : List[(Int, CommentaryAnswer.CheckEvent, List[String], chess.Color)] =
+-      def at(offset: Int) = observations.getOrElse(path.ids(offset), Nil)
+-      val checks = offsets.flatMap(offset => at(offset).collect {
+-        case observation @ MoveObservation(_, _, MoveObservationMeaning.CertifiedRelation(
+-            detail: RelationWitnessDetail.CreatedCheckResponseInventory), _) => (offset, observation, detail)
+-      })
+-      val responses = (initialResponse.toList ++ checks.map(_._1 + 1)).filter(_ < path.moves.size).distinct.sorted
+-        .flatMap(offset => at(offset).collect {
+-          case observation @ MoveObservation(_, _, MoveObservationMeaning.CertifiedRelation(
+-              detail: RelationWitnessDetail.RootCheckResponse), _)
+-              if EvidenceRef.sameMove(detail.response.resource.moveUci, path.moves(offset)) =>
+-            (offset, observation, detail)
+-        })
+-      val checkSteps = checks.map { (offset, observation, detail) =>
+-        val checkers = detail.checkers.map(p => RelationColoredPieceWitness(p.square, p.role, detail.mover.side))
+-        val opened = at(offset).filter(_.meaning match
+-          case MoveObservationMeaning.PieceControl(before, after) =>
+-            before.state == PieceControlState.Absent && after.state == PieceControlState.Present &&
+-              before.controller == after.controller && before.target == after.target &&
+-              after.controller.exists(p => checkers.contains(p) && p.at != detail.mover.to.key &&
+-                Set("bishop", "rook", "queen")(p.roleName)) &&
+-              after.target.exists(p => p.side == detail.checkedSide && p.square == detail.kingSquare)
+-          case _ => false)
+-        val openedCheckers = opened.flatMap(_.meaning match
+-          case MoveObservationMeaning.PieceControl(_, after) => after.controller
+-          case _ => None).distinct
+-        val action = CommentaryAnswer.CheckingMove(RootQuestionSummary.MoveRef(path, offset), detail, openedCheckers)
+-        (offset, action, (observation :: opened).flatMap(_.premises.map(_.id)), detail.checkedSide)
+-      }
+-      val responseSteps = responses.map { (offset, observation, detail) =>
+-        (offset, CommentaryAnswer.CheckReply(RootQuestionSummary.MoveRef(path, offset), detail),
+-          observation.premises.map(_.id), detail.respondingSide)
+-      }
+-      (responseSteps ++ checkSteps).sortBy(_._1)
+     val currentEffectReadings = mutable.Map.empty[(String, Int), List[ComparisonEffect]]
+     def currentEffects(path: ObservedLineProtocol.PreparedPath, index: Int): List[ComparisonEffect] =
+       currentEffectReadings.getOrElseUpdate(path.line.ref.id -> index, {
+@@ -666,7 +631,7 @@
+               .toList.flatMap(_.map(_.plyOffset)) else Nil)).filter(_ < path.moves.size).distinct.sorted
+           val checkOffsets = checkSeeds.flatMap(start =>
+             Iterator.iterate(start)(_ + 2).takeWhile(givesCheck).toList).distinct.sorted
+-          val checkStepsInOrder = checkSteps(path, checkOffsets, Some(index))
++          val checkStepsInOrder = checkSteps(path, checkOffsets, Some(index), observations)
+           val checkSequence = for
+             (_, actor, movementEvidence) <- currentMove.toList
+             first <- checkStepsInOrder.headOption.toList
+@@ -1427,7 +1392,7 @@
+                     observations.getOrElse(path.ids(offset), Nil).exists(_.meaning match
+                       case MoveObservationMeaning.CertifiedRelation(_: RelationWitnessDetail.CreatedCheckResponseInventory) => true
+                       case _ => false))
+-                  val captureChecks = checkSteps(path, checkingCaptures, None).filterNot { (offset, _, _, _) =>
++                  val captureChecks = checkSteps(path, checkingCaptures, None, observations).filterNot { (offset, _, _, _) =>
+                     transactionSteps.exists(step => step.checkAction && step.offset == offset)
+                   }.map { (offset, action, proof, _) =>
+                     HistoryStep(offset, CommentaryEnglish.checkDetail(action) + ".", "", proof :+ path.ids(offset), checkAction = true)
+@@ -1967,7 +1932,7 @@
+           val capture = byOccurrence.getOrElse(history.path.ids(offset), Nil)
+             .find(_.note.detail.isInstanceOf[Detail.Capture])
+           val canonical = if checks.size > 1 then
+-            checkSteps(history.path, List(offset), Some(offset)).filter(_._1 == offset)
++            checkSteps(history.path, List(offset), Some(offset), observations).filter(_._1 == offset)
+             else Nil
+           // Several histories may describe the same check differently. Share its
+           // typed response only with already-owned proof and a separate capture
+@@ -2831,7 +2796,7 @@
+                   target <- paths.pieceAfter(packet, history.path, history.originalTarget, offset + 1).flatten
+                 yield ControlState(MoveRef(history.path, offset), actor, Some(target), target.at, true)
+               }
+-              val checking = checkSteps(history.path, history.steps.filter(_.checkAction).map(_.offset), None).map(_._2)
++              val checking = checkSteps(history.path, history.steps.filter(_.checkAction).map(_.offset), None, observations).map(_._2)
+               val checks = Option.when(checking.nonEmpty)(CheckSequence(MoveRef(history.path, history.start), checking)).toList
+               val end = MoveRef(history.path, history.path.moves.size - 1)
+               val retained = history.endTarget.toList.map(PiecePresence(end, history.originalTarget, _))
+@@ -3032,6 +2997,44 @@
+       (captured ++ checking).sortBy(value => value._1 -> value._2).map(_._3)
+     }
+ 
++  /** Read checking moves and their actual replies from the certified inventory. */
++  private[runtime] def checkSteps(path: ObservedLineProtocol.PreparedPath, offsets: List[Int],
++      initialResponse: Option[Int], observations: Map[String, List[MoveObservation]])
++      : List[(Int, CommentaryAnswer.CheckEvent, List[String], chess.Color)] =
++    def at(offset: Int) = observations.getOrElse(path.ids(offset), Nil)
++    val checks = offsets.flatMap(offset => at(offset).collect {
++      case observation @ MoveObservation(_, _, MoveObservationMeaning.CertifiedRelation(
++          detail: RelationWitnessDetail.CreatedCheckResponseInventory), _) => (offset, observation, detail)
++    })
++    val responses = (initialResponse.toList ++ checks.map(_._1 + 1)).filter(_ < path.moves.size).distinct.sorted
++      .flatMap(offset => at(offset).collect {
++        case observation @ MoveObservation(_, _, MoveObservationMeaning.CertifiedRelation(
++            detail: RelationWitnessDetail.RootCheckResponse), _)
++            if EvidenceRef.sameMove(detail.response.resource.moveUci, path.moves(offset)) =>
++          (offset, observation, detail)
++      })
++    val checking = checks.map { (offset, observation, detail) =>
++      val checkers = detail.checkers.map(p => RelationColoredPieceWitness(p.square, p.role, detail.mover.side))
++      val opened = at(offset).filter(_.meaning match
++        case MoveObservationMeaning.PieceControl(before, after) =>
++          before.state == PieceControlState.Absent && after.state == PieceControlState.Present &&
++            before.controller == after.controller && before.target == after.target &&
++            after.controller.exists(p => checkers.contains(p) && p.at != detail.mover.to.key &&
++              Set("bishop", "rook", "queen")(p.roleName)) &&
++            after.target.exists(p => p.side == detail.checkedSide && p.square == detail.kingSquare)
++        case _ => false)
++      val openedCheckers = opened.flatMap(_.meaning match
++        case MoveObservationMeaning.PieceControl(_, after) => after.controller
++        case _ => None).distinct
++      val action = CommentaryAnswer.CheckingMove(RootQuestionSummary.MoveRef(path, offset), detail, openedCheckers)
++      (offset, action, (observation :: opened).flatMap(_.premises.map(_.id)), detail.checkedSide)
++    }
++    val responsesInOrder = responses.map { (offset, observation, detail) =>
++      (offset, CommentaryAnswer.CheckReply(RootQuestionSummary.MoveRef(path, offset), detail),
++        observation.premises.map(_.id), detail.respondingSide)
++    }
++    (responsesInOrder ++ checking).sortBy(_._1)
++
+   /** Complete only the actual uses in the chosen answer. End-position anchors
+     * and expandable continuations do not activate every earlier move. */
+   private[runtime] def completeSelectedConditions(packet: EvidenceBackedJudgmentPacket,
+@@ -3046,10 +3049,10 @@
+     val arms = pair.flatMap(path => paths.continuationReadings.find(reading =>
+       (reading.path eq path) && reading.complete && path.certified.flatMap(_._2.material).nonEmpty)
+       .map(reading => new RootQuestionSummary.Arm(packet, paths, path, positions, reading)))
+-    val statedPromotions = answer.core.flatMap(_.statements).collect { case value: MaterialEvents => value }
+-      .flatMap(value => value.events.filter(_.promotionGainCp > 0).map(event => value.path -> event))
+-    val selectedAnswer = answer.copy(core = answer.core.map { section =>
+-      val contextual = section.statements.map {
++    def promotionContexts(core: List[Section]): List[Section] =
++      val statedPromotions = core.flatMap(_.statements).collect { case value: MaterialEvents => value }
++        .flatMap(value => value.events.filter(_.promotionGainCp > 0).map(event => value.path -> event))
++      core.map { section => section.copy(statements = section.statements.map {
+         case value: MaterialEvents =>
+           val promotions = arms.find(_.path eq value.path).toList.flatMap { arm =>
+             value.events.flatMap { capture => capture.capture.toList.flatMap { cost =>
+@@ -3066,12 +3069,13 @@
+           }
+           value.copy(events = (value.events ++ promotions).distinct.sortBy(_.plyOffset))
+         case statement => statement
+-      }
++      }) }
++    val selectedAnswer = answer.copy(core = promotionContexts(answer.core).map { section =>
+       val responses = section.statements.collect { case response: TargetResponse if arms.exists(arm =>
+         targetResponseActions(arm, response).nonEmpty) => response }
+       // ponytail: remove only same-section escape introductions; cross-section
+       // routes retain their metadata until a real need justifies moving it.
+-      section.copy(statements = contextual.filterNot {
++      section.copy(statements = section.statements.filterNot {
+         case route: PieceRoute => responses.exists(response => (route.path eq response.path) &&
+           route.original == response.originalTarget && route.offsets == response.escape.toList)
+         case _ => false
+@@ -3088,10 +3092,13 @@
+         required = (selected.required ++ condition.required).distinct,
+         focus = (selected.focus ++ condition.focus).distinctBy(_.move)))
+     }
+-    completeSelectedPrices(arms, selectedAnswer.copy(core = core), selectedAnswer.core.flatMap(_.statements))
++    completeSelectedPrices(arms, selectedAnswer.copy(core = core), answer.core.flatMap(_.statements), additions)
+       .flatMap { completed =>
+-        if completed.core == answer.core then Some(completed)
+-        else RootQuestionSummary.completePairAnswer(packet, paths, pair, answer.question, completed.core)
++        // A newly owned actual loss may need its victim's earlier role change.
++        // This adds identity context after pricing; it cannot open a new price interval.
++        val contextual = completed.copy(core = promotionContexts(completed.core))
++        if contextual.core == answer.core then Some(contextual)
++        else RootQuestionSummary.completePairAnswer(packet, paths, pair, answer.question, contextual.core)
+           .map(closed => closed.copy(details = answer.details,
+             evidence = (answer.evidence ++ closed.evidence ++ arms.flatMap(_.proofs)).distinct))
+       }
+@@ -3101,7 +3108,8 @@
+     * episode. A quiet final position never enlarges that interval.
+     */
+   private[runtime] def completeSelectedPrices(arms: List[RootQuestionSummary.Arm],
+-      answer: CommentaryAnswer.Answer, selected: List[CommentaryAnswer.Statement])
++      answer: CommentaryAnswer.Answer, selected: List[CommentaryAnswer.Statement],
++      dependencies: List[(RootQuestionSummary.MoveRef, CommentaryAnswer.Section)] = Nil)
+       : Option[CommentaryAnswer.Answer] =
+     import CommentaryAnswer.*
+     import LineContinuationInvestigation.{DirectSupportUse, Event}
+@@ -3122,6 +3130,14 @@
+       val path = arm.path
+       def original(piece: Piece, count: Int) = arm.originals.find(arm.at(_, count).contains(piece))
+       def root(move: MoveRef) = (move.path eq path) && move.offset == 0
++      def ownedEnding(offset: Int): Boolean = offset == path.moves.size - 1 &&
++        arm.reading.complete && (arm.reading.path eq path) && path.ids == path.declared &&
++        path.moves == path.sourceMoves && selected.exists {
++          case RecordedEnd(move) => (move.path eq path) && move.offset == offset && path.automaticTerminal.isEmpty
++          case Terminal(move, result) => (move.path eq path) && move.offset == offset &&
++            path.automaticTerminal.contains(result)
++          case _ => false
++        }
+       def otherTargets(attacker: Piece, target: Piece, start: Int): List[(Event, Piece, List[Event])] =
+         arm.captures.flatMap { event =>
+           event.originalVictim.filter(other => other != target && other.side == target.side &&
+@@ -3201,33 +3217,21 @@
+           val account = arm.account(seed, focus)
+           // A selected loss may have a delayed recovery without making its
+           // capturer's later lifetime part of the question.
+-          val recoveries = (account.events ++ used).distinct.flatMap { loss =>
+-            arm.recovery(loss).filter { removal => (for
+-              captor <- loss.originalActor
+-              recovering <- removal.originalActor
+-              if removal.originalVictim.contains(captor) && removal.plyOffset > loss.plyOffset
+-            yield (loss.plyOffset + 1 to removal.plyOffset).forall(arm.covers(_, recovering, captor)))
+-              .contains(true)
+-            }.toList
+-          }
++          val recoveries = (account.events ++ used).distinct.flatMap(arm.continuousRecovery)
+           val events = (account.events ++ used ++ recoveries ++ arm.captures.filter(_.plyOffset == 0)).distinct
+           val checks = recoveries.filter(event => arm.checks(event.plyOffset - 1)).map(_.plyOffset - 1)
+           val unanswered = account.offsets.filter(n => arm.checks(n) && !account.offsets.contains(n + 1))
+           // An owned recorded ending bounds this observed account; it does
+           // not supply a check reply or change the account's completeness.
+-          val bounded = account.complete || (arm.reading.complete && (arm.reading.path eq path) &&
+-            path.ids == path.declared && path.moves == path.sourceMoves && unanswered.nonEmpty &&
+-            unanswered.forall(n => n == path.moves.size - 1 && selected.exists {
+-              case RecordedEnd(move) => (move.path eq path) && move.offset == n
+-              case _ => false
+-            }))
++          val bounded = account.complete || (unanswered.nonEmpty && unanswered.forall(ownedEnding))
+           (events.map(_.plyOffset), (account.offsets ++ events.map(_.plyOffset) ++ checks :+ 0).distinct.sorted, bounded)
+         }
+       if accounts.exists(!_._3) then return None
+       def stated(statement: Statement): List[(List[ObservedLineMaterialEvent], List[Int])] = statement match
+         case value: Material if value.path eq path => List(value.cost.events -> value.cost.offsets)
+         case value: MaterialEvents if value.path eq path =>
+-          value.events.map(event => List(event) -> List(event.plyOffset))
++          if value.events.exists(_.promotionGainCp != 0) then List(value.events -> value.references.map(_.offset))
++          else value.events.map(event => List(event) -> List(event.plyOffset))
+         case value: TargetResponse if value.path eq path => value.material.toList.flatMap(stated)
+         case _ => Nil
+       val previous = current.core.flatMap(_.statements.flatMap(stated)).filter(_._1.nonEmpty)
+@@ -3236,9 +3240,151 @@
+         offsets.nonEmpty && event.plyOffset >= offsets.min && event.plyOffset <= offsets.max)
+       // Each tuple is one existing account or one selected relation's price;
+       // only a shared actual material event permits joining two accounts.
++      // These dependencies start with the selected content, never with newly
++      // found prices. Reading an available capture is not observing its use.
++      val uses = selected.flatMap(_.covered).filter(_.path eq path).map(_.offset).toSet
++      val captures = arm.captures.filter(event => uses(event.plyOffset))
++      val namedPrices = selected.flatMap(stated).flatMap(_._1).toSet
++      val identityPromotions = previous.flatMap(_._1).filter(event => event.promotionGainCp != 0 &&
++        !namedPrices(event) && !uses(event.plyOffset)).toSet
++      val clearances = dependencies.flatMap { (use, section) =>
++        section.statements.collect { case value: ClearedRoute if value.use == use &&
++            (use.path eq path) && uses(use.offset) => value }.flatMap { value =>
++          arm.captures.find(_.plyOffset == use.offset).toList.flatMap { after =>
++            val departure = arm.captures.filter(_.plyOffset == value.move.offset)
++            // A new attack needs its actual opening/use receipt. Physical
++            // identity alone cannot reconnect an interrupted attack episode.
++            val gains = captures.filter(event => event.plyOffset < value.move.offset &&
++              event.originalActor == after.originalVictim && event.originalActor.exists(target =>
++                arm.at(target, value.move.offset).exists(value.targets.contains) &&
++                  (event.plyOffset + 1 to use.offset).forall(count =>
++                    arm.at(target, count) == arm.at(target, value.move.offset)) &&
++                  (value.move.offset + 1 to use.offset).forall(arm.covers(_, value.originalUser, target))))
++            (departure ++ gains).distinct.map { before =>
++              (List(before.plyOffset, after.plyOffset) ++ arm.continuousRecovery(after).map(_.plyOffset)) -> List.empty[Statement]
++            }
++          }
++        }
++      }
++      val exposures = captures.flatMap { selectedCapture =>
++        arm.reading.captureExposures.filter(exposure => exposure.occurrenceId == selectedCapture.occurrenceId &&
++          exposure.prefixMoves == path.moves.take(selectedCapture.plyOffset + 1) &&
++          exposure.blockers.exists((original, _) => selectedCapture.originalActor.contains(original)))
++          .flatMap { exposure =>
++            for
++              use <- arm.captures.find(event => event.plyOffset > selectedCapture.plyOffset &&
++                event.originalActor.contains(exposure.originalAttacker) &&
++                event.originalVictim.contains(exposure.originalTarget) &&
++                exposure.captures.exists(row => EvidenceRef.sameMove(row.move, path.moves(event.plyOffset)))).toList
++              if (selectedCapture.plyOffset + 1 to use.plyOffset).forall(count =>
++                arm.at(exposure.originalAttacker, count).contains(exposure.attacker) &&
++                arm.at(exposure.originalTarget, count).contains(exposure.target) &&
++                arm.covers(count, exposure.originalAttacker, exposure.originalTarget))
++              (blocker, before) <- exposure.blockers.filter((original, _) =>
++                selectedCapture.originalActor.contains(original))
++              mover <- arm.at(blocker, selectedCapture.plyOffset + 1).toList
++              user <- arm.at(exposure.originalAttacker, use.plyOffset + 1).toList
++            yield
++              arm.position(selectedCapture.plyOffset).foreach(position =>
++                arm.proofs ++= position.sourceRefs(List(exposure.raySourceId)))
++              arm.position(selectedCapture.plyOffset + 1).foreach(position =>
++                arm.proofs ++= position.sourceRefs(exposure.controlSourceIds ++ exposure.captures.map(_.sourceId)))
++              val route = ClearedRoute(arm.ref(selectedCapture.plyOffset), before, mover,
++                exposure.originalAttacker, arm.ref(use.plyOffset), user, List(exposure.target),
++                passage = true, development = None)
++              val offsets = List(selectedCapture.plyOffset, use.plyOffset) ++ arm.continuousRecovery(use).map(_.plyOffset)
++              offsets -> List[Statement](route)
++          }
++      }
++      // The alternative takes this very attacker with the threatened piece.
++      // In this arm the actual first reply takes that piece instead. The
++      // selected attack's use owns that price, not unrelated earlier losses.
++      val initialReplies = selected.flatMap {
++        case Action(move, Detail.Attack(actor, target, _)) if root(move) =>
++          for
++            user <- original(actor, 1).toList if arm.root.contains(user)
++            subject <- original(target, 1).toList
++            use <- captures.filter(event => event.originalActor.contains(user) &&
++              event.originalVictim.contains(subject) && event.plyOffset > move.offset)
++            if (move.offset + 1 to use.plyOffset).forall(arm.covers(_, user, subject))
++            reply <- arm.captures.filter(_.plyOffset == move.offset + 1)
++            if reply.originalActor.zip(reply.originalVictim).exists((attacker, threatened) =>
++              (move.offset to reply.plyOffset).forall(arm.covers(_, attacker, threatened)))
++            other <- arms.filter(a => (a.path ne path) && a.path.positions.headOption == path.positions.headOption)
++            take <- other.captures.filter(event => event.plyOffset == 0 &&
++              selected.exists(_.covered.contains(other.ref(0))) &&
++              event.originalActor == reply.originalVictim && event.originalVictim == reply.originalActor)
++          yield
++            val removed = arm.continuousRecovery(use).toList
++            val recovered = removed.flatMap(arm.continuousRecovery)
++            (List(reply.plyOffset, use.plyOffset) ++ (removed ++ recovered).map(_.plyOffset)) -> List.empty[Statement]
++        case _ => Nil
++      }
++      // Observe the actual reply when a selected capturing departure ends
++      // selected support. The support anchor is proof, not the price start.
++      val supportDepartures = selected.flatMap {
++        case action @ Action(move, Detail.Support(provider, target, opposition, _)) if (move.path eq path) =>
++          for
++            defender <- original(provider, move.offset + 1).toList
++            subject <- original(target, move.offset + 1).toList
++            enemy <- opposition.flatMap(original(_, move.offset + 1))
++            departure <- captures.filter(event => event.plyOffset > move.offset &&
++              event.originalActor.contains(defender))
++            loss <- arm.captures.filter(event => event.plyOffset == departure.plyOffset + 1 &&
++              event.originalActor.contains(enemy) && event.originalVictim.contains(subject))
++            if (move.offset + 1 to departure.plyOffset).forall(arm.covers(_, defender, subject)) &&
++              arm.control(departure.plyOffset + 1, defender, subject).contains(false) &&
++              (move.offset + 1 to loss.plyOffset).forall(count =>
++                arm.at(subject, count).contains(target) && arm.covers(count, enemy, subject))
++            after <- arm.at(defender, departure.plyOffset + 1).toList
++          yield
++            val events = List(departure, loss)
++            val receipt: Statement = if arm.identityRoles(events) then arm.pieceExchange(events)
++              else MaterialEvents(path, arm.material.events.filter(event => events.exists(_.plyOffset == event.plyOffset)))
++            List(departure.plyOffset, loss.plyOffset) -> List[Statement](action,
++              ControlState(arm.ref(departure.plyOffset), after, Some(target), target.at, present = false), receipt)
++        case _ => Nil
++      }
++      val directRelations = (clearances ++ exposures ++ initialReplies ++ supportDepartures).distinct
++      val directReplyMaterial = directRelations.flatMap(_._2).flatMap {
++        case value: PieceExchange => value.events.map(_.plyOffset)
++        case value: MaterialEvents => value.events.map(_.plyOffset)
++        case _ => Nil
++      }
++      val recoveries = captures.flatMap(arm.continuousRecovery)
++      val ownedMaterial = uses ++ namedPrices.map(_.plyOffset) ++ recoveries.map(_.plyOffset) ++ directReplyMaterial
++      val removals = captures.flatMap(event => arm.continuousRecovery(event)
++        .filterNot(removal => uses(removal.plyOffset))
++        // Only original content, its directly certified relation reply, or
++        // an actual check answer can own intervening material. Neither the
++        // generated price interval nor a recovery of a recovery is a seed.
++        .filter(removal => arm.material.events.filter(row => row.plyOffset > event.plyOffset &&
++          row.plyOffset < removal.plyOffset).forall(row => ownedMaterial(row.plyOffset) ||
++            (arm.checks(row.plyOffset - 1) && arm.checkEvents(List(row.plyOffset - 1)).exists {
++              case value: CheckReply => value.move == arm.ref(row.plyOffset)
++              case _ => false
++            }))).map { removal =>
++          List(event.plyOffset, removal.plyOffset) -> List.empty[Statement]
++        })
++      val relations = (removals ++ directRelations).distinct
++      val identityPrices = relations.flatMap(_._2).collect { case value: MaterialEvents => value }.toSet
++      def context(offsets: List[Int]): List[Int] =
++        val checks = (offsets.min to offsets.max).filter(arm.checks).toList
++        (offsets ++ checks ++ checks.filterNot(ownedEnding).map(_ + 1)).distinct.sorted
+       var pending = previous.map { (events, offsets) => (events, offsets, false) } ++
+-        accounts.map { (events, offsets, _) => (interval(events), offsets, true) }
+-      var core = current.core
++        accounts.map { (events, offsets, _) => (interval(events), offsets, true) } ++
++        relations.map { (offsets, _) => (interval(offsets), context(offsets), true) }
++      var core = relations.foldLeft(current.core) { case (sections, (offsets, conditions)) =>
++        val fresh = conditions.filterNot(sections.flatMap(_.statements).contains)
++        val owner = sections.indexWhere(_.statements.exists(conditions.contains)) match
++          case -1 => sections.indexWhere(section => section.covered.exists(ref =>
++            (ref.path eq path) && offsets.contains(ref.offset)))
++          case index => index
++        if fresh.isEmpty || owner < 0 then sections else
++          val section = sections(owner)
++          sections.updated(owner, section.copy(statements = section.statements ++ fresh,
++            required = (section.required ++ fresh.flatMap(_.references)).distinct))
++      }
+       while pending.nonEmpty do
+         var (events, offsets, changed) = pending.head
+         pending = pending.tail
+@@ -3247,7 +3393,10 @@
+           val joined = (events ++ overlap.flatMap(_._1)).distinct.sortBy(_.plyOffset)
+           offsets = (offsets ++ overlap.flatMap(_._2)).distinct.sorted
+           changed ||= overlap.exists(_._3)
+-          events = if changed then interval(joined.map(_.plyOffset)) else joined
++          // An added role-change witness stays with the victim, but its earlier
++          // date cannot make unrelated intervening trades this answer's price.
++          events = if changed then (interval(joined.filterNot(identityPromotions).map(_.plyOffset)) ++
++            joined.filter(identityPromotions)).distinct.sortBy(_.plyOffset) else joined
+           pending = pending.filterNot(overlap.contains)
+           overlap = pending.filter(price => price._1.exists(events.contains))
+         if changed then
+@@ -3255,12 +3404,29 @@
+           offsets = (offsets ++ events.map(_.plyOffset) :+ 0).distinct.sorted
+           val cost = CommentaryMaterialAccount.calculate(arm.material, events.map(_.plyOffset), offsets, path.moves.size)
+           if cost.isEmpty && !events.exists(_.promotionGainCp != 0) then return None
+-          val price: Statement = cost.fold[Statement](MaterialEvents(path, events))(Material(path, _))
+-          val missing = offsets.map(arm.ref).filterNot(price.references.contains)
+-          val statements = List(price) ++ Option.when(missing.nonEmpty)(Continuation(missing)).toList
+-          def overlaps(statement: Statement) = stated(statement).exists(_._1.exists(events.contains))
+-          val owner = core.indexWhere(section => section.references.contains(arm.ref(0))) match
+-            case -1 => core.indexWhere(_.statements.exists(overlaps))
++          // Keep an already selected identity-bearing reply when it covers
++          // this entire ordinary price. Additional prices cannot be hidden by
++          // a smaller reply receipt, and promotion still needs its role change.
++          val receipt = Option.when(events.forall(event => event.capture.nonEmpty && event.promotionGainCp == 0))(
++            core.flatMap(_.statements).collectFirst[Statement] {
++              case value: PieceExchange if (value.path eq path) &&
++                arm.identityRoles(value.events) &&
++                value.events.map(_.plyOffset).toSet == events.map(_.plyOffset).toSet => value
++              case value: MaterialEvents if (value.path eq path) && value.events == events &&
++                relations.exists(_._2.contains(value)) => value
++            }).flatten
++          val price: Statement = receipt.getOrElse(cost.fold[Statement](MaterialEvents(path, events))(Material(path, _)))
++          val existingChecks = core.flatMap(_.statements).flatMap {
++            case value: CheckSequence => value.events
++            case value: CheckEvent => List(value)
++            case _ => Nil
++          }
++          val checking = arm.checkEvents(offsets.filter(arm.checks)).filterNot(existingChecks.contains)
++          def overlaps(statement: Statement) = receipt.contains(statement) || stated(statement).exists(_._1.exists(events.contains))
++          val owner = core.indexWhere(_.statements.contains(price)) match
++            case -1 => core.indexWhere(section => section.references.contains(arm.ref(0))) match
++              case -1 => core.indexWhere(_.statements.exists(overlaps))
++              case index => index
+             case index => index
+           if owner < 0 then return None
+           val movedRequired = mutable.ListBuffer.empty[MoveRef]
+@@ -3268,6 +3434,7 @@
+           core = core.map { section =>
+             val removed = section.statements.flatMap {
+               case value: TargetResponse if overlaps(value) => value.material.toList.flatMap(_.references)
++              case value: MaterialEvents if identityPrices(value) && !receipt.contains(value) => Nil
+               case value: MaterialEvents if value.path eq path =>
+                 value.events.filter(events.contains).map(event => arm.ref(event.plyOffset))
+               case statement if overlaps(statement) => statement.references
+@@ -3275,6 +3442,9 @@
+             }.distinct
+             val retained = section.statements.flatMap {
+               case value: TargetResponse if overlaps(value) => List(value.copy(material = None))
++              // A specific actual reply remains meaningful when the whole
++              // price also contains another loss or recovery.
++              case value: MaterialEvents if identityPrices(value) && !receipt.contains(value) => List(value)
+               case value: MaterialEvents if value.path eq path =>
+                 val rest = value.events.filterNot(events.contains)
+                 Option.when(rest.nonEmpty)(value.copy(events = rest)).toList
+@@ -3288,10 +3458,29 @@
+             section.copy(statements = retained, required = section.required.filterNot(moved.contains),
+               focus = section.focus.filterNot(value => moved.contains(value.move)))
+           }
++          val delegated = (movedRequired.toList ++ movedFocus.map(_.move)).distinct.flatMap { ref =>
++            val index = core.indexWhere(_.references.contains(ref))
++            Option.when(index >= 0)(ref -> index)
++          }
++          delegated.foreach { (ref, index) =>
++            val retained = core(index)
++            core = core.updated(index, retained.copy(
++              required = (retained.required ++ Option.when(movedRequired.contains(ref))(ref)).distinct,
++              focus = (retained.focus ++ movedFocus.filter(_.move == ref)).distinctBy(_.move)))
++          }
++          val delegatedRefs = delegated.map(_._1).toSet
++          val required = movedRequired.filterNot(delegatedRefs)
++          val focus = movedFocus.filterNot(value => delegatedRefs(value.move))
++          val ownedReferences = core.flatMap(_.references) ++ price.references ++ checking.flatMap(_.references)
++          val localReferences = core(owner).references ++ price.references ++ checking.flatMap(_.references)
++          val missing = (offsets.map(arm.ref).filterNot(ownedReferences.contains) ++
++            (required.toList ++ focus.map(_.move)).filterNot(localReferences.contains)).distinct
++          val statements = Option.when(checking.nonEmpty)(CheckSequence(arm.ref(0), checking)).toList ++
++            List(price) ++ Option.when(missing.nonEmpty)(Continuation(missing)).toList
+           val section = core(owner)
+           core = core.updated(owner, section.copy(statements = section.statements ++ statements,
+-            required = (section.required ++ movedRequired ++ statements.flatMap(_.references)).distinct,
+-            focus = (section.focus ++ movedFocus).distinctBy(_.move)))
++            required = (section.required ++ required ++ statements.flatMap(_.references)).distinct,
++            focus = (section.focus ++ focus).distinctBy(_.move)))
+             .filterNot(section => section.statements.isEmpty && section.required.isEmpty && section.focus.isEmpty)
+       Some(current.copy(core = core))
+     arms.foldLeft(Option(answer))((result, arm) => result.flatMap(complete(arm, _)))
+--- starting/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala
++++ final/chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala
+@@ -541,9 +541,42 @@
+     def checks(offset: Int): Boolean = checking(offset)
+     def recovery(event: Event): Option[Event] = reading.captureLinks.find(_.lossEventId == event.id)
+       .flatMap(link => captures.find(_.id == link.captureEventId))
++    /** A physical removal belongs to this capture only while the actual
++      * recovering piece keeps attacking that same original capturer. */
++    def continuousRecovery(event: Event): Option[Event] = recovery(event).filter { removal =>
++      (for
++        capturer <- event.originalActor
++        recovering <- removal.originalActor
++        if removal.originalVictim.contains(capturer) && removal.plyOffset > event.plyOffset
++      yield (event.plyOffset + 1 to removal.plyOffset).forall { count =>
++        covers(count, recovering, capturer) || (for
++          p <- position(count)
++          actor <- at(recovering, count)
++          target <- at(capturer, count)
++          capture <- p.view.legalRows.flatMap(_.find(row => row.actor == actor && row.captures(target)))
++        yield
++          // A pin can still allow capture along its ray. Use the admitted
++          // exact legal action, rather than relaxing geometric pin checks.
++          proofs ++= p.sourceRefs(List(capture.sourceId))
++          true).contains(true)
++      }).contains(true)
++    }
++
++    private lazy val observed = packet.observations.groupBy(_.transition.evidence.id)
++    def checkEvents(offsets: List[Int]): List[CommentaryAnswer.CheckEvent] =
++      val events = MoveWorkProjection.checkSteps(path, offsets, None, observed)
++      proofs ++= events.flatMap(_._3)
++      events.map(_._2)
+     def balanced(events: List[Event]): Boolean =
+       val rows = material.captures.filter(row => events.exists(_.plyOffset == row.plyOffset))
+       rows.size == events.size && rows.groupMapReduce(_.capturedRole.name)(row => if row.side.white then 1 else -1)(_ + _).values.forall(_ == 0)
++    def identityRoles(events: List[Event]): Boolean = events.forall(event =>
++      path.ids.lift(event.plyOffset).contains(event.occurrenceId) &&
++        material.events.find(row => row.plyOffset == event.plyOffset &&
++          EvidenceRef.sameMove(row.moveUci, path.moves(event.plyOffset)))
++        .flatMap(_.capture).exists(capture =>
++          event.originalActor.exists(_.role == capture.attackerRole) &&
++            event.originalVictim.exists(_.role == capture.capturedRole)))
+     def pieceExchange(events: List[Event]): CommentaryAnswer.PieceExchange =
+       require(events.forall(captures.contains))
+       val recaptures = material.captures.filter(_.recapture).map(_.plyOffset).toSet
+--- starting/chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala
++++ final/chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala
+@@ -322,10 +322,15 @@
+     assert(delivered.text.contains("one bishop for one knight"), delivered.text)
+     val sparse = f.answer(List(MaterialEvents(path, path.certified.flatMap(_._2.material).get.events
+       .filter(event => Set(1, 3)(event.plyOffset)))))
+-    val untouched = MoveWorkProjection.completeSelectedPrices(f.arms(), sparse,
++    val completed = MoveWorkProjection.completeSelectedPrices(f.arms(), sparse,
+       sparse.core.flatMap(_.statements)).get
+-    assertEquals(untouched, sparse,
+-      "unrelated raw events do not choose an interval or create a new price episode")
++    val prices = statements(completed).collect { case value: Material if value.path eq path => value }
++    assertEquals(prices.map(_.cost.events.map(_.plyOffset)), List(List(1, 2)),
++      "the selected knight's continuously attacked recapture owns its bishop-for-knight price")
++    assert(!completed.core.flatMap(_.covered).exists(ref => (ref.path eq path) && ref.offset >= 3),
++      "the next rook move does not enlarge the selected knight's capture account")
++    assertEquals(completed.question, sparse.question)
++    assertEquals(completed.details, sparse.details)
+ 
+   test("a selected supporting piece's first-reply loss retains the root gain and actual recovery"):
+     // Already opened Fundamentals Game 4. The supporting rook is not the root pawn.
+@@ -405,6 +410,15 @@
+     assert(CommentaryMaterialAccount.calculate(source, List(10, 11, 12), List(10, 11, 12), path.moves.size).isEmpty)
+     val delivered = RootQuestionSummary.realize(f.paths, f.pair, closed).get
+     assert(delivered.text.indexOf("c8=Q") < delivered.text.indexOf("Nxc8"), delivered.text)
++    val onlyLoss = f.close(f.answer(List(MaterialEvents(path, exchange.take(1)))))
++    assert(statements(onlyLoss).exists {
++      case value: MaterialEvents if value.path eq path => value.events.map(_.plyOffset) == List(10, 11, 12)
++      case _ => false
++    }, "adding an owned recapture cannot detach the same victim's promotion from its price")
++    assert(!statements(onlyLoss).exists {
++      case value: Material if value.path eq path => true
++      case _ => false
++    })
+     val unrelated = f.close(f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == 2)))))
+     assert(!statements(unrelated).flatMap(_.references).contains(MoveRef(path, 10)),
+       "the original queen's earlier pawn capture does not pull in another piece's later promotion")
+@@ -523,3 +537,336 @@
+     val detailOnly = f.answer(List(support)).copy(details = List(Section(List(ending))))
+     assert(MoveWorkProjection.completeSelectedPrices(f.arms(), detailOnly, statements(detailOnly)).isEmpty,
+       "a detail-only recorded ending is not owned by the selected basic answer")
++
++  test("a selected master queen capture owns its continuously attacked removal and intervening check reply"):
++    // Opened WCC 2016 game 9, before White's 24th move. No new engine analysis.
++    val f = prepare("1r1r2k1/5ppp/Rb1q4/7n/3P4/1B2BP2/5P1P/3Q1R1K w - - 2 24",
++      "f1g1 d6d7 g1g5 g7g6 h1g2 b6d4 g5d5 d7d5 b3d5 d8d5 e3h6 b8d8 h2h4 d4g7 d1d5 h5f4 h6f4 d8d5 a6a8 g7f8 a8e8",
++      "d1d3 d6d7 f1b1 b6c7 h1g2 h5f4 e3f4 c7f4 b1e1 d7b5 d3b5 b8b5 b3c4 b5g5 g2f1 f4d6 a6a7")
++    val path = f.pair.head
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == 14))))
++    val result = f.close(selected)
++    val price = statements(result).collectFirst { case value: Material if value.path eq path => value }.get
++    assertEquals(price.cost.events.map(_.plyOffset), List(14, 16, 17))
++    assertEquals(price.cost.whiteAdditionalLosses, List(EvidencePieceRole("queen") -> 1))
++    assertEquals(price.cost.blackAdditionalLosses,
++      List(EvidencePieceRole("knight") -> 1, EvidencePieceRole("rook") -> 1))
++    assert(price.references.contains(MoveRef(path, 15)) && price.references.contains(MoveRef(path, 16)))
++    assert(!price.cost.events.exists(_.plyOffset == 7), "an earlier queen exchange is a different episode")
++    assertEquals(result.question, selected.question)
++    assertEquals(result.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, result).nonEmpty)
++
++    val uncertain = MoveWorkProjection.completeSelectedPrices(f.arms(f.positions - path.positions(16)),
++      selected, statements(selected)).get
++    assertEquals(uncertain, selected, "a physical link does not replace an unknown intermediate attack")
++
++    val gain = MaterialEvents(path, source.events.filter(_.plyOffset == 16))
++    val split = selected.copy(core = selected.core :+ Section(List(gain), gain.references))
++    val joined = f.close(split)
++    assert(joined.required.contains(MoveRef(path, 16)), "moving a price cannot discard its required reference")
++    assertEquals(statements(joined).collect { case value: Material if value.path eq path =>
++      value.cost.events.map(_.plyOffset) }, List(List(14, 16, 17)))
++    assert(!statements(joined).exists {
++      case value: MaterialEvents if value.path eq path => value.events.exists(_.plyOffset == 16)
++      case _ => false
++    }, "the transferred capture is not repeated as a separate price")
++    assert(RootQuestionSummary.realize(f.paths, f.pair, joined).nonEmpty)
++
++  test("a capturing clearance owns only its actual exposed-queen reply and observed recovery"):
++    // Opened WCC 2024 game 12, before Black's 20th move.
++    val line = "e7f6 g1e2 g6h7 c3c2 d8d7 h3h4 c6e7 d4d5 b6d5 c2c1 h7f5 b5c3 d5e3 d1d7 e3g2 h2g2 f5d7 c3e4"
++    val other = "f7f5 f2f3 e7f6 c3c2 a5a4 d4d5 c6e5 e3b6 c7b6 f3e4 b8c8 e4f5 c8c4 c2b1 c4c5"
++    val fen = "1r1qr1k1/1pp1bpp1/1nn3bp/pN6/2PPp3/P1Q1B1PP/1P3PBK/3RR1N1 b - - 3 20"
++    val f = prepare(fen, line, other)
++    val path = f.pair.head
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == 12))))
++    val result = f.close(selected)
++    val route = statements(result).collectFirst { case value: ClearedRoute if value.use.offset == 13 => value }.get
++    assertEquals(route.move, MoveRef(path, 12))
++    assertEquals(route.before, piece("black", "knight", "d5"))
++    assertEquals(route.originalUser, piece("white", "rook", "d1"))
++    assertEquals(route.targets, List(piece("black", "queen", "d7")))
++    val price = statements(result).collectFirst { case value: Material if value.path eq path => value }.get
++    assertEquals(price.cost.events.map(_.plyOffset), List(12, 13, 14, 15, 16))
++    assertEquals(price.cost.whiteAdditionalLosses,
++      List(EvidencePieceRole("bishop") -> 2, EvidencePieceRole("rook") -> 1))
++    assertEquals(price.cost.blackAdditionalLosses,
++      List(EvidencePieceRole("knight") -> 1, EvidencePieceRole("queen") -> 1))
++    assert(!price.cost.events.exists(_.plyOffset == 17), "the next pawn capture does not start a new price")
++    assertEquals(result.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, result).nonEmpty)
++
++    val horizon = prepare(fen, line.split(" ").take(13).mkString(" "), other)
++    val last = horizon.pair.head
++    assert(horizon.arms().head.reading.captureExposures.exists(_.prefixMoves.size == 13))
++    val only = horizon.answer(List(MaterialEvents(last,
++      last.certified.flatMap(_._2.material).get.events.filter(_.plyOffset == 12))))
++    val unchanged = MoveWorkProjection.completeSelectedPrices(horizon.arms(), only, statements(only)).get
++    assertEquals(unchanged, only, "an available response without actual use is not an observed queen loss")
++
++  test("a selected master capture does not own its capturer's later return into a new attack"):
++    // Opened Candidates 2018 game 10. Same physical queen, different attack episodes.
++    val f = prepare("r6k/3n2pp/p1Np1r1b/1p1Pp3/PQ2BB2/5P2/1PP1q3/1K1R2R1 b - - 0 24",
++      "h6f4 b4a5 f4e3 g1e1 e2f2 a5c7 d7c5 e1g1 e3h6 d1f1 f2e2 c6b8 f6f8 c7d6 a8b8 d6c5 b5a4 d5d6 e2b5 c5b5 a6b5 f1d1 b5b4 e4c6",
++      "e5f4 g1e1 e2c4 b4a5 b5a4 a5c7 d7e5 e1h1 a8f8 c7e7 e5g6 e4g6 h7g6 c6d8 a4a3 d8e6 f6f7 e7d6 f8c8 d1d2 a3b2")
++    val path = f.pair.head
++    val arm = f.arms().head
++    val source = path.certified.flatMap(_._2.material).get
++    List(13, 15).foreach { offset =>
++      val event = arm.captures.find(_.plyOffset == offset).get
++      assert(arm.recovery(event).exists(_.plyOffset == 20))
++      assertEquals(arm.continuousRecovery(event), None)
++      val selected = f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == offset))))
++      assertEquals(MoveWorkProjection.completeSelectedPrices(f.arms(), selected, statements(selected)), Some(selected))
++    }
++
++  test("a removal ending in check uses only an exact owned recorded boundary"):
++    // Synthetic safety case; this is not a master-game generalization result.
++    val f = prepare("2r4k/2p5/2Q5/8/8/8/2K5/8 w - - 0 1",
++      "c6c7 c8c7", "c2b2 h8g8")
++    val path = f.pair.head
++    val first = MaterialEvents(path, path.certified.flatMap(_._2.material).get.events.filter(_.plyOffset == 0))
++    val end = RecordedEnd(MoveRef(path, 1))
++    val selected = f.answer(List(first, end))
++    val closed = MoveWorkProjection.completeSelectedPrices(f.arms(), selected, statements(selected)).get
++    assertEquals(statements(closed).collectFirst { case value: Material if value.path eq path =>
++      value.cost.events.map(_.plyOffset) }.get, List(0, 1))
++    assert(statements(closed).contains(end))
++    val checking = statements(closed).collect { case value: CheckSequence => value.events }.flatten
++    assert(checking.exists { case value: CheckingMove => value.move == end.move; case _ => false })
++    assert(!checking.exists(_.isInstanceOf[CheckReply]), "the recorded end does not invent a legal response")
++    assert(!closed.required.exists(ref => (ref.path eq path) && ref.offset == 2))
++    val delivery = closed.copy(details = closed.details.map(section =>
++      section.copy(statements = section.statements :+ end)))
++    assert(RootQuestionSummary.realize(f.paths, f.pair, delivery).nonEmpty)
++    List(f.answer(List(first)), f.answer(List(first, RecordedEnd(MoveRef(path, 0)))),
++      f.answer(List(first, RecordedEnd(MoveRef(f.pair.last, 1)))),
++      f.answer(List(first)).copy(details = List(Section(List(end))))).foreach { invalid =>
++      assert(MoveWorkProjection.completeSelectedPrices(f.arms(), invalid, statements(invalid)).isEmpty,
++        "missing, interior, sibling and detail-only ends cannot close this basic price")
++    }
++
++  test("a selected attack's actual use keeps the alternative's reversed first-reply price"):
++    // Opened WCC 2016 game 11: the same c3/d4 pawns capture each other in the two actual arms.
++    val f = prepare("4r1k1/6pp/p3q3/1p4Q1/3pp3/P1PP3P/2P3P1/5RK1 w - - 0 24",
++      "f1e1 d4c3 e1e4 e6b6 g1h1 e8e4 d3e4 b6d6 e4e5 d6a3 e5e6 a3d6 g5f5 d6d1 h1h2 d1d6 h2g1 d6d4 g1h2",
++      "c3d4 e4e3 f1e1 h7h6 g5c5 e6f6 e1e2 e8f8 c5d5 f8f7 d5a8 f7f8")
++    val path = f.pair.head
++    val other = f.pair.last
++    val attack = f.notes.find(note => note.edge.evidence.id == path.ids.head && (note.note.detail match
++      case Detail.Attack(actor, target, _) => actor == piece("white", "rook", "e1") &&
++        target == piece("black", "pawn", "e4")
++      case _ => false)).get
++    val gain = MaterialEvents(path, path.certified.flatMap(_._2.material).get.events
++      .filter(event => Set(2, 5, 6)(event.plyOffset)))
++    val counterpart = MaterialEvents(other, other.certified.flatMap(_._2.material).get.events.filter(_.plyOffset == 0))
++    val selected = f.answer(List(Action(MoveRef(path, 0), attack.note.detail), gain, counterpart))
++    val arm = f.arms().head
++    val use = arm.captures.find(_.plyOffset == 2).get
++    assert(arm.recovery(use).exists(_.plyOffset == 5) && arm.continuousRecovery(use).isEmpty,
++      "the queen initially screens the recovering rook, so a physical link alone cannot own this new attack")
++    val closed = f.close(selected)
++    val price = statements(closed).collectFirst { case value: Material if value.path eq path => value }.get
++    assertEquals(price.cost.events.map(_.plyOffset), List(1, 2, 5, 6))
++    assertEquals(price.cost.commonExchanges,
++      List(EvidencePieceRole("pawn") -> 1, EvidencePieceRole("rook") -> 1))
++    assertEquals(price.cost.whiteAdditionalLosses, Nil)
++    assertEquals(price.cost.blackAdditionalLosses, Nil)
++    assert(!price.covered.contains(MoveRef(path, 9)), "a different pawn's later loss is not this attack's price")
++    assertEquals(closed.question, selected.question)
++    assertEquals(closed.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++
++    val withoutCounterpart = selected.copy(core = selected.core.map(section =>
++      section.copy(statements = section.statements.filterNot(_ == counterpart))))
++    List(withoutCounterpart, selected.copy(core = selected.core.map(section =>
++      section.copy(statements = section.statements.filterNot(_ == gain))))).foreach { invalid =>
++      val bounded = MoveWorkProjection.completeSelectedPrices(f.arms(), invalid, statements(invalid)).get
++      assert(!bounded.core.flatMap(_.covered).contains(MoveRef(path, 1)),
++        "both originally selected sides of the reply/use relation are needed")
++    }
++    val unknown = MoveWorkProjection.completeSelectedPrices(f.arms(f.positions - path.positions(1)),
++      selected, statements(selected)).get
++    assert(!unknown.core.flatMap(_.covered).contains(MoveRef(path, 1)), "unknown attack continuity cannot add a price")
++
++  test("an automatic draw after a checking removal preserves the actual terminal without a reply"):
++    // Synthetic boundary: Nxb6+ leaves only kings and a knight.
++    val f = prepare("2n4k/8/1pQ5/8/K7/8/8/8 w - - 0 1", "c6b6 c8b6", "a4a3 h8g8")
++    val path = f.pair.head
++    val terminal = Terminal(MoveRef(path, 1), path.automaticTerminal.get)
++    val first = MaterialEvents(path, path.certified.flatMap(_._2.material).get.events.filter(_.plyOffset == 0))
++    val selected = f.answer(List(first, terminal))
++    val closed = MoveWorkProjection.completeSelectedPrices(f.arms(), selected, statements(selected)).get
++    assert(statements(closed).contains(terminal))
++    assertEquals(closed.core.flatMap(_.covered).filter(_.path eq path).map(_.offset).toSet, Set(0, 1))
++    assert(!closed.required.exists(ref => (ref.path eq path) && ref.offset == 2))
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++
++  test("selected support departure keeps its exact gain and actual supported-target loss together"):
++    // Opened Candidates 2018 game 9; support begins within the line, not at its root.
++    val f = prepare("r1b1k1r1/ppp1qp1p/8/2p4n/3QP1pP/2P3P1/PP3P2/RNB2R1K w q - 0 16",
++      "d4d3 c8d7 c3c4 e8c8 b1c3 g8e8 f1e1 e7e5 h1h2 d7e6 c3d5 e6d5 c4d5 f7f5 c1g5 f5e4 d3a3 d8d5 a3a7 e5b2 h2g1 b2b6 a7a8 c8d7 a8a3 b6c6",
++      "d4c4 c8e6 c4d3 a8d8 d3c2 f7f5 e4f5 e6c4 f1g1 d8d3 h1h2 d3f3 c1g5 g8g5 h4g5 h5f4 g3f4 f3h3 h2g2 c4d3 c2a4 b7b5")
++    val path = f.pair.head
++    val support = f.notes.find(note => note.edge.evidence.id == path.ids(16) && (note.note.detail match
++      case Detail.Support(provider, target, _, _) => provider == piece("white", "queen", "a3") &&
++        target == piece("white", "pawn", "b2")
++      case _ => false)).get
++    val action = Action(MoveRef(path, 16), support.note.detail)
++    val gain = MaterialEvents(path, path.certified.flatMap(_._2.material).get.events.filter(_.plyOffset == 18))
++    val selected = f.answer(Nil).copy(core = List(Section(List(Continuation(f.pair.map(MoveRef(_, 0))), gain), gain.references),
++      Section(List(action), action.references, List(Focus(action.move, support)))))
++    val closed = f.close(selected)
++    val owner = closed.core.find(_.statements.contains(action)).get
++    assert(owner.statements.exists {
++      case value: ControlState => value.move == MoveRef(path, 18) && !value.present &&
++        value.target.contains(piece("white", "pawn", "b2"))
++      case _ => false
++    })
++    val receipt = owner.statements.collectFirst { case value: PieceExchange if value.path eq path => value }.get
++    assertEquals(receipt.events.map(_.plyOffset), List(18, 19))
++    assertEquals(receipt.events(1).originalVictim, Some(piece("white", "pawn", "b2")))
++    assert(owner.required.contains(MoveRef(path, 18)) && owner.focus.exists(_.move == action.move))
++    assert(!closed.core.flatMap(_.covered).contains(MoveRef(path, 17)),
++      "the support anchor is not a material interval start and cannot pull in the other pawn loss")
++    assert(!statements(closed).exists {
++      case value: Material if value.path eq path => true
++      case _ => false
++    }, "an identity-bearing complete price is not repeated as the same role/count aggregate")
++    assertEquals(closed.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++    val source = path.certified.flatMap(_._2.material).get
++    val bill = Material(path, CommentaryMaterialAccount.calculate(source, List(18, 19),
++      List(0, 18, 19, 20), path.moves.size).get)
++    val withQuietProof = selected.copy(core = List(selected.core.head.copy(
++      statements = selected.core.head.statements.filterNot(_ == gain) :+ bill,
++      required = bill.references), selected.core.last))
++    val transferred = f.close(withQuietProof)
++    val quiet = MoveRef(path, 20)
++    assert(transferred.required.contains(quiet) && transferred.core.flatMap(_.references).contains(quiet),
++      "a quiet proof held only by a replaced account is preserved with its required metadata")
++    assert(RootQuestionSummary.realize(f.paths, f.pair, transferred).nonEmpty)
++    val siblingProof = withQuietProof.copy(core = withQuietProof.core :+ Section(List(Continuation(List(quiet)))))
++    val retained = f.close(siblingProof)
++    val quietOwner = retained.core.find(_.statements.contains(Continuation(List(quiet)))).get
++    assert(quietOwner.required.contains(quiet), "metadata follows an existing sibling owner of the proof")
++    assertEquals(retained.core.flatMap(_.statements).count(_ == Continuation(List(quiet))), 1,
++      "retaining a sibling proof does not duplicate its bare continuation")
++    assert(RootQuestionSummary.realize(f.paths, f.pair, retained).nonEmpty)
++    List(selected.copy(core = List(selected.core.head)), selected.copy(core = List(
++      selected.core.head.copy(statements = selected.core.head.statements.filterNot(_ == gain)), selected.core.last))).foreach { invalid =>
++      val bounded = MoveWorkProjection.completeSelectedPrices(f.arms(), invalid, statements(invalid)).get
++      assert(!bounded.core.flatMap(_.covered).contains(MoveRef(path, 19)),
++        "detail/proof-only support or departure cannot become a new basic answer")
++    }
++    val unknown = MoveWorkProjection.completeSelectedPrices(f.arms(f.positions - path.positions(19)),
++      selected, statements(selected)).get
++    assert(!unknown.core.flatMap(_.covered).contains(MoveRef(path, 19)), "unknown ended support is not absent support")
++
++  test("a promotion identity witness does not import intervening unrelated trades into a later price"):
++    // Synthetic long-gap safety case; the intervening bishop takes a different pawn.
++    val f = prepare("1Q6/2P1n2k/8/8/1b6/8/P7/6K1 w - - 0 1",
++      "c7c8q h7g6 a2a3 b4a3 g1h1 e7c8 b8c8", "b8b7 h7g6")
++    val path = f.pair.head
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == 5))))
++    val closed = f.close(selected)
++    val groups = statements(closed).collect { case value: MaterialEvents if value.path eq path => value.events }
++    assert(groups.exists(_.map(_.plyOffset) == List(0, 5, 6)),
++      "the victim's promotion stays with its loss and the original queen's actual recapture")
++    assert(!closed.core.flatMap(_.covered).contains(MoveRef(path, 3)),
++      "preserving a past identity is not ownership of every trade since its role change")
++    assertEquals(closed.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++
++  test("a newly selected support price uses current roles when its target was already promoted"):
++    // Synthetic role boundary; a promoted queen is not described as a pawn capture victim.
++    val f = prepare("1Q6/2P1n2k/1p6/8/8/8/8/6K1 w - - 0 1",
++      "c7c8q h7g7 b8b6 e7c8", "b8a8 h7g7")
++    val path = f.pair.head
++    val support = f.notes.find(note => note.edge.evidence.id == path.ids.head && (note.note.detail match
++      case Detail.Support(provider, target, _, _) => provider == piece("white", "queen", "b8") &&
++        target == piece("white", "queen", "c8")
++      case _ => false)).get
++    val loss = f.arms().head.captures.find(_.plyOffset == 3).get
++    assertEquals(loss.originalVictim, Some(piece("white", "pawn", "c7")))
++    assert(!f.arms().head.identityRoles(List(loss)))
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(Action(MoveRef(path, 0), support.note.detail),
++      MaterialEvents(path, source.events.filter(_.plyOffset == 2))))
++    val closed = f.close(selected)
++    assert(statements(closed).exists {
++      case value: MaterialEvents if value.path eq path => value.events.map(_.plyOffset) == List(0, 2, 3) &&
++        value.events.last.capture.exists(_.capturedRole.name == "queen")
++      case _ => false
++    })
++    assert(!statements(closed).exists {
++      case value: PieceExchange if value.path eq path => value.events.contains(loss)
++      case _ => false
++    }, "an original-role receipt must not call the promoted victim a pawn")
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++
++  test("a promoted target's actual reply retains its identity inside a larger complete price"):
++    // Synthetic safety boundary: the supporter is captured after the promoted target.
++    val f = prepare("1Q6/2P1n2k/1p5r/8/8/8/8/6K1 w - - 0 1",
++      "c7c8q h7g7 b8b6 e7c8 g1f1 h6b6", "b8a8 h7g7")
++    val path = f.pair.head
++    val support = f.notes.find(note => note.edge.evidence.id == path.ids.head && (note.note.detail match
++      case Detail.Support(provider, target, _, _) => provider == piece("white", "queen", "b8") &&
++        target == piece("white", "queen", "c8")
++      case _ => false)).get
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(Action(MoveRef(path, 0), support.note.detail),
++      MaterialEvents(path, source.events.filter(_.plyOffset == 2))))
++    val closed = f.close(selected)
++    val delivered = statements(closed)
++    val whole = delivered.collectFirst { case value: Material if value.path eq path => value }.get
++    assertEquals(whole.cost.events.map(_.plyOffset), List(2, 3, 5))
++    assert(delivered.exists {
++      case value: MaterialEvents if value.path eq path => value.events.map(_.plyOffset) == List(0, 2, 3) &&
++        value.events.last.capture.exists(_.capturedRole.name == "queen")
++      case _ => false
++    }, "the full price cannot replace the specific promoted victim and its role-change context")
++    assertEquals(closed.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
++
++  test("continuous attack alone does not make unselected intervening exchanges an initial price"):
++    // Saved balanced master comparison, also exercised by public delivery tests.
++    val f = prepare("2rq1rk1/3n1ppp/p2bp3/1pp5/3P4/1N2Q1P1/PP1NPPKP/R1R5 w - - 0 20",
++      "d2e4 c5d4 b3d4 d7c5 d4f3 c5e4 e3e4 d8b6 c1c2 c8c2 e4c2 d6e7 a1c1 b6a5 c2c7 a5c7 c1c7 e7f6 b2b3 f8d8 c7c1 g7g5",
++      "d4c5 d7c5 c1d1 c8c7 a1c1 d8a8 d2f3 c5b3 c1c7 d6c7 e3b3 f8d8")
++    val path = f.pair.last
++    val arm = f.arms().last
++    val firstReply = arm.captures.find(_.plyOffset == 1).get
++    assert(arm.continuousRecovery(firstReply).exists(_.plyOffset == 10),
++      "the same knight is physically removed while the queen's attack persists")
++    val source = path.certified.flatMap(_._2.material).get
++    val firstPrice = MaterialEvents(path, source.events.filter(event => Set(0, 1)(event.plyOffset)))
++    val selected = f.answer(List(firstPrice))
++    val bounded = MoveWorkProjection.completeSelectedPrices(f.arms(), selected, statements(selected)).get
++    assertEquals(bounded.core.flatMap(_.covered).filter(_.path eq path).map(_.offset).toSet, Set(0, 1),
++      "unowned knight and rook trades separate the later removal from this chosen pawn exchange")
++    assertEquals(bounded.details, selected.details)
++
++  test("a pinned recapturer uses its exact admitted legal capture along the pin ray"):
++    // Synthetic legality boundary, not a quality/generalization position.
++    val f = prepare("1r1r2k1/8/8/8/8/8/8/1R4K1 w - - 0 1",
++      "b1b8 d8b8", "g1f1 b8b2")
++    val path = f.pair.head
++    val arm = f.arms().head
++    val first = arm.captures.find(_.plyOffset == 0).get
++    val recovering = arm.captures.find(_.plyOffset == 1).get.originalActor.get
++    assert(!arm.covers(1, recovering, first.originalActor.get),
++      "unpinned geometric cover does not establish this legal pin-ray recapture")
++    assert(arm.continuousRecovery(first).exists(_.plyOffset == 1),
++      "the exact legal inventory proves the pinned rook can take the checking-line attacker")
++    val source = path.certified.flatMap(_._2.material).get
++    val selected = f.answer(List(MaterialEvents(path, source.events.filter(_.plyOffset == 0))))
++    val closed = f.close(selected)
++    assertEquals(statements(closed).collectFirst { case value: Material if value.path eq path =>
++      value.cost.events.map(_.plyOffset) }.get, List(0, 1))
++    assertEquals(closed.details, selected.details)
++    assert(RootQuestionSummary.realize(f.paths, f.pair, closed).nonEmpty)
+--- starting/chesstory-runtime/src/test/scala/io/chesstory/runtime/ReferenceMeaningDeliveryTest.scala
++++ final/chesstory-runtime/src/test/scala/io/chesstory/runtime/ReferenceMeaningDeliveryTest.scala
+@@ -1263,7 +1263,9 @@
+       val units = (meaning \ "units").as[List[JsObject]]
+       def occurrence(ref: JsObject) = locateRef(paths, ref)
+       val covered = units.flatMap(unit => refs(unit("covered_moves")))
+-      assertEquals(covered.size, captureCount)
++      assertEquals(covered.size, captureCount, covered.map(ref =>
++        val (path, offset) = occurrence(ref)
++        s"${path.moves.head}:$offset").mkString("actual delivered captures: ", ", ", ""))
+       assertOwnedBilingualUnits(units, paths, Some(root))
+       covered.foreach { ref =>
+         val (path, offset) = occurrence(ref)

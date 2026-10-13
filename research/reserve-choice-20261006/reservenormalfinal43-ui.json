@@ -1,0 +1,717 @@
+{
+  "scope": "Decision timing goal: actual product decoder, renderer and exact SAN click callbacks in Node/JSDOM. This is a delivery check, not a human comprehension or new engine trial.",
+  "generated_at": "2026-10-06T10:33:23.300Z",
+  "run_dir": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\reservenormalfinal43",
+  "manifest_sha256": "d45d5820c5d2559cc9431cdd8b614e68ff664fba419234d89fdaf8f04a135289",
+  "request_sha256": "4f3e15aec9a4df777c4fcee00ee46bd058d0a6eb6b453f6c437808ec93ed0d10",
+  "source_hashes": [
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+      "sha256": "7271e54834d4e6150428609092a37ee6aaa7d23ce95660371c23aec02cdb70f4"
+    },
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "sha256": "1a7e856833c07e41f40fd647b33145b894bff8f2fac315ea1aba2b502803aa91"
+    },
+    {
+      "path": "lila-docker/repos/lila/ui/analyse/src/view/moveReview.ts",
+      "sha256": "532a10bb52ca1aed8f390617287cac87e6e92e8a768c8719d62b4a8660daa39d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "a6e92cb6ab4bd7a03a13abab9c7c2e7734879d317e68f8ea1605b1fde862801c"
+    }
+  ],
+  "input_hashes": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\decision-timing-20261006\\reservenormalfinal43\\final-snapshots.jsonl.gz",
+      "sha256": "52c1bc85a3f29751ea0de87715bd3ae98192ccbe017604a4efb694a1d5c532a8"
+    }
+  ],
+  "positives": [
+    {
+      "game_id": "H05",
+      "kind": "final",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": [
+        2072,
+        599,
+        594
+      ]
+    },
+    {
+      "game_id": "T20",
+      "kind": "final",
+      "stages": {
+        "observations": true,
+        "selection": true,
+        "snapshot": true,
+        "issued_work": false
+      },
+      "reject_lines": []
+    }
+  ],
+  "current_basic_links": [
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:e6654d57f83b840b516bc9b345777702f77f16ac1c980ccf7fd0eeb96bcad646",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:7d9eee1a01a72dce77af72ddf9d3cabfe37a3cfa7ede0ad5decce38ae2019166",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:14d05db03a5d10595d6169c40ee7af6be6c0a7c51016393a7f1632926729fd33",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:14d05db03a5d10595d6169c40ee7af6be6c0a7c51016393a7f1632926729fd33",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:2d711446657a1a843133aa2d556c19930f15dcfaa4abc24105fdf70b90625792",
+      "offset": 1,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:30134a9d0d55a35e784a80e518e40c4df696b54a15ceaf89b3480f99b03d313a",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:78d547d74032037b32ac39f5c4a09ceb76bc0103e9bd6aeeb34af3b54828454c",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:3e70fcc9a50bf27fe423d8b2c40e815b45dc91ce8742023dea57e02972b50359",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:9304b2e8f4b3748fe21452860abfa4528860f087523cebc8911c4204b1440ece",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:78d547d74032037b32ac39f5c4a09ceb76bc0103e9bd6aeeb34af3b54828454c",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:5ec4617789815db4a515b1062a9f489fe1c7af1014e7d30febaf2e9b7c7ded32",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:bc03aa867b90bfc2a25531f57de44cb7e22428fa8c870b51eafe6e19b736995e",
+      "offset": 4,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:09e7828428a5d9ea26a4f5523931f01281fc911584f330611d2674922a7688af",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "en-US",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:bd8202c8545d56722c4c81c617e6a4123c390059661be4a6be86141d6d85d5fa",
+      "offset": 6,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:e6654d57f83b840b516bc9b345777702f77f16ac1c980ccf7fd0eeb96bcad646",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:7d9eee1a01a72dce77af72ddf9d3cabfe37a3cfa7ede0ad5decce38ae2019166",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:14d05db03a5d10595d6169c40ee7af6be6c0a7c51016393a7f1632926729fd33",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:14d05db03a5d10595d6169c40ee7af6be6c0a7c51016393a7f1632926729fd33",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:39e7ae465365c57e9a3cfc0b780eaf336401ce89106f86ebf8b3a9c1210c0a60",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:2d711446657a1a843133aa2d556c19930f15dcfaa4abc24105fdf70b90625792",
+      "offset": 1,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:30134a9d0d55a35e784a80e518e40c4df696b54a15ceaf89b3480f99b03d313a",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:78d547d74032037b32ac39f5c4a09ceb76bc0103e9bd6aeeb34af3b54828454c",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:3e70fcc9a50bf27fe423d8b2c40e815b45dc91ce8742023dea57e02972b50359",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:9304b2e8f4b3748fe21452860abfa4528860f087523cebc8911c4204b1440ece",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:78d547d74032037b32ac39f5c4a09ceb76bc0103e9bd6aeeb34af3b54828454c",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:5ec4617789815db4a515b1062a9f489fe1c7af1014e7d30febaf2e9b7c7ded32",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:bc03aa867b90bfc2a25531f57de44cb7e22428fa8c870b51eafe6e19b736995e",
+      "offset": 4,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:09e7828428a5d9ea26a4f5523931f01281fc911584f330611d2674922a7688af",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "H05",
+      "locale": "ko-KR",
+      "line_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:line:663824dfbde319117f17d913507e31bad072bec65c824dfb7b0e66eba30679d4",
+      "occurrence_id": "move-review:44bd3e6f5f2ea25de8b4a14292cb3907f2c2137e9cf43756cc2f44b6e403ab54:68:g3g4:evidence:transition:bd8202c8545d56722c4c81c617e6a4123c390059661be4a6be86141d6d85d5fa",
+      "offset": 6,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:d935853ab72ab29996f98d7d870677f4a1c3587442ed8096eecb590d899ce303",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:16733178177fa269ee6948f0ea0c894cd2e9c67fc58ca320c3e26180a9a33fc8",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:16733178177fa269ee6948f0ea0c894cd2e9c67fc58ca320c3e26180a9a33fc8",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:82b193b24bf7ec898c473956190f6bb80e4729bc058ac2fabfc1b6339843266f",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:68b8221e62245be438bd05c78f1f59398721c9f311d807c3a10680f40ccd7b1e",
+      "offset": 1,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:82b193b24bf7ec898c473956190f6bb80e4729bc058ac2fabfc1b6339843266f",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:d935853ab72ab29996f98d7d870677f4a1c3587442ed8096eecb590d899ce303",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "en-US",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ed9254b2e29466b74c3f9cbc940f6b6083ca1dc5d58fcdc3525494cbcb6b0f90",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:b8360ecff2aa8b10b964537235406b209c7a001e30a08c40a50bd14e687cb21a",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:d935853ab72ab29996f98d7d870677f4a1c3587442ed8096eecb590d899ce303",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:16733178177fa269ee6948f0ea0c894cd2e9c67fc58ca320c3e26180a9a33fc8",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:16733178177fa269ee6948f0ea0c894cd2e9c67fc58ca320c3e26180a9a33fc8",
+      "offset": 3,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:82b193b24bf7ec898c473956190f6bb80e4729bc058ac2fabfc1b6339843266f",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:68b8221e62245be438bd05c78f1f59398721c9f311d807c3a10680f40ccd7b1e",
+      "offset": 1,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:82b193b24bf7ec898c473956190f6bb80e4729bc058ac2fabfc1b6339843266f",
+      "offset": 5,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:d935853ab72ab29996f98d7d870677f4a1c3587442ed8096eecb590d899ce303",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ae8793bdd2514a186723c08236c936c56785aae45c9792812779099c45f26f48",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:87f01edc541ab96a1722798de0016494d546bc6ca7c20237546e30ad40736776",
+      "offset": 2,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    },
+    {
+      "game_id": "T20",
+      "locale": "ko-KR",
+      "line_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:line:ed9254b2e29466b74c3f9cbc940f6b6083ca1dc5d58fcdc3525494cbcb6b0f90",
+      "occurrence_id": "move-review:cee9eb3c854cc55f0cfdba86075828ce4b7ea5e0a1b45bc1e8acb42982af1fad:93:g6g5:evidence:transition:b8360ecff2aa8b10b964537235406b209c7a001e30a08c40a50bd14e687cb21a",
+      "offset": 0,
+      "button_exists": true,
+      "san_matches": true,
+      "exact_click_frame": true
+    }
+  ],
+  "endpoint_links": [],
+  "action_accounts": [
+    {
+      "game_id": "H05",
+      "kind": "final",
+      "question": "investigated_mechanism",
+      "action_count": 31,
+      "actual_capture_count": 12,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 0
+    },
+    {
+      "game_id": "T20",
+      "kind": "final",
+      "question": "selected_comparison",
+      "action_count": 9,
+      "actual_capture_count": 2,
+      "uncovered_actual_captures": 0,
+      "position_only_ref_count": 1
+    }
+  ],
+  "negative_mutations": [
+    {
+      "name": "duplicate_action",
+      "game_id": "H05",
+      "meaning": "Duplicate a real owned action reference without changing its proof or prose.",
+      "length_guard_also_applies": true,
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1402,
+        6309
+      ]
+    },
+    {
+      "name": "foreign_action",
+      "game_id": "H05",
+      "meaning": "Replace one action with an unadmitted line ID.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1402,
+        6309
+      ]
+    },
+    {
+      "name": "action_not_owned_by_proof",
+      "game_id": "H05",
+      "meaning": "Use an admitted comparison occurrence that this unit does not own in proof_moves.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1402,
+        6309
+      ]
+    },
+    {
+      "name": "missing_capture_price",
+      "game_id": "H05",
+      "meaning": "Keep the actual capture action, proof and prose; remove its coverage and change role to bypass only the cost-role shape guard.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1457,
+        1468,
+        6309
+      ]
+    },
+    {
+      "name": "forged_required_ownership",
+      "game_id": "H05",
+      "meaning": "Assign an admitted occurrence as required although the unit does not own its proof.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1409,
+        6309
+      ]
+    },
+    {
+      "name": "unknown_question_enum",
+      "game_id": "H05",
+      "meaning": "Replace a known question with an unknown tag.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1347,
+        6309
+      ]
+    },
+    {
+      "name": "actions_require_typed_proof",
+      "game_id": "H05",
+      "meaning": "Retain action_moves but remove the typed proof list.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1402,
+        6309
+      ]
+    },
+    {
+      "name": "unlisted_supplementary_reply",
+      "game_id": "H05",
+      "meaning": "Keep the supplementary reply in the answer but remove its admitted witness path.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1391,
+        6309
+      ]
+    },
+    {
+      "name": "duplicate_witness_path",
+      "game_id": "H05",
+      "meaning": "Repeat an otherwise valid supplementary path.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1357,
+        6309
+      ]
+    },
+    {
+      "name": "foreign_witness_path",
+      "game_id": "H05",
+      "meaning": "Replace one supplementary path with a nonexistent path.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        2072,
+        599,
+        594,
+        1368,
+        6309
+      ]
+    },
+    {
+      "name": "forged_focus_position",
+      "game_id": "T20",
+      "meaning": "Keep an owned focus occurrence but replace its certified position ID.",
+      "selection_rejected": true,
+      "snapshot_rejected": false,
+      "reject_lines": [
+        1308,
+        1427,
+        6309
+      ]
+    }
+  ],
+  "legacy_no_action": [
+    {
+      "game_id": "H05",
+      "kind": "final",
+      "question": "investigated_mechanism",
+      "selection": true,
+      "reject_lines": [
+        2072,
+        599,
+        594
+      ],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    },
+    {
+      "game_id": "T20",
+      "kind": "final",
+      "question": "selected_comparison",
+      "selection": true,
+      "reject_lines": [],
+      "interpretation": "Compatibility probe: removal of action_moves invokes old proof/inline closure. Rejection of position-only endpoint captures is the preserved legacy behavior, not a new failure."
+    }
+  ],
+  "enum_syntax_only": [
+    {
+      "game_id": "H05",
+      "from": "investigated_mechanism",
+      "to": "investigated_mechanism",
+      "selection": true,
+      "limitation": "Tag-only syntax probe on unchanged real typed content. Not an actual investigated_mechanism serializer example and not proof of its semantic classification."
+    }
+  ],
+  "observed_question_tags": [
+    "investigated_mechanism",
+    "selected_comparison"
+  ],
+  "limits": [
+    "Input run metadata distinguishes completed jobs from retained partial snapshots and controls.",
+    "Typed producer content owns meaning; UI admission and click checks alone do not prove chess significance."
+  ]
+}

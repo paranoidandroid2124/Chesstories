@@ -102,9 +102,6 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
   private def coreDecisions(answer: Answer) = answer.core.flatMap(_.statements).collect {
     case value: ResourceDecision => value.value
   }
-  private def detailDecisions(answer: Answer) = answer.details.flatMap(_.statements).collect {
-    case value: ResourceDecision => value.value
-  }
   private def foreign(sections: List[Section], roots: List[PreparedPath]) = sections.flatMap(_.references)
     .map(_.path).distinct.filterNot(path => roots.exists(_ eq path))
   private def wireRefs(value: JsValue): Set[JsObject] = value match
@@ -115,7 +112,7 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
   private def covered(summary: JsObject, field: String) = (summary \ field).as[List[JsObject]]
     .flatMap(unit => (unit \ "covered_moves").as[List[JsObject]]).toSet
 
-  test("actual native producer delivers one matched question, its current refusal and conditional recapture price"):
+  test("actual native producer explains purpose and response-dependent choices with their immediate prices"):
     val f = actual
     val wire = PositionCommentaryJobProtocol.projectJobSnapshot(
       CommentaryJobSnapshot("f" * 32, f.request.requestId, 600001L, f.state))
@@ -140,48 +137,52 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
     val all = covered(summary, "units") ++ covered(summary, "detail_units")
     val old = (expected \ "original_core_covered").as[List[JsObject]] ++
       (expected \ "original_detail_covered").as[List[JsObject]]
-    assert(old.forall(all), "the narrower local question must preserve the existing owned prices")
+    val mentionedPaths = wireRefs(Json.toJson(units ++ details)).map(ref => (ref \ "line_id").as[String])
+    assert(old.forall(ref => all(ref) || !mentionedPaths((ref \ "line_id").as[String])),
+      "an old auxiliary example can retire as a whole; any retained episode must keep its previous prices")
     val rootPrices = (expected \ "original_core_covered").as[List[JsObject]]
       .filter(ref => rootIds((ref \ "line_id").as[String]))
-    assert(rootPrices.forall(covered(summary, "units")), "prior selected root prices stay in core")
+    assert(rootPrices.forall(covered(summary, "detail_units")), "old uses and their prices move together into detail")
     val moves = wireRefs(Json.toJson(units)).map(f.ref)
     assert(moves.exists(ref => ref.path.moves.take(4) == List("d2c4", "e8f6", "d1d6", "c6c7") && ref.offset == 3))
-    val capture = moves.find(ref => ref.path.moves.take(5) ==
-      List("d2c4", "e8f6", "d1d6", "c6d6", "c4d6") && ref.offset == 4).get
-    assert(covered(summary, "units")(MoveRef(capture.path, 3).json))
-    assert(covered(summary, "units")(capture.json))
+    List(List("d2b1", "e8c7", "d1d6", "c6d6"), List("d2c4", "c6c7", "d1d6", "e8d6"))
+      .foreach { prefix =>
+        val capture = moves.find(ref => ref.path.moves.take(4) == prefix && ref.offset == 3).get
+        assert(covered(summary, "units")(capture.json), "a displayed refutation must include its rook capture")
+      }
+    assert(moves.exists(ref => ref.offset == 2 && ref.path.moves.take(3) == List("d2b1", "e8c7", "e2d3")))
+    assert(moves.exists(ref => ref.offset == 2 && ref.path.moves.take(3) == List("d2c4", "c6c7", "c2c3")))
     val originalPath = f.pair.find(_.moves.head == "d2c4").get
     val originalLoss = MoveRef(originalPath, 21)
-    val oldCost = units.find(unit => (unit \ "covered_moves").as[List[JsObject]].contains(originalLoss.json)).get
-    val context = List("d2c4", "e8f6", "d1d6", "c6c7", "a1d1", "b6b5")
-    assertEquals(originalPath.moves.take(context.size), context)
-    assert(oldCost("en").as[List[JsValue]].exists(_.asOpt[String].exists(_.contains("Separately, in the recorded"))))
-    assert(wireRefs(oldCost("proof_moves")).contains(MoveRef(originalPath, 5).json),
-      "the retained old forecast names its first real divergence from the current Qc7 path")
-    assert(!wireRefs(oldCost("action_moves")).contains(MoveRef(originalPath, 5).json),
-      "a position-only label must not select the old prefix as a new price lifetime")
-    assert(covered(summary, "units")(MoveRef(originalPath, 22).json),
-      "the separately labelled original Bxb7 recovery price remains in core")
+    assert(!covered(summary, "units")(originalLoss.json), "an unselected historical episode must not swamp the current choices")
+    assert(covered(summary, "detail_units")(originalLoss.json))
+    assert(covered(summary, "detail_units")(MoveRef(originalPath, 22).json),
+      "the original rook loss and Bxb7 recovery remain together in detail")
     assert(units.flatMap(unit => unit("en").as[List[JsValue]]).exists(_.asOpt[String].exists(_.contains("moves the queen out of the attack"))))
     assert(units.flatMap(unit => unit("en").as[List[JsValue]]).exists(_.asOpt[String].exists(_.contains("keeps targeting White's rook on d6"))))
 
-  test("both display choices preserve exact current value owners and close only the represented same-victim transaction"):
+  test("bounded decisions keep exact value owners, differing defences and the previous complete explanation"):
     val f = actual
     val originalRoot = f.task.resource.owner.answer
     List(false, true).foreach { showOther =>
       val answer = f.deliver(showOther)
       assertEquals(answer.question, "functional_response")
       val center = coreDecisions(answer)
-      assertEquals(center.size, 2)
-      assert(center.forall(value => value.branch.matchedReply && value.branch.firstReply == "e8f6"))
-      assertEquals(center.map(_.branch.rootMove).toSet, Set("d2c4", "d2b1"))
+      assertEquals(center.map(value => value.branch.rootMove -> value.branch.firstReply).toSet,
+        Set("d2c4" -> "e8f6", "d2b1" -> "e8c7", "d2c4" -> "c6c7"))
+      assertEquals(center.count(value =>
+        value.branch.firstPool.lines.head.evaluation.moves.head == value.branch.firstReply), 2)
+      val route = answer.core.flatMap(_.statements).collectFirst { case value: PieceRoute => value }.get
+      assertEquals(route.original, f.task.resource.condition.subject.get.witness)
+      assertEquals(route.path.moves.head, "d2b1")
+      assertEquals(f.paths.notation.line(route.path.moves)(route.offsets.last), "Nc3")
       center.foreach { value =>
         assert(value.use eq value.branch.use.get)
         assert(value.resistance eq value.branch.response.get)
         assert(value.use.belongsTo(f.packet, f.paths) && value.resistance.belongsTo(f.packet, f.paths))
       }
       val useful = center.find(_.use.useful).get
-      assertEquals(useful.other.nonEmpty, showOther)
+      assertEquals(useful.other, None, "a redundant equal-value choice should not displace a changed defence")
       val reply = MoveRef(useful.path, 3)
       val originalUser = f.task.resource.actor.witness
       val user = f.paths.trackedPieceAfter(useful.path, originalUser, 3).flatten.get
@@ -189,6 +190,9 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
         case (original, Some(Some(current))) if current.square.key == useful.path.moves(3).take(2) => original
       }.get
       val movedQueen = f.paths.trackedPieceAfter(useful.path, queen, 4).flatten.get
+      val attackedQueen = f.paths.trackedPieceAfter(useful.path, queen, 3).flatten.get
+      assertEquals(useful.useRoles, List(ControlState(MoveRef(useful.path, 2), user,
+        Some(attackedQueen), attackedQueen.square.key, present = true)))
       assert(useful.replyRoles.contains(Action(reply, MoveWorkProjection.Detail.Evades(movedQueen, user))))
       assert(useful.replyRoles.contains(Action(reply, MoveWorkProjection.Detail.Attack(movedQueen, user, false))),
         "Qc7 keeps attacking the same original rook; it does not create that attack")
@@ -204,6 +208,7 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
         f.task.resource.actor, f.positions - useful.path.positions(3))
       assertEquals(missing.statements, Nil)
       assertEquals(missing.evidence, Nil)
+      assertEquals(missing.useRoles, Nil, "a missing position cannot supply the move's purpose")
       val before = f.positions(useful.path.positions(3))
       val incomplete = new MoveWorkProjection.Position(before.view):
         override def complete(kind: RelationFactKind): Boolean =
@@ -220,21 +225,18 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
         f.task.resource.actor.copy(square = "a1"), f.positions)
       assertEquals(borrowed.statements, Nil, "another friendly rook cannot own this response role")
       assertEquals(borrowed.evidence, Nil)
-      val refuted = center.find(_.use.refuted).get
-      assertEquals(refuted.other.map(ref => ref.path.moves(ref.offset)), Some("b1c3"))
-      val third = detailDecisions(answer)
-      assertEquals(third.size, 1)
-      assertEquals(third.head.branch.rootMove -> third.head.branch.firstReply, "d2b1" -> "e8c7")
-      assert(third.head.branch.firstPool.lines.head.evaluation.moves.head == third.head.branch.firstReply)
-      val proof = answer.core.flatMap(_.statements).collect { case value: LegalReplyOption => value }.head
+      val refuted = center.filter(_.use.refuted)
+      assertEquals(refuted.map(value => value.branch.rootMove -> value.other.get.path.moves(2)).toMap,
+        Map("d2b1" -> "e2d3", "d2c4" -> "c2c3"))
+      refuted.foreach(value => assert(answer.core.flatMap(_.covered).contains(MoveRef(value.path, 3))))
+      val proof = answer.details.flatMap(_.statements).collect { case value: LegalReplyOption => value }.head
       val original = f.previous.core.flatMap(_.statements).collect { case value: LegalReplyOption => value }.head
-      assertEquals(proof.proof, original.proof)
+      assertEquals(proof, original)
       assert(FunctionalReplyReading.valid(f.paths, proof) && FunctionalReplyReading.relevant(f.paths, f.pair, proof))
       assertEquals(proof.actionReferences, Nil)
-      val owned = center.flatMap(_.resistance.comparison.pathsByMove.values).toSet
-      assert(List(proof.reference, proof.alternative, proof.available).forall(owned))
       val required = List(MoveRef(proof.reference, 3), MoveRef(proof.available, 4), MoveRef(proof.alternative, 3))
-      assert(required.forall(answer.core.flatMap(_.covered).toSet))
+      assert(required.forall(answer.details.flatMap(_.references).toSet),
+        "the old legal example keeps its exact witnesses without becoming a newly evaluated transaction")
       val capturedQueen = proof.proof.action.target.get.witness
       List(proof.reference, proof.alternative).foreach { path =>
         assert(f.paths.continuationReadingFor(path).get.events.exists(event => event.plyOffset == 3 &&
@@ -243,22 +245,22 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
       assert(f.paths.continuationReadingFor(proof.available).get.events.exists(event => event.plyOffset == 4 &&
         event.originalActor.contains(proof.proof.action.subject.get.witness) && event.originalVictim.contains(capturedQueen)))
       val sources = answer.completionSources.get
-      assert(f.previous.completionSources.toList.flatten.forall(sources.contains))
+      assertEquals(sources.collect { case ResourceDecision(value) => value }.toSet, center.toSet)
       assert(!sources.flatMap(_.covered).exists(required.contains),
         "computed current capture prices cannot become fresh lifetime-account sources")
       assert(!sources.exists(_.isInstanceOf[RecordedContext]),
         "the separate recorded continuation label is never a new completion source")
-      assert(answer.details.flatMap(_.covered).contains(MoveRef(third.head.path, 3)),
-        "the other actual leader must be price-completed before being put in detail")
+      val previousCovered = (f.previous.core ++ f.previous.details).flatMap(_.covered).toSet
+      assert(previousCovered.subsetOf(answer.details.flatMap(_.covered).toSet))
       assert(foreign(answer.core, f.pair).size <= 5 && foreign(answer.details, f.pair).size <= 5)
       val rendered = f.summary(answer)
       assert((rendered.json \ "units").as[List[JsObject]].size <= 8)
       assert((rendered.json \ "detail_units").as[List[JsObject]].size <= 8)
-      assert(rendered.text.contains("Qc7") && rendered.text.contains("Nxd6") && rendered.text.contains("Nc3"), rendered.text)
+      assert(rendered.text.contains("Qd3") && rendered.text.contains("Prefer c3") && rendered.text.contains("Nc3"), rendered.text)
       assertEquals(f.task.resource.owner.answer, originalRoot)
     }
 
-  test("missing mechanical proof falls back to the wider completed answer; unfinished values cannot upgrade it"):
+  test("bounded values do not need an extra mechanical example; unfinished or differently owned values cannot upgrade"):
     val f = actual
     val previous = f.previous
     def withoutOption(section: Section): Section =
@@ -270,7 +272,7 @@ class FunctionalChoiceDeliveryTest extends munit.FunSuite:
       completionSources = previous.completionSources.map(_.filterNot(_.isInstanceOf[LegalReplyOption])))
     val fallback = f.deliver(showOther = true, before = before)
     assertEquals(coreDecisions(fallback).size, 3,
-      "failure to rebase a mechanical example must not discard the already completed wider local values")
+      "a missing mechanical example must not discard the completed response-dependent choices")
     assert(f.summary(fallback).text.contains("Nc3"))
     val missing = f.task.copy(branches = f.task.branches.map(branch =>
       if branch.rootMove == "d2b1" && branch.firstReply == "e8c7" then branch.copy(response = None) else branch))

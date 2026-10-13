@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-COMMAND=$*
-
-BASE_URL="${LILA_BASE_URL:-https://chesstory.com}"
-
-curl -H "Authorization: Bearer $LILA_CLI_TOKEN" -d "$COMMAND" "$BASE_URL/run/cli"

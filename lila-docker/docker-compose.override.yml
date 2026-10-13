@@ -1,6 +1,0 @@
-services:
-  chesstory:
-    volumes:
-      - ${USERPROFILE}\.sbt:/root/.sbt
-      - ${USERPROFILE}\.ivy2:/root/.ivy2
-      - ${LOCALAPPDATA}\Coursier\Cache\v1:/root/.cache/coursier/v1

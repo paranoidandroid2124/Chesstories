@@ -1,0 +1,464 @@
+{
+  "sealed_utc": "2026-10-09T01:32:34.905470+00:00",
+  "kind": "actual-caller-zero-engine-final-delivery-first-failure",
+  "input": {
+    "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\actual-replay\\result.json",
+    "sha256": "13cc1d6345c40cd1da966776270167669a6e56b783924b1273cb01d44ad0e265"
+  },
+  "diagnostic_log": {
+    "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\actual-replay\\process.log",
+    "sha256": "545d6342bfd415c3d182efdc575d4aae608c68267ee13a5d939d19f5a63a62b6"
+  },
+  "diagnostic_plan": {
+    "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\plan.json",
+    "sha256": "c4e6fcbc4e817ff9ead3d84fc9fea49ca1e0af8024792512e42b7421ab3c01a5"
+  },
+  "original_sources": [
+    {
+      "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\FunctionalChoiceReading.original.scala.txt",
+      "sha256": "949f4b7d0337432fe9cd6b650135e3651861760d573c08918c02a8fe69db434c"
+    },
+    {
+      "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\RootQuestionSummary.original.scala.txt",
+      "sha256": "45520b07aca3fbdf31599f880022ef5c0a6b1b21653e5a8e8c9c167ebfa5e0d4"
+    }
+  ],
+  "diagnostic_sources": [
+    {
+      "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\FunctionalChoiceReading.scala",
+      "sha256": "faa30ccbad725c6fd1965bb52266966a4e8d1e88753cf8dac909ca149fd5ca8f"
+    },
+    {
+      "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\RootQuestionSummary.scala",
+      "sha256": "bb0cd7d72b18d53646d36bd78919daa8ed551c7c6ee08e6062c5a5d01763fcec"
+    },
+    {
+      "path": "target\\functional-judgment-20261009\\h05-10h-family-required-policy1800-ui17-ledger1805\\completed43-final-delivery-gates\\AnchoredChoiceAnswer.scala",
+      "sha256": "06a58026679697859f803b2e8ee69c6965f939af01abc8b28dce29574d3ae68d"
+    }
+  ],
+  "exact_whole_reports": 43,
+  "new_engine_queries": 0,
+  "elapsed_ms": 88900,
+  "actual_family": {
+    "id": "anchored-choice-family:3045ac41b4b4dcf0bbbb1cf28fa0229b181bf97c11e8da488a0c0c20a83a8b9c",
+    "belongs_to_current": true,
+    "complete": true,
+    "initial_complete": true,
+    "followup_complete": false,
+    "stages": [
+      {
+        "id": "anchored-choice-task:0432116051830ed16c3beec363c49ee0f076f3d9ddc9b1b6f9c092e85f2b7438",
+        "prefix": [
+          "f3e3",
+          "b4b3"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:7a62d668ae3031d7a6d8f53372b889474a71dd34f7ba1f66572bcf688f6ee1c2",
+        "prefix": [
+          "f3e3",
+          "e5e6"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:3755c2a40705a4ed39c5b777cddc9fd2f3d231012934dc76cec2792453c927a8",
+        "prefix": [
+          "f3e3",
+          "f7f6"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:65548936341062f2080b27703191801983294597f9188ac9eb3e1c0d26743e54",
+        "prefix": [
+          "f3e3",
+          "b4b3",
+          "e3f3",
+          "e5e6",
+          "f3f4",
+          "f7f6"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:b6e6f4793ad642faa1bd89717d825c5d2033bea5055aaa11daced0b634c57589",
+        "prefix": [
+          "f3e3",
+          "b4b3",
+          "e3f3",
+          "f7f6",
+          "f3e3",
+          "e5e6",
+          "e3f4",
+          "e6f7",
+          "f4f5",
+          "f7e7"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:ab5e9a97baefbe4efba0919f88a74f67198473a5fd17313d13378d8355d30d1a",
+        "prefix": [
+          "f3e3",
+          "e5e6",
+          "e3d2",
+          "b4b3",
+          "d2e3",
+          "e6e5",
+          "e3f3",
+          "e5f6",
+          "f3f4",
+          "f6g6",
+          "e4e5",
+          "f7f5",
+          "e5e6",
+          "g6f6",
+          "e6e7",
+          "f6f7",
+          "e7e8q",
+          "f7e8",
+          "f4f5",
+          "e8e7"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:924ef6a3bdd1c4fbdde7e4a811b477b010f0518d093e8b7261153b8d0f2def92",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "b4b3",
+          "f3e3",
+          "f6f5",
+          "e4f5",
+          "e5f5",
+          "e3f3",
+          "f5g6",
+          "f3f4",
+          "g6f6"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:df4881b8da130d139ab7beddf6853c6fdc92f9537b0ab282984e433960edeb88",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "e5d6",
+          "e3d2",
+          "d6e5",
+          "c3b4",
+          "e5e4",
+          "d2c3",
+          "e4d5"
+        ],
+        "complete": true
+      },
+      {
+        "id": "anchored-choice-task:4c2e5aa9f097dd3662c669158fc30e3f4784120201095ecc6027bf91a6f23132",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "f6f5",
+          "e4f5",
+          "e5f5"
+        ],
+        "complete": true
+      }
+    ]
+  },
+  "private_stage_read": {
+    "family_id": "anchored-choice-family:3045ac41b4b4dcf0bbbb1cf28fa0229b181bf97c11e8da488a0c0c20a83a8b9c",
+    "stage_count": 9,
+    "read_count": 9,
+    "stages": [
+      {
+        "id": "anchored-choice-task:0432116051830ed16c3beec363c49ee0f076f3d9ddc9b1b6f9c092e85f2b7438",
+        "prefix": [
+          "f3e3",
+          "b4b3"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:7a62d668ae3031d7a6d8f53372b889474a71dd34f7ba1f66572bcf688f6ee1c2",
+        "prefix": [
+          "f3e3",
+          "e5e6"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:3755c2a40705a4ed39c5b777cddc9fd2f3d231012934dc76cec2792453c927a8",
+        "prefix": [
+          "f3e3",
+          "f7f6"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:65548936341062f2080b27703191801983294597f9188ac9eb3e1c0d26743e54",
+        "prefix": [
+          "f3e3",
+          "b4b3",
+          "e3f3",
+          "e5e6",
+          "f3f4",
+          "f7f6"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:b6e6f4793ad642faa1bd89717d825c5d2033bea5055aaa11daced0b634c57589",
+        "prefix": [
+          "f3e3",
+          "b4b3",
+          "e3f3",
+          "f7f6",
+          "f3e3",
+          "e5e6",
+          "e3f4",
+          "e6f7",
+          "f4f5",
+          "f7e7"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:ab5e9a97baefbe4efba0919f88a74f67198473a5fd17313d13378d8355d30d1a",
+        "prefix": [
+          "f3e3",
+          "e5e6",
+          "e3d2",
+          "b4b3",
+          "d2e3",
+          "e6e5",
+          "e3f3",
+          "e5f6",
+          "f3f4",
+          "f6g6",
+          "e4e5",
+          "f7f5",
+          "e5e6",
+          "g6f6",
+          "e6e7",
+          "f6f7",
+          "e7e8q",
+          "f7e8",
+          "f4f5",
+          "e8e7"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:924ef6a3bdd1c4fbdde7e4a811b477b010f0518d093e8b7261153b8d0f2def92",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "b4b3",
+          "f3e3",
+          "f6f5",
+          "e4f5",
+          "e5f5",
+          "e3f3",
+          "f5g6",
+          "f3f4",
+          "g6f6"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:df4881b8da130d139ab7beddf6853c6fdc92f9537b0ab282984e433960edeb88",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "e5d6",
+          "f3e2",
+          "d6e5",
+          "e2e3",
+          "e5d6",
+          "e3d2",
+          "d6e5",
+          "c3b4",
+          "e5e4",
+          "d2c3",
+          "e4d5"
+        ],
+        "actual_private_read": true
+      },
+      {
+        "id": "anchored-choice-task:4c2e5aa9f097dd3662c669158fc30e3f4784120201095ecc6027bf91a6f23132",
+        "prefix": [
+          "f3e3",
+          "f7f6",
+          "e3f3",
+          "f6f5",
+          "e4f5",
+          "e5f5"
+        ],
+        "actual_private_read": true
+      }
+    ]
+  },
+  "pair_close": {
+    "pair_closed": true,
+    "lead_sections": 9,
+    "detail_sections": 4,
+    "retained_sections": 0,
+    "completion_sources": 9
+  },
+  "final_metrics": {
+    "core_units": 7,
+    "detail_units": 6,
+    "core_witnesses": 18,
+    "detail_witnesses": 0,
+    "core_witness_bound": false,
+    "detail_witness_bound": true,
+    "root_moves_visible": true,
+    "references_valid": true,
+    "core_account_visible": true,
+    "detail_account_visible": true,
+    "text_length": 3721
+  },
+  "unit_metrics": {
+    "core": [
+      {
+        "role": "reply",
+        "parts": 74,
+        "proof_path_count": 8,
+        "covered_count": 0,
+        "required_count": 20
+      },
+      {
+        "role": "reply",
+        "parts": 73,
+        "proof_path_count": 6,
+        "covered_count": 0,
+        "required_count": 26
+      },
+      {
+        "role": "reply",
+        "parts": 64,
+        "proof_path_count": 4,
+        "covered_count": 0,
+        "required_count": 26
+      },
+      {
+        "role": "reply",
+        "parts": 48,
+        "proof_path_count": 4,
+        "covered_count": 0,
+        "required_count": 18
+      },
+      {
+        "role": "reply",
+        "parts": 48,
+        "proof_path_count": 4,
+        "covered_count": 0,
+        "required_count": 20
+      },
+      {
+        "role": "reply",
+        "parts": 40,
+        "proof_path_count": 4,
+        "covered_count": 0,
+        "required_count": 12
+      },
+      {
+        "role": "cost",
+        "parts": 41,
+        "proof_path_count": 5,
+        "covered_count": 10,
+        "required_count": 11
+      }
+    ],
+    "detail": [
+      {
+        "role": "cost",
+        "parts": 3,
+        "proof_path_count": 1,
+        "covered_count": 5,
+        "required_count": 8
+      },
+      {
+        "role": "reply",
+        "parts": 5,
+        "proof_path_count": 1,
+        "covered_count": 0,
+        "required_count": 2
+      },
+      {
+        "role": "cost",
+        "parts": 13,
+        "proof_path_count": 1,
+        "covered_count": 5,
+        "required_count": 8
+      },
+      {
+        "role": "reply",
+        "parts": 5,
+        "proof_path_count": 1,
+        "covered_count": 0,
+        "required_count": 2
+      },
+      {
+        "role": "cost",
+        "parts": 13,
+        "proof_path_count": 1,
+        "covered_count": 5,
+        "required_count": 8
+      },
+      {
+        "role": "reply",
+        "parts": 5,
+        "proof_path_count": 1,
+        "covered_count": 0,
+        "required_count": 2
+      }
+    ]
+  },
+  "realization": {
+    "context_pass": false,
+    "fallback_evaluated": true,
+    "fallback_pass": false,
+    "context_core": 14,
+    "context_details": 6,
+    "fallback_core": 14,
+    "fallback_details": 6
+  },
+  "actual_consumer_result": {
+    "family_id": "anchored-choice-family:3045ac41b4b4dcf0bbbb1cf28fa0229b181bf97c11e8da488a0c0c20a83a8b9c",
+    "completed_answer": false,
+    "proposed_sections": 9,
+    "completed_sections": null
+  },
+  "first_false_recorded_gate": "RootQuestionSummary.fromUnits core boundedWitnesses: 18 > 5",
+  "ruled_out": [
+    "finite task completion",
+    "private stage read",
+    "root receipt ownership",
+    "completePairAnswer material closure",
+    "8-unit cap",
+    "4000 text cap",
+    "reference legality",
+    "visible root actions and prices"
+  ],
+  "limits": [
+    "Every actual reported gate is from the original production caller with diagnostic-only logging.",
+    "Final Completed diagnostic wrapper loses assessment context; that separate null Family is not the caller failure.",
+    "This is held10h behavior; later parent two-file overlay is measured separately.",
+    "No human utility criterion is promoted by query completion or delivery gate diagnosis."
+  ]
+}

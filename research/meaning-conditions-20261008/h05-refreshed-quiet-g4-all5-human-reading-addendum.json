@@ -1,0 +1,1291 @@
+{
+  "created_utc": "2026-10-08T10:31:57.565080+00:00",
+  "reviewer": "/root/functional_condition_audit",
+  "kind": "separate post-completion human reading of the refreshed quiet-g4 all-five receipt",
+  "source_sha256": {
+    "research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+    "research\\meaning-conditions-20261008\\h05-retained-pawn-all5-human-reading-addendum.json": "15f0ff25fa48994b306c53fbd9ab56971e42d6cb4e99341e2b2f59aed7cd2455",
+    "research\\meaning-conditions-20261008\\h05-original-Ke3-all8-completed-human-reading-addendum.json": "9feb7e7785c505db7a195faa5014c623832390dfdcdd2fa07eae62b9bf4bc14f",
+    "research\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5-plan.json": "6eab46607dfd700dcebace2f5e0f187f15262c6c6dff49969d5dec1e2710974f",
+    "target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\results.json": "d0592c6a9adf01528e02ecbc84139d2a6fdef2966032b6ad5cde79a93310c319",
+    "target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\summary.json": "e19a3e42beeb7ba0b8cbde4e4e53c5cc944cae7758053caa470d0af4ebf7059a",
+    "target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\manifest.json": "cea42315b3a7c912a71166f1503446de7b88f41621cce074584e5c04cebe5a56",
+    "target\\meaning-conditions-20261008\\h05-refreshed-quiet-g4-all5\\independent-quiet-all5-physical-replay-and-epoch.json": "9b071ab5a0e22a791345eef5681d8b1c7cfaa2c4753003eb46c785dd79f2e381",
+    "target\\meaning-conditions-20261008\\h05-retained-pawn-check-replies\\results.json": "93798a8d14c0324aa255d549931d12058bb430d86369b77065f72ebba3065df7",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\results.json": "559d8073afe452b3ea1e1e276febe6ef5bfab965ea3e471cd262e238cabde1ac"
+  },
+  "unchanged_criteria_and_history": {
+    "original_human_criteria_unchanged": true,
+    "checking_g4_all5_addendum_unchanged": true,
+    "original_root_all8_addendum_unchanged": true,
+    "old20min_failure_preserved": true,
+    "old0_of_4_full_utility_status_changed": false,
+    "previous_human_readings_rescored": false
+  },
+  "chronology": {
+    "original_human_criteria_sealed_utc": "2026-10-08T09:04:29.119210+00:00",
+    "quiet_all5_plan_registered_utc": "2026-10-08T10:17:19.360695+00:00",
+    "quiet_all5_actual_finished_utc": "2026-10-08T10:18:26.835120+00:00",
+    "interpretation_written_after_actual_completion_and_reviewer_reading": true,
+    "fixed_criteria_not_retroactively_changed": true
+  },
+  "execution_and_mutations": {
+    "new_engine_queries_by_reviewer": 0,
+    "product_reports_submitted": 0,
+    "engine_outputs_mutated": false,
+    "main_UI_schema_test_edits": [],
+    "work_done": "Read completed actual receipt, replay all five actual prefix-plus-PVs, track original physical identities and current roles, and verify final unbounded epoch matches structured outcome."
+  },
+  "completion_verdict": {
+    "status": "Complete under the unchanged all-five/depth24 criterion for this exact refreshed position.",
+    "actual_elapsed_ms": 65883,
+    "nodes": 276368990,
+    "completed_depth": 24,
+    "search_fen": "8/8/4kp2/2p5/p1p1PKP1/PpP5/1P6/8 b - - 0 41",
+    "exact_original_history_UCI": [
+      "f3e3",
+      "f7f6",
+      "e3f3",
+      "e5d6",
+      "f3e2",
+      "d6e5",
+      "e2e3",
+      "b4b3",
+      "e3f3",
+      "e5d6",
+      "f3f4",
+      "d6e6",
+      "g3g4"
+    ],
+    "exact_original_history_SAN": [
+      "Ke3",
+      "f6",
+      "Kf3",
+      "Kd6",
+      "Ke2",
+      "Ke5",
+      "Ke3",
+      "b3",
+      "Kf3",
+      "Kd6",
+      "Kf4",
+      "Ke6",
+      "g4"
+    ],
+    "legal_requested_returned_reply_inventory_equal": true,
+    "legal_replies": [
+      "Kd6",
+      "Kd7",
+      "Ke7",
+      "Kf7",
+      "f5"
+    ],
+    "reply_classes": {
+      "king": [
+        "Kd6",
+        "Kd7",
+        "Ke7",
+        "Kf7"
+      ],
+      "pawn": [
+        "f5"
+      ]
+    },
+    "final_coherent_unbounded_epoch_matches_structured_receipt": true,
+    "legal_replayed_plies": 241,
+    "profile": "sf18-smallnet-t2-h128-research-v1; exact13ply original history; all5 legal first replies; MultiPV5/depth24"
+  },
+  "strongest_resistance_and_ties": {
+    "returned_bestmove": "Ke7",
+    "tied_leading_returned_king_defenses": [
+      "Ke7",
+      "Kd6",
+      "Kd7"
+    ],
+    "all_three_reported_White_cp": 8115,
+    "other_completed_results": {
+      "Kf7": {
+        "kind": "mate",
+        "value": 29
+      },
+      "f5": {
+        "kind": "mate",
+        "value": 15
+      }
+    },
+    "interpretation": "The first three are tied in this finite receipt; do not claim Ke7 uniquely strongest or rank its mechanism above Kd6/Kd7 from a identical score. The pawn f5 is fully included and its returned legal PV ends in mate; it is not an unexamined escape.",
+    "numerical_limit": "The larger downstream cp scores are from a fresh depth24 search beginning13plies into the original history. They are not an equal-horizon update of the original Ke3 all8 score or a product grade."
+  },
+  "new_control_vs_existing_illegality": {
+    "existing_facts": {
+      "before_f5_controllers": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "e4",
+          "current_square": "e4",
+          "current_role": "pawn"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_square": "f4",
+          "current_role": "king"
+        }
+      ],
+      "after_f5_controllers": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "e4",
+          "current_square": "e4",
+          "current_role": "pawn"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_square": "f4",
+          "current_role": "king"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "g3",
+          "current_square": "g4",
+          "current_role": "pawn"
+        }
+      ],
+      "White_king_adjacent_to_f5_before_and_after": true,
+      "Black_Kf5_not_legal_before_or_after": true,
+      "static_Black_reply_inventory_unchanged_after_g4": true,
+      "before_turn_normalized_Black_moves": [
+        "e6d6",
+        "e6d7",
+        "e6e7",
+        "e6f7",
+        "f6f5"
+      ],
+      "actual_after_Black_moves": [
+        "e6d6",
+        "e6d7",
+        "e6e7",
+        "e6f7",
+        "f6f5"
+      ],
+      "diagnostic_scope": "Before-g4 board is actually White-to-move. Setting turn to Black here is only an explicitly labeled static legality diagnostic, not an owned actual continuation or evaluation. The actual g4 transfers turn and keeps White king/e4 in place; it does not newly ban Kf5 or newly shrink this five-move static inventory."
+    },
+    "finding": "Before g4, White Kf4 already controls f5 and is adjacent to it; original White e4 also controls f5. Black Kf5 was already illegal. g4 adds a third control but does not newly cause that illegality.",
+    "immediate_Black_inventory": "In the explicitly turn-normalized static before-g4 diagnostic, Black has exactly the same five legal moves as after g4. Thus g4 does not newly shrink this local Black legal move set.",
+    "actual_usefulness": "The actual move consumes the retained original-g3 pawn move and passes the turn while leaving White Kf4 and original e4 in place. Black must now choose among the four king defenses or the f-pawn defense; the separately completed receipt supplies positive conversion witnesses for both response classes.",
+    "not_proved": "No claim of unique winning move, exact zugzwang, all legal White alternatives failing, or newly created Kf5 illegality. Before-g4 turn normalization is a static diagnostic only, not an actual owned continuation or numerical answer."
+  },
+  "functional_conditions": {
+    "bounded_claim": "The waiting/use function of original g3-g4 is useful at this exact reached board across every legal immediate Black reply in the completed finite-depth inventory. White must be able to retain an appropriate king/pawn posture, respond to the actual class of defense, and keep the prices of the resulting conversion.",
+    "conditions_required_to_own_this_claim": [
+      "Exact original13ply history and pawn identities: original g3 is now g4; original e4 is still e4; original Black f7 is f6; original Black b4 is b3; original White a3/b2/c3 remain. This is not the older checking-g4 input.",
+      "The side to move actually changes from White to Black by quiet g4 while White king f4 and e4 remain in place. The explanation must distinguish a useful spare move from merely newly adding control to a square already controlled.",
+      "Both response classes are completed: four king moves allow immediate Kf5 and a central exchange; ...f5 requires exf5+ and a different pawn-support/king route.",
+      "The king branches keep the actual original-e4 loss by ...fxe5 and White Kxe5 recapture. The pawn branch preserves original e4 as a passed pawn and later queen; it must not inherit the king branches e4-loss statement.",
+      "Used original g3 may be sacrificed as a pawn on g4/g7, sacrificed after promotion as a queen on g8, or survive to promote alongside original e4. The exact current role and actual capture must be tracked; a generic pawn-loss sentence does not fully describe a promoted-queen price.",
+      "The useful king/pawn activity must connect to the recorded conversion and actual costs. An available legal move or a pawn control fact alone is insufficient."
+    ],
+    "explicit_pawn_defense_support_witness": {
+      "history_class": "...f5 exf5+ ...Kf6 g5+ ...Kf7 Ke5 ...Kg7 f6+ ...Kg6 Kf4 ...Kf7",
+      "exact_rows": [
+        {
+          "absolute_ply_zero_based": 22,
+          "suffix_ply_zero_based": 9,
+          "SAN": "Kf4",
+          "UCI": "e5f4",
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "before_fen": "8/8/5Pk1/2p1K1P1/p1p5/PpP5/1P6/8 w - - 1 46",
+          "after_fen": "8/8/5Pk1/2p3P1/p1p2K2/PpP5/1P6/8 b - - 2 46",
+          "gives_check": false,
+          "White_king": "f4",
+          "Black_king": "g6",
+          "White_f5_controllers": [
+            {
+              "side": "white",
+              "root_role": "king",
+              "root_square": "f3",
+              "current_square": "f4",
+              "current_role": "king"
+            }
+          ],
+          "original_White_e4_current_square": "f6",
+          "original_White_e4_current_role": "pawn",
+          "original_White_e4_current_controllers": [
+            {
+              "side": "white",
+              "root_role": "pawn",
+              "root_square": "g3",
+              "current_square": "g5",
+              "current_role": "pawn"
+            }
+          ]
+        },
+        {
+          "absolute_ply_zero_based": 23,
+          "suffix_ply_zero_based": 10,
+          "SAN": "Kf7",
+          "UCI": "g6f7",
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "before_fen": "8/8/5Pk1/2p3P1/p1p2K2/PpP5/1P6/8 b - - 2 46",
+          "after_fen": "8/5k2/5P2/2p3P1/p1p2K2/PpP5/1P6/8 w - - 3 47",
+          "gives_check": false,
+          "White_king": "f4",
+          "Black_king": "f7",
+          "White_f5_controllers": [
+            {
+              "side": "white",
+              "root_role": "king",
+              "root_square": "f3",
+              "current_square": "f4",
+              "current_role": "king"
+            }
+          ],
+          "original_White_e4_current_square": "f6",
+          "original_White_e4_current_role": "pawn",
+          "original_White_e4_current_controllers": [
+            {
+              "side": "white",
+              "root_role": "pawn",
+              "root_square": "g3",
+              "current_square": "g5",
+              "current_role": "pawn"
+            }
+          ]
+        }
+      ],
+      "function": "With original e4 now on f6 and White king back on f4, the original g3 pawn on g5 is the ONLY White controller of f6. That witnessed support remains useful when the king is not adjacent to the passed pawn. This concrete later support is distinct from the redundant pre-existing prohibition of Black Kf5 at the quiet-g4 input.",
+      "scope_limit": "This is a legal owned support realization in the pawn-defense PV, not a separately executed counterfactual removing the g-pawn or proof of unique necessity."
+    },
+    "fixed_event_requirements_rejected": [
+      "g4 must give check: false at this quiet input.",
+      "Original e4 must already be gone before using g4: false here.",
+      "White must immediately play Kf5 after every reply: false for ...f5.",
+      "Original e4 must survive every useful continuation: false in all four king branches.",
+      "Original g3 must survive to the result: false in all four king branches.",
+      "Original g3 always sacrifices a pawn: false for Kf7, where the actual lost piece is its promoted queen.",
+      "Every successful conversion must first remove every Black pawn: the Kd6 supplied suffix stops with original Black b4 still on b3 and a positive completed valuation."
+    ]
+  },
+  "branches": [
+    {
+      "Black_reply": "Ke7",
+      "root_UCI": "e6e7",
+      "reported_White_score": {
+        "kind": "cp",
+        "value": 8115
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "immediate_White_Kf5_legal": true,
+      "White_prices": [
+        {
+          "absolute_ply_zero_based": 17,
+          "suffix_ply_zero_based": 4,
+          "SAN": "fxe5",
+          "UCI": "f6e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 39,
+          "suffix_ply_zero_based": 26,
+          "SAN": "Kxg7",
+          "UCI": "h6g7",
+          "capture_square": "g7",
+          "arrival_square": "g7",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "Black_losses": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 5,
+          "SAN": "Kxe5",
+          "UCI": "f5e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 22,
+          "suffix_ply_zero_based": 9,
+          "SAN": "Kxc5",
+          "UCI": "d5c5",
+          "capture_square": "c5",
+          "arrival_square": "c5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 24,
+          "suffix_ply_zero_based": 11,
+          "SAN": "Kxc4",
+          "UCI": "c5c4",
+          "capture_square": "c4",
+          "arrival_square": "c4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 30,
+          "suffix_ply_zero_based": 17,
+          "SAN": "Kxa4",
+          "UCI": "b4a4",
+          "capture_square": "a4",
+          "arrival_square": "a4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "a4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 40,
+          "suffix_ply_zero_based": 27,
+          "SAN": "Kxb3",
+          "UCI": "a4b3",
+          "capture_square": "b3",
+          "arrival_square": "b3",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "actual_final_checkmate": false,
+      "final_fen": "8/5k2/8/P7/2K5/2P5/1P6/8 b - - 0 58",
+      "remaining_original_identities": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "b2",
+          "current_role": "pawn",
+          "current_square": "b2"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "c3",
+          "current_role": "pawn",
+          "current_square": "c3"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_role": "king",
+          "current_square": "c4"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "a3",
+          "current_role": "pawn",
+          "current_square": "a5"
+        },
+        {
+          "side": "black",
+          "root_role": "king",
+          "root_square": "e5",
+          "current_role": "king",
+          "current_square": "f7"
+        }
+      ],
+      "common_owned_early_conversion": "White Kf5, then e5 ...fxe5 Kxe5. Original Black f7 on f6 captures original White e4 on e5; White king recaptures the original Black f7 pawn and obtains a route toward the queenside.",
+      "e4_guard_lifetime": "Alive at the quiet-g4 input, then actually sacrificed by ...fxe5; indefinite survival is not the functional requirement."
+    },
+    {
+      "Black_reply": "Kd6",
+      "root_UCI": "e6d6",
+      "reported_White_score": {
+        "kind": "cp",
+        "value": 8115
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "immediate_White_Kf5_legal": true,
+      "White_prices": [
+        {
+          "absolute_ply_zero_based": 17,
+          "suffix_ply_zero_based": 4,
+          "SAN": "fxe5",
+          "UCI": "f6e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 31,
+          "suffix_ply_zero_based": 18,
+          "SAN": "Kxg4",
+          "UCI": "g5g4",
+          "capture_square": "g4",
+          "arrival_square": "g4",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "Black_losses": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 5,
+          "SAN": "Kxe5",
+          "UCI": "f5e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 24,
+          "suffix_ply_zero_based": 11,
+          "SAN": "Kxc5",
+          "UCI": "d6c5",
+          "capture_square": "c5",
+          "arrival_square": "c5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 26,
+          "suffix_ply_zero_based": 13,
+          "SAN": "Kxc4",
+          "UCI": "c5c4",
+          "capture_square": "c4",
+          "arrival_square": "c4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 36,
+          "suffix_ply_zero_based": 23,
+          "SAN": "Kxa4",
+          "UCI": "b5a4",
+          "capture_square": "a4",
+          "arrival_square": "a4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "a4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "actual_final_checkmate": false,
+      "final_fen": "8/8/8/1K2k3/8/PpP5/1P6/8 b - - 2 54",
+      "remaining_original_identities": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "b2",
+          "current_role": "pawn",
+          "current_square": "b2"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "a3",
+          "current_role": "pawn",
+          "current_square": "a3"
+        },
+        {
+          "side": "black",
+          "root_role": "pawn",
+          "root_square": "b4",
+          "current_role": "pawn",
+          "current_square": "b3"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "c3",
+          "current_role": "pawn",
+          "current_square": "c3"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_role": "king",
+          "current_square": "b5"
+        },
+        {
+          "side": "black",
+          "root_role": "king",
+          "root_square": "e5",
+          "current_role": "king",
+          "current_square": "e5"
+        }
+      ],
+      "common_owned_early_conversion": "White Kf5, then e5 ...fxe5 Kxe5. Original Black f7 on f6 captures original White e4 on e5; White king recaptures the original Black f7 pawn and obtains a route toward the queenside.",
+      "e4_guard_lifetime": "Alive at the quiet-g4 input, then actually sacrificed by ...fxe5; indefinite survival is not the functional requirement."
+    },
+    {
+      "Black_reply": "Kd7",
+      "root_UCI": "e6d7",
+      "reported_White_score": {
+        "kind": "cp",
+        "value": 8115
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "immediate_White_Kf5_legal": true,
+      "White_prices": [
+        {
+          "absolute_ply_zero_based": 17,
+          "suffix_ply_zero_based": 4,
+          "SAN": "fxe5",
+          "UCI": "f6e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 31,
+          "suffix_ply_zero_based": 18,
+          "SAN": "Kxg4",
+          "UCI": "g5g4",
+          "capture_square": "g4",
+          "arrival_square": "g4",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "Black_losses": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 5,
+          "SAN": "Kxe5",
+          "UCI": "f5e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 24,
+          "suffix_ply_zero_based": 11,
+          "SAN": "Kxc5",
+          "UCI": "d6c5",
+          "capture_square": "c5",
+          "arrival_square": "c5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 26,
+          "suffix_ply_zero_based": 13,
+          "SAN": "Kxc4",
+          "UCI": "c5c4",
+          "capture_square": "c4",
+          "arrival_square": "c4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 34,
+          "suffix_ply_zero_based": 21,
+          "SAN": "Kxa4",
+          "UCI": "b4a4",
+          "capture_square": "a4",
+          "arrival_square": "a4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "a4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 36,
+          "suffix_ply_zero_based": 23,
+          "SAN": "Kxb3",
+          "UCI": "a4b3",
+          "capture_square": "b3",
+          "arrival_square": "b3",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "actual_final_checkmate": false,
+      "final_fen": "8/7k/8/8/P1K5/2P5/1P6/8 b - - 2 55",
+      "remaining_original_identities": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "b2",
+          "current_role": "pawn",
+          "current_square": "b2"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "c3",
+          "current_role": "pawn",
+          "current_square": "c3"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "a3",
+          "current_role": "pawn",
+          "current_square": "a4"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_role": "king",
+          "current_square": "c4"
+        },
+        {
+          "side": "black",
+          "root_role": "king",
+          "root_square": "e5",
+          "current_role": "king",
+          "current_square": "h7"
+        }
+      ],
+      "common_owned_early_conversion": "White Kf5, then e5 ...fxe5 Kxe5. Original Black f7 on f6 captures original White e4 on e5; White king recaptures the original Black f7 pawn and obtains a route toward the queenside.",
+      "e4_guard_lifetime": "Alive at the quiet-g4 input, then actually sacrificed by ...fxe5; indefinite survival is not the functional requirement."
+    },
+    {
+      "Black_reply": "Kf7",
+      "root_UCI": "e6f7",
+      "reported_White_score": {
+        "kind": "mate",
+        "value": 29
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "immediate_White_Kf5_legal": true,
+      "White_prices": [
+        {
+          "absolute_ply_zero_based": 17,
+          "suffix_ply_zero_based": 4,
+          "SAN": "fxe5",
+          "UCI": "f6e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 47,
+          "suffix_ply_zero_based": 34,
+          "SAN": "Kxg8",
+          "UCI": "f7g8",
+          "capture_square": "g8",
+          "arrival_square": "g8",
+          "en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "victim_current_role": "queen"
+        }
+      ],
+      "Black_losses": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 5,
+          "SAN": "Kxe5",
+          "UCI": "f5e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 24,
+          "suffix_ply_zero_based": 11,
+          "SAN": "Kxc5",
+          "UCI": "d6c5",
+          "capture_square": "c5",
+          "arrival_square": "c5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 26,
+          "suffix_ply_zero_based": 13,
+          "SAN": "Kxc4",
+          "UCI": "c5c4",
+          "capture_square": "c4",
+          "arrival_square": "c4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 30,
+          "suffix_ply_zero_based": 17,
+          "SAN": "Kxa4",
+          "UCI": "b4a4",
+          "capture_square": "a4",
+          "arrival_square": "a4",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "a4"
+          },
+          "victim_current_role": "pawn"
+        },
+        {
+          "absolute_ply_zero_based": 34,
+          "suffix_ply_zero_based": 21,
+          "SAN": "Kxb3",
+          "UCI": "a4b3",
+          "capture_square": "b3",
+          "arrival_square": "b3",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [
+        {
+          "absolute_ply_zero_based": 46,
+          "suffix_ply_zero_based": 33,
+          "SAN": "g8=Q+",
+          "UCI": "g7g8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "new_role": "queen"
+        },
+        {
+          "absolute_ply_zero_based": 62,
+          "suffix_ply_zero_based": 49,
+          "SAN": "b8=Q",
+          "UCI": "b7b8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "b2"
+          },
+          "new_role": "queen"
+        },
+        {
+          "absolute_ply_zero_based": 66,
+          "suffix_ply_zero_based": 53,
+          "SAN": "a8=Q",
+          "UCI": "a7a8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "a3"
+          },
+          "new_role": "queen"
+        }
+      ],
+      "actual_final_checkmate": true,
+      "final_fen": "6Q1/7k/8/2K3Q1/8/2P5/8/8 b - - 4 70",
+      "remaining_original_identities": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "c3",
+          "current_role": "pawn",
+          "current_square": "c3"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_role": "king",
+          "current_square": "c5"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "b2",
+          "current_role": "queen",
+          "current_square": "g5"
+        },
+        {
+          "side": "black",
+          "root_role": "king",
+          "root_square": "e5",
+          "current_role": "king",
+          "current_square": "h7"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "a3",
+          "current_role": "queen",
+          "current_square": "g8"
+        }
+      ],
+      "common_owned_early_conversion": "White Kf5, then e5 ...fxe5 Kxe5. Original Black f7 on f6 captures original White e4 on e5; White king recaptures the original Black f7 pawn and obtains a route toward the queenside.",
+      "e4_guard_lifetime": "Alive at the quiet-g4 input, then actually sacrificed by ...fxe5; indefinite survival is not the functional requirement."
+    },
+    {
+      "Black_reply": "f5",
+      "root_UCI": "f6f5",
+      "reported_White_score": {
+        "kind": "mate",
+        "value": 15
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "immediate_White_Kf5_legal": false,
+      "White_prices": [],
+      "Black_losses": [
+        {
+          "absolute_ply_zero_based": 14,
+          "suffix_ply_zero_based": 1,
+          "SAN": "exf5+",
+          "UCI": "e4f5",
+          "capture_square": "f5",
+          "arrival_square": "f5",
+          "en_passant": false,
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [
+        {
+          "absolute_ply_zero_based": 34,
+          "suffix_ply_zero_based": 21,
+          "SAN": "g8=Q+",
+          "UCI": "g7g8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "g3"
+          },
+          "new_role": "queen"
+        },
+        {
+          "absolute_ply_zero_based": 38,
+          "suffix_ply_zero_based": 25,
+          "SAN": "f8=Q",
+          "UCI": "f7f8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "new_role": "queen"
+        }
+      ],
+      "actual_final_checkmate": true,
+      "final_fen": "QQ6/8/1k2K3/2p5/p1p5/PpP5/1P6/8 b - - 4 56",
+      "remaining_original_identities": [
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "b2",
+          "current_role": "pawn",
+          "current_square": "b2"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "a3",
+          "current_role": "pawn",
+          "current_square": "a3"
+        },
+        {
+          "side": "black",
+          "root_role": "pawn",
+          "root_square": "b4",
+          "current_role": "pawn",
+          "current_square": "b3"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "c3",
+          "current_role": "pawn",
+          "current_square": "c3"
+        },
+        {
+          "side": "black",
+          "root_role": "pawn",
+          "root_square": "a4",
+          "current_role": "pawn",
+          "current_square": "a4"
+        },
+        {
+          "side": "black",
+          "root_role": "pawn",
+          "root_square": "c4",
+          "current_role": "pawn",
+          "current_square": "c4"
+        },
+        {
+          "side": "black",
+          "root_role": "pawn",
+          "root_square": "c5",
+          "current_role": "pawn",
+          "current_square": "c5"
+        },
+        {
+          "side": "black",
+          "root_role": "king",
+          "root_square": "e5",
+          "current_role": "king",
+          "current_square": "b6"
+        },
+        {
+          "side": "white",
+          "root_role": "king",
+          "root_square": "f3",
+          "current_role": "king",
+          "current_square": "e6"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "e4",
+          "current_role": "queen",
+          "current_square": "a8"
+        },
+        {
+          "side": "white",
+          "root_role": "pawn",
+          "root_square": "g3",
+          "current_role": "queen",
+          "current_square": "b8"
+        }
+      ],
+      "common_owned_early_conversion": "Black original f7 plays f6-f5; original White e4 captures it by exf5+ and remains alive. The original g3 pawn advances to g5+ and supports the resulting f-pawn as it advances.",
+      "e4_guard_lifetime": "Original e4 survives, relocates to f5/f6/f7 and promotes on f8; this is distinct from the four king-reply exchanges."
+    }
+  ],
+  "comparison_with_prior_checking_realization": {
+    "prior_input": "The earlier17ply checked position had White king f3, original e4 and Black f7 already gone, Black king f5 in check from original g3 now g4. All five first replies there were king moves.",
+    "current_input": "This13ply quiet position has White king f4, original e4 alive, original Black f7 on f6, and Black king e6 not in check. One of its five defenses is a pawn move.",
+    "surviving_structural_function": "A retained original pawn move can be used at an appropriate king/pawn configuration to give Black the move while preserving White options and to support a useful continuation. White continuation and conversion costs must be rechecked under the actual changed defense.",
+    "what_does_not_transfer": "No original e4 guard/loss fact, first-response inventory, pawn check, fixed king entry route, promotion identity, sacrifice location or numerical value is borrowed across these exact histories.",
+    "different_sacrifice_examples": [
+      "Prior checking Kg5 witness loses original g3 and also original a3; its final supplied position has original b2/c3 on b4/c5 versus bare Black king.",
+      "Current quiet Ke7/Kd6/Kd7 witnesses lose original e4 and original g3 as pawns, with g3 captured on g7 or g4.",
+      "Current quiet Kf7 witness loses original e4 pawn and then the QUEEN promoted from original g3; outside original b2/a3 later promote to the mating queens.",
+      "Current quiet ...f5 witness loses no White piece in the supplied line and mates after original g3 and original e4 both promote.",
+      "The separate original-root all8 ...f5 line loses the queen promoted from original e4; that is a different capture/actor from the current quiet Kf7 loss of the queen promoted from original g3."
+    ]
+  },
+  "limits_and_history": [
+    "This independently completed all-five receipt answers the previously open immediate ...f5 defense at the refreshed quiet-g4 board. It does not prove the exact13ply route forced from original Ke3.",
+    "Every immediate legal reply here is covered atdepth24. The later PV branches are legal owned witnesses; not every subsequent defensive node is separately inventoried or formally minimized.",
+    "Ke7/Kd6/Kd7 supplied suffixes have no recorded mate. Kd6 still has Black original b4 pawn on b3 at the endpoint. The positive cp readings and concrete priced conversions are the finite evidence; no terminal mate is invented.",
+    "Kf7 and ...f5 supplied legal lines end in actual checkmate, but independently replaying those lines does not prove every later defender deviation.",
+    "Original root all8 completion, the earlier failed20min attempt, named same-f6 timing control and the checking-g4 all5 remain separate, unchanged receipts and cost scopes.",
+    "No research result is submitted to product16, no product text/basic delivery has been executed with these new proofs, and no original0/4 full-utility criterion is promoted."
+  ],
+  "human_comment_supported_with_scope": "Here g4 uses the saved pawn move while keeping the king on f4 and e4 in place. It does not newly stop ...Kf5; the king already did that. The completed research covers every immediate Black defense: king moves permit Kf5 and the central pawn exchange, while ...f5 allows exf5+ and a supported passed-pawn advance. Those routes have different costs: the king routes can give up e4 and the g-pawn, even after the g-pawn promotes; the ...f5 route preserves both pawns through promotion. Their value is the surviving conversion, not one fixed check or pawn-survival story.",
+  "bounded_task_status": "Complete before10:45UTC; no further engine queries or product edits by this reviewer."
+}

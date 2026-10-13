@@ -1,0 +1,90 @@
+[
+  {
+    "id": "H05R3",
+    "result": {
+      "game_id": "H05R3",
+      "replay_status": "fully_replayed",
+      "saved_report_count": 7,
+      "replayed_report_count": 7,
+      "replayed_works": [
+        {
+          "work_id": "work:0",
+          "execution_key_sha256": "d94f4ede50d7130c8bc3b96f13474ea2ca47089aa99cab88d05598b2badbd01f",
+          "purpose": "root_search",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:1",
+          "execution_key_sha256": "b6fa2a887f87548e96cb8bc9ac40ea606ccbc543e7bc9d782c07f44326a8dc5d",
+          "purpose": "root_search",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:2",
+          "execution_key_sha256": "b99959bced86e816949469aa2861c0c63ea5c669f06b1ea08654f1c767103a20",
+          "purpose": "response_comparison",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:3",
+          "execution_key_sha256": "f2fb7618f9b646e4265afe0d5e64477f9cd87271cfeddbdf8bb06f2226cfe8a1",
+          "purpose": "response_comparison",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:4",
+          "execution_key_sha256": "e91ea474f3b858486bd7cec00e1a5064b70aa576c7d75665d78ab64a0c063dd3",
+          "purpose": "response_comparison",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:5",
+          "execution_key_sha256": "233488ff302a70b655f15a403fe18287c9e7046860a0133fca595b6623eafa0f",
+          "purpose": "response_comparison",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        },
+        {
+          "work_id": "work:6",
+          "execution_key_sha256": "ac92619c95277a11fe27e5a165d81da3713e87627bd50a260de4191cfe2741f3",
+          "purpose": "response_comparison",
+          "saved_execution": {
+            "scope": "saved actual engine report"
+          }
+        }
+      ],
+      "mismatched_work_fields": [],
+      "pending_issued_work": null,
+      "unreplayed_saved_work_ids": [],
+      "research_clock_elapsed_ms": 0
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "investigated_mechanism",
+        "basic": [
+          "g4 spends a pawn move that Ke3 keeps in reserve. In the analysed continuation, g4 keeps the king on f4. After Kg7 gives up control of f5, the king can enter with Kf5. Against f5, which keeps that square guarded, exf5+ leaves a passed pawn on f5, supported by the pawn kept in reserve.",
+          "In the Ke3 line: Kxg5 captures the white pawn on g5.",
+          "In the Ke3 line: Kxg5 captures the white pawn on g5.",
+          "In the Ke3 line: The recorded continuation is Kh6. exf5+ captures the black pawn on f5."
+        ],
+        "detail": [
+          "In the Ke3 line, both sides exchange one pawn. In the g4 line, both sides exchange one pawn. In the Ke3 line: exf5 captures the black pawn on f5. Kxf5 recaptures the white pawn on f5. In the g4 line: fxe5+ captures the white pawn on e5. Kxe3 captures the black pawn on e3.",
+          "In the Ke3 line, both sides exchange one pawn. exf5 captures the black pawn on f5. Kxf5 recaptures the white pawn on f5.",
+          "In the g4 line, both sides exchange one pawn. fxe5+ captures the white pawn on e5. Kxe3 captures the black pawn on e3."
+        ]
+      }
+    ]
+  }
+]

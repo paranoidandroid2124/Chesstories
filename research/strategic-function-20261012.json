@@ -1,0 +1,217 @@
+{
+  "schema_version": "chesstory.strategic-function.v1",
+  "status": "implemented-and-reviewed-within-preregistered-scope",
+  "scope": "Exchange of the moved piece changes the carrier of a continuing positional task; do not equate occupancy, role or exchange alone with identical activity.",
+  "cases": [
+    {
+      "id": "existing",
+      "source": "Think Like a Super-GM, Fischer–Robatsch, Vinkovci 1968, PDF 242–249",
+      "move": "21.Bd5",
+      "old_criteria": "research/meaning-conditions-20261008/final-theory-functional-synthesis.json#IC-SG23",
+      "minimum": [
+        "Explain why Bd5 challenges simplification while allowing exchanges, and connect the remaining white activity to a concrete black defensive deployment cost.",
+        "Distinguish exchange/retreat replies and resulting piece functions, allowing Ne8/Nb7 passivity or c-file pressure rather than fixing one exact book line.",
+        "Do not infer a won fork from legal Nc7, material gain from an attack, or forced superiority/unique move from the book. Preserve Nd5/Nec5 neutralization criterion."
+      ]
+    },
+    {
+      "id": "new",
+      "source": "Boris Gelfand, Positional Decision Making in Chess, Gelfand–Carlsen, Moscow 2013, PDF 177–181",
+      "move": "36.Qc2",
+      "minimum": [
+        "Explain challenging Black’s sole control of the open c-file, and how exchanging queens removes a source of counterplay when White opens the kingside.",
+        "Connect retained minor-piece activity/space to a concrete continuation toward pawn pressure; distinguish a queen exchange from a retreat retaining queens.",
+        "Do not call queen removal alone identical c-file pressure or a forced win; source explicitly permits keeping queens and later counterplay."
+      ]
+    }
+  ],
+  "limits": {
+    "depth_max": 18,
+    "request_ms": 10000,
+    "quality_cases": 2,
+    "screen": "actual product coordinator/decoder/view + fresh Stockfish 18 worker + HTTP; basic panel collapsed"
+  },
+  "history": "Repeated failures: facts/legality are not purpose; actor tracking is not functional identity; scores and tests do not certify explanatory meaning; keep preregistered criteria.",
+  "root_cause": [
+    "Original-actor tracking terminates the purpose when that piece is exchanged, before successor activity and opponent deployment are interpreted.",
+    "First capture/noncapture does not determine the continuing function. Different exchanges can preserve deployment, and the same pawn plan can coexist with different queen counterplay.",
+    "Occupancy and role alone cannot establish continuity: track the original challenged opponent, uninterrupted pawn occupation and original stationary targets."
+  ],
+  "implementation": {
+    "path": "MovePurpose question -> conditional reply classes -> owned response work -> ExchangeActivity state/continuity -> typed basic answer -> browser board validation.",
+    "discovery": "Generic legal same-role exchange offer against newly challenged non-pawn pieces; optional pawn-free contested file. No FEN, SAN, game name, book PV or fixture identifiers in production predicates.",
+    "realization": "Bounded actual continuations, selected exchange closure, remaining central deployment, file activity and pawn contact. Same original opponent and continuing original pawn targets are checked separately from the performing piece.",
+    "limits": "Geometric control is not tactical safety. Common local function is not whole-position equivalence, a lasting bind or a forced gain. Unrelated retreating pieces cannot stand in for question targets.",
+    "search_policy_changed": false
+  },
+  "actual_runs": [
+    {
+      "id": "existing",
+      "san": "Bd5",
+      "elapsed_ms": 3697.774999976158,
+      "depths": [
+        12,
+        12
+      ],
+      "work_purposes": [
+        "root_search",
+        "response_comparison"
+      ],
+      "response_lines_uci": [
+        [
+          "b7d5",
+          "c3d5",
+          "f6d4",
+          "f3d4",
+          "e4f6",
+          "e1e8",
+          "f6e8",
+          "d5b4",
+          "d7f6",
+          "a1c1",
+          "g8f8",
+          "g1f1",
+          "g7g6",
+          "f2f3",
+          "a8d8"
+        ],
+        [
+          "e4c5",
+          "d5b7",
+          "e8e1",
+          "a1e1",
+          "c5b7",
+          "c3d5",
+          "f6d4",
+          "f3d4",
+          "b7c5",
+          "b2b4",
+          "c5d3",
+          "e1e2"
+        ],
+        [
+          "e4d6",
+          "d5b7",
+          "d6b7",
+          "c3d5",
+          "f6d4",
+          "f3d4",
+          "e8e1",
+          "a1e1",
+          "b7c5",
+          "b2b4",
+          "c5d3",
+          "e1e3"
+        ]
+      ],
+      "screen": "research/strategic-function-20261012/bd5.png",
+      "minimum_meaning": "met in the inspected basic screen; broader claims remain limited below",
+      "semantic_review": "Bxd5 Nxd5 Bxd4 Nxd4 Nef6 Rxe8+ Nxe8 leaves Nd4/Nd5 and the original e4 knight on e8; Nd5 controls c7/f6. Nec5 Bxb7 Rxe1+ Rxe1 Nxb7 leaves that same black knight on b7, Bd4 controlling c5 and the white rook using the e-file. Different exchanges preserve a deployment idea while changing the original bishop attack. No forced fork or material win is claimed."
+    },
+    {
+      "id": "new",
+      "san": "Qc2",
+      "elapsed_ms": 2257.199999988079,
+      "depths": [
+        12,
+        12,
+        12
+      ],
+      "work_purposes": [
+        "root_search",
+        "focus_comparison",
+        "response_comparison"
+      ],
+      "response_lines_uci": [
+        [
+          "c7c2",
+          "d3c2",
+          "e7f7",
+          "e2c3",
+          "f8g6",
+          "f2e2",
+          "g6e7",
+          "f3f4",
+          "c8d7",
+          "c2b3",
+          "g5f4",
+          "e3f4",
+          "d7c8",
+          "e2d2"
+        ],
+        [
+          "c7b8",
+          "f3f4",
+          "c8b7",
+          "g3h5",
+          "d6e8",
+          "c2b1",
+          "b8c7",
+          "d3g6",
+          "e8d6",
+          "f2g2",
+          "c7c8"
+        ],
+        [
+          "c7d8",
+          "f3f4",
+          "c8b7",
+          "e2c3",
+          "d6e8",
+          "d3g6",
+          "e8d6",
+          "g3h5",
+          "f8d7",
+          "c2b3",
+          "d8g8"
+        ]
+      ],
+      "screen": "research/strategic-function-20261012/qc2.png",
+      "minimum_meaning": "met in the inspected basic screen; broader claims remain limited below",
+      "semantic_review": "Qc2 challenges the open c-file. Qxc2 Bxc2 Kf7 Nc3 Ng6 Ke2 Ne7 f4 has Bc2/Ng3 controlling f5; Qb8 f4 has Bd3/Ng3 doing that job while queens remain. Same f4 pressure against the original g5 pawn, different queen counterplay. The source-book judgment is not substituted for the engine grade."
+    }
+  ],
+  "baseline_failure": {
+    "existing": "5.019 seconds: attacks and initial recaptures, no continuing deployment purpose.",
+    "new": "2.606 seconds: queen captures and recaptures, no c-file purpose or subsequent pawn plan.",
+    "location": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\research-runs\\strategic-function-20261012",
+    "preregistered_minimum_not_rewritten": true
+  },
+  "development_findings": [
+    "Removed redundant root-PV demonstration: it duplicated response explanations and included a temporary pawn contact that had already been exchanged.",
+    "A negative test incorrectly assumed the current Qb8 PV would advance f4 later. It actually kept f4. Corrected the test to the recorded Qxc2 line with gxf4 exf4, where the original target is removed and a different white pawn returns to the same square. The product was not weakened.",
+    "After the live screens, tightened retreat attribution to question targets, shared exchange closure, and corrected singular verb agreement. Final semantic replay of these exact reports passed; no additional position or timing claim was introduced."
+  ],
+  "verification": {
+    "quality_positions": 2,
+    "request_ms": 10000,
+    "actual_screen": "English product coordinator/decoder/view and Chessground, Java HTTP, fresh browser Stockfish 18 t2/h16 per request. Bd5 is first user request of a fresh server. Not replay timing.",
+    "scala": "ExchangeActivityTest: 2 passed. Exchanged original actor, common deployment, same pawn pressure with different queens, actual gxf4/exf4 identity counterexample, foreign PreparedPaths rejected.",
+    "frontend": "moveReviewExchangeActivity.test.ts: 3 passed. Actual final answers accepted, altered tasks/reply classes/foreign work rejected, depth 19 and missing capture price rejected while preserving numerical assessment.",
+    "build": "All runtime Scala compiled after adding the model; final changed Scala compiled; product UI bundle and changed-file whitespace checks passed.",
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/strategic-function-browser.json.gz"
+  },
+  "limitations": [
+    "Completes the shared exchange-to-remaining-activity purpose path and two preregistered minimum readings; not arbitrary strategy discovery or universal functional equivalence.",
+    "The old Nd5 Bxd4 Nxd4 Nec5 criterion remains. The final root pair Bd5/Nxe4 does not newly prove the book’s Bd5-over-Nd5 ranking.",
+    "The new root pair is f4/Qc2. The author permits more than one plan; modern numerical ranks are not overwritten.",
+    "Conditional reply-class comparison is not unrestricted proof against every best defense. Controls and back-rank placement do not establish permanent passivity.",
+    "Mandatory exchange/check descriptions remain verbose. Full regressions, complete Docker/Lila integration, Korean UI and overall release readiness were not verified.",
+    "New Qc2 was preregistered before output but used in development; it is not a held-out generalization score."
+  ],
+  "preservation": {
+    "baseline_entries": 370,
+    "unchanged_existing_files": 349,
+    "changed_existing_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "research/README.md"
+    ],
+    "missing_existing_files": [],
+    "restored_previously_deleted_files": [],
+    "older_readme_bytes_preserved": true,
+    "committed": false
+  }
+}

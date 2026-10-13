@@ -1,0 +1,122 @@
+{
+  "goal": "Exchange function and retained choices",
+  "registered_before_new_product_output": true,
+  "existing": {
+    "id": "FJ-SG35-LATE-NE4",
+    "unchanged_minimum": [
+      "Explain why committing the f6 knight to e4 exchanges it too early.",
+      "Connect the recapturing pawn on e4 with reduced access to e3; explain the retained knight function and choice under Nd6.",
+      "Keep the actual selected exchange/recapture price. Do not substitute Bxe4 versus Qe2 ranking for Ne4 versus Nd6.",
+      "A verified useful alternative realization may replace the exact book continuation."
+    ],
+    "source": {
+      "path": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Custom\\Think Like a Super-GM - Reading Edition.pdf",
+      "sha256": "b6b1ddf45b24823191e88dd7a7ea05645103185bcd7a6489e3b1cb9410f537ba",
+      "read_pages": [
+        351,
+        355,
+        356,
+        361
+      ],
+      "visual_check_page": 356
+    }
+  },
+  "fresh": {
+    "id": "GF-1975-24-NF3",
+    "game": "Boris Gelfand–Abram Gelfand, Minsk 1975",
+    "source": "G:\\내 드라이브\\GoodNotes Sync\\Chess\\Custom\\Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+    "source_sha256": "4f5ab5f5396eddd689dfb82fdfdfbdf1adc8b8e13f6516358faf1e7dba8ae0a0",
+    "pages": [
+      9,
+      10
+    ],
+    "current_fen": "1r1q1r2/1p1b1ppk/p1pp1n1p/P3nP2/3NP3/1BN3QP/1PP3P1/R4R1K w - - 0 24",
+    "previous_exact_position_matches": [],
+    "minimum": [
+      "Nf3 offers to exchange the central e5 knight; taking is an option, not forced.",
+      "Explain the exchange function: after Nxf3 Rxf3 the e5 knight is gone and the rook can transfer along the third rank to pressure d6.",
+      "Contrast the useful roles when the opponent accepts versus declines the exchange, if a current owned comparison supports that distinction.",
+      "Preserve the exchange price and do not pretend the book line or plan uniquely causes the engine grade."
+    ],
+    "visual_check_page": 10,
+    "exposure": "Preregistered before product output; first used in this goal, then exposed during implementation. Not a blind holdout success."
+  },
+  "limits": {
+    "positions": 2,
+    "maximum_depth": 18,
+    "broad_regression": false,
+    "completion": "Read both actual basic explanations against these meanings; strings and test passes alone are insufficient."
+  },
+  "root_cause": [
+    "The first-reply comparison was already available, but the basic answer stopped at attack/support/capture facts. It had no selection connecting the recapture structure to the task of the surviving piece.",
+    "The prior first-target selector treated the original moved piece as the whole subject. The alternative can trade a different original piece and retain the useful original mover; those identities must stay distinct.",
+    "The author and the current engine may choose different captures and replies. Their function can agree without borrowing the book line, its evaluation, or another occurrence.",
+    "A legal entry alone is not a scored useful plan. Rook entry requires a target also used in a current tested continuation, exact current legality and complete control/ray inventories; its wording remains an available option."
+  ],
+  "implementation": {
+    "shared_reader": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ExchangeFunctionReading.scala",
+    "current_reply_owner": "TargetResponseInvestigation.FirstTarget",
+    "selection": "First capture and decline, the selected alternative root realization, at most the first nine plies for the retained role.",
+    "no_case_specific_fen_or_move_switches": true,
+    "additional_engine_queries": 0,
+    "failure_behavior": "Keep the previous answer if ownership, exact piece identity, functional inventories, price closure or bounded realization is missing.",
+    "scope": "Immediate minor-piece exchange closing pawn pressure with an observed retained-piece alternative; or a rook recapture freeing a former enemy-controlled entry toward a pawn."
+  },
+  "verification": {
+    "cases": 2,
+    "focused_tests": 2,
+    "result": "passed",
+    "new_actual_engine_jobs": 1,
+    "new_actual_engine_works": 5,
+    "completed_depths": [
+      8,
+      16
+    ],
+    "maximum_depth": 16,
+    "additional_research_retry": 0,
+    "replay": "All full work descriptors match the real reports; original primary assessments unchanged.",
+    "negative_checks": "On each same case, remove the exact required future board inventory: the first-reply proof remains valid but the exchange function becomes unavailable. A checked reading cannot be reused with another evidence owner.",
+    "fresh_option": "The unplayed f3d3 option has a current legal row and geometric entry checks, but no observed-action or engine-value receipt.",
+    "checks_not_run": [
+      "full regression suite",
+      "UI execution",
+      "additional chess positions",
+      "complete release validation"
+    ]
+  },
+  "actual_basic_readings": [
+    {
+      "id": "FJ-SG35-LATE-NE4",
+      "status": "bounded_meaning_met",
+      "reason": "The basic answer now connects Bxe4/fxe4 to the queen line blocked toward e3, keeps the Qe2/Ncd6 retention response, and contrasts using the c4 knight on e4 with retaining the f6 knight for Nd5 pressure on e3 and f4. Both exchanges retain their exact prices.",
+      "remaining": "This explains a concrete functional cost and the retained option; it does not isolate the whole numerical root delta or prove that every defense follows the displayed PV.",
+      "basic_text": "After Ne4, Black's knight on e4 now targets White's knight on g3. After Ne4, Bxe4 is the stronger tested reply than Qe2. In the Ne4 line: The recorded continuation is Bxe4 fxe4. Bxe4 captures the black knight on e4. fxe4 recaptures the white bishop on e4. The exchange leaves Black's pawn on e4 blocking the line from Black's queen on e6 to White's pawn on e3. The advanced piece has gone, but the recapturing pawn keeps that pressure closed. In the Ne4 line: The recorded continuation is Qe2 Ncd6. Ncd6 moves the knight out of the attack from White's queen on e2. After Ncd6, Black's knight on d6 supports Black's knight on e4. The recorded continuation is Nd6 Qb1 Nde4 Nxe4 dxe4 Bf1 Nd5. Nxe4 captures the black knight on e4. dxe4 recaptures the white knight on e4. Nd6 keeps the choice of which knight to offer on e4. Here Nde4 uses the knight originally on c4, leaving the knight from f6 for Nd5. From d5 it attacks White's pawn on e3 and White's pawn on f4, restoring pressure despite the blocked line. The immediate Ne4 exchange gives up that piece and this way of continuing the pressure. The compared root choices are Nd6 and Ne4."
+    },
+    {
+      "id": "GF-1975-24-NF3",
+      "status": "bounded_meaning_met",
+      "reason": "The basic answer connects the Nf3 challenge to exchanging the e5 knight, removing its d3 control, a currently legal rook entry toward d6, and the different Re8/Rad1/Nxe5/Rxe5 response. It explains the book function under the actual Qe7 reply rather than requiring the source Qc7 line.",
+      "remaining": "The d3 transfer is an available purpose, not an independently engine-ranked move or a forced line; no whole-root numerical causality is claimed.",
+      "basic_text": "After Nf3, White's knight on f3 now targets Black's knight on e5. After Nf3, Re8 and Nxf3 are competitive replies. In the Nf3 line: The recorded continuation is Nxf3 Rxf3 Qe7. Nxf3 captures the white knight on f3. Rxf3 recaptures the black knight on f3. The exchange removes Black's knight on e5, which controlled d3. After Qe7, the recapturing rook can use d3 to attack Black's pawn on d6; no opposing piece currently controls that entry square. This transfer is an available option. In the Nf3 line: The recorded continuation is Re8 Rad1 Qc7 Nxe5 Rxe5. Nxe5 captures the black knight on e5. Rxe5 recaptures the white knight on e5. After Rad1, White's rook on d1 now targets Black's pawn on d6. The compared root choices are Nf3 and Rfe1."
+    }
+  ],
+  "completion": {
+    "date": "2026-10-12",
+    "status": "bounded_medium_goal_met",
+    "basis": "Both actual basic texts were read against the preregistered functional meanings, in addition to the two core checks. No prior failed cohort was rescored.",
+    "not_claimed": [
+      "general strategic explanation solved",
+      "all exchanges covered",
+      "release fully ready"
+    ]
+  },
+  "final_sha256": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ExchangeFunctionReading.scala": "2486b3e3c6c172fc93de89efda460b4c11b8e4e01e9755c6e5cdd5e4b680ba70",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "0ff0f86022cba603fad31c978e5fba8cabea4b1bab9bd191232a794c78cca75d",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": "22426ded6295c85b45d99947e0f72905f0894037779c3bbebaabdb34176c9fad",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala": "417dc7ba51cb993a2de2517a314ab3ecd509710f5a613b8c28333bb9453a3e6a",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "3b1438eb661110779831dea5d667752971f0f1a247e25a60400c20d25f654976",
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/ExchangeFunctionReadingTest.scala": "fb0f25750ac0d88c0812c3f32916ecc5a135b608264565bd74023677c644406f",
+    "judgment-evaluation/fixtures/public-commentary-v6/exchange-function-produced.json.gz": "3664a235ed42cf1ccb84fe859b294208130dafd3643b63abd750be6732d0f726"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "registered_utc": "2026-10-07T11:04:05.449905+00:00",
+  "rule_freeze_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\critical-comparison-20261007\\final-rule-freeze-v11.json",
+  "rule_freeze_sha256": "266fbfdb9e75d13d6be7892b89c528ca39f8e62301bdc27470bcdeaba3db80a6",
+  "runs": [
+    {
+      "label": "criticalverifiednormal1",
+      "input_file": "final-normal-inputs-v11.json",
+      "budget_ms": 10000,
+      "trials": 6
+    },
+    {
+      "label": "criticalverifiedcold1",
+      "input_file": "final-normal-cold-input-v11.json",
+      "budget_ms": 10000,
+      "trials": 1
+    },
+    {
+      "label": "criticalverifiedrepeat1",
+      "input_file": "final-repeat-inputs-v11.json",
+      "budget_ms": 30000,
+      "trials": 6
+    },
+    {
+      "label": "criticalverifiedcontrols1",
+      "input_file": "final-control-inputs-v11.json",
+      "budget_ms": 30000,
+      "trials": 6
+    },
+    {
+      "label": "criticalverifiednew1",
+      "input_file": "final-new-reference-inputs-v11.json",
+      "budget_ms": 30000,
+      "trials": 4
+    }
+  ],
+  "meaning": "Read actual basic text separately from phase, proof and price/link retention. Do not retry failed trials or supply hypotheses, illustrative future moves or scores to product."
+}

@@ -1,0 +1,641 @@
+[
+  {
+    "id": "H05R1",
+    "result": {
+      "game_id": "H05R1",
+      "elapsed_ms": 8902,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 1778.857
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 1.941
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 125.326
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.879
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 1180.828
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 27.17
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 696.59
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.37
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 2042.258
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 113.237
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2706.11
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.123
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 111.098
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 112.36
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the Ke3 line, both sides exchange two pawns; Black also loses one pawn.",
+          "In the g4 line through Ke3, neither side loses material or promotes."
+        ],
+        "detail": [
+          "In the Ke3 line, both sides exchange two pawns; Black also loses one pawn. Kxc4 captures the black pawn on c4. Kxe5 captures the white pawn on e5. Kxa4 captures the black pawn on a4. Kxb3 captures the black pawn on b3. Kxg4 captures the white pawn on g4.",
+          "In the g4 line through Ke3, neither side loses material or promotes."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T20R1",
+    "result": {
+      "game_id": "T20R1",
+      "elapsed_ms": 6697,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 28.582
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.376
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 29.467
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.77
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 212.761
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 22.686
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 60.136
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.76
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 201.374
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 33.47
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 128.712
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.569
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 411.948
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 69.109
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 673.569
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.949
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 37.34
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 68.44
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2434.024
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.342
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 589.121
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 147.722
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 876.537
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.225
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 485.313
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 169.37
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "investigated_mechanism",
+        "basic": [
+          "After g5, the recorded g4 hxg4 h5 continuation gives White a passed pawn on h5. Advancing the pawn to g5 has removed its control of h5. Ke6 keeps that pawn on g6: after the same g4, it still guards h5. After Ke6, the tested g4 evaluates below Kd4. In the g5 line: hxg4 clears h5; h5 later occupies that square in this line. After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5.",
+          "In the g5 line: hxg4 captures the white pawn on g4."
+        ],
+        "detail": [
+          "After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5. After Ke1, the white pawn originally on h4 has promoted to a queen and is still present on h8. After g4, White's pawn on g4 now targets Black's pawn on h5. After hxg4, the black pawn originally on h5 is still present on g4. After Ke1, the black pawn originally on h5 is still present on g3. After g5, Black's pawn on f6 adds support to Black's pawn on g5, which is under attack from White's pawn on h4. hxg4 captures the white pawn on g4. The recorded continuation is Ke6. In the Ke6 line, White loses one pawn. fxg3 captures the white pawn on g3. The recorded continuation is g5 … f4+ Ke2 … f3+ Ke1. hxg4 captures the white pawn on g4. h8=Q promotes to a queen.",
+          "In the Ke6 line, White loses one pawn. fxg3 captures the white pawn on g3.",
+          "The recorded continuation is g5 … f4+ Ke2 … f3+ Ke1. hxg4 captures the white pawn on g4. h8=Q promotes to a queen."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "H05R2",
+    "result": {
+      "game_id": "H05R2",
+      "elapsed_ms": 5351,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 21.696
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 1.86
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 23.965
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.737
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 205.267
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 33.452
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1102.995
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.442
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 299.047
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 81.566
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 3066.505
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.13
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 378.928
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 126.777
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the Ke3 line, Black loses two pawns.",
+          "In the g4 line through Kf3, neither side loses material or promotes."
+        ],
+        "detail": [
+          "In the Ke3 line, Black loses two pawns. Kxc5 captures the black pawn on c5. Kxc4 captures the black pawn on c4.",
+          "In the g4 line through Kf3, neither side loses material or promotes."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T20R2",
+    "result": {
+      "game_id": "T20R2",
+      "elapsed_ms": 5247,
+      "works": 5,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 14.38
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.1
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 24.006
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.881
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 137.515
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 22.234
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 118.752
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.532
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 320.443
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 71.246
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 617.04
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.084
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 35.347
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 69.397
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 1620.828
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.107
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 469.458
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 155.609
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 940.017
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.081
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 425.382
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 189.738
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "observed_terminal_comparison",
+        "basic": [
+          "After g5, the recorded g4 hxg4 h5 continuation gives White a passed pawn on h5. Advancing the pawn to g5 has removed its control of h5. Kd6 keeps that pawn on g6: after the same g4, it still guards h5. After Kd6, the tested g4 evaluates below Kd4. In the g5 line: hxg4 clears h5; h5 later occupies that square in this line. After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5.",
+          "The recorded continuation is g5 … f4+ Kf2 g3+ Kg2 … f3+ Kf1 g2+ Kf2. hxg4 captures the white pawn on g4. h8=Q promotes to a queen.",
+          "In the Kd6 line, both sides exchange three pawns. After Kxh4, the game is drawn because neither side can give checkmate."
+        ],
+        "detail": [
+          "In the Kd6 line, both sides exchange three pawns. hxg5 captures the black pawn on g5. fxg5 recaptures the white pawn on g5. gxh4 captures the black pawn on h4. gxh4 recaptures the white pawn on h4. Kxc5 captures the white pawn on c5. Kxh4 captures the black pawn on h4. After Kxh4, the game is drawn because neither side can give checkmate.",
+          "The recorded continuation is g5 … f4+ Kf2 g3+ Kg2 … f3+ Kf1 g2+ Kf2. hxg4 captures the white pawn on g4. h8=Q promotes to a queen.",
+          "In the Kd6 line, both sides exchange three pawns. hxg5 captures the black pawn on g5. fxg5 recaptures the white pawn on g5. gxh4 captures the black pawn on h4. gxh4 recaptures the white pawn on h4. Kxc5 captures the white pawn on c5. Kxh4 captures the black pawn on h4. After Kxh4, the game is drawn because neither side can give checkmate.",
+          "The recorded continuation is g5 … f4+ Kf2 g3+ Kg2 … f3+ Kf1 g2+ Kf2. hxg4 captures the white pawn on g4. h8=Q promotes to a queen."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "H05R3",
+    "result": {
+      "game_id": "H05R3",
+      "elapsed_ms": 5117,
+      "works": 3,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 19.597
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.034
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 26.666
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.735
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 119.336
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 25.586
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 774.349
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.51
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 390.857
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 111.265
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 3151.185
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.122
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 342.922
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 143.363
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "selected_comparison",
+        "basic": [
+          "In the Ke3 line: bxa3 moves the pawn out of the attack from White's pawn on c3. In the Ke3 line, both sides exchange two pawns; Black also loses one pawn.",
+          "In the g4 line through Ke2, neither side loses material or promotes."
+        ],
+        "detail": [
+          "In the Ke3 line, both sides exchange two pawns; Black also loses one pawn. bxa3 captures the white pawn on a3. bxa3 recaptures the black pawn on a3. Kxc4 captures the black pawn on c4. Kxe5 captures the white pawn on e5. Kxc5 captures the black pawn on c5.",
+          "In the g4 line through Ke2, neither side loses material or promotes."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "T20R3",
+    "result": {
+      "game_id": "T20R3",
+      "elapsed_ms": 5841,
+      "works": 6,
+      "adapter_error": null,
+      "phase": "completed",
+      "stop_condition": null,
+      "pending": false,
+      "research_timings": [
+        {
+          "stage": "begin_rpc",
+          "elapsed_ms": 13.447
+        },
+        {
+          "stage": "begin_journal",
+          "elapsed_ms": 2.176
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 29.252
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.729
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 66.815
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 16.159
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 46.324
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 0.609
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 84.658
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 26.739
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 138.291
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.441
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 280.68
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 72.098
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 632.081
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.132
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 31.391
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 70.324
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 2678.911
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.103
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 328.465
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 145.267
+        },
+        {
+          "stage": "engine_rpc",
+          "elapsed_ms": 629.959
+        },
+        {
+          "stage": "engine_journal",
+          "elapsed_ms": 1.181
+        },
+        {
+          "stage": "report_rpc",
+          "elapsed_ms": 362.281
+        },
+        {
+          "stage": "report_journal",
+          "elapsed_ms": 171.102
+        }
+      ]
+    },
+    "assessment_state": "current",
+    "roots": [
+      {
+        "question": "observed_terminal_comparison",
+        "basic": [
+          "After g5, the recorded g4 hxg4 h5 continuation gives White a passed pawn on h5. Advancing the pawn to g5 has removed its control of h5. Kd6 keeps that pawn on g6: after the same g4, it still guards h5. After Kd6, the tested g4 evaluates below Kd4. In the g5 line: hxg4 clears h5; h5 later occupies that square in this line. After g5, Black's pawn on g5 now targets White's pawn on h4. h5 moves the pawn out of the attack from Black's pawn on g5.",
+          "The recorded continuation is g5. hxg4 captures the white pawn on g4. h8=Q promotes to a queen.",
+          "In the Kd6 line: After Kf5, White's king on f5 now targets Black's pawn on g5. gxh4 moves the pawn out of the attack from White's king on f5. In the Kd6 line, both sides exchange three pawns. After Kxh4, the game is drawn because neither side can give checkmate."
+        ],
+        "detail": [
+          "In the Kd6 line, both sides exchange three pawns. hxg5 captures the black pawn on g5. fxg5 recaptures the white pawn on g5. Kxc5 captures the white pawn on c5. gxh4 captures the black pawn on h4. gxh4 recaptures the white pawn on h4. Kxh4 captures the black pawn on h4. After Kxh4, the game is drawn because neither side can give checkmate.",
+          "The recorded continuation is g5. hxg4 captures the white pawn on g4. h8=Q promotes to a queen.",
+          "In the Kd6 line, both sides exchange three pawns. hxg5 captures the black pawn on g5. fxg5 recaptures the white pawn on g5. Kxc5 captures the white pawn on c5. gxh4 captures the black pawn on h4. gxh4 recaptures the white pawn on h4. Kxh4 captures the black pawn on h4. After Kxh4, the game is drawn because neither side can give checkmate.",
+          "The recorded continuation is g5. hxg4 captures the white pawn on g4. h8=Q promotes to a queen."
+        ]
+      }
+    ]
+  }
+]

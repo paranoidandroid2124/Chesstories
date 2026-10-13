@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-04",
+  "reviewer": "concise_answer_review",
+  "method": "최종 후보 source와 관련 기존 검사 본문을 읽은 독립 정적 감사. 루트의 컴파일/검사 결과와 별도이다.",
+  "execution_scope": {
+    "product_modified": false,
+    "build_or_tests_executed": false,
+    "engine_executed": false,
+    "browser_or_http_executed": false,
+    "protected_material_read": false,
+    "new_quality_measurement": false,
+    "human_reader_evaluation": false
+  },
+  "source_fingerprints": [
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala","sha256":"7844c2d4f69d7ce7ec8c80e8dd59bd5d601c9568f11650c33768b0f90115831e"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala","sha256":"d6ce8d508cdd13b526c771bba9590c363f0e00b769d39f46d119de0f7b66ea65"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala","sha256":"0c5eabc42c01d431701040c6a3150cb65bf434cc8bf0199d09682a8e8fbd1eb5"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala","sha256":"9a97e8a76f9e7c155323dd17f40e532d205419820ad46ffe1f4ce35aa9d65a8f"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryThreat.scala","sha256":"192ee3e4cf2e06a305e63963a1e5fb2a17752ba73dc5558188b2bd0b65a73107"},
+    {"path":"chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala","sha256":"5f58a265a24d12aa20c2cac760e19c3af2d878a4aa4742756898b7ff94ae704d"},
+    {"path":"chesstory-runtime/src/test/scala/io/chesstory/runtime/CommentaryDependencyTest.scala","sha256":"d6565e13b2c8c58fe8a7c9c2a31aa937a460f31e06e20502b22596791d3fdcda"}
+  ],
+  "overall_assessment": {
+    "new_blocking_source_violation_found": false,
+    "basis": "조사한 추가 경로는 실제 소유된 Arm의 capture/event/identity/inventory에서 가격을 구성한다. 새 후보 또는 pass 평가를 읽는 입력이 없고, 미확인 control을 true/absent로 바꾸는 새로운 우회도 확인하지 못했다.",
+    "claim_scope": "제공된 실제 두 수순 안의 선택된 조건, 실제 사용, 관측된 응수, 원래 기물의 손실/되잡기 및 확인된 종결. 강제 이득·최선·예방 성공·루트 실수 책임은 이 관계 추가만으로 확정하지 않는다.",
+    "not_proved": "이번 정적 감사만으로 모든 입력의 정상 작동, 실제 품질 개선률, 출시 기준 또는 시간 예산 충족을 증명하지 않는다."
+  },
+  "reviewed_boundaries": [
+    {
+      "name":"originally selected capture ownership",
+      "sources":["MoveWorkProjection.scala:3083-3099","MoveWorkProjection.scala:3241-3245"],
+      "result":"공통 caller가 조건/가격을 추가하기 전 selectedAnswer.core를 별도 selected 인자로 준다. capture 씨앗은 selected.covered에서 같은 path의 actual Arm.captures와 일치하는 offset뿐이다. proof refs와 새 가격 events는 추가 씨앗이 아니다.",
+      "preserved":"새 가격을 재귀적으로 따라 관련 없는 capturer lifetime 전체를 이야기하는 방식은 추가되지 않았다."
+    },
+    {
+      "name":"continuous physical removal",
+      "sources":["RootQuestionSummary.scala:542-552","RootQuestionSummary.scala:493-518"],
+      "result":"기존 actual captureLink에서 원래 capturer를 잡는 실제 removal을 가져오고, 그 recovering actor가 시작 포획 직후부터 제거 직전까지 같은 원래 capturer를 계속 covers해야 한다. unknown position/control 또는 RayBarrier 부재는 certificate를 성립시키지 않는다.",
+      "claim_limit":"covers는 geometric control과 unpinned certificate다. 모든 중간 차례의 legal_capture availability, 항상 가장 좋은 응수 또는 강제 제거의 증명은 아니다. actual removal의 합법성은 이미 소유된 실제 수순에서 온다."
+    },
+    {
+      "name":"selected capturing clearance and earlier selected gain",
+      "sources":["MoveWorkProjection.scala:3246-3264","MoveWorkProjection.scala:3551-3577"],
+      "result":"dependency의 use가 원래 선택된 capture여야 한다. 앞 gain의 originalActor가 뒤 capture의 originalVictim이며, 실제 ClearedRoute target과 일치해야 한다. target은 gain 이후 stationary이고, 실제 opening 뒤 originalUser가 그 target을 지속 covers한다. upstream dependency는 실제 user/victim, 단일 blocker, before blockedRay와 control false, 이후 control true, 실제 legal use 및 opening note를 확인한다.",
+      "preserved":"초기 ray가 막혀 있던 recovery를 physical identity 하나로 연속 공격이라고 바꾸지 않는다. 새 opening/use의 실제 receipt가 있을 때에만 그 bounded 거래를 연결한다.",
+      "caller_scope":"dependencies는 같은 Arm에서 selectedConditionSections가 생성한 typed Section이다. 외부 임의 route를 무제한 입력받는 계약으로 확대하지 않는다."
+    },
+    {
+      "name":"actual use of capture exposure",
+      "sources":["MoveWorkProjection.scala:3265-3293"],
+      "result":"selectedCapture의 정확 occurrence/prefix와 original blocker actor를 요구한다. 실제 나중 capture의 original attacker/target 및 UCI가 exposure와 일치하고, 두 기물의 현재 위치와 covers가 전 구간 유지돼야 한다. 실제 opening과 control/available-capture sources도 proof에 보존한다.",
+      "preserved":"available response만으로 queen loss 또는 price를 만들지 않는다. 주어진 실제 capture를 실제 target identity로 확인한다."
+    },
+    {
+      "name":"first actual reply with reversed actual alternative",
+      "sources":["MoveWorkProjection.scala:3295-3318"],
+      "result":"원래 선택된 root Attack의 실제 user/subject capture-use와 지속 관계를 요구한다. 해당 arm의 실제 첫 reply capture가 기존 위협 대상과 연결되고, 같은 시작 위치의 다른 arm에서 원래 선택된 root capture의 actor/victim이 정확히 역순이어야 한다. 제거/회복은 실제 bounded continuousRecovery로만 추가된다.",
+      "preserved":"다른 arm의 엔진 평가를 이 reply의 평가로 옮기지 않는다. 같은 SAN/물질 크기만으로 첫 reply를 붙이지 않는다. 두 originally selected 관계 중 하나가 없으면 그 가격 경로는 생기지 않는다.",
+      "claim_limit":"대안에서는 해당 attacker를 잡고 이 수순에서는 실제로 반대 포획을 허용했다는 대비다. 다른 모든 reply에서 손실이 강제된다는 결론은 아니다."
+    },
+    {
+      "name":"selected support departure and actual same-target loss",
+      "sources":["MoveWorkProjection.scala:3319-3341"],
+      "result":"선택된 support Action은 root가 아니어도 같은 path여야 한다. 원래 defender/target/enemy를 추적하며, originally selected capturing departure 뒤 바로 실제 opponent가 같은 target을 잡아야 한다. departure까지 support가 유지되고, 이후 control false가 알려져 있어야 하며 target 위치와 enemy covers는 loss까지 유지돼야 한다. support anchor와 ControlState(false), identity-bearing PieceExchange(departure,loss)를 같은 소유 Section에 둔다.",
+      "preserved":"미확인 ended support를 absent support로 바꾸지 않는다. support anchor 앞뒤의 독립된 material loss를 가격 interval 시작점으로 쓰지 않는다.",
+      "claim_limit":"실제 지원 이탈과 바로 이어진 대상 손실의 설명이다. 그 기물이 유일한 defender였거나 이탈 때문에 모든 수순에서 대상이 반드시 손실된다는 주장은 추가하지 않는다."
+    },
+    {
+      "name":"whole price receipt, partial receipt and promotion",
+      "sources":["MoveWorkProjection.scala:3342-3384","MoveWorkProjection.scala:3400-3433","RootQuestionSummary.scala:345-365"],
+      "result":"가격 계정은 같은 actual material event를 공유할 때만 합친다. 이미 존재하는 PieceExchange를 우선하려면 같은 path이며 가격의 모든 offset과 정확히 같고 ordinary capture-only여야 한다. 작은 receipt로 추가 비용을 숨기지 않는다. 그 외에는 actual ledger에서 Material을 계산하며 promotion은 MaterialEvents로 역할 변화를 보존한다. required/focus는 제거한 가격과 함께 새 owner로 이동한다.",
+      "preserved":"수치 합계가 같다는 이유로 original target의 손실을 없애지 않는다. identity-bearing whole price와 같은 aggregate를 중복해서 붙이지 않는다."
+    },
+    {
+      "name":"actual check inventory and proof-only echoes",
+      "sources":["MoveWorkProjection.scala:3000-3036","RootQuestionSummary.scala:554-558","MoveWorkProjection.scala:3385-3390,3423-3426"],
+      "result":"CheckingMove/CheckReply는 기존 certified inventory와 실제 response UCI로만 만든다. discovered checker를 실제 mover와 구분한다. already-owned refs는 이전 가격을 제거한 뒤 살아 있는 core와 새 price/check receipts에서 다시 계산한다. 실제로 유지된 refs는 Continuation echo를 만들지 않지만 교체된 계정에만 있던 quiet proof ref는 required와 함께 새 Continuation으로 보존한다.",
+      "preserved":"raw check SAN 문자열이나 pass PV를 현재 체크 응수 증명으로 사용하지 않는다. 응수 없는 끝 표시가 CheckReply가 되지 않는다."
+    },
+    {
+      "name":"finite check ending and actual terminal",
+      "sources":["MoveWorkProjection.scala:3129-3136,3219-3225,3343-3348","RootQuestionSummary.scala:55-110"],
+      "result":"가격을 닫는 ending은 complete owned source/path의 정확 마지막 위치이며 originally selected core의 RecordedEnd 또는 actual Terminal이어야 한다. RecordedEnd는 automaticTerminal이 없을 때, Terminal은 exact result가 일치할 때만 인정한다. 나머지 check는 실제 다음 reply ref를 요구한다.",
+      "status_of_prior_R1":"receipt-review-v1의 relation context 마지막 checking removal 경계는 checks.filterNot(ownedEnding)로 보완됐다. 원래 account.complete를 true로 바꾸지 않으며 interior/sibling/detail-only ending은 이 certificate에 들어오지 않는다."
+    },
+    {
+      "name":"pass evaluation and global reader guards",
+      "sources":["CommentaryThreat.scala:8-20,22-47","CommentaryJobReducer.scala:45,899-914","RootQuestionSummary.scala:968-970","RootThreatSummary.scala:31-42,72-83"],
+      "result":"automatic threat는 false이고 pass 점수/PV는 실제 packet에 bind되지 않는다. 이번 가격 함수는 candidate scores, hypothetical histories 또는 CompareMoves 평가값을 입력으로 사용하지 않는다. 기존 account/fits 및 RootThreatSummary의 특수 actual witness/가격 guard는 그대로다.",
+      "remaining_scope":"새 공통 가격이 기존 special reader의 사전 None을 복구한다는 뜻은 아니다. RootThreatSummary.read/readSelected의 direct realize도 제품 projection의 completeSelectedConditions와 다른 경로다."
+    }
+  ],
+  "checks_read_not_run": [
+    {"source":"CommentaryDependencyTest.scala:626-650","scope":"synthetic final checking removal의 exact core RecordedEnd 양성 및 missing/interior/sibling/detail-only 음성. 가짜 CheckReply 없음."},
+    {"source":"CommentaryDependencyTest.scala:652-692","scope":"opened WCC2016 Game11에서 actual reversed first reply/selected attack use. source relation 한쪽 제외 또는 unknown intermediate attack이면 추가 가격 없음."},
+    {"source":"CommentaryDependencyTest.scala:694-705","scope":"synthetic automatic draw after checking removal. exact Terminal 보존, 경로 밖 reply 없음. master generalization 결과가 아님."},
+    {"source":"CommentaryDependencyTest.scala:707-759","scope":"opened Candidates2018 Game9 selected late support/actual capturing departure/next same-target loss. support owner focus와 original victim 보존, independent earlier loss17 제외, whole PieceExchange를 같은 Material로 반복하지 않음, 교체된 Material에만 있던 quiet ref20과 required 보존, proof/detail-only 및 unknown ended support 음성."}
+  ],
+  "final_review_update": {
+    "reason":"최초 읽기 뒤 MWP와 DependencyTest의 변경을 해시 확인에서 발견하여 해당 가격 경계와 추가 검사 본문을 다시 읽었다.",
+    "initial_mwp_sha256":"1c7cd8105672027526fc3f94a5b52791ae728333ddd0a7a872866ed79476881a",
+    "final_mwp_sha256":"7844c2d4f69d7ce7ec8c80e8dd59bd5d601c9568f11650c33768b0f90115831e",
+    "reviewed_delta":"ownedReferences/missing Continuation 계산을 이전 가격 제거 뒤로 이동했다. 따라서 교체되어 사라지는 Material만 소유했던 quiet proof ref를 이미 소유했다고 오인해 제거하지 않는다. 기존 required/focus 이동과 새 실제 receipt 소유를 유지한다.",
+    "test_read":"CommentaryDependencyTest.scala:740-750의 기존 master pair에 quiet proof ref20을 가진 whole bill을 넣고 replacement 이후 required/reference/realize 보존을 검사하는 소스를 읽었다. 실행하지 않았다.",
+    "effect_on_safety_assessment":"proof metadata 보존에 필요한 좁은 수정이며, 관계 씨앗·실제 가격·가정 평가의 경계는 바뀌지 않았다."
+  },
+  "remaining_limits": [
+    "covers는 geometric control+unpinned certificate이며 전체 legal capture inventory와 동치가 아니다. 이를 계속 잡을 수 있었음/강제 손실/예방 성공으로 번역하지 않는다.",
+    "실제 수순의 관계와 가격을 연결하는 수정이다. root move의 실수 책임 또는 비교 강도를 확정하려면 같은 위치의 소유된 엔진 비교와 해당 실제 응수의 근거가 필요하다.",
+    "initialReplies는 actual first reply, supportDepartures는 selected capturing departure 직후 reply에 좁게 묶여 있다. 중요한 delayed reply 전부를 해결한 일반 관계 정책은 아니다.",
+    "RootThreatSummary의 dutyCosts.empty/즉시 balanced witness 및 일부 selected reader의 fits 사전 gate는 유지되어 있다. 이번 공통 가격 전달과 그 초기 선택 제한을 혼동하지 않는다.",
+    "판독 가능한 identity-bearing price가 정확 whole price일 때만 aggregate를 대신한다. 계정 안의 독립된 교환이 많으면 여전히 본문이 길거나 핵심 선택이 약할 수 있다.",
+    "읽은 실제 master 검사는 이미 열린 회귀 자료이며, synthetic ending 검사는 안전 속성 확인용이다. 이 자료를 새 일반화 성공 또는 인간 가독성 평가로 확대하지 않는다.",
+    "자동 threat의 실제 효용·기본 시간 예산·제품 UI/배포 환경은 이번 읽기 전용 감사에서 평가하지 않았다."
+  ],
+  "final_recommendation": "읽은 최종 source에서 가정 평가 승격, 미확인 control 승격, partial price receipt로 추가 비용 삭제라는 새 차단 결함은 확인하지 못했다. 이번 채택 범위는 actual selected relation의 가격 소유/전달로 보고하며, 위협 강제성이나 최적 질문 선택까지 해결했다고 표현하지 않는다. 최종 실행/검사/일반화 결과는 루트의 별도 기록에 따른다."
+}

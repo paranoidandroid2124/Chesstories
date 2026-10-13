@@ -1,0 +1,21 @@
+{
+  "completed_utc": "2026-10-06T10:38:16.962335+00:00",
+  "elapsed_minutes": 478,
+  "main_changes_from_goal_start": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+    "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+    "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts"
+  ],
+  "source_scope": "Hashes from this goal start; working tree also contains earlier uncommitted work.",
+  "report": "target/reserve-choice-20261006/report/report.html",
+  "ui_review_screenshot": "target/reserve-choice-20261006/report/h05-review.jpg",
+  "goal_scope": "Bounded milestone; unresolved limitations are preserved in verification.json"
+}

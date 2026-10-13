@@ -23,3 +23,13 @@ libraryDependencies ++= Seq(
 Test / parallelExecution := false
 
 Compile / mainClass := Some("io.chesstory.runtime.ChesstoryRuntime")
+
+// The local app launches Java directly; sbt is only needed when building.
+lazy val writeRuntimeClasspath = taskKey[File]("Write the standalone Java launch classpath")
+writeRuntimeClasspath := {
+  val entries = (Runtime / fullClasspath).value.map(_.data.getAbsolutePath)
+  val destination = target.value / "runtime-classpath.txt"
+  IO.write(destination, entries.mkString(java.io.File.pathSeparator))
+  streams.value.log.info(s"Wrote $destination")
+  destination
+}

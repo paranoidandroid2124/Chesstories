@@ -1,0 +1,3675 @@
+{
+  "schemaVersion": 1,
+  "producer": "Independent LLM reader baseline; not an independent human evaluation",
+  "engineUsed": false,
+  "productCodeRead": false,
+  "productOutputsRead": false,
+  "sourceInput": "research\\annotated-games-20261003\\games.json",
+  "sourceAuthorConsulted": "J. R. Capablanca, Chess Fundamentals; originalNotes in supplied games.json",
+  "method": "All move-specific questions, messages and obligations are individually authored. Python only maps input identifiers, validates legal SAN/UCI, and serializes authored rows. Later game moves are hindsight evidence, not engine PV or proof of best play.",
+  "scopeDefinitions": {
+    "phase1_board": "Direct legal-board relationships and immediate actions",
+    "phase1_provided_line": "Connections observed in the supplied actual game, without claiming all alternatives",
+    "phase2_theory": "Strategic plan or evaluation not established by legal trace alone",
+    "phase1_and_phase2_attributed": "Concrete mechanism plus separated historical or LLM strategic interpretation"
+  },
+  "games": [
+    {
+      "gameId": "fundamentals-game-06",
+      "bookGameNumber": 6,
+      "headers": {
+        "Event": "Rice Memorial Tournament",
+        "Site": "Rice Memorial Tournament",
+        "Date": "1916.??.??",
+        "Round": "?",
+        "White": "O. Chajes",
+        "Black": "J. R. Capablanca",
+        "Result": "1-0"
+      },
+      "bookMainlinePlyCount": 119,
+      "actualPlyCount": 131,
+      "source": {
+        "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page189",
+        "pageAnchor": "page189",
+        "originalHTMLLine": 5296,
+        "originalHTMLCharacterOffset": 439771
+      },
+      "supplementedContinuation": {
+        "sourceURL": "https://huggingface.co/datasets/Mai0313/Chess-AI-Database/resolve/102aa7f457c2466f93e5a6953ec84a40b844e816/chess_database_by_human/Capablanca.pgn",
+        "databaseSHA256": "fb5d46cd1ce78665b2d2ea3df03b5bbea72b6ddb643a0c930f66a686a8723a8a",
+        "rawRecordPath": "target/annotated-games-20261003/book-sections/crosscheck-games.html#game-6",
+        "headers": {
+          "Event": "New York Rice f",
+          "Site": "New York",
+          "Date": "1916.??.??",
+          "Round": "2",
+          "White": "Chajes, Oscar",
+          "Black": "Capablanca, Jose Raul",
+          "Result": "1-0",
+          "WhiteElo": "",
+          "BlackElo": "",
+          "ECO": "C12"
+        },
+        "bookPrefixExactlyMatches": true,
+        "supplementedPlies": 12,
+        "reason": "The original explicitly omits the last few moves before Black resigns."
+      },
+      "allMovesLegalityIndependentlyChecked": true,
+      "moves": [
+        {
+          "ply": 1,
+          "label": "1. e4",
+          "SAN": "e4",
+          "question": "What does White establish in the centre?",
+          "message": "e4 occupies the centre and opens the king's bishop for development.",
+          "required_reply_or_cost": "Black replies ...e6, preparing to contest this pawn with ...d5.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 2,
+          "label": "1... e6",
+          "SAN": "e6",
+          "question": "How will Black challenge White's centre?",
+          "message": "e6 opens the bishop and prepares ...d5 rather than copying White's pawn advance.",
+          "required_reply_or_cost": "The actual ...d5 follows after d4; the c8-bishop remains behind the e6-pawn.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 3,
+          "label": "2. d4",
+          "SAN": "d4",
+          "question": "Why add a second central pawn?",
+          "message": "d4 gives White a broad pawn centre before Black challenges it.",
+          "required_reply_or_cost": "...d5 immediately confronts the e4-pawn.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 4,
+          "label": "2... d5",
+          "SAN": "d5",
+          "question": "Which part of White's centre is challenged?",
+          "message": "d5 attacks e4 and gives Black a central foothold.",
+          "required_reply_or_cost": "White develops Nc3 to reinforce e4 instead of exchanging immediately.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 5,
+          "label": "3. Nc3",
+          "SAN": "Nc3",
+          "question": "How is the attacked e4-pawn maintained?",
+          "message": "Nc3 develops while defending e4.",
+          "required_reply_or_cost": "...Nf6 adds another attacker, so the centre still needs attention.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 6,
+          "label": "3... Nf6",
+          "SAN": "Nf6",
+          "question": "What does the developing knight threaten?",
+          "message": "Nf6 develops with pressure against e4.",
+          "required_reply_or_cost": "Bg5 challenges this knight, and e5 later gains space against it.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 7,
+          "label": "4. Bg5",
+          "SAN": "Bg5",
+          "question": "How does White limit the knight attacking e4?",
+          "message": "Bg5 pins the f6-knight to the queen while bringing out a bishop.",
+          "required_reply_or_cost": "Black counters with ...Bb4 against White's own c3-knight.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 8,
+          "label": "4... Bb4",
+          "SAN": "Bb4",
+          "question": "How does Black meet the pressure on f6?",
+          "message": "Bb4 counters with a pin against Nc3 rather than retreating the f6-knight.",
+          "required_reply_or_cost": "The eventual ...Bxc3 and bxc3 trade a bishop for that knight and alter White's queenside pawns.",
+          "scope": "phase1_board",
+          "uncertainty": "The author's preference for this variation is not an independent assessment of its strength.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page189",
+              "pageAnchor": "page189",
+              "originalHTMLLine": 5305,
+              "originalHTMLCharacterOffset": 440918
+            }
+          ]
+        },
+        {
+          "ply": 9,
+          "label": "5. e5",
+          "SAN": "e5",
+          "question": "How is the tension on e4 resolved?",
+          "message": "e5 gains space and attacks the pinned f6-knight instead of exchanging central pawns.",
+          "required_reply_or_cost": "...h6 questions Bg5, and the bishop retreats before Black exchanges on c3.",
+          "scope": "phase1_board",
+          "uncertainty": "No engine comparison with exd5 was made; the author's preference for that alternative remains attributed theory.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page189",
+              "pageAnchor": "page189",
+              "originalHTMLLine": 5310,
+              "originalHTMLCharacterOffset": 441336
+            }
+          ]
+        },
+        {
+          "ply": 10,
+          "label": "5... h6",
+          "SAN": "h6",
+          "question": "What response is demanded from Bg5?",
+          "message": "h6 attacks the bishop and asks White to resolve its pressure on f6.",
+          "required_reply_or_cost": "Bd2 retreats; Black can then exchange Nc3 and move the f6-knight to e4.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 11,
+          "label": "6. Bd2",
+          "SAN": "Bd2",
+          "question": "What does the bishop retreat allow?",
+          "message": "Bd2 saves the bishop but releases the pin on f6.",
+          "required_reply_or_cost": "...Bxc3 bxc3 and ...Ne4 follow, so the retreat cannot be described as preserving the same central restraint.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No claim that every bishop retreat leads to this sequence."
+        },
+        {
+          "ply": 12,
+          "label": "6... Bxc3",
+          "SAN": "Bxc3",
+          "question": "What is gained and surrendered by exchanging on c3?",
+          "message": "Bxc3 removes the knight defending e4, at the cost of Black's dark-squared bishop.",
+          "required_reply_or_cost": "bxc3 recaptures and leaves doubled c-pawns; ...Ne4 then occupies the centre.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 13,
+          "label": "7. bxc3",
+          "SAN": "bxc3",
+          "question": "What remains after the bishop-knight exchange?",
+          "message": "bxc3 restores material balance and reinforces d4, but changes White's pawn structure.",
+          "required_reply_or_cost": "...Ne4 exploits the disappearance of Nc3; the new c3-pawn is later taken by ...dxc3.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 14,
+          "label": "7... Ne4",
+          "SAN": "Ne4",
+          "question": "Where does the freed knight become active?",
+          "message": "Ne4 establishes the knight in White's centre after its pin is released.",
+          "required_reply_or_cost": "Qg4 attacks g7 rather than immediately removing the knight.",
+          "scope": "phase1_board",
+          "uncertainty": "Its long-term superiority is not established by this placement alone."
+        },
+        {
+          "ply": 15,
+          "label": "8. Qg4",
+          "SAN": "Qg4",
+          "question": "What immediate question does the queen ask?",
+          "message": "Qg4 threatens the g7-pawn and puts pressure near Black's king.",
+          "required_reply_or_cost": "Kf8 defends g7 while giving up castling rights.",
+          "scope": "phase1_board",
+          "uncertainty": "No forced king attack is inferred from the queen's location."
+        },
+        {
+          "ply": 16,
+          "label": "8... Kf8",
+          "SAN": "Kf8",
+          "question": "Why move the king instead of advancing g7?",
+          "message": "Kf8 defends g7 without moving that pawn, but permanently gives up castling.",
+          "required_reply_or_cost": "Black follows with ...c5 against White's centre; the author's comparison with ...g6 is strategic, not engine verified.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The claim that this is the best way to gain attacking time comes from Capablanca's annotation.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page189",
+              "pageAnchor": "page189",
+              "originalHTMLLine": 5319,
+              "originalHTMLCharacterOffset": 442470
+            }
+          ]
+        },
+        {
+          "ply": 17,
+          "label": "9. Bc1",
+          "SAN": "Bc1",
+          "question": "Does withdrawing the bishop regain useful activity?",
+          "message": "Bc1 withdraws the bishop again; Black immediately uses the time for ...c5 and ...Qa5.",
+          "required_reply_or_cost": "...Qa5 bears on c3, and White does not achieve the proposed Ba3 development in this sequence.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The author's judgement that the move wastes time is not a measured evaluation loss."
+        },
+        {
+          "ply": 18,
+          "label": "9... c5",
+          "SAN": "c5",
+          "question": "What concrete counterplay replaces king-side defence?",
+          "message": "c5 attacks d4 and prepares to open the centre with ...cxd4.",
+          "required_reply_or_cost": "...Qa5 and the eventual ...dxc3 accompany this break; the author also notes that Qa5 obstructs White's Ba3 idea.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "No claim that the break refutes White's position.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page190",
+              "pageAnchor": "page190",
+              "originalHTMLLine": 5327,
+              "originalHTMLCharacterOffset": 443179
+            }
+          ]
+        },
+        {
+          "ply": 19,
+          "label": "10. Bd3",
+          "SAN": "Bd3",
+          "question": "How does White prepare to remove Ne4?",
+          "message": "Bd3 develops with direct pressure on the central knight.",
+          "required_reply_or_cost": "Bxe4 later trades this bishop for the knight, followed by ...dxe4 and Qxe4.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 20,
+          "label": "10... Qa5",
+          "SAN": "Qa5",
+          "question": "How is the queenside pawn pressure reinforced?",
+          "message": "Qa5 adds pressure on c3 while White's king is still in the centre.",
+          "required_reply_or_cost": "After ...cxd4 and castling, ...dxc3 captures that pawn; the queen's pressure alone is not a pawn win.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 21,
+          "label": "11. Ne2",
+          "SAN": "Ne2",
+          "question": "Why develop the second knight here?",
+          "message": "Ne2 develops without occupying the f-pawn's route and leaves castling available.",
+          "required_reply_or_cost": "White castles next turn while Black's pawn captures continue.",
+          "scope": "phase1_board",
+          "uncertainty": "No claim that this square is uniquely best."
+        },
+        {
+          "ply": 22,
+          "label": "11... cxd4",
+          "SAN": "cxd4",
+          "question": "How does Black open the centre?",
+          "message": "cxd4 takes White's d-pawn and creates a pawn able to continue to c3.",
+          "required_reply_or_cost": "White castles and allows ...dxc3; the eventual piece exchange does not recover this extra queenside pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 23,
+          "label": "12. O-O",
+          "SAN": "O-O",
+          "question": "What is the price of completing king safety now?",
+          "message": "O-O moves the king away from the central pin and activates the rook, but leaves c3 to be captured.",
+          "required_reply_or_cost": "...dxc3 follows, and Black retains the pawn through the central piece exchanges.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No assessment of whether defending c3 instead was better."
+        },
+        {
+          "ply": 24,
+          "label": "12... dxc3",
+          "SAN": "dxc3",
+          "question": "Is this a lasting material gain?",
+          "message": "dxc3 removes White's c3-pawn and leaves Black's advanced pawn on c3.",
+          "required_reply_or_cost": "Bxe4 dxe4 Qxe4 resolves the other central exchange, but the c3-pawn survives until move 33.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 25,
+          "label": "13. Bxe4",
+          "SAN": "Bxe4",
+          "question": "What does capturing the central knight actually yield?",
+          "message": "Bxe4 exchanges a bishop for Ne4 rather than winning a knight outright.",
+          "required_reply_or_cost": "...dxe4 captures that bishop and Qxe4 removes the recapturing pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 26,
+          "label": "13... dxe4",
+          "SAN": "dxe4",
+          "question": "How is the piece exchange completed?",
+          "message": "dxe4 recaptures the bishop and puts the d-pawn where White's queen can take it.",
+          "required_reply_or_cost": "Qxe4 follows; Black's extra c3-pawn remains separate from this exchange.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 27,
+          "label": "14. Qxe4",
+          "SAN": "Qxe4",
+          "question": "Does the central recapture recover Black's extra pawn?",
+          "message": "Qxe4 completes the bishop-knight exchange and recovers that pawn, but not the c3-pawn.",
+          "required_reply_or_cost": "...Nc6 attacks the remaining e5-pawn; Black is still a pawn ahead in the recorded position.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "An extra pawn is not by itself a won-game claim."
+        },
+        {
+          "ply": 28,
+          "label": "14... Nc6",
+          "SAN": "Nc6",
+          "question": "How does Black connect development with pressure?",
+          "message": "Nc6 develops while attacking e5 and provides the route ...Ne7-d5.",
+          "required_reply_or_cost": "The author stresses Black's extra pawn but also delayed development; neither factor alone establishes a win.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author's favourable strategic assessment is distinct from the observable attack on e5.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page190",
+              "pageAnchor": "page190",
+              "originalHTMLLine": 5340,
+              "originalHTMLCharacterOffset": 444744
+            }
+          ]
+        },
+        {
+          "ply": 29,
+          "label": "15. Rd1",
+          "SAN": "Rd1",
+          "question": "What activity does the open d-file provide?",
+          "message": "Rd1 places a rook on the open d-file while the queen holds e5.",
+          "required_reply_or_cost": "The author's ...Ne7 comparison involves Ne2xc3 or Ba3; in the actual game Black still reaches d5 after f4 and Be3.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The strategic criticism of moving attention away from the king-side attack is attributed to the book.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page191",
+              "pageAnchor": "page191",
+              "originalHTMLLine": 5353,
+              "originalHTMLCharacterOffset": 445813
+            }
+          ]
+        },
+        {
+          "ply": 30,
+          "label": "15... g6",
+          "SAN": "g6",
+          "question": "What shelter is prepared for Black's king?",
+          "message": "g6 gives the king a route to g7 and reinforces f5.",
+          "required_reply_or_cost": "Kg7 follows; the pawn later becomes a target of h5 and hxg6+.",
+          "scope": "phase1_board",
+          "uncertainty": "Creating shelter does not prove that White has no attack."
+        },
+        {
+          "ply": 31,
+          "label": "16. f4",
+          "SAN": "f4",
+          "question": "How is e5 defended without tying the queen to it?",
+          "message": "f4 supports e5 with a pawn and gives White more king-side space.",
+          "required_reply_or_cost": "Black brings the knight through e7 to d5; White later advances this f-pawn only after the blockade changes.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 32,
+          "label": "16... Kg7",
+          "SAN": "Kg7",
+          "question": "Where does the uncastled king find shelter?",
+          "message": "Kg7 brings the king behind its king-side pawns.",
+          "required_reply_or_cost": "The subsequent h-pawn advance attacks that shelter, so its safety remains a question.",
+          "scope": "phase1_board",
+          "uncertainty": "No safety evaluation from king placement alone."
+        },
+        {
+          "ply": 33,
+          "label": "17. Be3",
+          "SAN": "Be3",
+          "question": "What role does the bishop take on e3?",
+          "message": "Be3 develops and coordinates White's central pieces, rather than using the open a3-f8 diagonal.",
+          "required_reply_or_cost": "Black continues ...Ne7; the author preferred a4 followed by Ba3 for greater activity.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The preference is historical annotation, not a same-position engine comparison.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page191",
+              "pageAnchor": "page191",
+              "originalHTMLLine": 5363,
+              "originalHTMLCharacterOffset": 446871
+            }
+          ]
+        },
+        {
+          "ply": 34,
+          "label": "17... Ne7",
+          "SAN": "Ne7",
+          "question": "Where is the knight manoeuvre heading?",
+          "message": "Ne7 reroutes the knight toward d5, where the f4-e5 pawns cannot attack it directly.",
+          "required_reply_or_cost": "Bf2 is followed by ...Nd5; the arrival is part of this recorded plan.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 35,
+          "label": "18. Bf2",
+          "SAN": "Bf2",
+          "question": "How is the bishop aligned with the king-side play?",
+          "message": "Bf2 places the bishop on the diagonal toward g3 and h4.",
+          "required_reply_or_cost": "The rook later uses g3 and the h-pawn advances; no immediate material gain follows from the bishop move.",
+          "scope": "phase1_board",
+          "uncertainty": "Purpose inferred from coordination, not uniquely established."
+        },
+        {
+          "ply": 36,
+          "label": "18... Nd5",
+          "SAN": "Nd5",
+          "question": "Why is d5 an effective central square?",
+          "message": "Nd5 occupies a central square that White's e5 and f4 pawns do not challenge.",
+          "required_reply_or_cost": "The knight later returns to f6 to recapture after ...f5 exf6; the blockade does not last indefinitely.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Capablanca's claim of a strategically won game is theory, not a conclusion proved by this board snapshot.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page191",
+              "pageAnchor": "page191",
+              "originalHTMLLine": 5370,
+              "originalHTMLCharacterOffset": 447570
+            }
+          ]
+        },
+        {
+          "ply": 37,
+          "label": "19. Rd3",
+          "SAN": "Rd3",
+          "question": "How can the rook join the king-side play?",
+          "message": "Rd3 lifts the rook so it can move across to g3.",
+          "required_reply_or_cost": "Rg3 follows after Nd4, but the rook's later sacrifice must be retained when describing the attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 38,
+          "label": "19... Bd7",
+          "SAN": "Bd7",
+          "question": "What does Black's remaining bishop development achieve?",
+          "message": "Bd7 develops the bishop and connects the back-rank rooks.",
+          "required_reply_or_cost": "Its later move to c6 creates counterplay against White's king.",
+          "scope": "phase1_board",
+          "uncertainty": "No immediate threat is claimed solely from development."
+        },
+        {
+          "ply": 39,
+          "label": "20. Nd4",
+          "SAN": "Nd4",
+          "question": "Where can White's knight act beyond its starting square?",
+          "message": "Nd4 centralizes the knight and gives it the route to f5.",
+          "required_reply_or_cost": "The knight is later pinned by ...Qb4, then moves with check in the queen-winning sequence.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 40,
+          "label": "20... Rac8",
+          "SAN": "Rac8",
+          "question": "How does the extra c-pawn gain support from a rook?",
+          "message": "Rac8 puts a rook behind the advanced c3-pawn on the c-file.",
+          "required_reply_or_cost": "That rook later switches to g8; the pawn is ultimately captured by Qxc3.",
+          "scope": "phase1_board",
+          "uncertainty": "Supporting the pawn now does not establish that it will survive."
+        },
+        {
+          "ply": 41,
+          "label": "21. Rg3",
+          "SAN": "Rg3",
+          "question": "What is the rook lift used for?",
+          "message": "Rg3 brings the rook toward Black's king-side pawns while White prepares h4-h5.",
+          "required_reply_or_cost": "The rook later goes to h3 and is sacrificed on h6 in exchange for access to Black's queen.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 42,
+          "label": "21... Kh7",
+          "SAN": "Kh7",
+          "question": "Why step the king to h7?",
+          "message": "Kh7 moves the king behind the h6-pawn and leaves g7 available to the defenders.",
+          "required_reply_or_cost": "White's h-pawn and rook subsequently attack the h-file shelter.",
+          "scope": "phase1_board",
+          "uncertainty": "No claim that this king step solves the attack."
+        },
+        {
+          "ply": 43,
+          "label": "22. h4",
+          "SAN": "h4",
+          "question": "What is the h-pawn advance trying to open?",
+          "message": "h4 starts the advance toward g6 and h6, supported by White's king-side pieces.",
+          "required_reply_or_cost": "h5 and hxg6+ follow; the advancing pawn is recaptured by ...Rxg6.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 44,
+          "label": "22... Rhg8",
+          "SAN": "Rhg8",
+          "question": "How is the g6-pawn defended?",
+          "message": "Rhg8 puts a rook behind g6 and prepares a recapture along the g-file.",
+          "required_reply_or_cost": "The rook actually recaptures hxg6+ with ...Rxg6, but that does not stop Rxh6+ and the queen-winning idea.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 45,
+          "label": "23. h5",
+          "SAN": "h5",
+          "question": "What contact does h5 create?",
+          "message": "h5 attacks g6 and brings a pawn directly against Black's king shelter.",
+          "required_reply_or_cost": "hxg6+ opens the h-file, followed by ...Rxg6 and White's rook sacrifice.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 46,
+          "label": "23... Qb4",
+          "SAN": "Qb4",
+          "question": "What does the queen move restrain?",
+          "message": "Qb4 pins Nd4 to White's queen along the fourth rank.",
+          "required_reply_or_cost": "After the h-file sacrifice, Nf5+ moves with check and frees Qe4 to take this queen.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author's alternative ...Qa5 is a strategic preference, not independently checked here.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page192",
+              "pageAnchor": "page192",
+              "originalHTMLLine": 5381,
+              "originalHTMLCharacterOffset": 449074
+            }
+          ]
+        },
+        {
+          "ply": 47,
+          "label": "24. Rh3",
+          "SAN": "Rh3",
+          "question": "Why move the attacking rook to h3?",
+          "message": "Rh3 places the rook behind the h-pawn so the h-file can be used after hxg6.",
+          "required_reply_or_cost": "...f5 exf6 ...Nxf6 hxg6+ ...Rxg6 clears the way for Rxh6+.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 48,
+          "label": "24... f5",
+          "SAN": "f5",
+          "question": "What does ...f5 open as well as attack?",
+          "message": "f5 attacks Qe4, but permits the en-passant capture exf6 that changes the king-side tactics.",
+          "required_reply_or_cost": "The actual sequence leads to Rxh6+ Kxh6 Nf5+ exf5 Qxb4; Black gives up the queen but receives rook-and-knight material.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author calls the move inferior yet not losing; no independent score or forcedness claim.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page192",
+              "pageAnchor": "page192",
+              "originalHTMLLine": 5396,
+              "originalHTMLCharacterOffset": 450269
+            }
+          ]
+        },
+        {
+          "ply": 49,
+          "label": "25. exf6",
+          "SAN": "exf6",
+          "question": "Why does this unusual capture matter?",
+          "message": "exf6 uses en passant to remove the just-advanced f-pawn instead of retreating the queen.",
+          "required_reply_or_cost": "...Nxf6 removes White's pawn and takes the knight away from d5; the ensuing h-file sequence wins the queen at a material cost.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 50,
+          "label": "25... Nxf6",
+          "SAN": "Nxf6",
+          "question": "Does the pawn recapture also change the tactical geometry?",
+          "message": "Nxf6 recaptures the pawn and leaves d5, while Black's queen remains on b4.",
+          "required_reply_or_cost": "The later Nf5+ uncovering of Qe4's attack on b4 must be included; this recapture does not end the tactic.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 51,
+          "label": "26. hxg6+",
+          "SAN": "hxg6+",
+          "question": "How is the h-file opened?",
+          "message": "hxg6+ removes g6 and gives check, clearing the h-file for the rook.",
+          "required_reply_or_cost": "...Rxg6 removes that pawn, but Rxh6+ then draws the king onto h6.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 52,
+          "label": "26... Rxg6",
+          "SAN": "Rxg6",
+          "question": "Does taking the checking pawn end White's attack?",
+          "message": "Rxg6 stops the pawn check, but leaves the h6-pawn available for a rook sacrifice.",
+          "required_reply_or_cost": "Rxh6+ Kxh6 is followed by Nf5+, which releases the queen attack on b4.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 53,
+          "label": "27. Rxh6+",
+          "SAN": "Rxh6+",
+          "question": "What justifies sacrificing the rook?",
+          "message": "Rxh6+ draws the king onto h6 so Nf5+ can release the attack on Black's queen.",
+          "required_reply_or_cost": "After Kxh6 Nf5+ exf5 Qxb4, White has surrendered a rook and knight for the queen; this is not a free queen win.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "Only the played acceptance line is traced; alternate king responses were not exhaustively analysed.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page193",
+              "pageAnchor": "page193",
+              "originalHTMLLine": 5410,
+              "originalHTMLCharacterOffset": 451606
+            }
+          ]
+        },
+        {
+          "ply": 54,
+          "label": "27... Kxh6",
+          "SAN": "Kxh6",
+          "question": "What is the consequence of accepting the rook?",
+          "message": "Kxh6 takes the rook but allows Nf5+ to interrupt the pressure on White's queen.",
+          "required_reply_or_cost": "...exf5 removes White's knight, yet Qxb4 wins the queen afterward.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 55,
+          "label": "28. Nf5+",
+          "SAN": "Nf5+",
+          "question": "Why can the pinned knight move now?",
+          "message": "Nf5+ checks Black's king while vacating d4 and exposing Qe4's attack on b4.",
+          "required_reply_or_cost": "...exf5 captures the knight, but White then takes the queen with Qxb4.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No universal forced-move claim beyond the actual reply."
+        },
+        {
+          "ply": 56,
+          "label": "28... exf5",
+          "SAN": "exf5",
+          "question": "What does Black receive for the queen being lost?",
+          "message": "exf5 removes the checking knight, giving Black material compensation before the queen capture.",
+          "required_reply_or_cost": "Qxb4 leaves Black with two rooks, bishop and knight against queen, rook and bishop.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "Compensation's adequacy is not inferred from piece values."
+        },
+        {
+          "ply": 57,
+          "label": "29. Qxb4",
+          "SAN": "Qxb4",
+          "question": "Does winning the queen settle the game?",
+          "message": "Qxb4 completes the tactic, but White has paid a rook and knight and still faces active Black rooks.",
+          "required_reply_or_cost": "...Rcg8 and ...Bc6 create counterplay; White needs g3 and Rd1 rather than assuming the game is won.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author's attacking alternatives after ...Bc6 are not independently engine verified.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page194",
+              "pageAnchor": "page194",
+              "originalHTMLLine": 5420,
+              "originalHTMLCharacterOffset": 452655
+            }
+          ]
+        },
+        {
+          "ply": 58,
+          "label": "29... Rcg8",
+          "SAN": "Rcg8",
+          "question": "What counterplay is built against the remaining king shelter?",
+          "message": "Rcg8 doubles the rooks on the g-file, with White's king behind g2.",
+          "required_reply_or_cost": "White plays g3 and then Rd1; Capablanca states that immediate ...Bc6 would have been more effective.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book's judgement about the lost tempo remains an attributed comparison.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page194",
+              "pageAnchor": "page194",
+              "originalHTMLLine": 5438,
+              "originalHTMLCharacterOffset": 454054
+            }
+          ]
+        },
+        {
+          "ply": 59,
+          "label": "30. g3",
+          "SAN": "g3",
+          "question": "How does White answer the doubled rooks?",
+          "message": "g3 advances the shelter pawn to a square supported by Bf2.",
+          "required_reply_or_cost": "...Bc6 adds diagonal pressure, so White still needs an active defensive rook.",
+          "scope": "phase1_board",
+          "uncertainty": "No claim that every g-file attack is now prevented."
+        },
+        {
+          "ply": 60,
+          "label": "30... Bc6",
+          "SAN": "Bc6",
+          "question": "Which diagonal joins Black's attack?",
+          "message": "Bc6 places the bishop on the diagonal toward g2 and h1.",
+          "required_reply_or_cost": "White's Rd1 and Rd6 counter the coordinated bishop, knight and rook play.",
+          "scope": "phase1_board",
+          "uncertainty": "No forced mate is inferred from the diagonal."
+        },
+        {
+          "ply": 61,
+          "label": "31. Rd1",
+          "SAN": "Rd1",
+          "question": "What does activating the last rook change?",
+          "message": "Rd1 brings White's remaining rook into play on the open file.",
+          "required_reply_or_cost": "Rd6 follows, attacking Black's bishop and knight and taking activity away from the king-side attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 62,
+          "label": "31... Kh5",
+          "SAN": "Kh5",
+          "question": "Can the exposed king join the attack in time?",
+          "message": "Kh5 tries to bring the king toward g4, but White has time for Rd6 against Black's pieces.",
+          "required_reply_or_cost": "The bishop retreats and White eventually exchanges the attacking g6-rook; the author instead recommended ...Ne4.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author's claim that the initiative turns here is not a measured blunder verdict.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page194",
+              "pageAnchor": "page194",
+              "originalHTMLLine": 5443,
+              "originalHTMLCharacterOffset": 454611
+            }
+          ]
+        },
+        {
+          "ply": 63,
+          "label": "32. Rd6",
+          "SAN": "Rd6",
+          "question": "How does the rook create a useful defensive tempo?",
+          "message": "Rd6 attacks Bc6 and Nf6, making Black attend to its pieces.",
+          "required_reply_or_cost": "...Be4 saves the bishop; the later ...Nd5 leaves the g6-rook exposed to Rxg6.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 64,
+          "label": "32... Be4",
+          "SAN": "Be4",
+          "question": "What survives when the attacked bishop moves?",
+          "message": "Be4 saves the bishop but gives White time to recover c3 and later exchange the g6-rook.",
+          "required_reply_or_cost": "Qxc3 Nd5 Rxg6 Kxg6 follows; the author's preferred ...Ne4 was a different defensive attempt.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "No proof that ...Be4 alone loses against every continuation.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page195",
+              "pageAnchor": "page195",
+              "originalHTMLLine": 5453,
+              "originalHTMLCharacterOffset": 455427
+            }
+          ]
+        },
+        {
+          "ply": 65,
+          "label": "33. Qxc3",
+          "SAN": "Qxc3",
+          "question": "How is Black's long-held extra pawn removed?",
+          "message": "Qxc3 finally captures the pawn that reached c3 in the opening.",
+          "required_reply_or_cost": "...Nd5 attacks the queen, but White first exchanges the rook on g6.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 66,
+          "label": "33... Nd5",
+          "SAN": "Nd5",
+          "question": "What does the knight attack allow White to do first?",
+          "message": "Nd5 saves the attacked knight and attacks Qc3, but vacates the line from Rd6 to the g6-rook.",
+          "required_reply_or_cost": "Rxg6 Kxg6 removes one pair of rooks; the knight's attack does not win the queen in the played line.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 67,
+          "label": "34. Rxg6",
+          "SAN": "Rxg6",
+          "question": "Is taking the attacking rook a material win?",
+          "message": "Rxg6 exchanges White's last rook for Black's active g6-rook.",
+          "required_reply_or_cost": "...Kxg6 recaptures; White is left with queen and bishop against rook, bishop and knight.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 68,
+          "label": "34... Kxg6",
+          "SAN": "Kxg6",
+          "question": "How does Black complete the rook exchange?",
+          "message": "Kxg6 recaptures the rook, leaving the g8-rook as Black's only rook.",
+          "required_reply_or_cost": "Qe5 centralizes White's queen, and the king soon retreats to f7.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The book's rejected ...Nxc3 comparison is not treated as a played continuation.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page195",
+              "pageAnchor": "page195",
+              "originalHTMLLine": 5459,
+              "originalHTMLCharacterOffset": 456055
+            }
+          ]
+        },
+        {
+          "ply": 69,
+          "label": "35. Qe5",
+          "SAN": "Qe5",
+          "question": "Where does the queen regain activity after the exchange?",
+          "message": "Qe5 centralizes the queen and attacks Be4.",
+          "required_reply_or_cost": "The bishop remains protected by the f5-pawn, so this is not an immediate piece win.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 70,
+          "label": "35... Kf7",
+          "SAN": "Kf7",
+          "question": "How does Black reduce the king's exposure?",
+          "message": "Kf7 brings the king back toward its remaining pieces.",
+          "required_reply_or_cost": "White uses c4 to dislodge Nd5 rather than immediately winning a piece.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 71,
+          "label": "36. c4",
+          "SAN": "c4",
+          "question": "Which defender does the pawn advance challenge?",
+          "message": "c4 attacks Nd5 and asks Black to move the central knight.",
+          "required_reply_or_cost": "...Re8 attacks the queen first, then ...Nf6 withdraws the knight after Qb2.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 72,
+          "label": "36... Re8",
+          "SAN": "Re8",
+          "question": "How can Black answer the attacked knight with tempo?",
+          "message": "Re8 attacks Qe5 along the e-file, postponing the knight retreat.",
+          "required_reply_or_cost": "Qb2 saves the queen and ...Nf6 then saves the knight.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 73,
+          "label": "37. Qb2",
+          "SAN": "Qb2",
+          "question": "Where does the queen keep pressure while escaping the rook?",
+          "message": "Qb2 leaves the attacked e-file while keeping the long diagonal available.",
+          "required_reply_or_cost": "...Nf6 withdraws the attacked knight; Bd4 later challenges its placement.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 74,
+          "label": "37... Nf6",
+          "SAN": "Nf6",
+          "question": "How does the knight escape the c-pawn?",
+          "message": "Nf6 moves away from c4's attack and is defended by Black's king.",
+          "required_reply_or_cost": "Bd4 then adds pressure on the knight, which later returns to d7.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 75,
+          "label": "38. Bd4",
+          "SAN": "Bd4",
+          "question": "What pressure does the bishop create on f6?",
+          "message": "Bd4 attacks Nf6 along the long diagonal while the king still defends it.",
+          "required_reply_or_cost": "This is not a pin to Kf7; the knight later moves to d7 when the checking sequence has ended.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 76,
+          "label": "38... Rh8",
+          "SAN": "Rh8",
+          "question": "How does the rook find counterplay without taking a pawn?",
+          "message": "Rh8 uses the open h-file to prepare checks against White's king.",
+          "required_reply_or_cost": "Rh1+ drives the king from g1, but White keeps the queen and bishop active.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 77,
+          "label": "39. Qb5",
+          "SAN": "Qb5",
+          "question": "How does White pressure Black's queenside?",
+          "message": "Qb5 attacks the b7-pawn and remains active across the fifth rank.",
+          "required_reply_or_cost": "...Rh1+ gains a checking tempo, and ...a6 subsequently attacks the queen.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 78,
+          "label": "39... Rh1+",
+          "SAN": "Rh1+",
+          "question": "What does the rook invasion achieve?",
+          "message": "Rh1+ checks along the first rank and forces White's king to move.",
+          "required_reply_or_cost": "Kf2 escapes; Black has obtained activity rather than a material recovery.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 79,
+          "label": "40. Kf2",
+          "SAN": "Kf2",
+          "question": "Where can White's king leave the checking rank?",
+          "message": "Kf2 steps out of the rook check while staying near White's pawns.",
+          "required_reply_or_cost": "...a6 then attacks Qb5; the checking sequence remains active.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 80,
+          "label": "40... a6",
+          "SAN": "a6",
+          "question": "How does Black gain time against the queen?",
+          "message": "a6 attacks Qb5 and protects that pawn from an immediate queen capture.",
+          "required_reply_or_cost": "Qb6 moves away and keeps pressure on b7.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 81,
+          "label": "41. Qb6",
+          "SAN": "Qb6",
+          "question": "Where does the queen preserve its pawn pressure?",
+          "message": "Qb6 escapes the a-pawn and still attacks b7.",
+          "required_reply_or_cost": "...Rh2+ checks the king before Black reroutes the knight.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 82,
+          "label": "41... Rh2+",
+          "SAN": "Rh2+",
+          "question": "How is the checking rook kept active?",
+          "message": "Rh2+ changes the checking rank and sends White's king back toward e1.",
+          "required_reply_or_cost": "Ke1 escapes; this sequence is not by itself perpetual check.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 83,
+          "label": "42. Ke1",
+          "SAN": "Ke1",
+          "question": "How does White leave the second-rank check?",
+          "message": "Ke1 moves off the rook's checking rank.",
+          "required_reply_or_cost": "...Nd7 then attacks the queen on b6.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 84,
+          "label": "42... Nd7",
+          "SAN": "Nd7",
+          "question": "Why return the knight to d7?",
+          "message": "Nd7 attacks Qb6 and coordinates with the queenside pawns.",
+          "required_reply_or_cost": "Qd6 preserves the queen's central activity and makes Black move the bishop again.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 85,
+          "label": "43. Qd6",
+          "SAN": "Qd6",
+          "question": "Which undefended defender is attacked?",
+          "message": "Qd6 attacks the knight on d7 while retaining a central queen.",
+          "required_reply_or_cost": "Bc6 supports Nd7 from c6; Black does not have to move the knight.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 86,
+          "label": "43... Bc6",
+          "SAN": "Bc6",
+          "question": "How is the attacked knight defended?",
+          "message": "Bc6 defends Nd7 and also restores the diagonal toward g2.",
+          "required_reply_or_cost": "White changes the pawn blockade with g4 instead of simply taking the knight.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 87,
+          "label": "44. g4",
+          "SAN": "g4",
+          "question": "Why offer the g-pawn while the f-pawn is blocked?",
+          "message": "g4 invites ...fxg4, removing Black's f5-pawn from the f-file so White's f-pawn can advance.",
+          "required_reply_or_cost": "After ...fxg4 f5-f6, Black also obtains a dangerous passed g-pawn; both consequences matter.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The enabling exchange is observed, but its optimality is not assessed."
+        },
+        {
+          "ply": 88,
+          "label": "44... fxg4",
+          "SAN": "fxg4",
+          "question": "What does taking g4 concede?",
+          "message": "fxg4 wins a pawn and creates a passed g-pawn, but clears the way for White's f-pawn.",
+          "required_reply_or_cost": "f5 and f6 follow; Black's g-pawn reaches g2 but is eventually captured by Qxg2+.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 89,
+          "label": "45. f5",
+          "SAN": "f5",
+          "question": "How is the opened f-file used?",
+          "message": "f5 starts White's passed pawn forward now that Black's f-pawn has left the file.",
+          "required_reply_or_cost": "...Rh1+ gains a tempo, but f6 subsequently fixes a threat close to promotion.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 90,
+          "label": "45... Rh1+",
+          "SAN": "Rh1+",
+          "question": "Can a check interrupt the pawn advance?",
+          "message": "Rh1+ forces the king to leave e1 before White continues f6.",
+          "required_reply_or_cost": "Kd2 escapes and Black's king retreats; the check does not stop the advance.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 91,
+          "label": "46. Kd2",
+          "SAN": "Kd2",
+          "question": "Where does White's king escape without losing its pieces?",
+          "message": "Kd2 leaves the checking rank and stays near the bishop and c-pawn.",
+          "required_reply_or_cost": "Black retreats the king to e8; White resumes f6.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 92,
+          "label": "46... Ke8",
+          "SAN": "Ke8",
+          "question": "How does Black place the king against the advanced pawn?",
+          "message": "Ke8 brings the king toward the f-pawn's promotion zone.",
+          "required_reply_or_cost": "f6 and Qe6+ make Black continue defending close to the back rank.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 93,
+          "label": "47. f6",
+          "SAN": "f6",
+          "question": "What new pressure does the passed pawn create?",
+          "message": "f6 places the pawn one step from f7, with queen and bishop able to support it.",
+          "required_reply_or_cost": "...Rh7 and later ...Rf7 blockade it; the pawn is eventually sacrificed during the rook elimination.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "Promotion is a threat, not an observed result."
+        },
+        {
+          "ply": 94,
+          "label": "47... Rh7",
+          "SAN": "Rh7",
+          "question": "How does the rook prepare to block the passer?",
+          "message": "Rh7 brings the rook to the seventh rank, from which it can reach f7.",
+          "required_reply_or_cost": "Qe6+ keeps the king under pressure before the rook occupies f7.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 95,
+          "label": "48. Qe6+",
+          "SAN": "Qe6+",
+          "question": "What does the queen check coordinate?",
+          "message": "Qe6+ checks the king while supporting the advanced f6-pawn.",
+          "required_reply_or_cost": "Kf8 escapes, and White brings the bishop toward h6 and g7.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 96,
+          "label": "48... Kf8",
+          "SAN": "Kf8",
+          "question": "Where can Black's king escape the queen check?",
+          "message": "Kf8 steps away from Qe6's checking file.",
+          "required_reply_or_cost": "Bh6+ later restricts it further and sends it to g8.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 97,
+          "label": "49. Be3",
+          "SAN": "Be3",
+          "question": "How does White reroute the bishop toward the king?",
+          "message": "Be3 reroutes the bishop toward h6 to join the king attack.",
+          "required_reply_or_cost": "...Rf7 blocks the passer, then Bh6+ brings the bishop into the attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 98,
+          "label": "49... Rf7",
+          "SAN": "Rf7",
+          "question": "How does Black stop f7 for the moment?",
+          "message": "Rf7 blockades the advanced f-pawn on the seventh rank.",
+          "required_reply_or_cost": "Bh6+ Kg8 Bg7 then ties the blockade to White's coordinated bishop and pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 99,
+          "label": "50. Bh6+",
+          "SAN": "Bh6+",
+          "question": "What does the bishop check force Black to address?",
+          "message": "Bh6+ brings a second attacker against the king and takes f8 away.",
+          "required_reply_or_cost": "Kg8 escapes; Bg7 will maintain the pressure rather than immediately taking a pawn.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 100,
+          "label": "50... Kg8",
+          "SAN": "Kg8",
+          "question": "Is reaching g8 a complete defensive solution?",
+          "message": "Kg8 escapes the bishop check, but White can keep the f6-pawn and bishop together with Bg7.",
+          "required_reply_or_cost": "The author contrasts a risky checking-pawn capture with the safer played bishop move.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The author's offered difficult ending is not a forced defensive resource established here.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page196",
+              "pageAnchor": "page196",
+              "originalHTMLLine": 5479,
+              "originalHTMLCharacterOffset": 459823
+            }
+          ]
+        },
+        {
+          "ply": 101,
+          "label": "51. Bg7",
+          "SAN": "Bg7",
+          "question": "Why preserve the attacking formation instead of grabbing a pawn?",
+          "message": "Bg7 supports f6 and confines Black's king while keeping the blockade under pressure.",
+          "required_reply_or_cost": "Black's g-pawn advances, but White contains it and later exchanges the f7-rook for bishop and pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The reason for preferring this move over the author's variation is annotation-assisted, not engine judged."
+        },
+        {
+          "ply": 102,
+          "label": "51... g3",
+          "SAN": "g3",
+          "question": "What counter-threat remains for Black?",
+          "message": "g3 advances Black's passer toward promotion while White presses on f6.",
+          "required_reply_or_cost": "g2 follows; White's king approaches and Qxg2+ eventually removes the pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 103,
+          "label": "52. Ke2",
+          "SAN": "Ke2",
+          "question": "How can the king join the defence against the passer?",
+          "message": "Ke2 brings the king toward f2 and the g-pawn's promotion route.",
+          "required_reply_or_cost": "After ...g2, Kf2 and then Kg1 keep the promotion square controlled.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 104,
+          "label": "52... g2",
+          "SAN": "g2",
+          "question": "How serious is the pawn on the second rank?",
+          "message": "g2 brings Black's passer within one step of promotion.",
+          "required_reply_or_cost": "The white king reaches f2 and g1, and the pawn later falls to Qxg2+; the pawn does not actually promote.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 105,
+          "label": "53. Kf2",
+          "SAN": "Kf2",
+          "question": "Where can the king control the promotion square?",
+          "message": "Kf2 brings the king close enough to contest g1.",
+          "required_reply_or_cost": "The knight moves to f8 while White's queen switches to g4.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 106,
+          "label": "53... Nf8",
+          "SAN": "Nf8",
+          "question": "How does the knight gain a defensive tempo?",
+          "message": "Nf8 attacks Qe6 while the rook continues blockading the pawn on f7.",
+          "required_reply_or_cost": "Qg4 escapes the attack, and the knight returns to d7 to attack f6.",
+          "scope": "phase1_board",
+          "uncertainty": "This is an attack on the queen, not direct knight support of the f7-rook."
+        },
+        {
+          "ply": 107,
+          "label": "54. Qg4",
+          "SAN": "Qg4",
+          "question": "How does the queen join defence and attack together?",
+          "message": "Qg4 escapes the knight and oversees the advanced g-pawn from the g-file.",
+          "required_reply_or_cost": "The pawn remains blocked; Black's knight returns to d7 rather than advancing it.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 108,
+          "label": "54... Nd7",
+          "SAN": "Nd7",
+          "question": "Which target does the knight return to cover?",
+          "message": "Nd7 attacks f6 while remaining connected with the bishop and rook.",
+          "required_reply_or_cost": "The pawn stays defended by Bg7 until Black's later ...Rxf6 sacrifice.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 109,
+          "label": "55. Kg1",
+          "SAN": "Kg1",
+          "question": "How is Black's immediate promotion controlled?",
+          "message": "Kg1 occupies the g-pawn's promotion square.",
+          "required_reply_or_cost": "White can now redirect the queen while the pawn remains on g2.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 110,
+          "label": "55... a5",
+          "SAN": "a5",
+          "question": "What queenside counterplay is attempted while g2 is blocked?",
+          "message": "a5 advances the a-pawn and prompts White's a4 reply.",
+          "required_reply_or_cost": "...Bxa4 wins that pawn, but does not free the g-pawn to promote.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 111,
+          "label": "56. a4",
+          "SAN": "a4",
+          "question": "What is the cost of confronting the a-pawn?",
+          "message": "a4 fixes the queenside pawn contact but leaves the pawn available to Bc6.",
+          "required_reply_or_cost": "...Bxa4 captures it; White keeps concentrating on Black's rook and g-pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No engine assessment of this pawn concession."
+        },
+        {
+          "ply": 112,
+          "label": "56... Bxa4",
+          "SAN": "Bxa4",
+          "question": "Does the queenside pawn capture change the main threat?",
+          "message": "Bxa4 gains a pawn and moves the bishop off the diagonal defending g2.",
+          "required_reply_or_cost": "Qh3 renews the king-side pressure; Black ultimately gives up its last rook despite the pawn gain.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 113,
+          "label": "57. Qh3",
+          "SAN": "Qh3",
+          "question": "What mating threat gives the queen move its point?",
+          "message": "Qh3 threatens Qh8 mate, with Bg7 and the f6-pawn restricting Black's king.",
+          "required_reply_or_cost": "...Rxf6 removes the pawn, then Bxf6 Nxf6 eliminates the rook and White takes g2 with check.",
+          "scope": "phase1_board",
+          "uncertainty": "The mate is a conditional threat if Black ignores it, not the result of the actual game."
+        },
+        {
+          "ply": 114,
+          "label": "57... Rxf6",
+          "SAN": "Rxf6",
+          "question": "What is the real cost of eliminating f6?",
+          "message": "Rxf6 takes the passer but gives up Black's last rook after Bxf6.",
+          "required_reply_or_cost": "...Nxf6 recaptures the bishop; White then removes g2 and enters queen against bishop and knight.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 115,
+          "label": "58. Bxf6",
+          "SAN": "Bxf6",
+          "question": "How does White answer the capture of its passer?",
+          "message": "Bxf6 captures the rook that took f6.",
+          "required_reply_or_cost": "...Nxf6 removes this bishop, so the result is a rook exchanged for bishop and pawn, not a free rook.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 116,
+          "label": "58... Nxf6",
+          "SAN": "Nxf6",
+          "question": "What material remains after the exchange?",
+          "message": "Nxf6 recaptures the bishop and leaves Black with bishop and knight against White's queen.",
+          "required_reply_or_cost": "Qxg2+ removes Black's remaining promotion threat on the next move.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No claim that this reply is the only legal defence."
+        },
+        {
+          "ply": 117,
+          "label": "59. Qxg2+",
+          "SAN": "Qxg2+",
+          "question": "How is Black's promotion counterplay finally removed?",
+          "message": "Qxg2+ takes the blocked passer with check.",
+          "required_reply_or_cost": "White's king is no longer tied to g1, and the queen next captures the queenside pawns.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 118,
+          "label": "59... Kf8",
+          "SAN": "Kf8",
+          "question": "How does the king escape the queen check?",
+          "message": "Kf8 moves away from the g-file check.",
+          "required_reply_or_cost": "Qxb7 removes another pawn, so escaping the check does not restore material.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 119,
+          "label": "60. Qxb7",
+          "SAN": "Qxb7",
+          "question": "What remains to be converted after the pawn capture?",
+          "message": "Qxb7 removes b7, leaving White's queen and c-pawn against bishop, knight and a-pawn.",
+          "required_reply_or_cost": "The supplemented continuation includes Qxa5, eliminating Black's last pawn; the book's omitted ending is not instant resignation.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "A general queen-versus-two-pieces win is theory, not a terminal rule.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page196",
+              "pageAnchor": "page196",
+              "originalHTMLLine": 5499,
+              "originalHTMLCharacterOffset": 462682
+            },
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page196",
+              "pageAnchor": "page196",
+              "originalHTMLLine": 5500,
+              "originalHTMLCharacterOffset": 462738
+            }
+          ]
+        },
+        {
+          "ply": 120,
+          "label": "60... Be8",
+          "SAN": "Be8",
+          "question": "How does Black regroup the bishop in the supplemented ending?",
+          "message": "Be8 brings the bishop back toward the king and knight.",
+          "required_reply_or_cost": "Qb6 keeps the queen active while Black's king moves to e7.",
+          "scope": "phase1_board",
+          "uncertainty": "This comes from the validated supplementary PGN, not the book's printed continuation."
+        },
+        {
+          "ply": 121,
+          "label": "61. Qb6",
+          "SAN": "Qb6",
+          "question": "What does the queen manoeuvre keep under pressure?",
+          "message": "Qb6 centralizes from b7 while retaining access to Black's last pawn on a5.",
+          "required_reply_or_cost": "Qxa5 follows after ...Ke7.",
+          "scope": "phase1_board",
+          "uncertainty": "Supplemented continuation; no best-move claim."
+        },
+        {
+          "ply": 122,
+          "label": "61... Ke7",
+          "SAN": "Ke7",
+          "question": "Why bring the king into the ending?",
+          "message": "Ke7 moves Black's king toward the centre and the remaining minor pieces.",
+          "required_reply_or_cost": "White can still take a5 and then bring its own king forward.",
+          "scope": "phase1_board",
+          "uncertainty": "Supplemented continuation; defensive intention is inferred."
+        },
+        {
+          "ply": 123,
+          "label": "62. Qxa5",
+          "SAN": "Qxa5",
+          "question": "How does the last pawn capture change the task?",
+          "message": "Qxa5 removes Black's final pawn; White retains a queen and c-pawn against bishop and knight.",
+          "required_reply_or_cost": "Black regroups ...Nd7 and ...Bf7 while White's king advances.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "Material advantage does not itself certify a forced win."
+        },
+        {
+          "ply": 124,
+          "label": "62... Nd7",
+          "SAN": "Nd7",
+          "question": "How is the knight placed to oppose the king and pawn?",
+          "message": "Nd7 centralizes the knight and helps cover the c5 advance square.",
+          "required_reply_or_cost": "White begins Kf2-e3-d4; Black's pieces still require coordination.",
+          "scope": "phase1_board",
+          "uncertainty": "Supplemented continuation; not a proof of an adequate defence."
+        },
+        {
+          "ply": 125,
+          "label": "63. Kf2",
+          "SAN": "Kf2",
+          "question": "What should White add to its queen's activity?",
+          "message": "Kf2 starts bringing the king toward the c-pawn and Black's defensive pieces.",
+          "required_reply_or_cost": "Ke3 and Kd4 follow rather than unnecessary queen checks.",
+          "scope": "phase2_theory",
+          "uncertainty": "The conversion plan is an LLM strategic reading of the supplemented continuation."
+        },
+        {
+          "ply": 126,
+          "label": "63... Bf7",
+          "SAN": "Bf7",
+          "question": "How does the bishop coordinate with the remaining knight?",
+          "message": "Bf7 attacks the c4-pawn along the diagonal through e6 and d5.",
+          "required_reply_or_cost": "The pawn is not defended at this moment; White approaches with Ke3 and later Kd4, and Black does not take c4 in the recorded continuation.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 127,
+          "label": "64. Ke3",
+          "SAN": "Ke3",
+          "question": "What does the king's advance protect?",
+          "message": "Ke3 approaches the c-pawn and central squares while White's queen stays active.",
+          "required_reply_or_cost": "Kd4 follows after Black's king reaches d6.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 128,
+          "label": "64... Kd6",
+          "SAN": "Kd6",
+          "question": "How does Black meet the advancing king?",
+          "message": "Kd6 brings the king toward the central pawn and White's king.",
+          "required_reply_or_cost": "Kd4 keeps White's pawn defended and its king close to the action.",
+          "scope": "phase1_board",
+          "uncertainty": "The record supplies a defensive attempt, not its optimality."
+        },
+        {
+          "ply": 129,
+          "label": "65. Kd4",
+          "SAN": "Kd4",
+          "question": "What does White's king support from d4?",
+          "message": "Kd4 brings the king beside the c4-pawn and controls the next rank.",
+          "required_reply_or_cost": "Black's Kc6 moves away from the central confrontation.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 130,
+          "label": "65... Kc6",
+          "SAN": "Kc6",
+          "question": "Where does Black's king avoid White's central control?",
+          "message": "Kc6 moves the king away from the central confrontation while keeping the pieces nearby.",
+          "required_reply_or_cost": "Qf5 follows, attacking the bishop and knight together.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 131,
+          "label": "66. Qf5",
+          "SAN": "Qf5",
+          "question": "What explains the resignation at the actual end?",
+          "message": "Qf5 attacks Bf7 and Nd7 at once, with White's king and c-pawn active; Black resigned here.",
+          "required_reply_or_cost": "The final position is queen and pawn against two minor pieces; neither checkmate nor bare-king draw occurred.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Both pieces are attacked, but all defensive replies were not exhaustively checked; resignation is the recorded outcome, not a proof of a forced fork."
+        }
+      ]
+    },
+    {
+      "gameId": "fundamentals-game-07",
+      "bookGameNumber": 7,
+      "headers": {
+        "Event": "San Sebastian",
+        "Site": "San Sebastian",
+        "Date": "1911.??.??",
+        "Round": "?",
+        "White": "J. R. Capablanca",
+        "Black": "A. Burn",
+        "Result": "1-0"
+      },
+      "bookMainlinePlyCount": 91,
+      "actualPlyCount": 91,
+      "source": {
+        "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page197",
+        "pageAnchor": "page197",
+        "originalHTMLLine": 5506,
+        "originalHTMLCharacterOffset": 463047
+      },
+      "supplementedContinuation": null,
+      "allMovesLegalityIndependentlyChecked": true,
+      "moves": [
+        {
+          "ply": 1,
+          "label": "1. e4",
+          "SAN": "e4",
+          "question": "What central commitment does e4 make?",
+          "message": "White occupies the centre and opens lines for the queen and king's bishop.",
+          "required_reply_or_cost": "Black meets it with ...e5; no advantage follows from occupying the square alone.",
+          "scope": "phase2_theory",
+          "uncertainty": "Opening purpose is a strategic interpretation, not a comparison of all legal moves."
+        },
+        {
+          "ply": 2,
+          "label": "1... e5",
+          "SAN": "e5",
+          "question": "How does Black contest White's centre?",
+          "message": "Black answers ...e5 with an equal central claim rather than conceding space.",
+          "required_reply_or_cost": "The pawn becomes a target of Nf3, and Black must sustain its defence.",
+          "scope": "phase2_theory",
+          "uncertainty": null
+        },
+        {
+          "ply": 3,
+          "label": "2. Nf3",
+          "SAN": "Nf3",
+          "question": "What immediate pressure does Nf3 add?",
+          "message": "Nf3 develops while attacking the e5-pawn.",
+          "required_reply_or_cost": "...Nc6 defends that pawn, so the attack does not win it.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 4,
+          "label": "2... Nc6",
+          "SAN": "Nc6",
+          "question": "How does ...Nc6 answer Nf3?",
+          "message": "Black develops a knight and protects e5 at the same time.",
+          "required_reply_or_cost": "White's Bb5 will challenge this defender rather than capture e5 immediately.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 5,
+          "label": "3. Bb5",
+          "SAN": "Bb5",
+          "question": "Why aim the bishop at c6?",
+          "message": "Bb5 puts pressure on the knight defending Black's centre.",
+          "required_reply_or_cost": "The knight is not pinned to the king; the pressure is a developing plan, not a forced pawn win.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The Ruy Lopez purpose is theoretical."
+        },
+        {
+          "ply": 6,
+          "label": "3... a6",
+          "SAN": "a6",
+          "question": "What does ...a6 require White to decide?",
+          "message": "...a6 attacks the bishop and asks it to retreat or exchange on c6.",
+          "required_reply_or_cost": "White retains the bishop with Ba4 instead of changing Black's pawn structure.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 7,
+          "label": "4. Ba4",
+          "SAN": "Ba4",
+          "question": "What does Ba4 preserve?",
+          "message": "White keeps the bishop and its pressure on c6.",
+          "required_reply_or_cost": "Black can later gain another tempo against this bishop with ...b5.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 8,
+          "label": "4... Nf6",
+          "SAN": "Nf6",
+          "question": "What new demand does ...Nf6 make?",
+          "message": "Black develops a knight that attacks White's e4-pawn.",
+          "required_reply_or_cost": "White supports the centre with d3 in the game.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 9,
+          "label": "5. d3",
+          "SAN": "d3",
+          "question": "Why choose d3 instead of an immediate central advance?",
+          "message": "d3 protects e4 and allows White to complete development with a compact centre.",
+          "required_reply_or_cost": "This keeps the d-pawn on a supporting square rather than immediately challenging e5 with d4.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Capablanca describes the choice as solid development; its relative merit is not independently established.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page197",
+              "pageAnchor": "page197",
+              "originalHTMLLine": 5516,
+              "originalHTMLCharacterOffset": 464393
+            }
+          ]
+        },
+        {
+          "ply": 10,
+          "label": "5... d6",
+          "SAN": "d6",
+          "question": "What is ...d6 maintaining?",
+          "message": "...d6 supports e5 while opening the c8-bishop's diagonal.",
+          "required_reply_or_cost": "The bishop still has to develop, and the central contact remains unresolved.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 11,
+          "label": "6. c3",
+          "SAN": "c3",
+          "question": "What preparation does c3 provide?",
+          "message": "c3 prepares a later d4 advance and gives the bishop a retreat to c2.",
+          "required_reply_or_cost": "The advance has not occurred; ...d5 instead lets Black start the central exchange.",
+          "scope": "phase2_theory",
+          "uncertainty": "These are opening intentions, not an established superiority over alternatives."
+        },
+        {
+          "ply": 12,
+          "label": "6... Be7",
+          "SAN": "Be7",
+          "question": "What development does ...Be7 complete?",
+          "message": "Black moves the king's bishop out of the way to prepare castling.",
+          "required_reply_or_cost": "The c8-bishop remains undeveloped, so castling alone will not complete Black's mobilisation.",
+          "scope": "phase2_theory",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page197",
+              "pageAnchor": "page197",
+              "originalHTMLLine": 5523,
+              "originalHTMLCharacterOffset": 465065
+            }
+          ]
+        },
+        {
+          "ply": 13,
+          "label": "7. Nbd2",
+          "SAN": "Nbd2",
+          "question": "Where is the b1-knight being routed?",
+          "message": "Nbd2 develops the knight toward a central rerouting through f1.",
+          "required_reply_or_cost": "It occupies d2 and temporarily blocks the c1-bishop's diagonal until Nf1 clears it.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The later route establishes the game connection, not that this was the only useful development."
+        },
+        {
+          "ply": 14,
+          "label": "7... O-O",
+          "SAN": "O-O",
+          "question": "What changes when Black castles?",
+          "message": "Black brings the king to g8 and the rook to f8.",
+          "required_reply_or_cost": "The knight and bishop still have unfinished development on the queenside.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 15,
+          "label": "8. Nf1",
+          "SAN": "Nf1",
+          "question": "What does Nf1 make possible, and what does it delay?",
+          "message": "Nf1 clears d2 so the c1-bishop can develop, while preparing Ne3.",
+          "required_reply_or_cost": "The knight on f1 also blocks White's short castling until it moves again.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 16,
+          "label": "8... b5",
+          "SAN": "b5",
+          "question": "What immediate gain does ...b5 seek?",
+          "message": "...b5 attacks the bishop on a4 and gains queenside space.",
+          "required_reply_or_cost": "The bishop escapes to c2, and b5 later becomes a target of a4.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 17,
+          "label": "9. Bc2",
+          "SAN": "Bc2",
+          "question": "What resource does Bc2 keep?",
+          "message": "Bc2 saves the bishop and keeps its diagonal toward the kingside.",
+          "required_reply_or_cost": "The e4-pawn initially blocks that diagonal; the later exd5 opens it for the h7 attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 18,
+          "label": "9... d5",
+          "SAN": "d5",
+          "question": "What does ...d5 challenge now?",
+          "message": "Black strikes at White's e4-centre before White has castled.",
+          "required_reply_or_cost": "After ...dxe4 and dxe4, the central pawns are exchanged rather than simply won.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 19,
+          "label": "10. Qe2",
+          "SAN": "Qe2",
+          "question": "How does Qe2 support the centre?",
+          "message": "Qe2 adds protection to e4 while leaving the d-pawn available to recapture.",
+          "required_reply_or_cost": "Black's ...dxe4 is met by dxe4, so the supported centre changes ownership rather than disappearing.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 20,
+          "label": "10... dxe4",
+          "SAN": "dxe4",
+          "question": "Does ...dxe4 win White's central pawn for nothing?",
+          "message": "Black exchanges the d-pawn for White's e-pawn.",
+          "required_reply_or_cost": "White answers dxe4, leaving White's former d-pawn in the centre.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 21,
+          "label": "11. dxe4",
+          "SAN": "dxe4",
+          "question": "What centre remains after dxe4?",
+          "message": "White recaptures and retains a pawn on e4, now supplied by the d-file.",
+          "required_reply_or_cost": "That pawn later captures on d5 and is eventually removed by ...Nxd5.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 22,
+          "label": "11... Bc5",
+          "SAN": "Bc5",
+          "question": "What activity does ...Bc5 add?",
+          "message": "Black develops the bishop toward White's kingside while making e7 available to the queen.",
+          "required_reply_or_cost": "The bishop does not win a piece; White continues Bg5 and Ne3.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book questions the development sequence, but no independent best-move proof is available.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page197",
+              "pageAnchor": "page197",
+              "originalHTMLLine": 5532,
+              "originalHTMLCharacterOffset": 466356
+            }
+          ]
+        },
+        {
+          "ply": 23,
+          "label": "12. Bg5",
+          "SAN": "Bg5",
+          "question": "What pressure does Bg5 put on Black's development?",
+          "message": "Bg5 pins the f6-knight to Black's queen on d8.",
+          "required_reply_or_cost": "...Qe7 later removes that pin, and Bxf6 is a voluntary exchange rather than a forced capture.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 24,
+          "label": "12... Be6",
+          "SAN": "Be6",
+          "question": "What does ...Be6 add to the central contest?",
+          "message": "Black develops the remaining bishop and contests central squares, including d5.",
+          "required_reply_or_cost": "White can play Ne3 without blocking its own bishop, which has already reached g5.",
+          "scope": "phase1_board",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page198",
+              "pageAnchor": "page198",
+              "originalHTMLLine": 5540,
+              "originalHTMLCharacterOffset": 466962
+            }
+          ]
+        },
+        {
+          "ply": 25,
+          "label": "13. Ne3",
+          "SAN": "Ne3",
+          "question": "What does Ne3 accomplish for White's coordinated development?",
+          "message": "Ne3 brings the rerouted knight into the centre and clears f1 for castling.",
+          "required_reply_or_cost": "Its later Nd5 is met by ...Bxd5, so the strong square does not mean the knight will stay there.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 26,
+          "label": "13... Re8",
+          "SAN": "Re8",
+          "question": "What pressure does ...Re8 prepare?",
+          "message": "Black places a rook behind the e5-pawn on the e-file.",
+          "required_reply_or_cost": "The pawn still blocks the rook's direct action; this is pressure behind the centre, not an immediate attack through it.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 27,
+          "label": "14. O-O",
+          "SAN": "O-O",
+          "question": "Why can White castle now?",
+          "message": "With f1 cleared by Ne3, White castles and brings the rook into play.",
+          "required_reply_or_cost": "The position still needs an answer to Black's central pieces; king relocation by itself proves no evaluation gain.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 28,
+          "label": "14... Qe7",
+          "SAN": "Qe7",
+          "question": "What changes when Black moves the queen to e7?",
+          "message": "...Qe7 releases the f6-knight from the diagonal pin and connects Black's heavy pieces.",
+          "required_reply_or_cost": "White uses Nd5 to exchange the e6-bishop and leave a pawn on d5.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Capablanca criticises ...Qe7; the concrete continuation is observed, but the lost opportunity is not independently compared.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page198",
+              "pageAnchor": "page198",
+              "originalHTMLLine": 5547,
+              "originalHTMLCharacterOffset": 467626
+            }
+          ]
+        },
+        {
+          "ply": 29,
+          "label": "15. Nd5",
+          "SAN": "Nd5",
+          "question": "What does Nd5 force Black to address?",
+          "message": "Nd5 attacks the queen on e7 and enters an active central square.",
+          "required_reply_or_cost": "Black takes it with ...Bxd5, and White recaptures exd5, changing the active knight into a central pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 30,
+          "label": "15... Bxd5",
+          "SAN": "Bxd5",
+          "question": "What is the cost of removing the d5-knight?",
+          "message": "...Bxd5 removes White's active knight at the price of Black's e6-bishop.",
+          "required_reply_or_cost": "exd5 recaptures, opens the c2-bishop's diagonal and leaves White a pawn on d5.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 31,
+          "label": "16. exd5",
+          "SAN": "exd5",
+          "question": "Why does exd5 matter beyond recovering the piece?",
+          "message": "exd5 completes the bishop-for-knight exchange and clears the bishop's route toward h7.",
+          "required_reply_or_cost": "Black later wins the d5-pawn with ...Nxd5, so its central presence is temporary.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 32,
+          "label": "16... Nb8",
+          "SAN": "Nb8",
+          "question": "What is the idea behind retreating ...Nb8?",
+          "message": "Black reroutes the c6-knight toward d7 to support the centre.",
+          "required_reply_or_cost": "The retreat costs time while White starts an attack with a4 and the open bishop diagonal.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The plan is identified by the book and later moves; its comparative evaluation is not proved.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page198",
+              "pageAnchor": "page198",
+              "originalHTMLLine": 5557,
+              "originalHTMLCharacterOffset": 468503
+            }
+          ]
+        },
+        {
+          "ply": 33,
+          "label": "17. a4",
+          "SAN": "a4",
+          "question": "What weakness does a4 challenge?",
+          "message": "a4 attacks Black's b5-pawn and demands a queenside response.",
+          "required_reply_or_cost": "Black pushes ...b4, which White meets with cxb4 and ...Bxb4; this is an exchange of pawns, not an immediate free pawn.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 34,
+          "label": "17... b4",
+          "SAN": "b4",
+          "question": "What does ...b4 gain, and what does it leave unresolved?",
+          "message": "...b4 pushes the attacked pawn forward and provokes a queenside exchange.",
+          "required_reply_or_cost": "cxb4 and ...Bxb4 remove both pawns, while White's developing kingside attack remains available.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book calls ...b4 a mistake; the later h7 loss supports the practical story, not proof that this pawn push alone caused it.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page198",
+              "pageAnchor": "page198",
+              "originalHTMLLine": 5563,
+              "originalHTMLCharacterOffset": 469010
+            }
+          ]
+        },
+        {
+          "ply": 35,
+          "label": "18. cxb4",
+          "SAN": "cxb4",
+          "question": "What does cxb4 actually win?",
+          "message": "White captures the advanced b-pawn to resolve the queenside contact.",
+          "required_reply_or_cost": "...Bxb4 recaptures, so White has exchanged its c-pawn for Black's b-pawn rather than won material here.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 36,
+          "label": "18... Bxb4",
+          "SAN": "Bxb4",
+          "question": "What does ...Bxb4 recover?",
+          "message": "Black recaptures the pawn and keeps an active bishop.",
+          "required_reply_or_cost": "White can exchange the f6-knight and bring the queen to e4, preparing the h7 capture.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 37,
+          "label": "19. Bxf6",
+          "SAN": "Bxf6",
+          "question": "Why exchange the f6-knight now?",
+          "message": "Bxf6 removes a kingside defender and draws Black's queen onto f6.",
+          "required_reply_or_cost": "...Qxf6 recaptures the bishop; the gain is the resulting attack, not a free knight.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 38,
+          "label": "19... Qxf6",
+          "SAN": "Qxf6",
+          "question": "What does ...Qxf6 restore and expose?",
+          "message": "Black recaptures the bishop, completing the bishop-for-knight exchange.",
+          "required_reply_or_cost": "White's Qe4 coordinates with Bc2 against h7, which the queen on f6 does not defend.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 39,
+          "label": "20. Qe4",
+          "SAN": "Qe4",
+          "question": "What is the concrete point of Qe4?",
+          "message": "Qe4 lines up with Bc2 to attack the h7-pawn.",
+          "required_reply_or_cost": "...Bd6 attacks the queen, but Qxh7+ takes the pawn with check before that attack can win the queen.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 40,
+          "label": "20... Bd6",
+          "SAN": "Bd6",
+          "question": "Does ...Bd6 stop the h7 attack?",
+          "message": "...Bd6 attacks White's queen on e4.",
+          "required_reply_or_cost": "Qxh7+ escapes with check and wins h7; the developing tempo does not prevent the capture.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 41,
+          "label": "21. Qxh7+",
+          "SAN": "Qxh7+",
+          "question": "What does Qxh7+ obtain, and how does Black reply?",
+          "message": "White wins the h7-pawn with check and displaces Black's king.",
+          "required_reply_or_cost": "...Kf8 escapes the check; White then uses Nh4 rather than assuming the exposed king is already mated.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 42,
+          "label": "21... Kf8",
+          "SAN": "Kf8",
+          "question": "What remains after ...Kf8 escapes the check?",
+          "message": "Black gets out of check while White remains a pawn ahead.",
+          "required_reply_or_cost": "Nh4 creates a further attacking threat, and ...Qh6 leads to a queen exchange rather than an immediate mate.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page199",
+              "pageAnchor": "page199",
+              "originalHTMLLine": 5576,
+              "originalHTMLCharacterOffset": 470498
+            }
+          ]
+        },
+        {
+          "ply": 43,
+          "label": "22. Nh4",
+          "SAN": "Nh4",
+          "question": "What does Nh4 add to White's attack?",
+          "message": "Nh4 prepares Nf5 and supports the queen's attack from h7.",
+          "required_reply_or_cost": "Black answers with ...Qh6; White exchanges queens, so the attack converts into an endgame advantage instead of a mating finish.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book regards the queen response as practically forced; alternatives have not been exhaustively checked."
+        },
+        {
+          "ply": 44,
+          "label": "22... Qh6",
+          "SAN": "Qh6",
+          "question": "What is Black trying to achieve with ...Qh6?",
+          "message": "...Qh6 challenges the attacking queen and offers to exchange it.",
+          "required_reply_or_cost": "Qxh6 and ...gxh6 end the immediate queen attack but leave Black a weakened h-pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page199",
+              "pageAnchor": "page199",
+              "originalHTMLLine": 5585,
+              "originalHTMLCharacterOffset": 471174
+            }
+          ]
+        },
+        {
+          "ply": 45,
+          "label": "23. Qxh6",
+          "SAN": "Qxh6",
+          "question": "What advantage survives Qxh6?",
+          "message": "White accepts the queen exchange after winning h7.",
+          "required_reply_or_cost": "...gxh6 recaptures, so no queen is won; the result is an extra pawn and a vulnerable black h-pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 46,
+          "label": "23... gxh6",
+          "SAN": "gxh6",
+          "question": "What position does ...gxh6 leave?",
+          "message": "Black recaptures White's queen and removes the immediate mating attack.",
+          "required_reply_or_cost": "The pawn on h6 later advances to h5 and is captured; its new square is not a secure material recovery.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 47,
+          "label": "24. Nf5",
+          "SAN": "Nf5",
+          "question": "What active role does Nf5 give the knight?",
+          "message": "Nf5 attacks the bishop on d6 and occupies a central attacking square.",
+          "required_reply_or_cost": "Black retains the bishop; the knight's pressure has not yet won a piece.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 48,
+          "label": "24... h5",
+          "SAN": "h5",
+          "question": "Does ...h5 make the h-pawn safe?",
+          "message": "Black advances the pawn created by the queen exchange.",
+          "required_reply_or_cost": "White can reroute the bishop with Bd1 and take it on h5, so the advance does not resolve its vulnerability.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 49,
+          "label": "25. Bd1",
+          "SAN": "Bd1",
+          "question": "What is the purpose of Bd1?",
+          "message": "Bd1 opens a clear diagonal toward h5 and prepares to capture Black's exposed pawn.",
+          "required_reply_or_cost": "Bxh5 will win it, but Black subsequently recovers White's d5-pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 50,
+          "label": "25... Nd7",
+          "SAN": "Nd7",
+          "question": "What does ...Nd7 achieve after the slow retreat?",
+          "message": "The b8-knight finally develops, preparing ...Nf6 and pressure on d5.",
+          "required_reply_or_cost": "It does not defend h5, which White captures next.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 51,
+          "label": "26. Bxh5",
+          "SAN": "Bxh5",
+          "question": "How much does Bxh5 really add to White's material lead?",
+          "message": "White wins the h-pawn and temporarily has two extra pawns.",
+          "required_reply_or_cost": "...Nf6 gains a tempo on the bishop and ...Nxd5 recovers one pawn, leaving White one pawn ahead.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 52,
+          "label": "26... Nf6",
+          "SAN": "Nf6",
+          "question": "Why is ...Nf6 an active developing move?",
+          "message": "...Nf6 attacks the bishop on h5 and brings the knight into contact with d5.",
+          "required_reply_or_cost": "Be2 saves the bishop; the lasting gain is the subsequent capture of d5, not a won bishop.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 53,
+          "label": "27. Be2",
+          "SAN": "Be2",
+          "question": "What does Be2 preserve?",
+          "message": "White retreats the attacked bishop while keeping it available for later activity.",
+          "required_reply_or_cost": "Black takes d5 next, reducing White's extra pawns from two to one.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 54,
+          "label": "27... Nxd5",
+          "SAN": "Nxd5",
+          "question": "What does ...Nxd5 recover?",
+          "message": "Black captures the advanced central pawn that resulted from exd5.",
+          "required_reply_or_cost": "White remains one pawn ahead and immediately attacks the knight with Rfd1.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 55,
+          "label": "28. Rfd1",
+          "SAN": "Rfd1",
+          "question": "Why place the f-rook on d1?",
+          "message": "Rfd1 uses the open file to attack the knight on d5.",
+          "required_reply_or_cost": "The knight escapes to f4, so the rook gains activity rather than a piece.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 56,
+          "label": "28... Nf4",
+          "SAN": "Nf4",
+          "question": "What is the point of ...Nf4?",
+          "message": "The knight escapes the rook attack while attacking White's bishop on e2.",
+          "required_reply_or_cost": "Bc4 saves the bishop, and g3 later drives the knight from f4.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 57,
+          "label": "29. Bc4",
+          "SAN": "Bc4",
+          "question": "What activity does Bc4 retain while escaping?",
+          "message": "Bc4 saves the bishop and puts it on an active diagonal toward Black's queenside.",
+          "required_reply_or_cost": "Black later moves ...a5 out of the bishop's attack on a6; no pawn is won immediately.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 58,
+          "label": "29... Red8",
+          "SAN": "Red8",
+          "question": "What file does ...Red8 contest?",
+          "message": "Black transfers the e-rook to d8 to oppose White's rook on the open d-file.",
+          "required_reply_or_cost": "The bishop on d6 blocks direct contact between the rooks for now.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 59,
+          "label": "30. h4",
+          "SAN": "h4",
+          "question": "What new front does h4 prepare?",
+          "message": "White starts advancing the kingside pawn majority while the pieces restrain Black's centre.",
+          "required_reply_or_cost": "The pawn has only advanced; the connected passed-pawn threat becomes concrete after the later exchange on e6.",
+          "scope": "phase2_theory",
+          "uncertainty": "The purpose is a strategic reading of the subsequent plan."
+        },
+        {
+          "ply": 60,
+          "label": "30... a5",
+          "SAN": "a5",
+          "question": "Why does Black play ...a5?",
+          "message": "...a5 moves the a-pawn out of the c4-bishop's attack and fixes contact with White's a4-pawn.",
+          "required_reply_or_cost": "It also leaves the pawn on a5, where Black must continue maintaining its defence.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book highlights the defensive time cost; superiority of other choices is untested.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page200",
+              "pageAnchor": "page200",
+              "originalHTMLLine": 5598,
+              "originalHTMLCharacterOffset": 473259
+            }
+          ]
+        },
+        {
+          "ply": 61,
+          "label": "31. g3",
+          "SAN": "g3",
+          "question": "What does g3 force the knight to address?",
+          "message": "g3 attacks the knight on f4 and makes Black choose a retreat.",
+          "required_reply_or_cost": "...Ne6 is met by Bxe6, changing the pawn structure rather than allowing the knight to settle.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 62,
+          "label": "31... Ne6",
+          "SAN": "Ne6",
+          "question": "What is the consequence of retreating ...Ne6?",
+          "message": "Black moves the attacked knight to e6.",
+          "required_reply_or_cost": "Bxe6 and ...fxe6 exchange it for White's bishop and leave Black with doubled e-pawns.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 63,
+          "label": "32. Bxe6",
+          "SAN": "Bxe6",
+          "question": "Why give up the bishop with Bxe6?",
+          "message": "White removes the knight and induces Black's f-pawn to recapture on e6.",
+          "required_reply_or_cost": "White also surrenders the bishop; the benefit is the resulting pawn structure and kingside passers, not an extra piece.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 64,
+          "label": "32... fxe6",
+          "SAN": "fxe6",
+          "question": "What lasting change does ...fxe6 make?",
+          "message": "Black recaptures and keeps material balanced among the exchanged minor pieces.",
+          "required_reply_or_cost": "The f-pawn leaves the kingside, producing doubled e-pawns and leaving White's g- and h-pawns without opposing pawns ahead of them.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "How much this structure is worth requires endgame judgement beyond legal tracing."
+        },
+        {
+          "ply": 65,
+          "label": "33. Ne3",
+          "SAN": "Ne3",
+          "question": "Where is White's knight heading after the bishop exchange?",
+          "message": "Ne3 reroutes the knight toward c4 to pressure the bishop and central squares.",
+          "required_reply_or_cost": "This route costs a move but reaches c4 before Black can solve all its defensive tasks.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The comparative merit of the route is not proved."
+        },
+        {
+          "ply": 66,
+          "label": "33... Rdb8",
+          "SAN": "Rdb8",
+          "question": "What counterplay does ...Rdb8 seek?",
+          "message": "Black transfers the d-rook to the b-file to gain activity on the queenside.",
+          "required_reply_or_cost": "This leaves the d-file to White but has not yet won a queenside pawn.",
+          "scope": "phase2_theory",
+          "uncertainty": "The counterplay intention is inferred from later ...Rb4."
+        },
+        {
+          "ply": 67,
+          "label": "34. Nc4",
+          "SAN": "Nc4",
+          "question": "What concrete pressure does Nc4 create?",
+          "message": "Nc4 attacks the bishop on d6 and places the knight against Black's centre.",
+          "required_reply_or_cost": "The bishop stays defended by the c7-pawn; White cannot treat the attack as a free bishop.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 68,
+          "label": "34... Ke7",
+          "SAN": "Ke7",
+          "question": "Why bring the king to e7?",
+          "message": "With queens gone, Black centralises the king to help defend the position.",
+          "required_reply_or_cost": "This cannot by itself remove the weaknesses that White can attack with active rooks and advancing pawns.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book's losing assessment is not an independently verified engine result.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page200",
+              "pageAnchor": "page200",
+              "originalHTMLLine": 5605,
+              "originalHTMLCharacterOffset": 474281
+            }
+          ]
+        },
+        {
+          "ply": 69,
+          "label": "35. Rac1",
+          "SAN": "Rac1",
+          "question": "What does Rac1 add to the pressure?",
+          "message": "White brings the a-rook onto the c-file, lining up against c7 behind the knight on c4.",
+          "required_reply_or_cost": "The knight currently blocks the file; a later knight capture on d6 would open it for the rook.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 70,
+          "label": "35... Ra7",
+          "SAN": "Ra7",
+          "question": "What defence does ...Ra7 provide?",
+          "message": "...Ra7 adds a defender to c7 while keeping the a-pawn protected.",
+          "required_reply_or_cost": "White still has the idea Nxd6, opening the c-file, so the rook move manages a threat rather than ending White's activity.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book gives this defensive purpose; no forced line is asserted.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page200",
+              "pageAnchor": "page200",
+              "originalHTMLLine": 5611,
+              "originalHTMLCharacterOffset": 474736
+            }
+          ]
+        },
+        {
+          "ply": 71,
+          "label": "36. Re1",
+          "SAN": "Re1",
+          "question": "Why switch the other rook to e1?",
+          "message": "Re1 prepares to place the rook on e4 against Black's doubled central pawns.",
+          "required_reply_or_cost": "The e5-pawn stops a direct invasion along the file, so White must improve its position before claiming a capture.",
+          "scope": "phase2_theory",
+          "uncertainty": "The rook-lift purpose follows the played Re4 rather than a proof of optimality."
+        },
+        {
+          "ply": 72,
+          "label": "36... Kf6",
+          "SAN": "Kf6",
+          "question": "What does ...Kf6 defend?",
+          "message": "Black brings the king toward the central pawns, including e5.",
+          "required_reply_or_cost": "White can check this king along the f-file later, so centralisation comes with exposure to the active rooks.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 73,
+          "label": "37. Re4",
+          "SAN": "Re4",
+          "question": "What pressure does Re4 establish?",
+          "message": "Re4 places the rook directly against the e5-pawn.",
+          "required_reply_or_cost": "The pawn is defended by the king and bishop, so this is pressure, not an immediate pawn win.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 74,
+          "label": "37... Rb4",
+          "SAN": "Rb4",
+          "question": "What does ...Rb4 attack?",
+          "message": "...Rb4 activates the rook against White's a4-pawn and c4-knight.",
+          "required_reply_or_cost": "The knight has several defenders at this point; Black does not gain material simply by attacking two targets.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 75,
+          "label": "38. g4",
+          "SAN": "g4",
+          "question": "What does g4 prepare?",
+          "message": "White supports the advance of the kingside passers while keeping the pieces active.",
+          "required_reply_or_cost": "Black's rooks still have queenside activity, so the pawn plan must coexist with defence there.",
+          "scope": "phase2_theory",
+          "uncertainty": "The winning force of the plan is strategic judgement, not a computed result."
+        },
+        {
+          "ply": 76,
+          "label": "38... Ra6",
+          "SAN": "Ra6",
+          "question": "Why does ...Ra6 stay on the sixth rank?",
+          "message": "...Ra6 adds a rook's defence to the bishop on d6 and retains protection of a5.",
+          "required_reply_or_cost": "Black spends another move maintaining these pieces while White can lift a rook to the f-file.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page200",
+              "pageAnchor": "page200",
+              "originalHTMLLine": 5617,
+              "originalHTMLCharacterOffset": 475528
+            }
+          ]
+        },
+        {
+          "ply": 77,
+          "label": "39. Rc3",
+          "SAN": "Rc3",
+          "question": "What route does Rc3 open for the rook?",
+          "message": "Rc3 prepares Rf3+ without moving the knight that supports White's queenside position.",
+          "required_reply_or_cost": "The lift is followed by a check, not an immediate capture of Black's central pawns.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 78,
+          "label": "39... Bc5",
+          "SAN": "Bc5",
+          "question": "What changes when the bishop goes to c5?",
+          "message": "...Bc5 moves the bishop off d6 and keeps it active on the diagonal toward White's kingside.",
+          "required_reply_or_cost": "White still plays Rf3+, so the bishop move does not shelter Black's king from the rook check.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 79,
+          "label": "40. Rf3+",
+          "SAN": "Rf3+",
+          "question": "What practical gain does Rf3+ make?",
+          "message": "White uses the rook lift to check Black's centrally placed king.",
+          "required_reply_or_cost": "...Kg7 escapes; White gains a more useful rook position for supporting the pawn advance rather than winning material with the check.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 80,
+          "label": "40... Kg7",
+          "SAN": "Kg7",
+          "question": "What does ...Kg7 concede?",
+          "message": "Black moves the king away from the f-file check.",
+          "required_reply_or_cost": "White's rook remains active on f3 while White prepares the g- and h-pawn advance.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 81,
+          "label": "41. b3",
+          "SAN": "b3",
+          "question": "What defensive task does b3 perform?",
+          "message": "b3 directly defends the knight on c4 against the b4-rook.",
+          "required_reply_or_cost": "This matters when Black later captures the knight: bxc4 can take that rook in return.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 82,
+          "label": "41... Bd4",
+          "SAN": "Bd4",
+          "question": "What pressure does ...Bd4 put on the f2-pawn?",
+          "message": "...Bd4 attacks f2 along the diagonal to White's king, pinning the pawn.",
+          "required_reply_or_cost": "The f3-rook defends f2, and Kg2 removes the pin in the next move.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 83,
+          "label": "42. Kg2",
+          "SAN": "Kg2",
+          "question": "How does Kg2 reduce the pressure on f2?",
+          "message": "Kg2 steps away from the bishop's diagonal and removes the pin on f2.",
+          "required_reply_or_cost": "The rook still defends f2 while White continues the g- and h-pawn advance.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 84,
+          "label": "42... Ra8",
+          "SAN": "Ra8",
+          "question": "What does ...Ra8 give up and retain?",
+          "message": "Black takes the sixth-rank rook back to the a-file while still defending a5.",
+          "required_reply_or_cost": "White's b3-pawn continues to protect the knight against the active b4-rook.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 85,
+          "label": "43. g5",
+          "SAN": "g5",
+          "question": "What does g5 start to threaten?",
+          "message": "White advances the g-pawn toward Black's king and prepares the connected advance h5 and g6.",
+          "required_reply_or_cost": "The pawn is not yet deciding the game alone; Black still seeks counterplay with the rooks.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The strength of the threat beyond the played continuation is unproved."
+        },
+        {
+          "ply": 86,
+          "label": "43... Ra6",
+          "SAN": "Ra6",
+          "question": "What defence returns with ...Ra6?",
+          "message": "Black returns the rook to a6, again protecting a5 along the file.",
+          "required_reply_or_cost": "This repeated defensive move does not prevent White from pushing h5.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 87,
+          "label": "44. h5",
+          "SAN": "h5",
+          "question": "Why is h5 important alongside the g-pawn?",
+          "message": "h5 prepares to support g6, so the advancing g-pawn will not stand alone.",
+          "required_reply_or_cost": "Black gives up a rook for the c4-knight, but that exchange does not remove the kingside pawns in the game.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 88,
+          "label": "44... Rxc4",
+          "SAN": "Rxc4",
+          "question": "What is the full price of ...Rxc4?",
+          "message": "Black removes White's active knight with the b4-rook.",
+          "required_reply_or_cost": "bxc4 recaptures, so Black exchanges a rook for a knight rather than winning the knight for free.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 89,
+          "label": "45. bxc4",
+          "SAN": "bxc4",
+          "question": "What does bxc4 leave White with?",
+          "message": "White recaptures the rook and gains the exchange, while keeping the kingside passers.",
+          "required_reply_or_cost": "The new c4-pawn and remaining black rook still matter; the game is not over by rule at this capture.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 90,
+          "label": "45... Rc6",
+          "SAN": "Rc6",
+          "question": "What can ...Rc6 still do?",
+          "message": "Black keeps the remaining rook active on the sixth rank to resist the pawn advance.",
+          "required_reply_or_cost": "White nevertheless plays g6, supported by h5, and Black resigns in the recorded game.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No exhaustive defence analysis was performed."
+        },
+        {
+          "ply": 91,
+          "label": "46. g6",
+          "SAN": "g6",
+          "question": "What is the final point of g6?",
+          "message": "White advances a protected g-pawn near Black's king after gaining the exchange.",
+          "required_reply_or_cost": "Black resigns here; the position is not checkmate, and the move's complete forced consequences have not been verified.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The recorded result and connected passers support the description, not a proof against every defence."
+        }
+      ]
+    },
+    {
+      "gameId": "fundamentals-game-08",
+      "bookGameNumber": 8,
+      "headers": {
+        "Event": "Berlin",
+        "Site": "Berlin",
+        "Date": "1913.??.??",
+        "Round": "?",
+        "White": "J. Mieses",
+        "Black": "J. R. Capablanca",
+        "Result": "0-1"
+      },
+      "bookMainlinePlyCount": 88,
+      "actualPlyCount": 88,
+      "source": {
+        "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page201",
+        "pageAnchor": "page201",
+        "originalHTMLLine": 5632,
+        "originalHTMLCharacterOffset": 477558
+      },
+      "supplementedContinuation": null,
+      "allMovesLegalityIndependentlyChecked": true,
+      "moves": [
+        {
+          "ply": 1,
+          "label": "1. e4",
+          "SAN": "e4",
+          "question": "What centre does White claim with e4?",
+          "message": "White occupies the centre and opens development for the king's bishop.",
+          "required_reply_or_cost": "Black immediately contests that centre with ...e5.",
+          "scope": "phase2_theory",
+          "uncertainty": "The opening purpose is theoretical, not an evaluation of alternatives."
+        },
+        {
+          "ply": 2,
+          "label": "1... e5",
+          "SAN": "e5",
+          "question": "How does ...e5 answer White's first move?",
+          "message": "Black claims the opposing central square rather than allowing an uncontested e4-centre.",
+          "required_reply_or_cost": "White can challenge it immediately with d4.",
+          "scope": "phase2_theory",
+          "uncertainty": null
+        },
+        {
+          "ply": 3,
+          "label": "2. d4",
+          "SAN": "d4",
+          "question": "What does d4 put at stake?",
+          "message": "White directly challenges e5 and opens the centre early.",
+          "required_reply_or_cost": "...exd4 and Qxd4 exchange the pawns but bring White's queen out before the minor pieces.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 4,
+          "label": "2... exd4",
+          "SAN": "exd4",
+          "question": "What is the consequence of ...exd4?",
+          "message": "Black exchanges the e-pawn for White's d-pawn.",
+          "required_reply_or_cost": "Qxd4 recaptures, so Black has not won a pawn; the resulting queen placement permits ...Nc6 with tempo.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 5,
+          "label": "3. Qxd4",
+          "SAN": "Qxd4",
+          "question": "What does Qxd4 recover, and what development cost follows?",
+          "message": "White recaptures the pawn and restores material equality.",
+          "required_reply_or_cost": "...Nc6 develops with an attack on the queen, making White spend another move on Qe3.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 6,
+          "label": "3... Nc6",
+          "SAN": "Nc6",
+          "question": "Why is ...Nc6 more than ordinary development?",
+          "message": "...Nc6 develops the knight while attacking the queen on d4.",
+          "required_reply_or_cost": "White moves the queen to e3; Black wins a developing tempo, not material.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 7,
+          "label": "4. Qe3",
+          "SAN": "Qe3",
+          "question": "What does Qe3 retain after the queen is attacked?",
+          "message": "Qe3 saves the queen and keeps a direct defence of e4.",
+          "required_reply_or_cost": "Moving it again to g3 later removes that defence and permits Black's central capture.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 8,
+          "label": "4... Nf6",
+          "SAN": "Nf6",
+          "question": "What pressure does ...Nf6 add?",
+          "message": "...Nf6 develops a knight against White's e4-pawn.",
+          "required_reply_or_cost": "White adds another defender with Nc3 before Black builds up the e-file pressure.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 9,
+          "label": "5. Nc3",
+          "SAN": "Nc3",
+          "question": "What useful defence comes with Nc3?",
+          "message": "Nc3 develops and adds a knight's defence to e4.",
+          "required_reply_or_cost": "...Bb4 pins that knight to the king, which White addresses with Bd2 and long castling.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 10,
+          "label": "5... Bb4",
+          "SAN": "Bb4",
+          "question": "How does ...Bb4 restrict the defender of e4?",
+          "message": "...Bb4 pins the c3-knight to White's king and pressures the centre through that defender.",
+          "required_reply_or_cost": "Bd2 interposes on the diagonal and White later castles away; the pin is not permanent.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 11,
+          "label": "6. Bd2",
+          "SAN": "Bd2",
+          "question": "What does Bd2 make possible?",
+          "message": "Bd2 breaks the knight's absolute pin and clears c1 for long castling.",
+          "required_reply_or_cost": "Black castles short, after which White can place its king on the opposite wing.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 12,
+          "label": "6... O-O",
+          "SAN": "O-O",
+          "question": "What arrangement does Black choose by castling?",
+          "message": "Black puts the king on g8 and brings the rook to f8.",
+          "required_reply_or_cost": "The rook then uses the open e-file, while White chooses queenside castling.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 13,
+          "label": "7. O-O-O",
+          "SAN": "O-O-O",
+          "question": "What practical shape does long castling give the game?",
+          "message": "White castles queenside and puts a rook on d1, with the kings on opposite wings.",
+          "required_reply_or_cost": "Black later attacks the queenside pawn cover; opposite castling itself does not prove White has an attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 14,
+          "label": "7... Re8",
+          "SAN": "Re8",
+          "question": "Why does Black choose ...Re8 before developing the c8-bishop?",
+          "message": "...Re8 adds the rook to the pressure on e4 behind the f6-knight.",
+          "required_reply_or_cost": "After Qg3, ...Nxe4 Nxe4 ...Rxe4 wins the e-pawn with a knight exchange.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Capablanca gives this pawn-winning plan; its superiority over ...d6 is not independently tested.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page201",
+              "pageAnchor": "page201",
+              "originalHTMLLine": 5644,
+              "originalHTMLCharacterOffset": 479348
+            }
+          ]
+        },
+        {
+          "ply": 15,
+          "label": "8. Qg3",
+          "SAN": "Qg3",
+          "question": "What is the price of moving the queen to g3?",
+          "message": "Qg3 sends the queen toward Black's kingside but removes its defence of e4.",
+          "required_reply_or_cost": "...Nxe4 Nxe4 ...Rxe4 leaves Black a pawn ahead, so the attacking placement has a concrete central cost.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 16,
+          "label": "8... Nxe4",
+          "SAN": "Nxe4",
+          "question": "What does ...Nxe4 actually win?",
+          "message": "Black captures e4 using the rook's support on the e-file.",
+          "required_reply_or_cost": "White takes the knight with Nxe4, but ...Rxe4 recaptures, leaving Black the extra pawn.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 17,
+          "label": "9. Nxe4",
+          "SAN": "Nxe4",
+          "question": "Does Nxe4 recover the pawn deficit?",
+          "message": "White exchanges its c3-knight for Black's e4-knight.",
+          "required_reply_or_cost": "...Rxe4 removes White's knight in return; the original e-pawn remains lost.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 18,
+          "label": "9... Rxe4",
+          "SAN": "Rxe4",
+          "question": "What position does ...Rxe4 leave?",
+          "message": "Black completes the knight exchange and remains a pawn ahead with an active rook on e4.",
+          "required_reply_or_cost": "White develops Bf4 and Bd3 to gain activity against the rook rather than recovering the pawn immediately.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 19,
+          "label": "10. Bf4",
+          "SAN": "Bf4",
+          "question": "What pressure does Bf4 create?",
+          "message": "Bf4 develops the bishop toward c7 and tries to gain time against Black's position.",
+          "required_reply_or_cost": "The later ...Qf6 and ...d6 mean Bxc7 is not a simple safe pawn recovery.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book treats development, rather than the pawn alone, as White's aim; the bishop-trapping branch is attributed analysis."
+        },
+        {
+          "ply": 20,
+          "label": "10... Qf6",
+          "SAN": "Qf6",
+          "question": "What is Black trying to prevent with ...Qf6?",
+          "message": "...Qf6 attacks the bishop on f4 and keeps Black's queen active against White's developing position.",
+          "required_reply_or_cost": "The bishop is defended by Qg3; taking c7 would instead allow ...d6 to shut its retreat, according to the book.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The safety of every attempted bishop escape after Bxc7 is not exhaustively established here.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page202",
+              "pageAnchor": "page202",
+              "originalHTMLLine": 5662,
+              "originalHTMLCharacterOffset": 481083
+            }
+          ]
+        },
+        {
+          "ply": 21,
+          "label": "11. Nh3",
+          "SAN": "Nh3",
+          "question": "Why develop Nh3 instead of immediately taking c7?",
+          "message": "Nh3 brings the last knight into play and reinforces the bishop on f4.",
+          "required_reply_or_cost": "It avoids the book's Bxc7 ...d6 trap, but the knight itself becomes a target once Black opens the c8-bishop.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The judgement about the pawn capture is attributed to Capablanca.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page202",
+              "pageAnchor": "page202",
+              "originalHTMLLine": 5671,
+              "originalHTMLCharacterOffset": 481812
+            }
+          ]
+        },
+        {
+          "ply": 22,
+          "label": "11... d6",
+          "SAN": "d6",
+          "question": "What threat comes with ...d6?",
+          "message": "...d6 opens the c8-bishop's diagonal toward the knight on h3.",
+          "required_reply_or_cost": "The knight is attacked along that diagonal and must be considered in White's next development; it later leaves h3 with Ng5.",
+          "scope": "phase1_board",
+          "uncertainty": null,
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page202",
+              "pageAnchor": "page202",
+              "originalHTMLLine": 5677,
+              "originalHTMLCharacterOffset": 482320
+            }
+          ]
+        },
+        {
+          "ply": 23,
+          "label": "12. Bd3",
+          "SAN": "Bd3",
+          "question": "How does Bd3 gain time for development?",
+          "message": "Bd3 develops the bishop with an attack on Black's rook on e4.",
+          "required_reply_or_cost": "Black replies ...Nd4 and retains the rook for a tactical continuation instead of simply retreating it.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 24,
+          "label": "12... Nd4",
+          "SAN": "Nd4",
+          "question": "What new pressure does ...Nd4 create?",
+          "message": "...Nd4 places the knight actively in the centre, attacking c2.",
+          "required_reply_or_cost": "White answers Be3, which also attacks the knight; the centre becomes a tactical contest rather than a stable outpost.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book prefers the simpler ...Re8; no independent comparison proves its ranking.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page203",
+              "pageAnchor": "page203",
+              "originalHTMLLine": 5682,
+              "originalHTMLCharacterOffset": 482781
+            }
+          ]
+        },
+        {
+          "ply": 25,
+          "label": "13. Be3",
+          "SAN": "Be3",
+          "question": "What problem does Be3 set for Black's active pieces?",
+          "message": "Be3 attacks the d4-knight while Bd3 is still attacking the rook on e4.",
+          "required_reply_or_cost": "The e3-bishop is also exposed to that rook, and ...Rxe3 later starts the exchange sequence.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 26,
+          "label": "13... Bg4",
+          "SAN": "Bg4",
+          "question": "Why does the double attack in ...Bg4 not settle the position?",
+          "message": "...Bg4 attacks the d1-rook and the h3-knight, but White uses Ng5 to attack the e4-rook.",
+          "required_reply_or_cost": "The ensuing ...Rxe3 sequence leaves White the exchange ahead; the attacks on d1 and h3 cannot be described as free piece wins.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Capablanca calls ...Bg4 a serious mistake; the precise better move is his analysis, not independent engine evidence.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page203",
+              "pageAnchor": "page203",
+              "originalHTMLLine": 5693,
+              "originalHTMLCharacterOffset": 483661
+            }
+          ]
+        },
+        {
+          "ply": 27,
+          "label": "14. Ng5",
+          "SAN": "Ng5",
+          "question": "What does Ng5 force Black's rook to confront?",
+          "message": "Ng5 escapes the bishop's attack and attacks the rook on e4, while White's bishops also pressure Black's central pieces.",
+          "required_reply_or_cost": "...Rxe3 begins a long exchange; after Qxe4 White has two rooks against a rook and bishop, but is a pawn behind.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The book regards Black's sacrifice as the best remaining practical choice, not a result proved here."
+        },
+        {
+          "ply": 28,
+          "label": "14... Rxe3",
+          "SAN": "Rxe3",
+          "question": "What is the real outcome of ...Rxe3?",
+          "message": "Black takes the e3-bishop and attacks White's queen, beginning a tactical liquidation.",
+          "required_reply_or_cost": "Qxg4 ...Ne2+ Bxe2 ...Rxe2 Ne4 ...Rxe4 Qxe4 leaves White the exchange ahead and Black a pawn ahead; the captured bishop is not a free gain.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No claim is made that all alternative responses are forced.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page203",
+              "pageAnchor": "page203",
+              "originalHTMLLine": 5703,
+              "originalHTMLCharacterOffset": 484417
+            }
+          ]
+        },
+        {
+          "ply": 29,
+          "label": "15. Qxg4",
+          "SAN": "Qxg4",
+          "question": "Why does Qxg4 matter beyond taking a bishop?",
+          "message": "White saves the attacked queen while capturing Black's g4-bishop.",
+          "required_reply_or_cost": "...Ne2+ and ...Rxe2 recover White's other bishop, and the sequence still has to continue to Qxe4 before its material result is clear.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 30,
+          "label": "15... Ne2+",
+          "SAN": "Ne2+",
+          "question": "What does the check ...Ne2+ enable?",
+          "message": "Black uses the knight check to keep the initiative while the e3-rook remains active.",
+          "required_reply_or_cost": "Bxe2 removes the knight, but ...Rxe2 then takes that bishop; the checking knight is sacrificed as part of the exchange.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 31,
+          "label": "16. Bxe2",
+          "SAN": "Bxe2",
+          "question": "What must accompany the bishop capture Bxe2?",
+          "message": "White removes the checking knight and stops the check.",
+          "required_reply_or_cost": "Black's rook recaptures on e2, so White's bishop cannot be counted as surviving the exchange.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 32,
+          "label": "16... Rxe2",
+          "SAN": "Rxe2",
+          "question": "What does ...Rxe2 recover?",
+          "message": "Black recaptures the bishop with the rook and has removed both white bishops.",
+          "required_reply_or_cost": "Ne4 attacks Black's queen; ...Rxe4 and Qxe4 then finish the liquidation, costing Black this rook.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 33,
+          "label": "17. Ne4",
+          "SAN": "Ne4",
+          "question": "What tactical purpose does Ne4 serve?",
+          "message": "Ne4 attacks Black's queen on f6, keeping White's remaining knight involved in the liquidation.",
+          "required_reply_or_cost": "...Rxe4 takes the knight, but Qxe4 wins that rook in return; the final position is exchange-up for White, pawn-up for Black.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 34,
+          "label": "17... Rxe4",
+          "SAN": "Rxe4",
+          "question": "Is ...Rxe4 a free capture of the knight?",
+          "message": "Black takes White's last minor piece with the active rook.",
+          "required_reply_or_cost": "Qxe4 recaptures the rook, so the capture is part of a rook-for-minor-pieces transaction rather than a lasting rook survival.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 35,
+          "label": "18. Qxe4",
+          "SAN": "Qxe4",
+          "question": "What material position remains after Qxe4?",
+          "message": "White completes the sequence with two rooks against Black's rook and bishop.",
+          "required_reply_or_cost": "Black still has an extra pawn and active queen; the exchange advantage has not ended the game or proved a forced win.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The later result is a Black win, but does not retroactively prove this position was winning for Black."
+        },
+        {
+          "ply": 36,
+          "label": "18... Qg5+",
+          "SAN": "Qg5+",
+          "question": "What does ...Qg5+ force White to handle?",
+          "message": "Black checks along the diagonal toward White's king on c1.",
+          "required_reply_or_cost": "f4 blocks that diagonal and attacks the queen, so the check gains no material by itself.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 37,
+          "label": "19. f4",
+          "SAN": "f4",
+          "question": "What does f4 solve while gaining time?",
+          "message": "f4 blocks the queen's check and attacks it on g5.",
+          "required_reply_or_cost": "Black retreats to b5; White's pawn is now committed farther up the kingside.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 38,
+          "label": "19... Qb5",
+          "SAN": "Qb5",
+          "question": "Why keep the queen active on b5?",
+          "message": "...Qb5 saves the queen while retaining queenside activity near White's king.",
+          "required_reply_or_cost": "White can challenge the b4-bishop with c3, so the queen placement does not freeze White's development.",
+          "scope": "phase2_theory",
+          "uncertainty": "The intended counterattack is strategic interpretation."
+        },
+        {
+          "ply": 39,
+          "label": "20. c3",
+          "SAN": "c3",
+          "question": "What immediate problem does c3 solve?",
+          "message": "c3 attacks the bishop on b4 and gives White room to organise the rooks.",
+          "required_reply_or_cost": "...Bc5 saves the bishop; the queenside pawns later become the route for Black's attack.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 40,
+          "label": "20... Bc5",
+          "SAN": "Bc5",
+          "question": "What does ...Bc5 preserve?",
+          "message": "Black saves the bishop from c3 and keeps it active rather than exchanging it away.",
+          "required_reply_or_cost": "The bishop later reroutes to f6, where it attacks White's queenside cover.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 41,
+          "label": "21. Rhe1",
+          "SAN": "Rhe1",
+          "question": "Why bring the h-rook to e1?",
+          "message": "Rhe1 develops White's unused rook onto an open file while retaining both rooks.",
+          "required_reply_or_cost": "The move does not resolve whether White should exchange queens or keep the attack going.",
+          "scope": "phase2_theory",
+          "uncertainty": "The file choice is a development judgement, not a forced tactical necessity."
+        },
+        {
+          "ply": 42,
+          "label": "21... Qc6",
+          "SAN": "Qc6",
+          "question": "What decision does ...Qc6 offer White?",
+          "message": "...Qc6 attacks White's queen on e4 and makes a queen exchange possible.",
+          "required_reply_or_cost": "Qxc6 would be met by ...bxc6; White instead chooses Rd5 and retains queens.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 43,
+          "label": "22. Rd5",
+          "SAN": "Rd5",
+          "question": "What choice is expressed by Rd5?",
+          "message": "Rd5 blocks the queen's attack and keeps the queens on the board instead of exchanging on c6.",
+          "required_reply_or_cost": "White retains the attacking chances but also Black's queen counterplay; the book says Qxc6 would have led to a favourable exchange-up ending.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The winning assessment of the alternative ending is Capablanca's; no independent optimal-play analysis was used.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page204",
+              "pageAnchor": "page204",
+              "originalHTMLLine": 5720,
+              "originalHTMLCharacterOffset": 486660
+            }
+          ]
+        },
+        {
+          "ply": 44,
+          "label": "22... Qd7",
+          "SAN": "Qd7",
+          "question": "What centre does ...Qd7 keep covered?",
+          "message": "Black repositions the queen behind the d6-pawn, keeping that pawn defended.",
+          "required_reply_or_cost": "The queens remain on the board, and ...c6 soon drives the active white rook away.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 45,
+          "label": "23. f5",
+          "SAN": "f5",
+          "question": "What does f5 try to obtain from retaining queens?",
+          "message": "White gains space toward Black's king and controls e6 and g6 to support the attack.",
+          "required_reply_or_cost": "Black challenges the active rook with ...c6 and later blocks the attack with ...Bf6 and ...h6.",
+          "scope": "phase2_theory",
+          "uncertainty": "The effectiveness of the attacking plan is strategic judgement."
+        },
+        {
+          "ply": 46,
+          "label": "23... c6",
+          "SAN": "c6",
+          "question": "What does ...c6 require White's rook to do?",
+          "message": "...c6 attacks the rook on d5 and supports Black's coming central advance.",
+          "required_reply_or_cost": "Rd2 saves the rook, so the pawn move gains time rather than material.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 47,
+          "label": "24. Rd2",
+          "SAN": "Rd2",
+          "question": "What does Rd2 give up to save the rook?",
+          "message": "White retreats the attacked rook from its active fifth-rank square.",
+          "required_reply_or_cost": "Black uses the time for ...d5, which attacks White's queen on e4.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 48,
+          "label": "24... d5",
+          "SAN": "d5",
+          "question": "What useful tempo does ...d5 gain for Black's plan?",
+          "message": "...d5 attacks White's queen and frees d6 for the bishop's route to e7 and f6.",
+          "required_reply_or_cost": "Qf3 saves the queen, while ...Be7 and ...Bf6 complete that defensive reorganisation before the queenside advance.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The broader attack-prevention plan is Capablanca's explanation, not an independently computed evaluation.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page205",
+              "pageAnchor": "page205",
+              "originalHTMLLine": 5736,
+              "originalHTMLCharacterOffset": 488216
+            }
+          ]
+        },
+        {
+          "ply": 49,
+          "label": "25. Qf3",
+          "SAN": "Qf3",
+          "question": "What does Qf3 preserve after ...d5?",
+          "message": "Qf3 saves the queen from the pawn attack and keeps it available for kingside pressure.",
+          "required_reply_or_cost": "Black can now reroute the bishop without another queen tempo.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 50,
+          "label": "25... Be7",
+          "SAN": "Be7",
+          "question": "Where is the bishop going with ...Be7?",
+          "message": "Black reroutes the bishop toward f6 to reinforce the kingside and pressure the queenside diagonal.",
+          "required_reply_or_cost": "The played ...Bf6 gives that plan a concrete target in White's pawn cover.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "The route's strategic merit is not compared against alternatives."
+        },
+        {
+          "ply": 51,
+          "label": "26. Rde2",
+          "SAN": "Rde2",
+          "question": "What does Rde2 try to organise?",
+          "message": "White doubles the rooks on the open e-file while continuing the kingside attack.",
+          "required_reply_or_cost": "This leaves the queenside attack to be handled later; the rooks have not yet forced an entry.",
+          "scope": "phase2_theory",
+          "uncertainty": "The purpose is a strategic reading of the rook arrangement."
+        },
+        {
+          "ply": 52,
+          "label": "26... Bf6",
+          "SAN": "Bf6",
+          "question": "Why is ...Bf6 central to Black's counterplay?",
+          "message": "...Bf6 brings the bishop onto the long diagonal toward White's c3- and b2-pawns.",
+          "required_reply_or_cost": "Those pawns still block the diagonal, but the later ...b4 and ...Qxb4 remove c3 and increase the pressure on b2.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The general strength of this bishop is a strategic assessment; the stated blockers and later removal are board facts."
+        },
+        {
+          "ply": 53,
+          "label": "27. Qh5",
+          "SAN": "Qh5",
+          "question": "What attack does Qh5 continue?",
+          "message": "Qh5 keeps White's queen near Black's king, trying to use the advancing kingside pawns.",
+          "required_reply_or_cost": "Black answers ...h6 and ...Kh7, limiting the queen's useful attacking squares.",
+          "scope": "phase2_theory",
+          "uncertainty": "The attacking intention is inferred, not proof of a mating threat."
+        },
+        {
+          "ply": 54,
+          "label": "27... h6",
+          "SAN": "h6",
+          "question": "What restraint does ...h6 create?",
+          "message": "...h6 blocks the queen's route up the h-file and controls g5.",
+          "required_reply_or_cost": "After ...Kh7, a later h4 could be answered by ...g6 to trap the queen, rather than strengthen White's attack.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The queen-trap branch is the author's analysis and was checked for legality; it is not an actual game continuation."
+        },
+        {
+          "ply": 55,
+          "label": "28. g4",
+          "SAN": "g4",
+          "question": "What does g4 support, and what restriction comes with it?",
+          "message": "g4 supports the f5-pawn and the queen on h5.",
+          "required_reply_or_cost": "The pawn also occupies a retreat square for that queen; after ...Kh7, h4 and ...g6 would leave its available retreats vulnerable.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "This is a conditional local mechanism, not proof that g4 was the decisive error."
+        },
+        {
+          "ply": 56,
+          "label": "28... Kh7",
+          "SAN": "Kh7",
+          "question": "What concrete attacking idea does ...Kh7 stop?",
+          "message": "...Kh7 makes h4 a dangerous way to support the queen: Black could answer ...g6 and trap it.",
+          "required_reply_or_cost": "The queen's checking captures on h6 and g6 can be answered by ...Kxh6 and ...fxg6, while Qg5 meets ...hxg5; White avoids this branch with Kb1.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "These illustrative captures are legal board branches; no exhaustive search proves all White defences or overall king safety.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page206",
+              "pageAnchor": "page206",
+              "originalHTMLLine": 5750,
+              "originalHTMLCharacterOffset": 489759
+            }
+          ]
+        },
+        {
+          "ply": 57,
+          "label": "29. Kb1",
+          "SAN": "Kb1",
+          "question": "What is White's priority with Kb1?",
+          "message": "White moves the king toward the corner while the kingside attack has stalled.",
+          "required_reply_or_cost": "Black now brings the rook to d8 and begins the queenside pawn advance.",
+          "scope": "phase2_theory",
+          "uncertainty": "The king-safety intention is theoretical, not proof that Kb1 is best."
+        },
+        {
+          "ply": 58,
+          "label": "29... Rd8",
+          "SAN": "Rd8",
+          "question": "What support does ...Rd8 add?",
+          "message": "Black brings the rook behind the central d5-pawn on the d-file.",
+          "required_reply_or_cost": "The pawn still blocks the rook's penetration; later rook and queen activity must supply the counterattack.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 59,
+          "label": "30. Rd1",
+          "SAN": "Rd1",
+          "question": "Why does Rd1 return a rook to the d-file?",
+          "message": "White shifts the e1-rook to d1 to organise against Black's centre and queenside play.",
+          "required_reply_or_cost": "The other rook stays on e2, and ...Qa4 will attack this newly placed d1-rook.",
+          "scope": "phase2_theory",
+          "uncertainty": "The defensive organisation is strategic; the later queen attack is concrete."
+        },
+        {
+          "ply": 60,
+          "label": "30... c5",
+          "SAN": "c5",
+          "question": "What does ...c5 make available?",
+          "message": "...c5 advances Black's queenside pawn mass and clears c6 for the queen's diagonal route to a4.",
+          "required_reply_or_cost": "...Qa4 then attacks the rook on d1, so the advance is linked to an immediate developing attack rather than only extra space.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The choice to attack with the pawn majority is the author's strategic plan.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page206",
+              "pageAnchor": "page206",
+              "originalHTMLLine": 5758,
+              "originalHTMLCharacterOffset": 490542
+            }
+          ]
+        },
+        {
+          "ply": 61,
+          "label": "31. Qh3",
+          "SAN": "Qh3",
+          "question": "Why withdraw the queen to h3?",
+          "message": "Qh3 keeps the g4-pawn defended while moving out of the cramped h5-square.",
+          "required_reply_or_cost": "Black's ...Qa4 attacks both g4 and Rd1, so the queen's defensive task remains important.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 62,
+          "label": "31... Qa4",
+          "SAN": "Qa4",
+          "question": "How does ...Qa4 constrain White's defensive pieces?",
+          "message": "...Qa4 attacks Rd1 and g4, keeping White's queen tied to the pawn while demanding a rook defence.",
+          "required_reply_or_cost": "Red2 protects Rd1, so the queen's double pressure is not a free rook win.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book's initiative judgement is separate from the verified attacks and defences.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page206",
+              "pageAnchor": "page206",
+              "originalHTMLLine": 5764,
+              "originalHTMLCharacterOffset": 491040
+            }
+          ]
+        },
+        {
+          "ply": 63,
+          "label": "32. Red2",
+          "SAN": "Red2",
+          "question": "What problem does Red2 solve?",
+          "message": "Red2 puts the other rook behind Rd1 and defends it against the queen on a4.",
+          "required_reply_or_cost": "Black changes the attack with ...Qe4+, displacing the king instead of capturing a defended rook.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 64,
+          "label": "32... Qe4+",
+          "SAN": "Qe4+",
+          "question": "What does ...Qe4+ gain without taking material?",
+          "message": "Black checks along the diagonal to the king on b1.",
+          "required_reply_or_cost": "White chooses Ka1, and Black uses the next move for ...b5; the check by itself wins no piece.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 65,
+          "label": "33. Ka1",
+          "SAN": "Ka1",
+          "question": "What position does Ka1 leave for Black to attack?",
+          "message": "White escapes the queen check into the corner.",
+          "required_reply_or_cost": "Black begins ...b5 and ...b4 against the pawn cover rather than claiming a forced mate from this king move.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 66,
+          "label": "33... b5",
+          "SAN": "b5",
+          "question": "What is the point of ...b5?",
+          "message": "...b5 prepares ...b4 to challenge c3 and open the f6-bishop's diagonal toward b2.",
+          "required_reply_or_cost": "After cxb4 and ...Qxb4, c3 disappears and Black's d5-pawn becomes a passer, but White later captures that passer.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The plan is attributed to Capablanca; its winning force against all defences is not established.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page206",
+              "pageAnchor": "page206",
+              "originalHTMLLine": 5773,
+              "originalHTMLCharacterOffset": 491913
+            }
+          ]
+        },
+        {
+          "ply": 67,
+          "label": "34. Qg2",
+          "SAN": "Qg2",
+          "question": "What does Qg2 keep defended?",
+          "message": "Qg2 keeps g4 defended while moving away from h3.",
+          "required_reply_or_cost": "...Qa4 renews the attack on Rd1, and White still has to manage the queenside threats.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 68,
+          "label": "34... Qa4",
+          "SAN": "Qa4",
+          "question": "How does ...Qa4 support the central pawn indirectly?",
+          "message": "...Qa4 keeps pressure on Rd1 while the other black rook guards the d-file, making a rook capture on d5 a back-rank danger.",
+          "required_reply_or_cost": "Rxd5 allows ...Qxd1+ Rxd1 ...Rxd1#, a legally verified mating branch. The pawn is not a free gain.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "This conditional branch reaches checkmate; the overall merits of all alternatives were not evaluated.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page206",
+              "pageAnchor": "page206",
+              "originalHTMLLine": 5778,
+              "originalHTMLCharacterOffset": 492317
+            }
+          ]
+        },
+        {
+          "ply": 69,
+          "label": "35. Kb1",
+          "SAN": "Kb1",
+          "question": "What does Kb1 change in the queenside defence?",
+          "message": "White moves the king out of the corner before the pawn contact opens.",
+          "required_reply_or_cost": "Black still plays ...b4, and the ensuing exchanges expose b2 to the bishop and rook attack.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No claim is made that the king move refutes a particular forced line."
+        },
+        {
+          "ply": 70,
+          "label": "35... b4",
+          "SAN": "b4",
+          "question": "What does ...b4 bring directly against White's king cover?",
+          "message": "...b4 attacks c3 and forces the pawn contact onto White's queenside cover.",
+          "required_reply_or_cost": "cxb4 and ...Qxb4 remove c3, opening the bishop's diagonal toward b2 and leaving a passed d-pawn.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book's claim that adequate defence is doubtful is not independently proved.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page207",
+              "pageAnchor": "page207",
+              "originalHTMLLine": 5784,
+              "originalHTMLCharacterOffset": 492777
+            }
+          ]
+        },
+        {
+          "ply": 71,
+          "label": "36. cxb4",
+          "SAN": "cxb4",
+          "question": "What is the cost of meeting ...b4 with cxb4?",
+          "message": "White captures Black's b-pawn but moves the c3-pawn off its blocking square.",
+          "required_reply_or_cost": "...Qxb4 removes that pawn, so Black's bishop gains a clear diagonal to b2 and d5 becomes passed.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 72,
+          "label": "36... Qxb4",
+          "SAN": "Qxb4",
+          "question": "What does ...Qxb4 accomplish beyond recapturing?",
+          "message": "Black removes White's c-pawn, opening the bishop against b2 and leaving the d5-pawn passed.",
+          "required_reply_or_cost": "White later takes d5, but ...Rb8 and the c-pawn advance continue the attack; the passer itself is not the final winning explanation.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book's rejected earlier pawn-capture variation is separate from the played recapture.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page207",
+              "pageAnchor": "page207",
+              "originalHTMLLine": 5794,
+              "originalHTMLCharacterOffset": 493559
+            }
+          ]
+        },
+        {
+          "ply": 73,
+          "label": "37. a3",
+          "SAN": "a3",
+          "question": "What immediate demand does a3 make?",
+          "message": "a3 attacks Black's queen on b4 and gains a tempo for White's defence.",
+          "required_reply_or_cost": "...Qa4 saves the queen while attacking the advanced a3-pawn as well as Rd1.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 74,
+          "label": "37... Qa4",
+          "SAN": "Qa4",
+          "question": "What pressure does ...Qa4 retain after a3?",
+          "message": "Black saves the queen and keeps pressure on the d1-rook and the a3-pawn.",
+          "required_reply_or_cost": "White takes d5, but Black replies with the active ...Rb8 rather than pursuing a free rook capture.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 75,
+          "label": "38. Rxd5",
+          "SAN": "Rxd5",
+          "question": "Does Rxd5 end Black's pawn-based attack?",
+          "message": "White removes Black's passed d-pawn and restores pawn equality.",
+          "required_reply_or_cost": "...Rb8 and ...c4 continue the attack against b2 with Black's remaining c-pawn, so the eliminated passer is not the whole danger.",
+          "scope": "phase1_provided_line",
+          "uncertainty": "No claim is made that the pawn capture was best or that the result was forced."
+        },
+        {
+          "ply": 76,
+          "label": "38... Rb8",
+          "SAN": "Rb8",
+          "question": "What is the point of ...Rb8 after d5 is lost?",
+          "message": "Black switches the rook to the b-file against the pawn shelter of White's king.",
+          "required_reply_or_cost": "R1d2 defends b2 along the second rank, so the pawn is not immediately free to take.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 77,
+          "label": "39. R1d2",
+          "SAN": "R1d2",
+          "question": "What does R1d2 add to White's defence?",
+          "message": "White brings the back rook to d2, defending b2 and reinforcing the rook on d5.",
+          "required_reply_or_cost": "Black advances ...c4 to make new threats rather than simply capture the defended b2-pawn.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 78,
+          "label": "39... c4",
+          "SAN": "c4",
+          "question": "What new route does ...c4 create?",
+          "message": "Black advances the c-pawn toward c3, where it can attack the d2-rook and b2-pawn together.",
+          "required_reply_or_cost": "After ...c3 and Rc2, ...cxb2 removes the king's last b-file pawn and leaves Black a dangerous pawn on b2.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 79,
+          "label": "40. Qg3",
+          "SAN": "Qg3",
+          "question": "How does Qg3 challenge Black's active rook?",
+          "message": "Qg3 attacks the rook on b8 along the diagonal through f4, e5, d6 and c7.",
+          "required_reply_or_cost": "...Rb3 saves the rook while attacking the queen on g3, so White cannot win the rook with that attack alone.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 80,
+          "label": "40... Rb3",
+          "SAN": "Rb3",
+          "question": "Why is ...Rb3 more active than a retreat?",
+          "message": "...Rb3 escapes the queen's diagonal and attacks that queen along the third rank.",
+          "required_reply_or_cost": "Qd6 saves it, while the rook supports the coming pawn advance and continues to pressure b2 and a3.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 81,
+          "label": "41. Qd6",
+          "SAN": "Qd6",
+          "question": "What counterpressure does Qd6 retain?",
+          "message": "Qd6 saves the queen and attacks the bishop on f6.",
+          "required_reply_or_cost": "The bishop is protected by g7, so the attack is not a free bishop; Black continues ...c3.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 82,
+          "label": "41... c3",
+          "SAN": "c3",
+          "question": "What does ...c3 force White to address?",
+          "message": "...c3 attacks both the rook on d2 and the pawn on b2.",
+          "required_reply_or_cost": "Rc2 saves the rook, but ...cxb2 removes the pawn and leaves Black's pawn immediately in front of White's king.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "The book gives another winning capture as an alternative; no independent comparison of those lines was made.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page208",
+              "pageAnchor": "page208",
+              "originalHTMLLine": 5812,
+              "originalHTMLCharacterOffset": 495602
+            }
+          ]
+        },
+        {
+          "ply": 83,
+          "label": "42. Rc2",
+          "SAN": "Rc2",
+          "question": "What does Rc2 save and fail to save?",
+          "message": "White moves the rook out of the c-pawn's attack and onto the second rank.",
+          "required_reply_or_cost": "Black still plays ...cxb2; taking that pawn with Rxb2 would expose the rook to ...Rxb2, so the pawn cannot be described as harmless.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 84,
+          "label": "42... cxb2",
+          "SAN": "cxb2",
+          "question": "What changes when Black plays ...cxb2?",
+          "message": "Black removes the b2-pawn and places its own pawn next to White's king.",
+          "required_reply_or_cost": "White's king on b1 still blocks promotion, while the black rook protects b2; this is pressure, not a promotion that has already happened.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 85,
+          "label": "43. Rd3",
+          "SAN": "Rd3",
+          "question": "What counterattack does Rd3 attempt?",
+          "message": "Rd3 attacks Black's rook on b3 along the third rank.",
+          "required_reply_or_cost": "...Qe4 attacks the white rook in turn, so its active placement comes under a new threat.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 86,
+          "label": "43... Qe4",
+          "SAN": "Qe4",
+          "question": "What useful threat comes with ...Qe4?",
+          "message": "...Qe4 attacks the rook on d3 and brings the queen onto the diagonal toward c2 and White's king.",
+          "required_reply_or_cost": "Rd1 saves the attacked rook but exposes the c2-rook to a pin along e4-d3-c2-b1.",
+          "scope": "phase1_provided_line",
+          "uncertainty": null
+        },
+        {
+          "ply": 87,
+          "label": "44. Rd1",
+          "SAN": "Rd1",
+          "question": "What is the cost of saving the rook with Rd1?",
+          "message": "White moves the d3-rook to safety on d1.",
+          "required_reply_or_cost": "Vacating d3 leaves the c2-rook pinned to the king by Black's queen, and ...Rc3 adds a direct attack on that pinned rook.",
+          "scope": "phase1_board",
+          "uncertainty": null
+        },
+        {
+          "ply": 88,
+          "label": "44... Rc3",
+          "SAN": "Rc3",
+          "question": "What is the concrete point of the final ...Rc3?",
+          "message": "Black attacks the pinned c2-rook and also the pawn on a3.",
+          "required_reply_or_cost": "White resigns; the book gives Qd2 followed by ...Rxa3 as the remaining defence and cost, rather than an immediate checkmate or promotion.",
+          "scope": "phase1_and_phase2_attributed",
+          "uncertainty": "Qd2 and ...Rxa3 were legality-checked as an illustrative branch; their forced or optimal status was not independently proved.",
+          "consulted_annotation_sources": [
+            {
+              "url": "https://www.gutenberg.org/files/33870/33870-h/33870-h.htm#page208",
+              "pageAnchor": "page208",
+              "originalHTMLLine": 5822,
+              "originalHTMLCharacterOffset": 496804
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "frozen": true,
+  "comparisonLimit": "The provided line in these notes is the actual historical game, not a product engine PV. Future historical events must not be counted as product omissions automatically. Reply/cost obligations are applicable to a product claim only when the provided product evidence establishes that connection.",
+  "validation": {
+    "gameNumbers": [
+      6,
+      7,
+      8
+    ],
+    "moveCounts": [
+      131,
+      91,
+      88
+    ],
+    "totalMoves": 310,
+    "allPliesContiguous": true,
+    "labelsAndSANMatchSourceInput": true,
+    "individuallyAuthoredMoveMessages": true,
+    "engineUsed": false,
+    "legalityLibrary": "python-chess",
+    "independentHumanReaderEvaluation": false,
+    "checkedConditionalBranches": [
+      {
+        "game": 6,
+        "afterPly": 113,
+        "branch": "Qh8#",
+        "condition": "Hypothetical White turn before Black replies; candidate threat only",
+        "verified": "Legal and checkmate in that hypothetical board"
+      },
+      {
+        "game": 7,
+        "afterPly": 82,
+        "verified": "f2 is absolutely pinned; Kg2 removes the pin"
+      },
+      {
+        "game": 8,
+        "afterPly": 56,
+        "branch": "h4 g6 Qxh6+ Kxh6",
+        "verified": "All branch moves legal"
+      },
+      {
+        "game": 8,
+        "afterPly": 56,
+        "branch": "h4 g6 Qxg6+ fxg6",
+        "verified": "All branch moves legal"
+      },
+      {
+        "game": 8,
+        "afterPly": 56,
+        "branch": "h4 g6 Qg5 hxg5",
+        "verified": "All branch moves legal"
+      },
+      {
+        "game": 8,
+        "afterPly": 68,
+        "branch": "Rxd5 Qxd1+ Rxd1 Rxd1#",
+        "verified": "All moves legal and final board is checkmate"
+      },
+      {
+        "game": 8,
+        "afterPly": 88,
+        "branch": "Qd2 Rxa3",
+        "verified": "Illustrative legal author branch; c2 is absolutely pinned before Qd2"
+      }
+    ]
+  }
+}

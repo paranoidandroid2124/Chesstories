@@ -1,0 +1,1544 @@
+{
+  "generated_at": "2026-10-04T04:53:59.385Z",
+  "node": "v22.20.0",
+  "source_inputs": {
+    "regressionRequests": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\inputs\\cases-15.jsonl",
+      "sha256": "a14d9db06fac71cd6805304c9267ef1bfa4ea749e4bb1408495c55a307965df2"
+    },
+    "regressionSnapshots": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\v6-cases\\final-snapshots.jsonl.gz",
+      "sha256": "bba4fac74aa3fd1943cd1880bbb5a14242159c3fb43f0b370413f4bc5db4176f"
+    },
+    "freshResults": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\fresh-probe-v6\\run\\results.json",
+      "sha256": "ca217f6dff35e46b283b378ef9022099e6ab1cce7e735d12ba8950919d0ffd66"
+    },
+    "freshSnapshots": {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\fresh-probe-v6\\run\\final-snapshots.jsonl.gz",
+      "sha256": "9774cfab35c8b7c2253eba62d5021f9a50c7bb7b6cbf8c5552271e1945cb85dc"
+    }
+  },
+  "previous_v2_results": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\frontend-probe\\results.json",
+    "sha256_before": "26802c3c794024040e294161ae78ab0a86867db5a53f9acf3b5e862e3c32dd23",
+    "sha256_after": "26802c3c794024040e294161ae78ab0a86867db5a53f9acf3b5e862e3c32dd23",
+    "preserved": true
+  },
+  "cases": [
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-01",
+      "ply": 21,
+      "request_id": "full-flow-fundamentals-game-01-21",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:be4f96ec58990a9c2d238f99ede6c0aa54929c33a6feb431dd621c1f2f4eaa3c:20:d1b3:evidence:candidate-comparison:2db66783427c5a8f7d755423068d23fcd7b89080ce6273ba12ee6c046d31e452",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:be4f96ec58990a9c2d238f99ede6c0aa54929c33a6feb431dd621c1f2f4eaa3c:20:d1b3:line:179d0a831793cbf158b017e2f964f257d75acfbcf8e50d1948d1a4ae1689c9b4",
+            "move-review:be4f96ec58990a9c2d238f99ede6c0aa54929c33a6feb431dd621c1f2f4eaa3c:20:d1b3:line:4ae3f7fdf888d5d11b210cbba900ed81018d7e69243dcd8a4c63b610355f5387"
+          ],
+          "summary_preserved": true,
+          "references_checked": 117,
+          "legally_replayed_moves": 36,
+          "core_inline_refs": 6,
+          "core_proof_refs": 6,
+          "core_covered_refs": 0,
+          "max_unit_proof_refs": 10,
+          "max_unit_required_refs": 9,
+          "max_unit_covered_refs": 4,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 4,
+              "exact_san_actions_checked": 28,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 4,
+              "exact_san_actions_checked": 28,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-01",
+      "ply": 47,
+      "request_id": "full-flow-fundamentals-game-01-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:8eb367174fefe8dadbac3b37f486622fca4c50d64e44cbd72000485f269a8c89:46:f2f4:evidence:candidate-comparison:80cc6436eb462ba5d4bb911a038499abd751ff264c452e3a1298b480cc2c04c6",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:8eb367174fefe8dadbac3b37f486622fca4c50d64e44cbd72000485f269a8c89:46:f2f4:line:1a8327167385ab6983df928100b0bb126f17bcf80ad48fa7f23b9f1b0887df2b",
+            "move-review:8eb367174fefe8dadbac3b37f486622fca4c50d64e44cbd72000485f269a8c89:46:f2f4:line:6b5077a8f21303ebe93678f9a1a24284f59fd22de7cb83b55c8d19e757ed5208"
+          ],
+          "summary_preserved": true,
+          "references_checked": 158,
+          "legally_replayed_moves": 38,
+          "core_inline_refs": 29,
+          "core_proof_refs": 14,
+          "core_covered_refs": 5,
+          "max_unit_proof_refs": 12,
+          "max_unit_required_refs": 12,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 41,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 41,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-01",
+      "ply": 49,
+      "request_id": "full-flow-fundamentals-game-01-49",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:6bb419f215cfc7cddbd9a485faed43968e087107129bb7ce250157bd3ec90fab:48:c5b6:evidence:candidate-comparison:4fa9758b81fd29c9e2beefe09d05efe9773cddc87b190a0af4d46a84af95087b",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:6bb419f215cfc7cddbd9a485faed43968e087107129bb7ce250157bd3ec90fab:48:c5b6:line:a86e858b4e544dc1126aa21477dd5775a9f2ba01a317228e0efc0f995d8df0f5",
+            "move-review:6bb419f215cfc7cddbd9a485faed43968e087107129bb7ce250157bd3ec90fab:48:c5b6:line:e25113f1b315e21046e558e110c6623351e98bf02860da88cdcb03e349d49144"
+          ],
+          "summary_preserved": true,
+          "references_checked": 254,
+          "legally_replayed_moves": 37,
+          "core_inline_refs": 47,
+          "core_proof_refs": 32,
+          "core_covered_refs": 12,
+          "max_unit_proof_refs": 16,
+          "max_unit_required_refs": 16,
+          "max_unit_covered_refs": 10,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 4,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 64,
+              "english_only_units": 6,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 4,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 64,
+              "english_only_units": 6,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-03",
+      "ply": 17,
+      "request_id": "full-flow-fundamentals-game-03-17",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:5cb362ca6b56515b21fd5005f25c1b7cf4025530eb13b9012e127855a8e48906:16:f1d1:evidence:candidate-comparison:4dc3b61bfcc63e7e1dee9c0770cdc56418f093f04aa84d61e633e151e0076832",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:5cb362ca6b56515b21fd5005f25c1b7cf4025530eb13b9012e127855a8e48906:16:f1d1:line:86951ee2c8f553ca32f5ec2b60575ee851fcda323992b50f62cd7680e4581e24",
+            "move-review:5cb362ca6b56515b21fd5005f25c1b7cf4025530eb13b9012e127855a8e48906:16:f1d1:line:5b048d24fa90d673f4bc1bc5f9a79c05880b7d79849377cccce51cef6c95bfd7"
+          ],
+          "summary_preserved": true,
+          "references_checked": 132,
+          "legally_replayed_moves": 37,
+          "core_inline_refs": 17,
+          "core_proof_refs": 6,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 10,
+          "max_unit_required_refs": 10,
+          "max_unit_covered_refs": 9,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 34,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 34,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-03",
+      "ply": 93,
+      "request_id": "full-flow-fundamentals-game-03-93",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:637f9e3cb2f268ad59fbebbd5febb5ca1beedbf37ebe1c079bc0922fa0aafa05:92:b6c4:evidence:candidate-comparison:a8fdd5b8db1f6a01db907f89d8af6ff230dae1d4c98a07fbb5e2f91605b29135",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:637f9e3cb2f268ad59fbebbd5febb5ca1beedbf37ebe1c079bc0922fa0aafa05:92:b6c4:line:5be3ae28b0e9cd2b222f5b3f16ad823c0819dc5054b7bffb48ce736249c76acc",
+            "move-review:637f9e3cb2f268ad59fbebbd5febb5ca1beedbf37ebe1c079bc0922fa0aafa05:92:b6c4:line:d20a2de7178f5d516b4e3bea25f71d57997ab68b4995a0217411c9e1529131e3"
+          ],
+          "summary_preserved": true,
+          "references_checked": 196,
+          "legally_replayed_moves": 39,
+          "core_inline_refs": 19,
+          "core_proof_refs": 13,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 16,
+          "max_unit_required_refs": 16,
+          "max_unit_covered_refs": 5,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 50,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 50,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-04",
+      "ply": 59,
+      "request_id": "full-flow-fundamentals-game-04-59",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:c1378a3efaf4fa341f12ad5c32d1eadef827966906b532eebb17c49f63d3dfa7:58:c4d5:evidence:candidate-comparison:669ab2d192aed7096e121bb4cd69afcb868430d2bf86aaf6e5dbb1ba286590c5",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:c1378a3efaf4fa341f12ad5c32d1eadef827966906b532eebb17c49f63d3dfa7:58:c4d5:line:b1a111c48116501d21ebfb0bb6d5b53ccfeb15015a4f35601cfe348ac9dfabf5",
+            "move-review:c1378a3efaf4fa341f12ad5c32d1eadef827966906b532eebb17c49f63d3dfa7:58:c4d5:line:756174dc8f567bf06d0809e34fe7f79297c1dafa85b3f9c252a282fda81e10cc"
+          ],
+          "summary_preserved": true,
+          "references_checked": 234,
+          "legally_replayed_moves": 44,
+          "core_inline_refs": 42,
+          "core_proof_refs": 24,
+          "core_covered_refs": 12,
+          "max_unit_proof_refs": 21,
+          "max_unit_required_refs": 21,
+          "max_unit_covered_refs": 11,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 59,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 59,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-04",
+      "ply": 76,
+      "request_id": "full-flow-fundamentals-game-04-76",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:b15a413f036281444ef834bfbe0eeb60812f37afb852a3d046794e83b13d9d86:75:a8b8:evidence:candidate-comparison:637c0abeb682d46d390fbe31ca960711d10823ef33a8c3ff6371010a1b57a842",
+          "question": "observed_terminal_comparison",
+          "pair_line_ids": [
+            "move-review:b15a413f036281444ef834bfbe0eeb60812f37afb852a3d046794e83b13d9d86:75:a8b8:line:38c04d328f0da8ff3662d6dd7376b252abcb6da60333cce9d8ba61cd534493fa",
+            "move-review:b15a413f036281444ef834bfbe0eeb60812f37afb852a3d046794e83b13d9d86:75:a8b8:line:7745e214fae9ee54028438413d6223ea3c6c0c2100dce9c5d5df85ab8b5cc0fe"
+          ],
+          "summary_preserved": true,
+          "references_checked": 108,
+          "legally_replayed_moves": 26,
+          "core_inline_refs": 3,
+          "core_proof_refs": 15,
+          "core_covered_refs": 9,
+          "max_unit_proof_refs": 13,
+          "max_unit_required_refs": 13,
+          "max_unit_covered_refs": 8,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 15,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 15,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-05",
+      "ply": 83,
+      "request_id": "full-flow-fundamentals-game-05-83",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:d916d62f205a46b7a2be5734b0a3647e168818bce779d0685d469223ad24ff0e:82:e4c5:evidence:candidate-comparison:edca145b7f11db0e2fef81ca6326e1a660034eb8f42e5fb293133b6cebedd3e4",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:d916d62f205a46b7a2be5734b0a3647e168818bce779d0685d469223ad24ff0e:82:e4c5:line:5ca65ffc2ded3eda020de2fbf747642a8edd43c1fd584365689a54528c7101ab",
+            "move-review:d916d62f205a46b7a2be5734b0a3647e168818bce779d0685d469223ad24ff0e:82:e4c5:line:763df88567c97f858b197570290569773158d8d1b5313b97724e91b000824533"
+          ],
+          "summary_preserved": true,
+          "references_checked": 207,
+          "legally_replayed_moves": 36,
+          "core_inline_refs": 42,
+          "core_proof_refs": 25,
+          "core_covered_refs": 6,
+          "max_unit_proof_refs": 19,
+          "max_unit_required_refs": 19,
+          "max_unit_covered_refs": 5,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 53,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 53,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-06",
+      "ply": 119,
+      "request_id": "full-flow-fundamentals-game-06-119",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:4d4d42d64e7cf192e9a5314aa61c5c48580929ab2edc7cd058bdb2fdcbd208d0:118:g2b7:evidence:candidate-comparison:1f9cc1986ddbbf45b820e4d9aa147d55e419526eed9d105df714f1fd23e01ab2",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:4d4d42d64e7cf192e9a5314aa61c5c48580929ab2edc7cd058bdb2fdcbd208d0:118:g2b7:line:0dba031af83b655b533fba9ad75d5124d45c7465a6caab914298c444839794ef",
+            "move-review:4d4d42d64e7cf192e9a5314aa61c5c48580929ab2edc7cd058bdb2fdcbd208d0:118:g2b7:line:7d1f40ae67451f58641ca607b1733c62ecc3de07ba5ea4525004de2135f2465a"
+          ],
+          "summary_preserved": true,
+          "references_checked": 118,
+          "legally_replayed_moves": 42,
+          "core_inline_refs": 13,
+          "core_proof_refs": 9,
+          "core_covered_refs": 4,
+          "max_unit_proof_refs": 11,
+          "max_unit_required_refs": 11,
+          "max_unit_covered_refs": 3,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 25,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 25,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-06",
+      "ply": 129,
+      "request_id": "full-flow-fundamentals-game-06-129",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:a8170221e7b9942510afc0738472db427d265840f21ce85350d2ce65c2c38854:128:e3d4:evidence:candidate-comparison:8795b89dc3274d726d4e3d93c55a3b9e2894172d21578103cc477c113c9ed567",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:a8170221e7b9942510afc0738472db427d265840f21ce85350d2ce65c2c38854:128:e3d4:line:99c3ccd9abd9f21fe1b53a532979cce2309913da2a706ce576a61dcf048294a5",
+            "move-review:a8170221e7b9942510afc0738472db427d265840f21ce85350d2ce65c2c38854:128:e3d4:line:c3a4120daded94495991effd82fc66d476d47e9be566cfd4506446c419cb0260"
+          ],
+          "summary_preserved": true,
+          "references_checked": 147,
+          "legally_replayed_moves": 30,
+          "core_inline_refs": 22,
+          "core_proof_refs": 18,
+          "core_covered_refs": 2,
+          "max_unit_proof_refs": 16,
+          "max_unit_required_refs": 16,
+          "max_unit_covered_refs": 2,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 36,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 36,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-07",
+      "ply": 56,
+      "request_id": "full-flow-fundamentals-game-07-56",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:6a362d3b791f7c5ed6538937745b373f1e9d8bd9b83ddd098905fab1d7aee46e:55:d5f4:evidence:candidate-comparison:2813ead8e7bec53c1f00783b6d196e9c1d13bdfa1727b4e39300767c489b1605",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:6a362d3b791f7c5ed6538937745b373f1e9d8bd9b83ddd098905fab1d7aee46e:55:d5f4:line:b9ab04bf48333fa8d4b3b08ebeac47adf3e96ca0b2f04e600b7390a80b463958",
+            "move-review:6a362d3b791f7c5ed6538937745b373f1e9d8bd9b83ddd098905fab1d7aee46e:55:d5f4:line:2cca755e85ab27bf0c214d0673a915547dd15687113b12a0b09e674d29e924c0"
+          ],
+          "summary_preserved": true,
+          "references_checked": 169,
+          "legally_replayed_moves": 38,
+          "core_inline_refs": 31,
+          "core_proof_refs": 17,
+          "core_covered_refs": 7,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 44,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 44,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-08",
+      "ply": 38,
+      "request_id": "full-flow-fundamentals-game-08-38",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:e18a389a43fdd1340b9c2bf3aa92be2f292c1e30c3b3015d6c8ffcb3fed90544:37:g5b5:evidence:candidate-comparison:b61c7cfa242bf353bf5392c3534d4a2a43e24d7dac50caa4b9265c5db03b8a35",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:e18a389a43fdd1340b9c2bf3aa92be2f292c1e30c3b3015d6c8ffcb3fed90544:37:g5b5:line:1e5e0b2023f89e2ad82835d13ba315adeacde023747b67c9c9c131f592724997",
+            "move-review:e18a389a43fdd1340b9c2bf3aa92be2f292c1e30c3b3015d6c8ffcb3fed90544:37:g5b5:line:bc1a50670d75d468a3d9e347961bea16932bd678679f3416586c3d9ad1626b3e"
+          ],
+          "summary_preserved": true,
+          "references_checked": 116,
+          "legally_replayed_moves": 33,
+          "core_inline_refs": 25,
+          "core_proof_refs": 13,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 13,
+          "max_unit_required_refs": 13,
+          "max_unit_covered_refs": 4,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 32,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 32,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-09",
+      "ply": 33,
+      "request_id": "full-flow-fundamentals-game-09-33",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:dbf73d49fabd00cb075ec958a44556823710ac323614f59d83e3e1a2b66201f9:32:a4c3:evidence:candidate-comparison:1547350b9ca29645991b432ac5b1c764e6a1dfc3c351248e5f7b61cbd410ee5e",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:dbf73d49fabd00cb075ec958a44556823710ac323614f59d83e3e1a2b66201f9:32:a4c3:line:4a489ff66da2f9fcef3baea34af99c1f8d2287144a75a4c7672af85ad9daebed",
+            "move-review:dbf73d49fabd00cb075ec958a44556823710ac323614f59d83e3e1a2b66201f9:32:a4c3:line:8e4d413a00e917239e591b6d5e51626a5e4aa4fe41ac239ac8d695fe2a60fa4d"
+          ],
+          "summary_preserved": true,
+          "references_checked": 240,
+          "legally_replayed_moves": 31,
+          "core_inline_refs": 55,
+          "core_proof_refs": 29,
+          "core_covered_refs": 9,
+          "max_unit_proof_refs": 16,
+          "max_unit_required_refs": 16,
+          "max_unit_covered_refs": 8,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 67,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 67,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-09",
+      "ply": 53,
+      "request_id": "full-flow-fundamentals-game-09-53",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:1d63794f65b210943b0d409388b1a4772cf15874a346c529b43e3597c838e7d0:52:d4e6:evidence:candidate-comparison:f10a916c6d77f4c20fd60f59b7a9c686ee901e00a5a624ed3945083c60b39874",
+          "question": "contested_pair_response",
+          "pair_line_ids": [
+            "move-review:1d63794f65b210943b0d409388b1a4772cf15874a346c529b43e3597c838e7d0:52:d4e6:line:01c66b1e5ed59abb5dfa3606b2dde5c2288953667140845ec3e303d820e62e27",
+            "move-review:1d63794f65b210943b0d409388b1a4772cf15874a346c529b43e3597c838e7d0:52:d4e6:line:64be15bef87e419d0179fb002b41be1325b1f5d29a880153967d55dc0cb041a1"
+          ],
+          "summary_preserved": true,
+          "references_checked": 52,
+          "legally_replayed_moves": 31,
+          "core_inline_refs": 7,
+          "core_proof_refs": 6,
+          "core_covered_refs": 4,
+          "max_unit_proof_refs": 4,
+          "max_unit_required_refs": 4,
+          "max_unit_covered_refs": 2,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 13,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 13,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "regression",
+      "game_id": "fundamentals-game-10",
+      "ply": 117,
+      "request_id": "full-flow-fundamentals-game-10-117",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:7b40c32a801e0862cf224e2ef3cabb905a5c00f3b119940fac0c624469cf1061:116:g6g7:evidence:candidate-comparison:d066027de8bd386b4854cb5430b9e37804aae25904dd3ac3bf60973489c5a4f8",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:7b40c32a801e0862cf224e2ef3cabb905a5c00f3b119940fac0c624469cf1061:116:g6g7:line:990ccec22fea182c1133b62e8f9ceeb51b143bcb26e14411e4a8d7e02e86a1d0",
+            "move-review:7b40c32a801e0862cf224e2ef3cabb905a5c00f3b119940fac0c624469cf1061:116:g6g7:line:42594bab50e65790d9efd4c7a14c4b6d15bfa1dcf3d1905ff9e76b762234ff68"
+          ],
+          "summary_preserved": true,
+          "references_checked": 162,
+          "legally_replayed_moves": 47,
+          "core_inline_refs": 13,
+          "core_proof_refs": 8,
+          "core_covered_refs": 1,
+          "max_unit_proof_refs": 19,
+          "max_unit_required_refs": 19,
+          "max_unit_covered_refs": 2,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 42,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 42,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-07",
+      "ply": 47,
+      "request_id": "fresh-wch2016-07-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:evidence:candidate-comparison:3b7ad6499c1812f68b7a7505695c672b498e8a51ed36b20e98a9ae2dc9264553",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:line:6d33d87a23ccc8f10e5a53b32c81fa8802ba7beb6de977f790d46cdbc95b8938",
+            "move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:line:01488dad22bc99ff08ebad775dc51595da496912b200610477b381eff38fbfa4"
+          ],
+          "summary_preserved": true,
+          "references_checked": 100,
+          "legally_replayed_moves": 37,
+          "core_inline_refs": 23,
+          "core_proof_refs": 10,
+          "core_covered_refs": 4,
+          "max_unit_proof_refs": 10,
+          "max_unit_required_refs": 10,
+          "max_unit_covered_refs": 4,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 29,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 29,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-08",
+      "ply": 48,
+      "request_id": "fresh-wch2016-08-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:evidence:candidate-comparison:fcbec2bc9adb8ac2177016f33e12a9c469d76aa1cdc547531f6eaac1309c8a90",
+          "question": "observed_move_order",
+          "pair_line_ids": [
+            "move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:line:33f9eea4dbd946b08297a7e1d181b56fd9af4171142c6afe69470e76640008a7",
+            "move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:line:61dcf16c31e3de04bbcacab9ede351e5d4809510bc325f297b503ea0e1c234e4"
+          ],
+          "summary_preserved": true,
+          "references_checked": 68,
+          "legally_replayed_moves": 33,
+          "core_inline_refs": 22,
+          "core_proof_refs": 12,
+          "core_covered_refs": 0,
+          "max_unit_proof_refs": 6,
+          "max_unit_required_refs": 6,
+          "max_unit_covered_refs": 0,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 0,
+              "exact_san_actions_checked": 22,
+              "english_only_units": 2,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 0,
+              "exact_san_actions_checked": 22,
+              "english_only_units": 2,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-09",
+      "ply": 47,
+      "request_id": "fresh-wch2016-09-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:candidate-comparison:326c93d7a5ffe56dd2d6a02cf9b8d3eb08b7739efa60acb8ab7ee4e0c93025ee",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114",
+            "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:748c5937e771a2e0765c4708946fb2541b1212947ef5051408f013b0a9957b91"
+          ],
+          "summary_preserved": true,
+          "references_checked": 244,
+          "legally_replayed_moves": 38,
+          "core_inline_refs": 49,
+          "core_proof_refs": 33,
+          "core_covered_refs": 8,
+          "max_unit_proof_refs": 23,
+          "max_unit_required_refs": 23,
+          "max_unit_covered_refs": 7,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 4,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 62,
+              "english_only_units": 6,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 4,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 62,
+              "english_only_units": 6,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-10",
+      "ply": 48,
+      "request_id": "fresh-wch2016-10-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:evidence:candidate-comparison:34f1346ab01a3f675832e8e484342d40816dc921c81fc9fc3b2e7249a6751355",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:line:b0cec07a3fd5f2f1c473431d4e671ec77dd7556b0714ab851227735c09fe5ee5",
+            "move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:line:6b8fdbb42a8748d6340e2a9119b2c6f5df49ac7488c270fec3a925b35693da5e"
+          ],
+          "summary_preserved": true,
+          "references_checked": 175,
+          "legally_replayed_moves": 23,
+          "core_inline_refs": 44,
+          "core_proof_refs": 20,
+          "core_covered_refs": 7,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 53,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 53,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-11",
+      "ply": 47,
+      "request_id": "fresh-wch2016-11-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:candidate-comparison:2b014a7aec6b1a5a2faeba7fd985d647551e9f817ebc501b1115d1136dac7732",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:6f3370ad58c9fa9e9139aab7ba84e399ed1e35b5ee97fbe528a0e69e4fcc4d66",
+            "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff"
+          ],
+          "summary_preserved": true,
+          "references_checked": 125,
+          "legally_replayed_moves": 31,
+          "core_inline_refs": 20,
+          "core_proof_refs": 10,
+          "core_covered_refs": 5,
+          "max_unit_proof_refs": 14,
+          "max_unit_required_refs": 14,
+          "max_unit_covered_refs": 5,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 28,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 28,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2016-12",
+      "ply": 48,
+      "request_id": "fresh-wch2016-12-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:evidence:candidate-comparison:fca531c77c75b5d14c0244b5c75657c75df0dd1a84139883fdce0555cd2ec90b",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:4436e0fc0b563fda76df49ae3be2998b392545a59624da632bb3596eae0b87c2",
+            "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:c9b5aba878188e30591c124092400c76d87509925fe1ecf5e1e9e3f85b507dbc"
+          ],
+          "summary_preserved": true,
+          "references_checked": 100,
+          "legally_replayed_moves": 31,
+          "core_inline_refs": 16,
+          "core_proof_refs": 12,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 8,
+          "max_unit_required_refs": 8,
+          "max_unit_covered_refs": 4,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 24,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 3,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 24,
+              "english_only_units": 5,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-07",
+      "ply": 47,
+      "request_id": "fresh-candidates2018-07-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:evidence:candidate-comparison:bb8b76cc3e0bf1c8c3553893d3ecf9c1af54a917e9b47342e33863d8734a458b",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:line:2883e00b663a09431c5de8a8003ec4936d8bf14452f6e777141f1c44eb66c80a",
+            "move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:line:df19d568cba15046853146302e14229fb4b18bb5580edf29415ea5f0e83ba1b4"
+          ],
+          "summary_preserved": true,
+          "references_checked": 199,
+          "legally_replayed_moves": 48,
+          "core_inline_refs": 22,
+          "core_proof_refs": 15,
+          "core_covered_refs": 13,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 13,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 44,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 44,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-08",
+      "ply": 48,
+      "request_id": "fresh-candidates2018-08-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:evidence:candidate-comparison:d417711f7e148477e033d28572e8377d7af1f061c5afa8884a9dfcd107c4d0c0",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:391a36ac2ab5d7566bf0c8369d8d53c627305f6a3914421624a96a71ca5356b7",
+            "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:739cb8ae71825e298a72e8fdfcc849bfc01ecd8e4e74b31565e5773b1e150c86"
+          ],
+          "summary_preserved": true,
+          "references_checked": 135,
+          "legally_replayed_moves": 27,
+          "core_inline_refs": 32,
+          "core_proof_refs": 16,
+          "core_covered_refs": 2,
+          "max_unit_proof_refs": 10,
+          "max_unit_required_refs": 10,
+          "max_unit_covered_refs": 5,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 5,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 41,
+              "english_only_units": 7,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 5,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 41,
+              "english_only_units": 7,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-09",
+      "ply": 31,
+      "request_id": "fresh-candidates2018-09-31",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:candidate-comparison:7e5c9d763a632c4780a75fe3231a06b6071bcaf9d51c66ebc9bf973e06050ca9",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b",
+            "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:3106f63521ef03128e7c54f35a87bc1f3aa790b90ed02ffc094bfbe18c56f513"
+          ],
+          "summary_preserved": true,
+          "references_checked": 172,
+          "legally_replayed_moves": 48,
+          "core_inline_refs": 33,
+          "core_proof_refs": 17,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 45,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 45,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-10",
+      "ply": 48,
+      "request_id": "fresh-candidates2018-10-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:candidate-comparison:5af58618b5a5be4841f3ebfef4174a519db38a6a004e9024abddd24e6d2cdfc0",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100",
+            "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:17b2af62d1931ca3a363299e3cc542abf13210a5814d4b03877fedf0cd1e6a8b"
+          ],
+          "summary_preserved": true,
+          "references_checked": 245,
+          "legally_replayed_moves": 45,
+          "core_inline_refs": 54,
+          "core_proof_refs": 31,
+          "core_covered_refs": 8,
+          "max_unit_proof_refs": 18,
+          "max_unit_required_refs": 18,
+          "max_unit_covered_refs": 7,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 5,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 69,
+              "english_only_units": 7,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 5,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 69,
+              "english_only_units": 7,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-11",
+      "ply": 47,
+      "request_id": "fresh-candidates2018-11-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:evidence:candidate-comparison:df6a41d09fe5cf5166ae7dd46446fb9f490f0e084ef870cf53c9a81a29099177",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:line:3ba1d41a5ea6bade4796d9fc34749768a144950e4d8ca97a806e7b943bd02cd8",
+            "move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:line:32fba2c0912a37dbe837775d927c8248415a8f443baef77d2d7f7934a2990191"
+          ],
+          "summary_preserved": true,
+          "references_checked": 62,
+          "legally_replayed_moves": 14,
+          "core_inline_refs": 16,
+          "core_proof_refs": 7,
+          "core_covered_refs": 1,
+          "max_unit_proof_refs": 7,
+          "max_unit_required_refs": 7,
+          "max_unit_covered_refs": 1,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 20,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 20,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "candidates2018-12",
+      "ply": 48,
+      "request_id": "fresh-candidates2018-12-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:evidence:candidate-comparison:132400e283aa1ec081a28104f656d293d7778f9814392bada338eb5f0a470897",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:line:955f96ac2cb818813fc4f6af23a38026dc107de71f9ba79eedb9e4f515245c66",
+            "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:line:457152484ef1788e09dc106998a03898cd290cc939a780b512aee80fe4ae1c77"
+          ],
+          "summary_preserved": true,
+          "references_checked": 142,
+          "legally_replayed_moves": 35,
+          "core_inline_refs": 33,
+          "core_proof_refs": 15,
+          "core_covered_refs": 4,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 42,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 42,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-07",
+      "ply": 39,
+      "request_id": "fresh-wch2024-07-39",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:evidence:candidate-comparison:e0ef6153ccbb659bd346de24b3112c9a178753dc6ea244b6bf18a36c097c618d",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:line:da4086cd0de8bac9e26d714449ac07c54cc5afbda7e4ac018e676c748ae16689",
+            "move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:line:73d850bf820971dc363a25d7afae71ad43f3a33ad4eb7e2744ce98aae8accdb1"
+          ],
+          "summary_preserved": true,
+          "references_checked": 170,
+          "legally_replayed_moves": 34,
+          "core_inline_refs": 36,
+          "core_proof_refs": 18,
+          "core_covered_refs": 6,
+          "max_unit_proof_refs": 18,
+          "max_unit_required_refs": 18,
+          "max_unit_covered_refs": 6,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 48,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 48,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-08",
+      "ply": 48,
+      "request_id": "fresh-wch2024-08-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:evidence:candidate-comparison:93d4a739c2145763f63050c51c2b9e62d06298b082382b01753fb0f7113ec433",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:line:c304c2cb71b84c2dc831a699a6cb4f88a9729cdf2a45a1f4d0c156a75ab26c9f",
+            "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:line:4bffd3c1028c5e82295e00dd79024948032e3f759aeff5f8866266e07a1c07f2"
+          ],
+          "summary_preserved": true,
+          "references_checked": 143,
+          "legally_replayed_moves": 40,
+          "core_inline_refs": 22,
+          "core_proof_refs": 10,
+          "core_covered_refs": 5,
+          "max_unit_proof_refs": 9,
+          "max_unit_required_refs": 9,
+          "max_unit_covered_refs": 8,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 38,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 38,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-09",
+      "ply": 47,
+      "request_id": "fresh-wch2024-09-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:candidate-comparison:4c545a24392ec2072e34909b24316383c88006a64796348643c9c07b3053eac6",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:23aa5c79157b19c70ab315b7675e0698fe9af883c5d456ae22153a43790a4807",
+            "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:91317ddd01ffe99d72c154dff5d0e091ca4c0c95edcb45e5d19bd8b27cae0273"
+          ],
+          "summary_preserved": true,
+          "references_checked": 127,
+          "legally_replayed_moves": 14,
+          "core_inline_refs": 29,
+          "core_proof_refs": 13,
+          "core_covered_refs": 6,
+          "max_unit_proof_refs": 9,
+          "max_unit_required_refs": 8,
+          "max_unit_covered_refs": 3,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 37,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 37,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-10",
+      "ply": 48,
+      "request_id": "fresh-wch2024-10-48",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:evidence:candidate-comparison:a024147aef2fd2422537464f1456010b110a157f007b70c4e5109d95605dcdb3",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:line:8141227501c04c9a96d2caafbbd76f021ee3ee45490deb4c780dd5132e8f1ec9",
+            "move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:line:0b8026c44e22294d1d817154d6b5192e5a855b6e83481a60e8e80ceafdf9af0d"
+          ],
+          "summary_preserved": true,
+          "references_checked": 110,
+          "legally_replayed_moves": 27,
+          "core_inline_refs": 28,
+          "core_proof_refs": 13,
+          "core_covered_refs": 3,
+          "max_unit_proof_refs": 12,
+          "max_unit_required_refs": 12,
+          "max_unit_covered_refs": 2,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 33,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 33,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-11",
+      "ply": 47,
+      "request_id": "fresh-wch2024-11-47",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:evidence:candidate-comparison:3e1944141977402082cf7913f10a9b6d1657f49fe6353b7d26a1ca327e35dc44",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:line:078bcfe4754ab3ee12149528c1f5f97a878a335489f0d5f3472409e597306e3e",
+            "move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:line:33dea821bd236cc66de61d9ce55753e34e96a1ebb0e83d26a5fdcf678c55021b"
+          ],
+          "summary_preserved": true,
+          "references_checked": 183,
+          "legally_replayed_moves": 42,
+          "core_inline_refs": 32,
+          "core_proof_refs": 11,
+          "core_covered_refs": 6,
+          "max_unit_proof_refs": 11,
+          "max_unit_required_refs": 11,
+          "max_unit_covered_refs": 8,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 49,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 2,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 49,
+              "english_only_units": 4,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    },
+    {
+      "group": "fresh",
+      "game_id": "wch2024-12",
+      "ply": 40,
+      "request_id": "fresh-wch2024-12-40",
+      "snapshot_decoded": true,
+      "candidates": [
+        {
+          "id": "comparison:move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:candidate-comparison:7903e970648af7730b44ce6e79d00553ea12d3e3acb8b33912bcde03dbb7f403",
+          "question": "selected_comparison",
+          "pair_line_ids": [
+            "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:f7208ea6279b1da3a2df099849af23e6f01a327b4a84cd96fef212f2268bb5fe",
+            "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125"
+          ],
+          "summary_preserved": true,
+          "references_checked": 173,
+          "legally_replayed_moves": 33,
+          "core_inline_refs": 35,
+          "core_proof_refs": 15,
+          "core_covered_refs": 5,
+          "max_unit_proof_refs": 15,
+          "max_unit_required_refs": 15,
+          "max_unit_covered_refs": 7,
+          "rendering": [
+            {
+              "locale": "en-US",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 49,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            },
+            {
+              "locale": "ko-KR",
+              "core_units_rendered": 1,
+              "detail_units_rendered": 2,
+              "exact_san_actions_checked": 49,
+              "english_only_units": 3,
+              "selected_parts_preserved": true
+            }
+          ]
+        }
+      ],
+      "unavailable": []
+    }
+  ],
+  "negatives": [
+    {
+      "kind": "foreign_actual_source_path_in_proof",
+      "snapshot_decoded": true,
+      "rejected": true
+    },
+    {
+      "kind": "hidden_covered_capture_missing_from_proof",
+      "snapshot_decoded": true,
+      "required_covered_source_and_words_unchanged": true,
+      "rejected": true
+    }
+  ],
+  "totals": {
+    "cases": 33,
+    "regression_cases": 15,
+    "fresh_cases": 18,
+    "publicly_decoded": 33,
+    "summary_candidates": 33,
+    "preserved_summaries": 33,
+    "fully_checked_summaries": 33,
+    "unavailable_notices_checked": 0,
+    "exact_san_actions_checked": 2672,
+    "max_unit_proof_refs": 23,
+    "max_unit_required_refs": 23,
+    "max_unit_covered_refs": 13
+  },
+  "scope": "Actual public frontend decoder and real production VNode renderer; exact stored requests, source paths, canonical legal SAN, basic/detail parts and focus/click callbacks. JSDOM only: no DOM board insertion, real browser, full UI, official build, mobile, HTTP or live engine in this check. Machine equality does not judge explanatory quality.",
+  "tree_path_context": "Empty before path and probe after path are standalone display identifiers; request FEN, initial FEN, history and played move remain exact."
+}

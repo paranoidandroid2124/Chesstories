@@ -1,0 +1,209 @@
+{
+  "status": "Research reasoning before candidate engine reports and product output; questions to investigate, not verified best-move or universal causal conclusions.",
+  "scope": "All 70 fixed position slots. The first available slot in a game is called primary here only for bookkeeping; engine balance may select a later-priority slot.",
+  "common_required_reading": [
+    "After the same-position engine alternative is fixed, identify the same relevant original subjects in both arms, including other targets of a shared attacker when their exchange changes the answer.",
+    "For the selected claim, retain the actual opponent response and the loss, recapture, role change, or confirmed outcome that changes the apparent benefit. Do not use the historical game line as a forced engine continuation.",
+    "An initial contact or legal capture is not by itself a profitable or forced threat. Distinguish observed branch consequences, confirmed direct-response availability, and an isolated causal claim.",
+    "If the chosen question has no concrete witnessed answer in the supplied pair, mark question selection or investigation unresolved. Do not fill it with generic strategic praise or an occurrence-only move sentence.",
+    "Keep proof and replay occurrences even where the message aggregates an exchange price. Exact SAN references and answer usefulness are separate obligations."
+  ],
+  "games": [
+    {
+      "id": "wch2016-01",
+      "questions_by_fullmove": {
+        "24": "Does h3 change a concrete pawn or piece interaction compared with the alternative, or is this a quiet waiting choice with no witnessed short-term difference?",
+        "20": "What concrete response or pawn route does g3 change in this rook-and-minor-piece position, and is that change actually used in either supplied line?",
+        "16": "When Qxc4 accepts the queen exchange, what survives after Qxc4 and Rxc4, and how does that completed exchange differ from declining it?",
+        "12": "What does Qc2 preserve or enable while Black can offer the queen exchange, and what does the alternative give up in the actual responses?"
+      },
+      "primary_required_response_price": "The historical h3 line has no capture in its first ten recorded moves. Do not fabricate a material price or king-safety gain; an explanation needs a concrete changed action in the same-position engine pair. The earlier Qxc4 Qxc4 Rxc4 sequence is a completed exchange, not a queen gain.",
+      "claim_limits": ["No forced attack or permanent king safety from the pawn move alone.", "A quiet answer is allowed if it states a witnessed difference; an unanswered waiting question remains unresolved."]
+    },
+    {
+      "id": "wch2016-02",
+      "questions_by_fullmove": {
+        "24": "Does Nbd7 change how Black can maintain or resolve the attacks on e5 and b5, or support the ensuing c5 break, compared with the alternative?",
+        "20": "What exchange does Rcxd8 complete, and what response or pawn price is different if Black uses the other rook or another move?",
+        "16": "What actual route or defensive duty does Nb6 change before the central exchanges, and what happens to the affected targets in the alternative?",
+        "12": "What concrete action uses the e-file after Re8, and is there an opposing response or price that limits that action?"
+      },
+      "primary_required_response_price": "Both initially attacked pawns must remain identifiable. In the historical Nbd7 line, the later Rxe6 fxe6 rook exchange is followed by Nxb5, so a c5 or defensive claim must not silently omit the b-pawn loss if that transaction is its scope. These later moves are not proven consequences of Nbd7 alone.",
+      "claim_limits": ["Do not treat a new support contact as successful defence without its actual use.", "Do not infer that every later pawn loss belongs to the knight move's price."]
+    },
+    {
+      "id": "wch2016-03",
+      "questions_by_fullmove": {
+        "24": "Which concrete action, if any, uses the e-file rook after Re1, and how does that differ from the alternative rook placement?",
+        "20": "What completes the minor-piece exchange after Kxg2, and does a different king recapture or another move change the remaining material or an immediate reply?",
+        "16": "Does a4 change the actual queenside pawn response or piece route compared with the alternative, and what remains after the ensuing exchanges?",
+        "12": "What is actually exchanged or enabled by Bf4 in the queenless transition, and what does the alternative retain or concede?"
+      },
+      "primary_required_response_price": "Re1 is quiet. The historical f4 gxf4 gxf4 and b5 axb5 axb5 are later pawn exchanges. Their presence is not proof that Re1 caused them; include their completed price only if the chosen supplied-line answer depends on them.",
+      "claim_limits": ["An e-file coordinate is not an observed rook use.", "Do not promote a quiet preparatory action to a causal explanation solely because it precedes a break."]
+    },
+    {
+      "id": "wch2016-04",
+      "questions_by_fullmove": {
+        "24": "Does Bxc6 complete the pending queen exchange, and what material or response is left if Black chooses the alternative?",
+        "20": "When Nxe4 takes the pawn, which reply and later recovery determine whether Black really keeps that gain?",
+        "16": "What does dxe4 exchange in the centre, and what actual response changes the apparent gain or the subsequent minor-piece exchange?",
+        "12": "What concrete use or defensive duty follows the bishop retreat to f8 compared with the alternative?"
+      },
+      "primary_required_response_price": "Immediately before this recorded move, White played Qxc6 and captured Black's queen. Bxc6 then takes White's queen. A queen-gain explanation at the new root needs the already missing black queen or the exact previous-move context; it must not portray the completed queen exchange as a free queen.",
+      "claim_limits": ["The previous move is source context, not an invented new engine branch.", "Do not describe the surviving bishop's later activity as the cause of a rating difference without a verified comparison."]
+    },
+    {
+      "id": "wch2016-05",
+      "questions_by_fullmove": {
+        "24": "How does Rf3 respond to Black's bishop and rook activity, and what price remains when the f-file rooks are exchanged?",
+        "20": "How does Rf3 change the response to Black's bishop action, and does the following capture on c5 undo an apparent gain?",
+        "16": "Which targets or routes does Nc5 change, and what survives after the actual minor-piece exchanges in each arm?",
+        "12": "What does h3 change while the centre can be exchanged, and which capture-and-recapture prices must qualify the answer?"
+      },
+      "primary_required_response_price": "The historical Rf3 Be4 Rxf7 Qxf7 sequence exchanges a white rook for a black rook; the queen's recapture reverses the apparent rook gain. The later f3 attacks the bishop and Be4-f5 retreat must be described as an actual response if used, without substituting the unsupported claim that Rf3 itself forced the whole sequence.",
+      "claim_limits": ["Rxf7 alone is not the final material result.", "Bishop contact with the rook and a successful response are separate facts."]
+    },
+    {
+      "id": "wch2016-06",
+      "questions_by_fullmove": {
+        "24": "What price does cxb4 recover after White has just taken Black's knight on b4, and how does the rook exchange or another response change the account?",
+        "20": "Which exchange or concrete action uses Rfe8, and which opposing recapture changes its apparent benefit?",
+        "16": "Does f5 force a knight response or alter a capture's value, and what is left after the actual minor-piece exchange?",
+        "12": "What does Nb4 attack or prepare in the supplied line, and what is the complete price of Nxb3 and axb3?"
+      },
+      "primary_required_response_price": "The preceding historical White cxb4 captured a black knight, and Black's cxb4 now captures that white pawn. Naming this merely a pawn exchange would hide the earlier knight loss. In the following Rc1 Rc8 Rxc8+ Qxc8, both exchanged rooks must be accounted for. Their inclusion depends on whether the selected answer concerns this transaction or only the immediate recapture.",
+      "claim_limits": ["Do not make every capture before the next quiet move part of one cause.", "The bishop-versus-knight endgame value is outside a short supplied-line proof."]
+    },
+    {
+      "id": "candidates2018-01",
+      "questions_by_fullmove": {
+        "20": "Does Rb5 force the queen to move, and do the actual responses return to the same position rather than create a permanent gain?",
+        "16": "What is the concrete queen response to Rb5, and what price or subsequent return limits the rook's apparent tempo?",
+        "12": "Which action actually uses Rb1, and how do Black's central response and the later c-pawn loss change its meaning?"
+      },
+      "primary_required_response_price": "The source line Rb5 Qa6 Rb1 Qa5 Rb5 returns to a repeated board-and-turn configuration and the game ends agreed drawn. Preserve a witnessed convergence or repetition if the engine pair confirms it, while keeping board repetition, threefold-claim eligibility, and agreed historical draw separate.",
+      "claim_limits": ["A repeated board in a short PV does not alone prove a rule draw without history.", "Attacking the queen does not guarantee material or lasting positional gain."]
+    },
+    {
+      "id": "candidates2018-02",
+      "questions_by_fullmove": {
+        "24": "What concrete action does Bc4 change while White's e-pawn can advance, and what is the full price after the captures on different files?",
+        "20": "What does Qb6 target or support in the actual continuation, and how do the b-file pawn exchanges change that use?",
+        "16": "What price does Nxe5 accept after dxe5, and which other target or pawn is actually gained or lost in the same chosen transaction?",
+        "12": "What does b5 change in the c-pawn response and queenside route, and what does the alternative actually leave behind?"
+      },
+      "primary_required_response_price": "The historical line includes Rxa8 Rxa8, e6, dxe4, exf7+, Bxf7, and Nxe4. A bishop-development story cannot silently treat e6 as a retained pawn advance: that e-pawn later captures on f7 and is removed. Rook, pawn, and recovery transactions must be scoped to the selected claim rather than all listed as equal ideas.",
+      "claim_limits": ["Different capture squares may still belong to the same selected price, but adjacency alone is not the reason.", "The recorded e-pawn advance is not a forced promotion or a universal winning claim."]
+    },
+    {
+      "id": "candidates2018-03",
+      "questions_by_fullmove": {
+        "24": "Which checks or immediate contacts does Kf1 answer, and what concrete checking or rook response differs under the alternative?",
+        "20": "What remains after Rxc2 Qxc2, and does that complete rook exchange preserve or expose another relevant target?",
+        "16": "When Qxe7 wins a pawn, what other-square capture and subsequent rook pressure change the actual price?",
+        "12": "What is exchanged after Bxd4 Qxd4, and what price qualifies the subsequent queen pawn captures?"
+      },
+      "primary_required_response_price": "Kf1 answers the preceding Qg5+ check. In the actual line Black later places the rook on b3 while White checks from c8. Keep the actual king-escape response separate from any later king-safety claim; a stable long-term shelter is not established by this one legal evasion.",
+      "claim_limits": ["The historical source's eventual loss is not evidence that Kf1 is itself the blunder.", "A move from check is not a proof of improved king safety over every alternative."]
+    },
+    {
+      "id": "candidates2018-04",
+      "questions_by_fullmove": {
+        "24": "What does Nc5 preserve or attack while the rook is threatened, and which knight-versus-rook exchange determines the actual price?",
+        "20": "What is the complete price of bxc4 Bxc4, and what piece activity is actually used afterwards?",
+        "16": "Which actual central action uses Rfe8, and do Black's pawn and minor-piece responses change that use compared with the alternative?",
+        "12": "Does Nbd7 protect or reroute a relevant subject, and is that new duty actually used in the supplied line?"
+      },
+      "primary_required_response_price": "The historical line Nc5 h4 Rf5 e4 Rxf4 Nxf4 Nxe4 contains the black rook taking a white knight, being taken by the other white knight, and then a black knight taking the e-pawn. An attacker-only or root-mover-only reading can lose the other white knight and the pawn from the transaction. Do not call Rxf4 a free knight.",
+      "claim_limits": ["Nc5's new contacts do not alone prove the whole tactical line is forced.", "Shared pieces are not sufficient grounds to include all their later captures."]
+    },
+    {
+      "id": "candidates2018-05",
+      "questions_by_fullmove": {
+        "24": "Does c4 free or restrict a concrete rook or bishop action, and what do Black's actual bishop response and pawn captures leave behind?",
+        "20": "What does f4 change while Black can capture on c3, and does the reply preserve or reverse that pawn benefit?",
+        "16": "What action actually uses Bf4, and what is the price of the later knight action Nf3+ and exf3?",
+        "12": "What does Qb3 target or permit compared with another queen placement, and which central exchanges qualify that use?"
+      },
+      "primary_required_response_price": "The recorded c4 line contains Be4 Rd2 Qh5 f3 Bxf3 f5 Bc6. The black bishop takes the f-pawn and retreats; a statement that c4 gains a tempo or frees the rook must include that pawn loss if the same bishop-and-rook episode is its scope. It must not infer causation merely from c4 preceding Bxf3.",
+      "claim_limits": ["A vacated square is a useful condition only if a concrete user or defensive change is witnessed.", "Do not treat the later attacking prospects as a verified consequence of c4."]
+    },
+    {
+      "id": "candidates2018-06",
+      "questions_by_fullmove": {
+        "24": "What does Re4 actually threaten or enable, and how do the countercaptures on c7, d4, and g4 determine the chosen transaction's price?",
+        "20": "Which concrete action uses Bf6's new line, and what opponent response limits that action?",
+        "16": "Does h6 answer a real piece threat or enable a concrete action, and what response changes that account?",
+        "12": "What exchanges follow d5, and what does the alternative retain or concede after the actual recaptures?"
+      },
+      "primary_required_response_price": "The historical Re4 Rxc7 Qxd4 Be3 Rxg4 hxg4 Qe4 f3 Qb4 Rxb7 sequence mixes a white pawn gain, a black knight gain, rook-for-rook exchange on g4, and the later white capture of the bishop on b7. A rook-use or queen-attack headline must preserve the relevant countercapture price without presenting the whole sequence as compulsory.",
+      "claim_limits": ["A ledger sum is not the reason that each capture belongs to the headline.", "The longer Rxb7 bishop gain may be unrelated to a narrower Re4-Rxg4 claim and requires explicit scope; if included, its own later countercapture must be read."]
+    },
+    {
+      "id": "wch2024-01",
+      "questions_by_fullmove": {
+        "24": "Does h4 win a useful bishop tempo while White's rook, knight, and c-pawn are under pressure, or does Black's countercapture change its price?",
+        "20": "What action does Rac1 enable on the c-file, and which Black queen or rook reply changes the apparent support?",
+        "16": "Which actual defensive use belongs to Bf2, and what does the knight exchange and subsequent b2-c4 route permit?",
+        "12": "What changes after b3 while Black can exchange in the centre, and which actual recovery or target loss qualifies the answer?"
+      },
+      "primary_required_response_price": "The source h4 Bf4 Qb1 Rxc3 Rxc3 Qxc3 sequence removes the c-pawn and trades a pair of rooks. The bishop retreat cannot be narrated as a standalone benefit if the relevant other targets are lost in the same actual response. Later fxe6 fxe6 and Qxe5 are separate pawn events whose inclusion depends on the chosen claim.",
+      "claim_limits": ["The pre-choice score is pending; do not exclude this game because the actual recorded h4 may be a mistake.", "Geometric attacks on several white pieces are not all verified profitable threats."]
+    },
+    {
+      "id": "wch2024-02",
+      "questions_by_fullmove": {
+        "20": "Does Nc6 answer the current pressure on the d4 knight, and do the actual knight responses converge or repeat instead of create a lasting gain?",
+        "16": "What concrete king or piece action uses g6, and is a relevant target or pawn price changed compared with the alternative?",
+        "12": "What completes the queen exchange after Qxd1 Rfxd1, and which rook route or actual reply remains different?"
+      },
+      "primary_required_response_price": "Nc6 moves the attacked d4 knight. The historical Nc6 Nc3 Nd4 Ne2 Nc6 Nc3 Nd4 repeats the knight placements and the game ends agreed drawn. A claim of escape must not become permanent safety; a claim of repetition must not become automatic threefold adjudication without move history.",
+      "claim_limits": ["No confirmed terminal state is implied by the last recorded board alone.", "An attacked knight can move away without that being the main engine comparison answer."]
+    },
+    {
+      "id": "wch2024-03",
+      "questions_by_fullmove": {
+        "24": "What does Rxc2 exchange while Black's b3 knight also attacks the rook and knight, and what price remains after Nxd2 Kxd2?",
+        "20": "What exchange does fxe4 complete, and which later knight capture changes the apparent central gain?",
+        "16": "Does Bh2 preserve an actual bishop duty or response, and what does Black's rook-and-knight reply change?",
+        "12": "What concrete action uses Rg1 while the h-pawn can capture, and what actual reply or pawn price limits it?"
+      },
+      "primary_required_response_price": "Rxc2 removes the bishop on c2, but the same black b3 knight then takes White's d2 knight and is taken by Kxd2. The answer must distinguish the captured bishop from the separately exchanged knights and the surviving rook. Focusing only on the moved rook would omit another attacked target.",
+      "claim_limits": ["Do not call the captured bishop a free gain if the answer's price includes the subsequent knight transaction.", "Do not infer a winning outcome from the game's eventual result."]
+    },
+    {
+      "id": "wch2024-04",
+      "questions_by_fullmove": {
+        "24": "What does Qxe4 complete after White's knight capture, and what rook or pawn price remains in the following actual exchange?",
+        "20": "What actual exchange or queen use does Qe7 prepare, and does the alternative preserve a relevant minor piece or target?",
+        "16": "What is the completed minor-piece price after Nxf3+ Bxf3, and how does the central pawn response change the comparison?",
+        "12": "Which actual action or defensive duty uses Bh7, and what happens to the affected target in the alternative?"
+      },
+      "primary_required_response_price": "The preceding White Nxe4 removed Black's knight, so Qxe4 completes a knight-for-knight exchange rather than taking a free knight. The following c5 Rxd8+ Rxd8 bxc5 bxc5 trades rooks and pawns. Separate the initial knight transaction from later material changes unless the selected question explicitly includes them.",
+      "claim_limits": ["The previous capture is context required to name the transaction, not a new root variation.", "A queen's new square is not proof that every future rook trade is its caused benefit."]
+    },
+    {
+      "id": "wch2024-05",
+      "questions_by_fullmove": {
+        "24": "Does Bxd3 remove the knight pressure at an acceptable price, and how does cxd3's new pawn change the rook and minor-piece responses?",
+        "20": "What completes Nxg5's pawn capture, and what actual bishop or knight response changes the apparent gain?",
+        "16": "What response does Re1+ force in the supplied line, and which pawn capture or knight route qualifies its value?",
+        "12": "What does Rxe8+ Kxe8 trade, and what actual king or piece response differs in the alternative?"
+      },
+      "primary_required_response_price": "Bxd3 cxd3 trades a bishop for the black d3 knight and leaves a black pawn on d3. The later Nc4 Nxc4 dxc4 removes the other black knight and White's knight while that pawn survives on c4. Initial removal of a fork-capable knight and the surviving pawn price should not be conflated with permanent safety or a free knight gain.",
+      "claim_limits": ["The black d3 pawn's identity and later capture must remain distinct from the removed knight.", "Capturing the attacking knight can create a different threat or price; removal is not full threat-resolution proof."]
+    },
+    {
+      "id": "wch2024-06",
+      "questions_by_fullmove": {
+        "24": "Does Qe7 answer the queen contact while preserving a different target, and do the actual queen replies return to a prior configuration?",
+        "20": "What is the actual price of Qf5 while White can take on c6 and Black can take on e5, and what remains after both captures?",
+        "16": "What action actually uses Rb8, and what price follows the bishop exchange and other-square pawn captures?",
+        "12": "What does dxe4 exchange, and which pawn countercaptures on c5, g2, or f2 change the remaining material?"
+      },
+      "primary_required_response_price": "Qe7 moves Black's queen away from the current white-queen contact. The historical queen shuttles are followed by g6, Red1, Qe5, and Rbe8; they do not by themselves adjudicate a draw. Track the same relevant queen and the e4 pawn in both arms, but do not drag every later queen capture into a narrow escape question.",
+      "claim_limits": ["The historical game draw is distinct from a confirmed terminal rule state in the supplied engine line.", "Queen relocation alone is not a forced pawn-saving claim."]
+    }
+  ]
+}

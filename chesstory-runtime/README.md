@@ -2,8 +2,8 @@
 
 Private standalone runtime for deterministic chess commentary.
 [JudgmentBoundary](docs/JudgmentBoundary.md) defines current meaning, ownership,
-investigation policy, and budgets. [Progress](C:/Codes/Chesstories/research/role-use-next/progress.md)
-is the single entry point for current status and the next work.
+investigation policy, and budgets. [Research status](../research/README.md)
+is the entry point for current results, previous failures, and remaining work.
 Executable types, admission checks, and public schemas are the contract authority.
 
 ## Run
@@ -51,6 +51,20 @@ The browser executes only issued work and reports suffixes with `white_score`
 in the existing ceval White perspective. Independently admitted observations
 survive progress, completion, and interruption even without an assessment.
 Single-move and chronological PGN review share the coordinator and result cache.
+
+Jobs with at most 10 seconds remaining start directly at depth 12 and prioritize
+the reviewed piece's first capture/non-capture response comparison. Longer jobs
+retain the depth-8 preview and depth-16 verification. Normal commentary work is
+capped at depth 18. The original deadline includes browser engine preparation,
+requests, and delivery; missing evidence does not extend it.
+
+Before accepting requests, the runtime initializes its legal-observation and
+serialization path with an unscored standard opening. This performs no engine
+search and creates no reusable job or case-specific answer. During short jobs,
+pending work receives its required observation certificate. A completed purpose
+answer publishes the board resources needed by its statements, links, and early
+path positions, while keeping complete move paths, scores, and material events.
+Unpublished optional position references are null, not dangling identifiers.
 
 ## Browser engine binding
 

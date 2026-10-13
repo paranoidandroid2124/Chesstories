@@ -1,0 +1,130 @@
+{
+  "schema_version": "chesstory.research.sg41-held-basic-human-reading.v1",
+  "scope": "Exposed development control. Unchanged sealed SG41 criteria; basic-only independent first pass preserved, then prior basic and human readings compared; current manifest/results used for provenance only.",
+  "input_sha256": {
+    "mcNd5HeldReplay35-basic.json": "4b41db8bdb76d220eafeb29b9e84707663a71e7bbde58a7d00391042974a4be4",
+    "sg41-priced-capture-and-mover-commentary-criteria.json": "ff51aa5c8689d6e5fe478fba3adea3376ab6ece745e7afc5d25eb55b6b8efb05",
+    "sg41-played-nd5-development-plan.json": "fd2bc03e5ee9e0fbb057cff0150a888c2e8c093df0c09509f890dee812fcb5bc",
+    "sg41-minimum-priced-utility-unit.json": "fbffeab879262ef10d639c2cafad6920076b493026bd31a5a6ac902710904ce3",
+    "mcPlayedNd532a-basic.json": "0d10c3457df6f36f1461f0673f3b3727112b3d19aef415e4cd8b23c418f3e54c",
+    "mcPlayedNd532b-basic.json": "c5191dc306d2f8e876c2d2ee1bce2aa966cb20a33dad72a789d777ee057b4d47",
+    "mcNd5Replay33-basic.json": "273fabfb6a5b1f255749ee67ae0020850ea1c0114302e9f6ad1995e0b5014db4",
+    "sg41-played-nd5-basic-v32-human-reading.json": "0563aa9828af377b321b734b521a4e952919d4e410d635d8073f19fcf1feb396",
+    "sg41-played-nd5-controlled-v33-reading.json": "73d447e408aa2289f70538d9c2a1886a159e757b2f7ba338e3a34977e946cbf3"
+  },
+  "case_id": "FC-SG41-ND5-HELD",
+  "human_question": "Why is immediate Nd5 costly with Pe6 retained, even when White chooses an adequate recapture; how does this differ from the valid alternative knight route?",
+  "basic_word_count": 141,
+  "verdict_metadata_observed": {
+    "code": "blunder",
+    "mover": "white",
+    "candidate_win_percent_delta_for_mover": -32.738994641003316,
+    "numerical_accuracy_validated_here": false
+  },
+  "judgment": {
+    "core_complete": false,
+    "core_state": "partial",
+    "current_actual_move_purpose_conveyed": true,
+    "specific_pawn_capture_of_knight_conveyed": true,
+    "complete_recorded_four_capture_chain_conveyed": true,
+    "immediate_price_recoverable_by_tracking_material": true,
+    "price_stated_as_knight_for_pawn": false,
+    "best_white_recapture_demonstrated_in_basic": false,
+    "functional_utility_against_best_defense_demonstrated_in_basic": false,
+    "original_Red1_numerical_cause_explained": false,
+    "root_verdict_accuracy_proved_by_this_reading": false
+  },
+  "essential_conveyed": [
+    "The explanation now starts from the actual knight on d5: it attacks Be7 and Pf6, and is attacked by Rc5 and Pe6 while supported by Rd4 and Pe4.",
+    "The relevant cheap reply is concrete: ...exd5 captures that same knight. White recaptures the e6 pawn with its d4 rook.",
+    "The recorded price is carried through ...Rc5xd5 taking that white rook, then White's final Rxd5 taking the black rook. The loss and final recovery of the used rook are both present.",
+    "The four named captures let a reader who tracks material recover a knight-for-pawn loss; listing support does not in itself make this exchange favorable.",
+    "The text scopes the chain as a recorded continuation and does not expressly call every rook recapture compulsory, claim a forced win, or attribute the earlier Red1 verdict to this descendant price."
+  ],
+  "essential_missing_or_partial": [
+    "The blunder label and the factual chain are still not joined into a plain judgment: Pe6 can take the knight cheaply, and White's recapture does not restore that knight. A novice must perform the material accounting across three identically named Rxd5 moves.",
+    "The basic contains only the rook-recapture realization. It does not demonstrate that White's legal exd5 alternative or its best recapture has been considered. This is a limit on proven utility, not a claim that the recorded rook chain is illegal or that White's pawn choice necessarily saves the knight.",
+    "The Ne2 material is not presented as the alternative root choice suited to the position. Its common c3 vacancy is supplied, but the reader is not told how that route avoids the immediate expensive Nd5 decision.",
+    "The new current targets/attackers/support establish a useful purpose fragment, while the favorable knight targets and supporting pieces are not weighed against the pawn capture in the commentary itself."
+  ],
+  "excess": [
+    "The final 30-word vacancy block repeats that both Nd5 and Ne2 clear c3 for a later c3 move. Under the sealed mistake criterion this common consequence does not distinguish the useful Ne2 route from immediate Nd5's price.",
+    "'The recorded continuation is Ne2 … Nd5' follows a line where the Nd5 knight was captured. Without an explicit alternative-branch transition, a reader can confuse this with a continuation of that same exchange. This is a presentation ambiguity, not a legality judgment about an unseen full line.",
+    "The statement that ...exd5 moves the pawn out of Pf5's attack is secondary to the actual knight-for-pawn loss and leads the response description before its decisive cost. It may be useful detail but adds work to the basic answer."
+  ],
+  "unsupported_claims_not_made": [
+    "No assertion that Rc5 and Pe6 provide equivalent denial merely because both attack d5.",
+    "No assertion that a supported knight cannot be captured, that Nd5 is a forced win, or that all knight routes fail after Black a5.",
+    "No assertion that this exact descendant capture chain is the exclusive cause of Red1's earlier numerical preference."
+  ],
+  "scope_limits": [
+    "HELD is the actual White Nd5 control; the moved-pawn ...fxe4/replacement-defender contract is not newly scored by this output.",
+    "141 versus another word count is not a success criterion. The issue is whether necessary prices are recoverable and unrelated shared facts obscure the judgment.",
+    "Sealed prior standalone values are research context and were not adopted as current product numerical receipts.",
+    "No old basic, internal candidate/PV/trace, source code, runner or engine was read or executed before sealing this first-pass judgment."
+  ],
+  "first_pass": {
+    "path": "research/meaning-conditions-20261008/sg41-held-v35-first-pass.json",
+    "sha256": "7157d3882e53e1895fca9067d9c9d27e8e2493cb62610e81c62248f6812c4cbc",
+    "unchanged": true,
+    "judgment_unchanged": true
+  },
+  "comparison_with_v32_held": {
+    "same_current_fen": true,
+    "same_focus": true,
+    "same_verdict_and_receipt": true,
+    "previous_default_question": "selected_comparison",
+    "current_default_question": "first_target_response",
+    "previous_basic_word_count": 220,
+    "current_basic_word_count": 141,
+    "meaningful_change": "The actual knight on d5, its targets, attackers and supporters now lead the basic. The existing relevant capture price follows rather than being embedded after remote Ne2 events.",
+    "price_proof_new": false,
+    "price_proof_retained": true,
+    "price_proof_detail": "Both v32 HELD and v35 state exd5, White Rd4xd5, Black Rc5xd5 and the final White Rxd5 recovery. V35 did not newly complete that four-capture price.",
+    "removed_excess": [
+      "Ne2 Rg8 continuation",
+      "a/b-pawn exchanges and the Rc5 escape from b4",
+      "Rf1 endpoint presence observations of the knight and black rook"
+    ],
+    "retained_excess": "The same 30-word common c3-vacancy block and ambiguous Ne2 ... Nd5 transition remain.",
+    "identity_tradeoff": "V32 names the final White rook as originally on d1. V35 final Rxd5 names its captured black rook but leaves the recapturing White rook identity implicit. Material remains recoverable in the stated chain.",
+    "criteria_result_unchanged": "Recorded-branch price is recoverable, but the basic still does not organize a plain knight-for-pawn judgment or demonstrate the best White recapture and useful alternative route.",
+    "initial_comparison_correction": "A preliminary parent update incorrectly implied the second rook loss/recovery was previously omitted. V32 already included it; this record corrects that implication."
+  },
+  "comparison_with_v33_moved": {
+    "same_case_as_current_held": false,
+    "v33_case_id": "FC-SG41-ND5-MOVED",
+    "v33_change": "The earlier MOVED reading credited the new actual replacement support after Rxe4: Rd1 now supports Nd5 while Re4 does not.",
+    "scope": "That separate conditional defender addition is preserved as a partial MOVED result. No current v35 MOVED output was supplied, so this reading cannot judge a v35 change to that condition or combine it with HELD as a completed utility proof.",
+    "previous_judgments_rescored": false
+  },
+  "provenance_after_first_pass": {
+    "basic_embedded_snapshot_sha256": "036eb7b18a5c5ff9e31bc312160405923a85136b5eca74b15dd939d445a49be0",
+    "files": {
+      "manifest.json": "1826f2b83eb09b9014a438672f0ce8828626555ff28c962d7ad14b2cbb92edee",
+      "results.json": "56cc432954e10955afaeef31ae3d75cb22c82562bbc74c4f412bf56c09a1bcf8",
+      "final-snapshots.jsonl.gz": "036eb7b18a5c5ff9e31bc312160405923a85136b5eca74b15dd939d445a49be0",
+      "journal.jsonl.gz": "34281e02ed323ad4f9a3ac85d0619dbcc7dd926196d0aff6ab05c42653aa007d"
+    },
+    "product_manifest_sha256": "64de0ccc1d3d938ebc78ae76bf3df3f6fb64d1a61aa5241484b7625d629986de",
+    "classpath_sha256": "0b8c0ae77313be06545705d568197fe342f419f6902b0e1334acfb7a6b5af8e6",
+    "class_files_verified": 1824,
+    "recorded_source_sha256": "51cda42283ba084fd51592069bd1793c3f4c33bacb3b5d9dd69e3b534badbcd1",
+    "saved_reports_count": 10,
+    "completed_reports_replayed": 10,
+    "all_ten_whole_work_exact": true,
+    "new_engine_queries": 0,
+    "snapshot_decompressed_or_internal_content_read": false,
+    "provenance_confirms_numeric_accuracy": false
+  },
+  "final_reading": {
+    "essential_fact_and_recorded_price": "conveyed",
+    "plain_mover_cost_judgment": "partial",
+    "full_functional_utility": "not established by the basic",
+    "original_Red1_root_cause": "not established",
+    "wrong_superiority_or_forced_result_asserted": false,
+    "excess_remains": true,
+    "core_complete": false,
+    "success_metric": "Foregrounding an existing relevant price and removing remote comparison clutter is useful organization progress, without new chess-value or root-cause proof."
+  }
+}

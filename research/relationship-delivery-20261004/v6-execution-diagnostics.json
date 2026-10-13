@@ -1,0 +1,438 @@
+{
+  "engine_run_remains_original_v6": true,
+  "whole_budget_failures": [
+    {
+      "request_id": "fresh-wch2016-09-47",
+      "work_id": "work:2",
+      "purpose": "response_comparison",
+      "requested_limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "actual_depth": 14,
+      "pv_depth_and_bound": [
+        {
+          "depth": 14,
+          "bound": null
+        },
+        {
+          "depth": 14,
+          "bound": null
+        },
+        {
+          "depth": 14,
+          "bound": null
+        }
+      ],
+      "actual_nodes": 1983915,
+      "engine_millis": 1170,
+      "executor_elapsed_ms": 1341
+    },
+    {
+      "request_id": "fresh-candidates2018-07-47",
+      "work_id": "work:3",
+      "purpose": "response_comparison",
+      "requested_limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "actual_depth": 16,
+      "pv_depth_and_bound": [
+        {
+          "depth": 16,
+          "bound": null
+        },
+        {
+          "depth": 16,
+          "bound": "lowerbound"
+        },
+        {
+          "depth": 16,
+          "bound": null
+        }
+      ],
+      "actual_nodes": 2000604,
+      "engine_millis": 1108,
+      "executor_elapsed_ms": 1340
+    },
+    {
+      "request_id": "fresh-candidates2018-09-31",
+      "work_id": "work:4",
+      "purpose": "root_search",
+      "requested_limits": {
+        "depth": 33,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      },
+      "actual_depth": 17,
+      "pv_depth_and_bound": [
+        {
+          "depth": 17,
+          "bound": null
+        },
+        {
+          "depth": 17,
+          "bound": null
+        },
+        {
+          "depth": 17,
+          "bound": null
+        }
+      ],
+      "actual_nodes": 4941073,
+      "engine_millis": 3256,
+      "executor_elapsed_ms": 3546
+    },
+    {
+      "request_id": "fresh-candidates2018-11-47",
+      "work_id": "work:3",
+      "purpose": "root_search",
+      "requested_limits": {
+        "depth": 21,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      },
+      "actual_depth": 20,
+      "pv_depth_and_bound": [
+        {
+          "depth": 20,
+          "bound": null
+        },
+        {
+          "depth": 20,
+          "bound": null
+        },
+        {
+          "depth": 20,
+          "bound": "upperbound"
+        }
+      ],
+      "actual_nodes": 5001217,
+      "engine_millis": 3170,
+      "executor_elapsed_ms": 3249
+    },
+    {
+      "request_id": "fresh-wch2024-07-39",
+      "work_id": "work:5",
+      "purpose": "investigation_comparison",
+      "requested_limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 3
+      },
+      "actual_depth": 16,
+      "pv_depth_and_bound": [
+        {
+          "depth": 16,
+          "bound": null
+        },
+        {
+          "depth": 16,
+          "bound": null
+        },
+        {
+          "depth": 16,
+          "bound": "lowerbound"
+        }
+      ],
+      "actual_nodes": 2000105,
+      "engine_millis": 1382,
+      "executor_elapsed_ms": 1611
+    },
+    {
+      "request_id": "fresh-wch2024-09-47",
+      "work_id": "work:3",
+      "purpose": "focus_comparison",
+      "requested_limits": {
+        "depth": 16,
+        "nodes": 2000000,
+        "movetime_ms": 2500,
+        "multi_pv": 2
+      },
+      "actual_depth": 16,
+      "pv_depth_and_bound": [
+        {
+          "depth": 16,
+          "bound": null
+        },
+        {
+          "depth": 16,
+          "bound": "upperbound"
+        }
+      ],
+      "actual_nodes": 2001259,
+      "engine_millis": 1244,
+      "executor_elapsed_ms": 1306
+    }
+  ],
+  "public_contract_failure": {
+    "request_id": "fresh-candidates2018-12-48",
+    "work_id": "work:2",
+    "purpose": "response_comparison",
+    "original_outcome": "executor_failed/engine_failure",
+    "executor_error": "Public decoder rejected issued work",
+    "new_engine_work_executed_after_fix": false
+  },
+  "selected_assessment_counts": {
+    "current": 14,
+    "needs_refresh": 4
+  },
+  "selected_verification_counts": {
+    "complete": 15,
+    "stopped": 3
+  },
+  "selected_statuses": [
+    {
+      "request_id": "fresh-wch2016-07-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2016-08-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2016-09-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2016-10-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2016-11-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 17,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:3"
+        ],
+        "completed_depth": 17,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2016-12-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-07-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-08-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-09-31",
+      "final_progress_phase": "completed",
+      "assessment_state": "needs_refresh",
+      "verification": {
+        "state": "stopped",
+        "target_depth": 33,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:3"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-10-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-11-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "needs_refresh",
+      "verification": {
+        "state": "stopped",
+        "target_depth": 21,
+        "reason": "child_challenge",
+        "trigger_work_ids": [
+          "work:2"
+        ],
+        "completed_depth": 16,
+        "stop_reason": "search_budget_exhausted"
+      }
+    },
+    {
+      "request_id": "fresh-candidates2018-12-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-07-39",
+      "final_progress_phase": "completed",
+      "assessment_state": "needs_refresh",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-08-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-09-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "needs_refresh",
+      "verification": {
+        "state": "stopped",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": null,
+        "stop_reason": "search_budget_exhausted"
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-10-48",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-11-47",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    },
+    {
+      "request_id": "fresh-wch2024-12-40",
+      "final_progress_phase": "completed",
+      "assessment_state": "current",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      }
+    }
+  ],
+  "source_classes_verified_after_run": {
+    "main_sources": 71,
+    "main_classes": 1699
+  },
+  "scope": "No product prose was read to create these execution/contract diagnostics; actual final progress completion does not imply every issued investigation completed or the current assessment is verified."
+}

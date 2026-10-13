@@ -1,0 +1,336 @@
+[
+  {
+    "id": "H05R1",
+    "rows": [
+      {
+        "producer": "C-reserve-response",
+        "id": "reserve_response",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:2",
+        "prefix_len": 1,
+        "reference": "e5e6",
+        "alternative": "f7f6"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:4",
+        "prefix_len": 8,
+        "reference": "c3c2",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-timing",
+        "id": "reserve_timing",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "g3g4",
+        "alternative": "e3f3"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "not_returned",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 22,
+        "reference": "f4e3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "e3f3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 14,
+        "reference": "c3c2",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 12,
+        "reference": "d2c1",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:4",
+        "prefix_len": 8,
+        "reference": "c3c2",
+        "alternative": "g3g4"
+      }
+    ]
+  },
+  {
+    "id": "H05R2",
+    "rows": [
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "investigation_limit",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 8,
+        "reference": "f6e5",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-response",
+        "id": "reserve_response",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:2",
+        "prefix_len": 1,
+        "reference": "e5e6",
+        "alternative": "f7f6"
+      },
+      {
+        "producer": "C-reserve-response",
+        "id": "reserve_response",
+        "state": "stopped",
+        "stop_reason": "investigation_limit",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 1,
+        "reference": "b4a3",
+        "alternative": "f7f6"
+      },
+      {
+        "producer": "C-reserve-entry",
+        "id": "reserve_counter",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:4",
+        "prefix_len": 13,
+        "reference": "g5g6",
+        "alternative": "b4b3"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "not_returned",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 12,
+        "reference": "f3e2",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-timing",
+        "id": "reserve_timing",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "g3g4",
+        "alternative": "e3f3"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 18,
+        "reference": "c5b4",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "investigation_limit",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 16,
+        "reference": "f4e3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "e3f3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 12,
+        "reference": "f3e2",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 24,
+        "reference": "c4b5",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 18,
+        "reference": "c4b5",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:5",
+        "prefix_len": 12,
+        "reference": "f3e4",
+        "alternative": "g3g4"
+      }
+    ]
+  },
+  {
+    "id": "H05R3",
+    "rows": [
+      {
+        "producer": "C-reserve-response",
+        "id": "reserve_response",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:2",
+        "prefix_len": 1,
+        "reference": "e5e6",
+        "alternative": "f7f6"
+      },
+      {
+        "producer": "C-reserve-timing",
+        "id": "reserve_timing",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "better",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "g3g4",
+        "alternative": "e3f3"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:4",
+        "prefix_len": 18,
+        "reference": "f5f4",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:3",
+        "prefix_len": 2,
+        "reference": "e3f3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-entry",
+        "id": "reserve_counter",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:5",
+        "prefix_len": 21,
+        "reference": "g6g7",
+        "alternative": "f6f5"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "investigation_limit",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 20,
+        "reference": "f4e3",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "stopped",
+        "stop_reason": "prerequisite_unresolved",
+        "relation": null,
+        "work_id": null,
+        "prefix_len": 24,
+        "reference": "f5e6",
+        "alternative": "g3g4"
+      },
+      {
+        "producer": "C-reserve-hold",
+        "id": "reserve_hold",
+        "state": "answered",
+        "stop_reason": null,
+        "relation": "worse",
+        "work_id": "work:4",
+        "prefix_len": 18,
+        "reference": "f5f4",
+        "alternative": "g3g4"
+      }
+    ]
+  }
+]

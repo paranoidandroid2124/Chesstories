@@ -1,0 +1,736 @@
+[
+  {
+    "id": "B03",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "answered",
+        "stop": null,
+        "values": [],
+        "needs": null,
+        "relation": "worse",
+        "scores": [
+          {
+            "kind": "cp",
+            "value": 45
+          },
+          {
+            "kind": "cp",
+            "value": 21
+          }
+        ]
+      },
+      {
+        "id": "support",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      }
+    ],
+    "summary": "Nc3 develops the knight from b1 to c3, controlling d5 and e4. Be3 clears c1; Rc1 later occupies that square in this line. Nc3 develops the knight to c3; later Rc1 passes through the vacated b1 square in this line. After Bb5, White's bishop on b5 now targets Black's knight on c6. After a6, Black's pawn on a6 now targets White's bishop on b5. Ba4 moves the bishop out of the attack from Black's pawn on a6. Bb5 develops the bishop from f1 to b5. Bxc6 captures the black knight on c6. bxc6 recaptures the white bishop on c6.",
+    "question": "selected_comparison",
+    "local_expansions": 0,
+    "proposal_count": 51
+  },
+  {
+    "id": "D05",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "answered",
+        "stop": null,
+        "values": [],
+        "needs": null,
+        "relation": "worse",
+        "scores": [
+          {
+            "kind": "cp",
+            "value": -506
+          },
+          {
+            "kind": "cp",
+            "value": -444
+          }
+        ]
+      },
+      {
+        "id": "support",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "check",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      }
+    ],
+    "summary": "In the recorded Re8 line, Black loses one pawn. In the recorded Rg8+ line, no capture or promotion is recorded. Rg8+ places the rook on the open g-file. The recorded continuation is Rg8+ Kh2. After e4, Black's pawn on e4 now targets White's knight on f3. e4 clears e5; Ne5 later occupies that square in this line. Ne5 moves the knight out of the attack from Black's pawn on e4. After Kh3, the black pawn originally on e5 is still present on e2. After Re8, Black's rook on e8 adds support to Black's pawn on e5, which is under attack from White's knight on f3. With Nxh4, the white knight originally on f3 captures the black pawn originally on h4. After Kd4, the black pawn originally on e5 is still present on e5.",
+    "question": "selected_comparison",
+    "local_expansions": 0,
+    "proposal_count": 26
+  },
+  {
+    "id": "D06",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "answered",
+        "stop": null,
+        "values": [],
+        "needs": null,
+        "relation": "worse",
+        "scores": [
+          {
+            "kind": "cp",
+            "value": -17
+          },
+          {
+            "kind": "mate",
+            "value": -6
+          }
+        ]
+      },
+      {
+        "id": "control_before",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "control_after",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "absent"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "control_lost",
+        "kind": "fact_comparison",
+        "state": "supported",
+        "stop": null,
+        "values": [],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "first_check",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "queen_removed",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "removed"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      }
+    ],
+    "summary": "In the Re1 line, White loses one rook. After Rh2#, Black wins by checkmate. In the Rxf6 line, White gives up one pawn and one rook for one queen.",
+    "question": "observed_terminal_comparison",
+    "local_expansions": 0,
+    "proposal_count": 48
+  },
+  {
+    "id": "C03",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "answered",
+        "stop": null,
+        "values": [],
+        "needs": null,
+        "relation": "worse",
+        "scores": [
+          {
+            "kind": "cp",
+            "value": 29
+          },
+          {
+            "kind": "cp",
+            "value": 64
+          }
+        ]
+      },
+      {
+        "id": "root_before",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "b8"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "root_after",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "d7"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "root_occupancy",
+        "kind": "fact_comparison",
+        "state": "supported",
+        "stop": null,
+        "values": [],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "retreat_blocked",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "illegal"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "retreat_available",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "legal"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "retreat_difference",
+        "kind": "fact_comparison",
+        "state": "supported",
+        "stop": null,
+        "values": [],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "pawn_attack",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "retreat_strength",
+        "kind": "compare_moves",
+        "state": "answered",
+        "stop": null,
+        "values": [],
+        "needs": null,
+        "relation": "worse",
+        "scores": [
+          {
+            "kind": "cp",
+            "value": 26
+          },
+          {
+            "kind": "cp",
+            "value": 70
+          }
+        ]
+      }
+    ],
+    "summary": "Nbd7 develops the knight to d7; later Rc8 passes through the vacated b8 square in this line. After Nbd7, Black's queen on d8 does not support Black's pawn on d5, whereas the d8-queen does after Na6. Black's pawn on c6 and Black's pawn on e6 and Black's knight on f6 still support that target. In the Nbd7 line: After Rc8, Black's rook on c8 now targets White's queen on c2. Nf1 clears d2; Qd2 later occupies that square in this line. Qd2 moves the queen out of the attack from Black's rook on c8. After Qxd3, the white queen originally on c2 is still present on d3. With cxd5, the white pawn originally on c4 captures the black pawn originally on d5; with exd5, the black pawn originally on e6 recaptures that pawn. Nbd7 develops the knight from b8 to d7, controlling e5. After Nbd7, Black's knight on d7 adds support to Black's knight on f6. After e5, White's pawn on e5 now targets Black's knight on f6. Ne8 moves the knight out of the attack from White's pawn on e5. After Ne8, Black's knight on e8 does not support Black's pawn on d5. After e5, White's queen on c2 now targets Black's pawn on h7. After Nf5, White's knight on f5 blocks the line from White's queen on c2 to Black's pawn on h7. After Qxd3, the black pawn originally on h7 is still present on h7. Na6 develops the knight to a6; later Rc8 passes through the vacated b8 square in this line. In the provided Na6 line, the same knight next moves with Nb4 to b4. After Nb4, Black's knight on b4 now targets White's queen on c2 and White's pawn on a2, and adds support to Black's pawn on d5, which is under attack from White's pawn on c4 and White's pawn on e4. Qb1 moves the queen out of the attack from Black's knight on b4. After Qc5, the white queen originally on c2 is still present on b1. In the Nbd7 line: Nxf4 captures the white bishop on f4. gxf4 recaptures the black knight on f4.",
+    "question": "selected_comparison",
+    "local_expansions": 1,
+    "proposal_count": 27
+  },
+  {
+    "id": "S4",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "stopped",
+        "stop": "no_executable_work",
+        "values": [],
+        "needs": null,
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "support_before",
+        "kind": "fact",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [
+          "absent"
+        ],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 1
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "support_after",
+        "kind": "fact",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 2
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 2
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "support_changed",
+        "kind": "fact_comparison",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 1
+          },
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 2
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 2
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "recapture_without",
+        "kind": "fact",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_unavailable",
+            "prefix_moves_uci": [],
+            "requirement_id": null,
+            "horizon": 3
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "recapture_with",
+        "kind": "fact",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "recapture_difference",
+        "kind": "fact_comparison",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_unavailable",
+            "prefix_moves_uci": [],
+            "requirement_id": null,
+            "horizon": 3
+          },
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "rook_route_now",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "rook_route_later",
+        "kind": "fact",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "rook_route_difference",
+        "kind": "fact_comparison",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": [
+          {
+            "kind": "input",
+            "reason": "path_end",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          },
+          {
+            "kind": "input",
+            "reason": "declared_path_unavailable",
+            "prefix_moves_uci": [
+              "c8d8"
+            ],
+            "requirement_id": null,
+            "horizon": 5
+          }
+        ],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "white_timing",
+        "kind": "compare_moves",
+        "state": "stopped",
+        "stop": "search_budget_exhausted",
+        "values": [],
+        "needs": null,
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      }
+    ],
+    "summary": "Compare what happens to the black pawn originally on d6 and the white pawn originally on e4 in the recorded d5 and Rd8 lines. After d5, Black's pawn on d5 now targets White's pawn on e4. With exd5, the white pawn originally on e4 captures the attacking black pawn originally on d6. After Re4, the white pawn originally on e4 is still present on d5. After Rd8, Black's rook on d8 adds support to Black's pawn on d6, which is under attack from White's queen on d3. The recorded continuation is gxh5. After d5, Black's pawn on d5 now targets White's pawn on e4. With exd5, the white pawn originally on e4 captures the attacking black pawn originally on d6. With Nxd5, the black knight originally on b6 recaptures the white pawn originally on e4. After e4, Black's pawn on e4 now targets White's queen on d3. With Qxe4, the white queen originally on d3 captures the attacking black pawn originally on e5. After Qxe4, White's rook on d1 now targets Black's knight on d5. After Nxd5, White's queen on d3 now targets Black's knight on d5. Nxc3+ moves the knight out of the attacks from White's queen on e4 and White's rook on d1. In the provided Nxc3+ line: Nxc3+ gives check to the White king on b1 with Black's knight on c3; Nxc3 captures the checking knight on c3. After Nxc3+, White's queen on e4 now targets Black's queen on c6. Qxc3 moves the queen out of the attack from White's queen on e4. Nxc3+ clears d5; later Rxd8+ passes through that square in this line. With Nxc3+, the black knight originally on b6 captures the white pawn originally on c3; with Nxc3, the white knight originally on c1 recaptures that knight; with Qxc3, the black queen originally on c6 recaptures that knight. With Rxd8+, the white rook originally on d1 captures the black rook originally on c8. In the Rd8 line: The recorded continuation is Kh7. gxh5 captures the black pawn on h5. In the d5 line: After exd5, White's pawn on d5 now targets Black's queen on c6. Qd6 moves the queen out of the attack from White's pawn on d5. d5 clears d6; Qd6 later occupies that square in this line.",
+    "question": "selected_comparison",
+    "local_expansions": 0,
+    "proposal_count": 1
+  },
+  {
+    "id": "S2",
+    "requirements": [
+      {
+        "id": "root_pair",
+        "kind": "compare_moves",
+        "state": "stopped",
+        "stop": "investigation_limit",
+        "values": [],
+        "needs": null,
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "d_support_before",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "absent"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "d_support_after",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "d_support_changed",
+        "kind": "fact_comparison",
+        "state": "supported",
+        "stop": null,
+        "values": [],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      },
+      {
+        "id": "f_support",
+        "kind": "fact",
+        "state": "supported",
+        "stop": null,
+        "values": [
+          "present"
+        ],
+        "needs": [],
+        "relation": null,
+        "scores": [
+          null,
+          null
+        ]
+      }
+    ],
+    "summary": "In the recorded Rhd1 line, both sides exchange one pawn and one knight and one rook and one queen; White also loses one pawn. In the recorded Rhf1 line, no capture or promotion is recorded. The recorded continuation is Rhf1. After Nf6, Black's knight on f6 now targets White's pawn on d5. After Nbd7, the white pawn originally on d5 is still present on d5. After Rhd1, White's rook on d1 adds support to White's pawn on d5, which is under attack from Black's knight on b6. The recorded continuation is h4. After Rxc5, Black's rook on c5 now targets White's pawn on d5. After Qb4, White's queen on b4 now targets Black's knight on b6. Nc5 clears d7; Nd7 later occupies that square in this line. Nd7 moves the knight out of the attack from White's queen on b3. With Qxb6, the white queen originally on a5 captures the black queen originally on d8; with Nxb6, the black knight originally on b6 recaptures that queen. With Nxa4, the black knight originally on b6 captures the white pawn originally on a2. With fxe5, the white pawn originally on f3 captures the black pawn originally on e5; with Rxe5, the black rook originally on h8 recaptures that pawn; with Rxe5, the white rook originally on h1 recaptures that rook; with dxe5, the black pawn originally on d6 recaptures that rook. dxe5 clears d6; d6 later occupies that square in this line. d6 moves the pawn out of the attack from Black's rook on c5. After d6, the white pawn originally on d5 is still present on d6. In the Rhd1 line: Nxc5 captures the black knight on c5. Rxc5 recaptures the white knight on c5.",
+    "question": "selected_comparison",
+    "local_expansions": 1,
+    "proposal_count": 48
+  }
+]

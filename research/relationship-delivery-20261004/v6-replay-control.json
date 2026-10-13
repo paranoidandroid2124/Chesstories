@@ -1,0 +1,343 @@
+{
+  "scope": "Final frozen v6 same-input public reducer/serializer replay; opened regression games, no semantic quality score.",
+  "generated_utc": "2026-10-04T05:07:39.338407+00:00",
+  "engine_executed": false,
+  "product_source_modified_by_replay_agent": false,
+  "new_cohort_semantic_content_read": false,
+  "input_sha256": "ef129f06adf8163c8f443b3f43bea1f6781b94dc14d1e931124f44e1e8874b36",
+  "comparisons": {
+    "baseline_to_v6": {
+      "overall": {
+        "jobs": 900,
+        "fully_replayed_readable_jobs": 900,
+        "statuses": {
+          "fully_replayed": 900
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3840,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 900,
+          "original_packet_flag_exact": 900,
+          "report_count_exact": 900,
+          "work_trace_exact": 900,
+          "candidate_ids_exact": 900,
+          "pair_path_ids_moves_exact": 900,
+          "verification_exact": 900,
+          "assessment_exact": 900,
+          "assessment_state_exact": 900,
+          "line_material_ledgers_exact": 900
+        },
+        "changed_basic_jobs": 224,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 22,
+        "after_no_basic_jobs": 22,
+        "cost_delivery_changed_jobs": 218,
+        "cost_owned_capture_projection_changed_jobs": 46,
+        "before_jobs_with_exact_repeated_sentences": 149,
+        "after_jobs_with_exact_repeated_sentences": 139,
+        "before_repeated_sentence_excess": 243,
+        "after_repeated_sentence_excess": 225
+      },
+      "original_clean_packet_group": {
+        "jobs": 802,
+        "fully_replayed_readable_jobs": 802,
+        "statuses": {
+          "fully_replayed": 802
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3486,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 802,
+          "original_packet_flag_exact": 802,
+          "report_count_exact": 802,
+          "work_trace_exact": 802,
+          "candidate_ids_exact": 802,
+          "pair_path_ids_moves_exact": 802,
+          "verification_exact": 802,
+          "assessment_exact": 802,
+          "assessment_state_exact": 802,
+          "line_material_ledgers_exact": 802
+        },
+        "changed_basic_jobs": 198,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 19,
+        "after_no_basic_jobs": 19,
+        "cost_delivery_changed_jobs": 194,
+        "cost_owned_capture_projection_changed_jobs": 41,
+        "before_jobs_with_exact_repeated_sentences": 136,
+        "after_jobs_with_exact_repeated_sentences": 127,
+        "before_repeated_sentence_excess": 224,
+        "after_repeated_sentence_excess": 207
+      },
+      "original_partial_packet_group": {
+        "jobs": 98,
+        "fully_replayed_readable_jobs": 98,
+        "statuses": {
+          "fully_replayed": 98
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 354,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 98,
+          "original_packet_flag_exact": 98,
+          "report_count_exact": 98,
+          "work_trace_exact": 98,
+          "candidate_ids_exact": 98,
+          "pair_path_ids_moves_exact": 98,
+          "verification_exact": 98,
+          "assessment_exact": 98,
+          "assessment_state_exact": 98,
+          "line_material_ledgers_exact": 98
+        },
+        "changed_basic_jobs": 26,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 3,
+        "after_no_basic_jobs": 3,
+        "cost_delivery_changed_jobs": 24,
+        "cost_owned_capture_projection_changed_jobs": 5,
+        "before_jobs_with_exact_repeated_sentences": 13,
+        "after_jobs_with_exact_repeated_sentences": 12,
+        "before_repeated_sentence_excess": 19,
+        "after_repeated_sentence_excess": 18
+      },
+      "additional_reading_controls_exact": {
+        "progress": 900,
+        "assessment_scope": 900,
+        "proposal_sources": 900,
+        "requirement_states": 900,
+        "public_path_count": 900
+      }
+    },
+    "v5_to_v6": {
+      "overall": {
+        "jobs": 900,
+        "fully_replayed_readable_jobs": 900,
+        "statuses": {
+          "fully_replayed": 900
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3840,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 900,
+          "original_packet_flag_exact": 900,
+          "report_count_exact": 900,
+          "work_trace_exact": 900,
+          "candidate_ids_exact": 900,
+          "pair_path_ids_moves_exact": 900,
+          "verification_exact": 900,
+          "assessment_exact": 900,
+          "assessment_state_exact": 900,
+          "line_material_ledgers_exact": 900
+        },
+        "changed_basic_jobs": 7,
+        "summary_unavailable_changed_jobs": 1,
+        "before_no_basic_jobs": 23,
+        "after_no_basic_jobs": 22,
+        "cost_delivery_changed_jobs": 7,
+        "cost_owned_capture_projection_changed_jobs": 4,
+        "before_jobs_with_exact_repeated_sentences": 138,
+        "after_jobs_with_exact_repeated_sentences": 139,
+        "before_repeated_sentence_excess": 226,
+        "after_repeated_sentence_excess": 225
+      },
+      "original_clean_packet_group": {
+        "jobs": 802,
+        "fully_replayed_readable_jobs": 802,
+        "statuses": {
+          "fully_replayed": 802
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 3486,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 802,
+          "original_packet_flag_exact": 802,
+          "report_count_exact": 802,
+          "work_trace_exact": 802,
+          "candidate_ids_exact": 802,
+          "pair_path_ids_moves_exact": 802,
+          "verification_exact": 802,
+          "assessment_exact": 802,
+          "assessment_state_exact": 802,
+          "line_material_ledgers_exact": 802
+        },
+        "changed_basic_jobs": 6,
+        "summary_unavailable_changed_jobs": 1,
+        "before_no_basic_jobs": 20,
+        "after_no_basic_jobs": 19,
+        "cost_delivery_changed_jobs": 6,
+        "cost_owned_capture_projection_changed_jobs": 4,
+        "before_jobs_with_exact_repeated_sentences": 126,
+        "after_jobs_with_exact_repeated_sentences": 127,
+        "before_repeated_sentence_excess": 208,
+        "after_repeated_sentence_excess": 207
+      },
+      "original_partial_packet_group": {
+        "jobs": 98,
+        "fully_replayed_readable_jobs": 98,
+        "statuses": {
+          "fully_replayed": 98
+        },
+        "reading_errors": 0,
+        "exact_matched_report_prefix": 354,
+        "controls_exact_among_complete": {
+          "request_fen_exact": 98,
+          "original_packet_flag_exact": 98,
+          "report_count_exact": 98,
+          "work_trace_exact": 98,
+          "candidate_ids_exact": 98,
+          "pair_path_ids_moves_exact": 98,
+          "verification_exact": 98,
+          "assessment_exact": 98,
+          "assessment_state_exact": 98,
+          "line_material_ledgers_exact": 98
+        },
+        "changed_basic_jobs": 1,
+        "summary_unavailable_changed_jobs": 0,
+        "before_no_basic_jobs": 3,
+        "after_no_basic_jobs": 3,
+        "cost_delivery_changed_jobs": 1,
+        "cost_owned_capture_projection_changed_jobs": 0,
+        "before_jobs_with_exact_repeated_sentences": 12,
+        "after_jobs_with_exact_repeated_sentences": 12,
+        "before_repeated_sentence_excess": 18,
+        "after_repeated_sentence_excess": 18
+      },
+      "additional_reading_controls_exact": {
+        "progress": 900,
+        "assessment_scope": 900,
+        "proposal_sources": 900,
+        "requirement_states": 900,
+        "public_path_count": 900
+      }
+    }
+  },
+  "final_readings": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\v6-all\\readings.jsonl",
+    "bytes": 26062231,
+    "sha256": "13c4c69c178cfeb67f1694fa7f5e880cba86f1610404c1af55cd8cafd9f61e89",
+    "gzip_path": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\target\\relationship-delivery-20261004\\replay-tools\\runs\\v6-all\\readings.jsonl.gz",
+    "gzip_bytes": 3772668,
+    "gzip_sha256": "3bb9c1331090dee2a527cd0d4a5993c73c19f9406d1879502c02bbb50bd74864"
+  },
+  "states": {
+    "baseline": {
+      "assessment_states": {
+        "current": 798,
+        "needs_refresh": 102
+      },
+      "verification_stop_reasons": {
+        "None": 787,
+        "search_budget_exhausted": 99,
+        "verification_limit": 1,
+        "invalid_engine_work_report": 13
+      },
+      "jobs_with_no_basic": 22,
+      "jobs_with_no_comparisons": 4,
+      "basic_unicode_codepoints": 1237006,
+      "replay_harness_time": {
+        "total_job_elapsed_ms": 2483714,
+        "median_job_elapsed_ms": 2557.0,
+        "first_job_elapsed_ms": 20634,
+        "p90_job_elapsed_ms": 4742,
+        "p90_method": "Nearest rank: sorted[ceil(0.90 * n) - 1]; historical reports may use a different adjacent rank."
+      }
+    },
+    "v5": {
+      "assessment_states": {
+        "current": 798,
+        "needs_refresh": 102
+      },
+      "verification_stop_reasons": {
+        "None": 787,
+        "search_budget_exhausted": 99,
+        "verification_limit": 1,
+        "invalid_engine_work_report": 13
+      },
+      "jobs_with_no_basic": 23,
+      "jobs_with_no_comparisons": 4,
+      "basic_unicode_codepoints": 1231400,
+      "replay_harness_time": {
+        "total_job_elapsed_ms": 2120567,
+        "median_job_elapsed_ms": 2287.0,
+        "first_job_elapsed_ms": 18170,
+        "p90_job_elapsed_ms": 3762,
+        "p90_method": "Nearest rank: sorted[ceil(0.90 * n) - 1]; historical reports may use a different adjacent rank."
+      }
+    },
+    "v6": {
+      "assessment_states": {
+        "current": 798,
+        "needs_refresh": 102
+      },
+      "verification_stop_reasons": {
+        "None": 787,
+        "search_budget_exhausted": 99,
+        "verification_limit": 1,
+        "invalid_engine_work_report": 13
+      },
+      "jobs_with_no_basic": 22,
+      "jobs_with_no_comparisons": 4,
+      "basic_unicode_codepoints": 1233380,
+      "replay_harness_time": {
+        "total_job_elapsed_ms": 1893699,
+        "median_job_elapsed_ms": 2056.0,
+        "first_job_elapsed_ms": 13284,
+        "p90_job_elapsed_ms": 3468,
+        "p90_method": "Nearest rank: sorted[ceil(0.90 * n) - 1]; historical reports may use a different adjacent rank."
+      }
+    }
+  },
+  "preservation": {
+    "freeze_sha256": "b21ef8662b7c5c8dcd474be79878e1c94701d489bd4249ba69ef37bfbe41bbfe",
+    "class_fingerprints": {
+      "baseline": {
+        "file_count": 1695,
+        "sha256": "ce6dde6cfa23352cc130390155b2a56e0d8b2f3e336b06dd245a5ac0aa5ca72a"
+      },
+      "v5": {
+        "file_count": 1699,
+        "sha256": "50e5a71e02d5fb05ce006e117b8c5bae6c37c6024a121ac360e0142e90dcf2a3"
+      },
+      "v6": {
+        "file_count": 1699,
+        "sha256": "f93992955c59962aec7744adfa72cbfad0ad3c1519871a9ee00e25e7ddbc6d05"
+      }
+    },
+    "main_sources": {
+      "count": 71,
+      "mismatches": []
+    },
+    "supporting_files": {
+      "count": 47,
+      "mismatches": [
+        "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts"
+      ],
+      "unchanged_count": 46,
+      "approved_post_freeze_changes": [
+        {
+          "path": "lila-docker\\repos\\lila\\ui\\analyse\\src\\moveReviewSelection.ts",
+          "frozen_sha256": "2231644b1ebfd745c807af99ceee8e506f90f5f61efaae5f2894d9df086ab2b0",
+          "actual_sha256": "6957b7fce70b288463d36e1ab9c55461f965c533685c0157d2e0bdee1969f807",
+          "scope": "Parent-authorized frontend mechanical public contract fix; backend sources/classes and saved replay unchanged.",
+          "evidence_record": "C:\\Users\\양자\\.codex\\worktrees\\8f44\\Chesstories\\research\\relationship-delivery-20261004\\post-freeze-public-contract-fix.json",
+          "evidence_record_sha256": "8c053d9b5ddbe7a8966c604fff56115d2034e3da6b19137efc7f3d870d6c7294"
+        }
+      ],
+      "unapproved_mismatches": []
+    },
+    "protected_files": {
+      "count": 43,
+      "mismatches": []
+    },
+    "old_manifest_fields": {
+      "count": 13,
+      "mismatches": []
+    }
+  },
+  "limits": [
+    "Fixed virtual time preserves request budget but does not reproduce actual deadline behavior.",
+    "Harness elapsed time excludes fresh engine, browser, mobile and full-stack execution.",
+    "Capture-ownership projections are descriptive public-ledger reads, not material-account recalculation or quality grades.",
+    "Delayed-provider causality requires selected-relation and actual trace evidence; text-change counts cannot establish it."
+  ]
+}

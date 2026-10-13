@@ -1,0 +1,515 @@
+{
+  "created_utc": "2026-10-08T10:20:08.714429+00:00",
+  "reviewer": "/root/functional_condition_audit",
+  "kind": "new original-Ke3 all-eight completed-receipt human-reading addendum under unchanged criteria",
+  "criteria_sha256_unchanged": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+  "all5_addendum_sha256_unchanged": "15f0ff25fa48994b306c53fbd9ab56971e42d6cb4e99341e2b2f59aed7cd2455",
+  "chronology": {
+    "original_human_criteria_sealed_utc": "2026-10-08T09:04:29.119210+00:00",
+    "long40min_plan_registered_utc": "2026-10-08T09:46:53.116260+00:00",
+    "long40min_actual_finished_utc": "2026-10-08T09:54:35.098671+00:00",
+    "reviewer_read_result_after_completion": true,
+    "previous_chronology_clarification_preserved": "The original leading2 engine completion preceded the original human criterion seal, while this reviewer had not read its results. The new long40min plan/execution are both after the unchanged original criteria. No old record is edited retrospectively."
+  },
+  "source_sha256": {
+    "research\\meaning-conditions-20261008\\h05-original-root-human-precomparison-criteria.json": "c637d6e4bf3e128386c63e331cdcc24f0fb1a4be2aef759a6c17a753470e31cf",
+    "research\\meaning-conditions-20261008\\h05-retained-pawn-all5-human-reading-addendum.json": "15f0ff25fa48994b306c53fbd9ab56971e42d6cb4e99341e2b2f59aed7cd2455",
+    "research\\meaning-conditions-20261008\\h05-original-root-leading-defenses-human-reading.json": "a34e15cea60bf3730d919145aa60ecd42dd6756c6a9ea0e8b479e23de578a054",
+    "research\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min-plan.json": "bd9d0466af6df94c4273370556543dfa663264b9a8593a850835437a706577b2",
+    "research\\meaning-conditions-20261008\\h05-original-first-defenses-plan.json": "e226a6f60ec44358d56632f888ce97a755ad3d0938c96cc5c1036c5f3c848195",
+    "research\\meaning-conditions-20261008\\h05-original-first-defenses-final-independent-audit.json": "60cb68b013492167e2bd3c8055ed2293157b58cd6675825109f4c2c729a5c28e",
+    "target\\meaning-conditions-20261008\\h05-original-first-defenses\\results.json": "9f75c140deaef68e0e9a19d8f8782f67c109040c2eac250932d760252f79c0d4",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\results.json": "559d8073afe452b3ea1e1e276febe6ef5bfab965ea3e471cd262e238cabde1ac",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\summary.json": "e2796bd6a1eaf94800b40dee607bbadef7192ef5199dd33a07c99e81036b77b7",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\manifest.json": "e682dc7a564d962befaf5ce42f78383c73280814c47646bf414b6759ad684cd6",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\independent-all8-physical-pv-replay.json": "04fc5739e15c0a9b864c2c2450417f71cd862095b39c0e4f061b050d879711e4",
+    "target\\meaning-conditions-20261008\\h05-original-Ke3-all8-long40min\\independent-final-completion-epoch-check.json": "6a23341b00227bf978e58c87ba28d2c2c46f42ef4d8c5d4bc04727d5bf8f192d",
+    "research\\meaning-conditions-20261008\\h05-same-defense-timing-plan.json": "fca44dbfab2772a56fd5e7fd307aa33ddcba9dfc6d7ab4cb010c55655b24a834",
+    "target\\meaning-conditions-20261008\\h05-same-defense-timing\\results.json": "48281af483317bbd79c99a12a767bb85b4193751e937377cd56078f1a47e8d98"
+  },
+  "execution_and_changes": {
+    "new_engine_queries_by_reviewer": 0,
+    "product_reports_submitted": 0,
+    "engine_outputs_mutated": false,
+    "main_UI_schema_test_edits": [],
+    "old_0_of_4_full_utility_status_changed": false,
+    "old_readings_rescored": false
+  },
+  "completion_verdict": {
+    "new_attempt": "COMPLETED under the unchanged all-eight/depth24 criterion.",
+    "exact_search_fen": "8/5p2/8/2p1k3/ppp1P3/P1P1K1P1/1P6/8 b - - 1 35",
+    "exact_original_prefix_UCI": [
+      "f3e3"
+    ],
+    "legal_first_reply_inventory": [
+      "Kd6",
+      "Ke6",
+      "Kf6",
+      "b3",
+      "bxa3",
+      "bxc3",
+      "f5",
+      "f6"
+    ],
+    "legal_requested_returned_roots_exactly_equal": true,
+    "structured_all8_receipt_matches_final_unbounded_raw_epoch": true,
+    "final_raw_epoch_nodes": 2375978849,
+    "completed_depth": 24,
+    "all_eight_positive_white_cp": true,
+    "new_actual_elapsed_ms": 460169,
+    "new_allowed_movetime_ms": 2400000,
+    "physical_replay": "All eight prefix-plus-PV lines replayed legally: 200 plies, with exact original identities, en passant and promotion followed by capture accounted for.",
+    "prior20min_attempt": "Remains executor_failed/search_budget_exhausted at 1,200,105ms, last complete inventory depth21. Its old historical criterion verdict remains correct for that attempt.",
+    "plan_delta": "Same actual original history, legal root set, depth24/nodes10b/MultiPV8/Hash128/Threads2. Only query work/key and allowance/lease change from20 to40min.",
+    "performance_inference_limit": "This new run actually completed in7m40.169s, below the old20min allowance. Its success demonstrates that this required finite inventory can complete, not that the doubled allowance was necessary or caused a speed improvement. The old failed effort remains part of cost/history.",
+    "Ke3_two_attempts_elapsed_ms": 1660274
+  },
+  "leading_resistance": {
+    "returned_best_Black_reply": "f6",
+    "reported_White_f6_cp": 881,
+    "reported_White_Ke6_cp": 890,
+    "gap_cp": 9,
+    "human_interpretation": "Read f6 and Ke6 as the nearly equal leading resistance group. Do not invent a precise human cause for a nine-centipawn ordering or declare f6 a unique exact minimax defense.",
+    "equal_pairs": [
+      {
+        "roots": [
+          "bxa3",
+          "bxc3"
+        ],
+        "White_cp": 1831
+      },
+      {
+        "roots": [
+          "f5",
+          "b3"
+        ],
+        "White_cp": 2907
+      }
+    ],
+    "equality_limit": "Equal numerical readings do not merge physical targets, pawn identities, costs or human tasks."
+  },
+  "root_bounded_utility": {
+    "accepted": "In this completed h128/depth24 inventory, Ke3 has a positive White result after every legal immediate Black reply. The independently legal supplied continuations show several coherent king/pawn tasks and preserve their actual prices, including both nearly leading defenses.",
+    "functional_question": "Keep an appropriate king posture and the original g-pawn resource until the actual defense/structure permits useful entry or conversion; after a different defense, investigate the task and prices of that new board instead of insisting on one recorded route.",
+    "not_equivalent_to": "Finding g4 somewhere in each winning PV does not prove g4 is important or uniquely necessary in each of the other six lines. This audit accepts the finite root inventory and its response-specific conversion witnesses, not a universal same-function theorem for every first reply.",
+    "quiet_f6_realization": "The leading f6 witness uses quiet g4 while White king f4 and original e4 remain. The pawn move transfers the turn without moving that king or e4; the returned ...Ke7 allows Kf5 and the later priced e5/fxe5/Kxe5 trade. ...f5 remains a legal Black alternative at that later point, so only a bounded witnessed realization is claimed there.",
+    "Ke6_realization": "The nearly equal Ke6 witness is a queenside preparation/exchange route with White Kd2, original c3 loss, original a3 advanced to b6 and original b2 relocated to a3. It contains no White f4/f5 visit. It therefore prevents treating f4/f5 entry as a universal condition of the original Ke3 judgment.",
+    "all5_relation": "The prior late retained-g3 g4+ ALL5 comparison remains valid at its own exact17ply history. That checking route is one successful realization; it is not the required event or forced route for the newly completed original-root inventory.",
+    "obsolete_or_overbroad_conditions_rejected": [
+      "Require g4 to be a check: all eight new original-root PVs use g4 quietly.",
+      "Require e4 already to have disappeared before g4: original e4 is still present at g4 in seven of eight new PVs, including both leading defenses.",
+      "Require all original White pawns to survive: multiple branches contain actual original a3/c3/e4 losses.",
+      "Require a promoted queen to survive: the f5 line actually loses the promoted original e4 queen to ...Kxd7.",
+      "Require the same f4/f5 approach in every Black-first-defense branch: the Ke6 route uses the queenside and never visits either square.",
+      "Require the exact book ...b3 structure after ...bxc3: original c3 is gone and original b2 occupies c3 in the latter."
+    ]
+  },
+  "branches": [
+    {
+      "Black_reply": "f6",
+      "root_UCI": "f7f6",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 881
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 28,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f4",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 17,
+          "suffix_ply_zero_based": 16,
+          "SAN": "fxe5",
+          "UCI": "f6e5",
+          "capture_square": "e5",
+          "arrival_square": "e5",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "7k/8/8/6P1/p1K5/PpP5/1P6/8 b - - 2 49",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Keep the king and reserve pawn available while maneuvering, use the reserve only after the returned ...b3 change, and turn useful king entry into a priced central trade and queenside approach.",
+        "observed_conversion": "Kf3/Kd6/Ke2/Ke5/Ke3 is followed by ...b3. White then plays Kf3/Kd6/Kf4/Ke6 and quiet g4 with its original e4 still on e4. After the returned ...Ke7, Kf5 and e5 lead to ...fxe5 Kxe5, then Kd5, Kxc4 and Kxc5. The original g3 pawn survives and later advances to g5.",
+        "actual_price": "Original Black f7, now f6, captures original White e4 on e5; the White king recaptures that original Black pawn with Kxe5.",
+        "boundary": "After quiet g4 Black has Kd6,Kd7,Ke7,Kf7 AND f5 legally available. Only ...Ke7 is the displayed next witness; do not call this forced king-only play or independently closed every later response. The finite line ends without mate or promotion, with White king c4/g-pawn g5 and four White pawns versus two Black queenside pawns."
+      }
+    },
+    {
+      "Black_reply": "Ke6",
+      "root_UCI": "e5e6",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 890
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 27,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "c5",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 5,
+          "suffix_ply_zero_based": 4,
+          "SAN": "cxb4",
+          "UCI": "c5b4",
+          "capture_square": "b4",
+          "arrival_square": "b4",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "c3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "8/5k2/1P3P2/2K5/6P1/P7/8/8 w - - 1 49",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Prepare the king for a queenside exchange and outside-pawn advance rather than force a kingside entry story.",
+        "observed_conversion": "Kd2 comes before ...Ke5 cxb4 cxb4 axb4. White Kc2/Kc3 prepares b5 and Kxc4; e5+ and Kc5 follow. Quiet g4 occurs with the White king on c5, followed by ...f6 exf6, b6 and ...a3 bxa3. The White king never visits f4 or f5 in this PV.",
+        "actual_price": "Original White c3 captures original Black b4 on b4, then original Black c5 captures that original White c3 pawn there; original White a3 recaptures on b4. The surviving b6 pawn is therefore original a3. Original White b2 later captures original Black a4 on a3 and remains on a3.",
+        "boundary": "The line ends with White king c5 and original a3/e4/g3/b2 pawns on b6/f6/g4/a3 versus a bare Black king f7. Black king f7 attacks the f6 pawn at this endpoint. White is to move; a possible further pawn loss/race is not an observed capture or a fully supplied conversion theorem."
+      }
+    },
+    {
+      "Black_reply": "Kf6",
+      "root_UCI": "e5f6",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 956
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 19,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f6",
+      "white_prices": [],
+      "promotions": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 17,
+          "SAN": "e8=Q+",
+          "UCI": "e7e8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "promoted_to": "queen"
+        }
+      ],
+      "final_fen": "4Q3/5K2/8/2p5/ppp3P1/P1P5/1P1k4/8 w - - 1 45",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Exploit the king retreat to advance the e-pawn with the king and remove the original Black f7 pawn.",
+        "observed_conversion": "Kf4/e5/Kf5/Kf6 precedes quiet g4 and Kxf7; original e4 then advances through e6,e7 and e8=Q+.",
+        "actual_price": "No White capture loss occurs in this supplied PV.",
+        "boundary": "The line ends after ...Kd2 with White queen e8 and king f7. Black king d2 attacks original White c3 at the endpoint. This later possible cost is not an executed capture in the receipt; do not assert all queenside pawns remain permanently safe or that the intermediate quiet g4 is uniquely necessary."
+      }
+    },
+    {
+      "Black_reply": "Kd6",
+      "root_UCI": "e5d6",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 1016
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 27,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f6",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 25,
+          "suffix_ply_zero_based": 24,
+          "SAN": "bxa3",
+          "UCI": "b4a3",
+          "capture_square": "a3",
+          "arrival_square": "a3",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "a3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "8/1k6/4PKP1/2p5/p1p5/P1P5/8/8 w - - 1 49",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Exploit central king activity and advance the e- and g-pawns protected by the king while accounting for the queenside exchange.",
+        "observed_conversion": "Kf4/e5/Kf5/Kf6 and Kxf7 create central activity; original e4/g3 pawns finish on e6/g6, both protected by the White king f6.",
+        "actual_price": "Original Black b4 captures original White a3 on a3; original White b2 recaptures on a3. The final a3 pawn is original b2, not the sacrificed original a3.",
+        "boundary": "The legal supplied line stops before promotion; original Black a4/c4/c5 remain. Positive depth24 evaluation plus protected advanced e/g pawns is the bounded conversion evidence."
+      }
+    },
+    {
+      "Black_reply": "bxa3",
+      "root_UCI": "b4a3",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 1831
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 21,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f6",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 1,
+          "suffix_ply_zero_based": 0,
+          "SAN": "bxa3",
+          "UCI": "b4a3",
+          "capture_square": "a3",
+          "arrival_square": "a3",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "a3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "8/3kP3/5K2/2p5/p1p3P1/P1P5/8/8 w - - 1 46",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Recapture the queenside exchange and use the central king/e-pawn opportunity the defense permits.",
+        "observed_conversion": "The immediate capture is answered bxa3 by original White b2. Kf4/e5+/Kf5/Kf6 later removes Black f7 and reaches e7+.",
+        "actual_price": "Original White a3 is actually lost to original Black b4; the recaptured a3 pawn is original White b2.",
+        "boundary": "The supplied line stops with original e4 on e7 supported by White king f6. It has not yet promoted; do not borrow the original a3 identity or the ...bxc3 structure."
+      }
+    },
+    {
+      "Black_reply": "bxc3",
+      "root_UCI": "b4c3",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 1831
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 19,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f6",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 1,
+          "suffix_ply_zero_based": 0,
+          "SAN": "bxc3",
+          "UCI": "b4c3",
+          "capture_square": "c3",
+          "arrival_square": "c3",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "actor_current_role": "pawn",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "c3"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "8/5p2/4P3/2pk1K2/p1p3P1/P1P5/8/8 w - - 1 45",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Recapture with the original b-pawn and use the central king/e-pawn progression in the changed structure.",
+        "observed_conversion": "The immediate capture is answered bxc3 by original White b2. The original White e4 pawn finishes on e6, supported by White king f5.",
+        "actual_price": "Original White c3 is actually captured by original Black b4; that Black pawn is recaptured by original White b2. The current c3 pawn is original b2 and b2 is vacant.",
+        "boundary": "The line still has original Black f7 on f7 at its endpoint. It is not book ...b3 and must not borrow the original c3 pawn history or the Kxf7 event from the equally valued bxa3 line."
+      }
+    },
+    {
+      "Black_reply": "f5",
+      "root_UCI": "f7f5",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 2907
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 26,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": true,
+      "White_king_at_g4": "f5",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 23,
+          "suffix_ply_zero_based": 22,
+          "SAN": "Kxd7",
+          "UCI": "d6d7",
+          "capture_square": "d7",
+          "arrival_square": "d7",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "queen"
+        }
+      ],
+      "promotions": [
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix_ply_zero_based": 17,
+          "SAN": "f8=Q",
+          "UCI": "f7f8q",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "promoted_to": "queen"
+        }
+      ],
+      "final_fen": "8/2k5/6P1/2pK4/ppp5/P1P5/1P6/8 b - - 0 48",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Convert the allowed central passed-pawn advance, while preserving the later loss of the promoted piece and the remaining g-pawn race.",
+        "observed_conversion": "Original White e4 captures original Black f7 by exf5, advances through f6+/f7 to f8=Q, then the actual PV continues Qc8+ Qd7+ Kxd7 before White Kd5 and g6.",
+        "actual_price": "The QUEEN captured by ...Kxd7 is the promoted original White e4 pawn. It is not a surviving free queen gain.",
+        "boundary": "The completed cp+2907 reading remains positive after that genuine queen loss; the remaining king/g-pawn continuation is the legal supplied compensation witness. The audit does not claim the queen sacrifice is unique, forced, or the sole cause of the valuation."
+      }
+    },
+    {
+      "Black_reply": "b3",
+      "root_UCI": "b4b3",
+      "reported_white_score": {
+        "kind": "cp",
+        "value": 2907
+      },
+      "completed_depth": 24,
+      "all_moves_legal": true,
+      "suffix_plies": 25,
+      "g4_uses_original_g3": true,
+      "g4_gives_check": false,
+      "original_e4_present_at_g4": false,
+      "White_king_at_g4": "f4",
+      "white_prices": [
+        {
+          "absolute_ply_zero_based": 9,
+          "suffix_ply_zero_based": 8,
+          "SAN": "Kxf6",
+          "UCI": "e6f6",
+          "capture_square": "f6",
+          "arrival_square": "f6",
+          "is_en_passant": false,
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "actor_current_role": "king",
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim_current_role": "pawn"
+        }
+      ],
+      "promotions": [],
+      "final_fen": "8/6P1/8/1Kp5/p3k3/PpP5/1P6/8 w - - 1 48",
+      "actual_final_checkmate": false,
+      "interpretation": {
+        "human_task": "Use the changed blocked queenside structure and central exchange to activate the king and surviving g-pawn.",
+        "observed_conversion": "...b3 keeps original Black b4 on b3. White e5 is met by ...f5; exf6 is legal en passant, capturing original Black f7 on f5, and ...Kxf6 removes original White e4. Quiet g4 with White king f4 precedes Ke5/Kd5/Kxc4/Kb5 and g5/g6/g7.",
+        "actual_price": "Original White e4 is captured by the original Black king on f6 after the en-passant exchange.",
+        "boundary": "Original White a3/b2/c3 remain and the original g3 pawn reaches g7. This is an owned ...b3 structure and a quiet g4 realization; do not borrow product ...bxc3 actors or the separate late g4+ ALL5 history."
+      }
+    }
+  ],
+  "comparison_with_earlier_separate_receipts": {
+    "early_g4_old_all8": {
+      "source": "target\\meaning-conditions-20261008\\h05-original-first-defenses\\results.json",
+      "status": "Previously completed all8 atdepth24 in671947ms; preserved independent audit identifies f6 as uniquely strongest returned with Whitecp0, otherseven positive. It is a separate prior query, not re-executed or a numerical same-epoch paired all8 comparison with this new Ke3 receipt.",
+      "use": "It supplies the adequate-defense counterexample to explaining early g4 as bad under every Black reply. The product score/grade is not replaced with these research128 values."
+    },
+    "same_f6_named_timing": {
+      "position": "After original Ke3 ...f6, identical history and child board",
+      "named_actions": "Kf3 versus immediate g4",
+      "completed_d24_values": {
+        "Kf3_White_cp": 714,
+        "immediate_g4_White_cp": 0
+      },
+      "scope": "This independently completed restricted named-two comparison remains the causal timing control in its finite stated scope; it is not this new all8 epoch or every White alternative. Ke3 alone and the eventual appearance of g4 alone are insufficient conditions."
+    },
+    "combined_interpretation": "The earlier first-defense/counterfactual timing evidence and this completed original-Ke3 inventory support the human timing account across adequate resistance without requiring the old checking realization. They still do not provide a full mathematical proof of the original evaluation or a product full-utility success."
+  },
+  "limits_and_prices": [
+    "Every immediate original Black first reply is now covered in this finite completed inventory; later defensive nodes are not all separately inventoried by this audit.",
+    "All eight new PVs terminate without recorded mate. One contains e8=Q+ and another contains f8=Q followed by actual queen loss. Positive cp values are finite engine valuations, not formal minimax/tablebase certificates.",
+    "The Ke6 endpoint Black king f7 attacks original e4 on f6; the Kf6 endpoint Black king d2 attacks original White c3. These later possible costs are not executed in the supplied lines, so the audit neither fabricates their capture nor asserts their permanent safety.",
+    "Original Black b4->b3 and original Black b4 captures onto c3/a3 are physically distinct structures. Recaptured White pawn identity is retained exactly.",
+    "No differently profiled h128 numerical receipt is inserted into product16, no prior report or first-time failure is replaced, and no original0/4 full-utility criteria are changed."
+  ],
+  "human_comment_with_scope": "Ke3 keeps the g-pawn move available while the king adjusts to Black’s defense. Against the leading ...f6, the returned line waits for ...b3, then uses quiet g4 without moving the prepared king on f4; the later central pawn trade opens the king’s route to the queenside. The nearly equal ...Ke6 calls for Kd2 and queenside exchanges instead, including the loss of the original c-pawn. The completed depth24 research finds a positive White result after every legal first reply, but those different continuations and their costs must be explained on their own boards.",
+  "bounded_task_status": "Complete: actual all8 receipt read, final unbounded epoch verified, all8 physical PVs independently replayed and human interpretation sealed. No further engine query by this reviewer."
+}

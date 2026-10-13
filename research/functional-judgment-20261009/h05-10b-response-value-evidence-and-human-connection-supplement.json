@@ -1,0 +1,698 @@
+{
+  "schema_version": 1,
+  "sealed_utc": "2026-10-08T21:46:17.434707+00:00",
+  "phase": "Separate H05 held10b and target-only prefix-consolidation evidence/human-connection supplement after both BASIC-first seals",
+  "preserved_firstpasses": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-resume180-human-firstpass.json",
+      "sha256": "7d4be23640cc5dbf58bb050a9749822dbe8b5d186e1e97994d101a2827f57717",
+      "changed": false
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-prefix-consolidation-research-human-firstpass.json",
+      "sha256": "8827f902ad32162d5e401029a23d2d193594033e8c744f16d5d4862e8ef5f12a",
+      "changed": false
+    }
+  ],
+  "presealed_chain": {
+    "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-minimum-response-sensitive-function-value-chain.json",
+    "sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94",
+    "changed": false
+  },
+  "evidence_sources": [
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-10b-native-completion-cost-and-delivery-audit.json",
+      "sha256": "95d21141a337c0ab11be020c502b0e840f0096edfa3072972164495ec275b130"
+    },
+    {
+      "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\research\\functional-judgment-20261009\\h05-prefix-consolidation-research-override-audit.json",
+      "sha256": "4ad971fbea3f2a5e7ed6214c1204b79bf318a35f55a6464292b42807375a0259"
+    }
+  ],
+  "native_provenance": {
+    "ordinary_original_request_equal": true,
+    "profile": "sf18-smallnet-t2-h16-v1",
+    "API_and_policy_budget_ms": 180000,
+    "research_overlay_used": false,
+    "root50M_overlay_used": false,
+    "current_query_count": 2,
+    "exact_original_replays": 4,
+    "actual_reports": 6,
+    "this_reader_engines": 0
+  },
+  "actually_completed_bounded_scope": {
+    "anchored_stage": [
+      "Ke3",
+      "f6"
+    ],
+    "own_choice": "Kf3 versus immediate g4 in the same exact stage; the own pool is current and not a borrowed root value.",
+    "after_choice_resistance": {
+      "afterKe3f6Kf3": "Unrestricted depth16 MultiPV3 Kd6/f5 tied White+573 and Ke6+591. Not every legal response value returned.",
+      "afterKe3f6g4": "Unrestricted depth16 MultiPV3 Ke6/b3/Kd6 all0. Native task representative b3 is one genuine tied returned leader; no unique-strongest claim.",
+      "original_first_Black_unrestricted_after_each_root_present": false,
+      "official_root_report_unchanged_exact_native_replay": true,
+      "conditional_source_reply_work2": "Only named Ke6/f6 after Ke3; cannot certify all first defenses.",
+      "known_omitted_capture_obligations": [],
+      "causal_limit": "After-choice conditional evidence does not alone explain the original root evaluation or force the witnessed king cycle."
+    },
+    "Task_complete": true,
+    "private_typed_read_present": true,
+    "finite_limit": "Unrestricted depth16 MultiPV3 pools enumerate six legal root replies per arm and return three scored leaders each. They are completed current surveys, not separately scored reports for every legal reply or a formal minimax proof.",
+    "root_cause": "Both original first-Black unrestricted pools remain absent. The scoped after-Ke3-f6 value/counter chain does not by itself explain the whole original root evaluation."
+  },
+  "delivery_failure_vs_research_delivery": {
+    "ordinary10b": {
+      "stage": "RootQuestionSummary.fromUnits",
+      "clause": "coreWitnessLines.size <= MaximumWitnessLines (5)",
+      "observed_core_witness_count": 6,
+      "observed_detail_witness_count": 0,
+      "cause": "FunctionalChoiceReading.completeAnswer retains the prior whole ReserveTempo section for non-root action refs, then protectRootUses independently recognises its root condition/use. New local response value and the old cycle require disjoint non-root proof paths."
+    },
+    "ordinary_visible_result": "Old317-character ReserveTempo fallback retained; original human judgment partial.",
+    "research_override": {
+      "zero_new_engine_queries": 0,
+      "whole_played_primary_unchanged": true,
+      "canonical_and_price_gates_pass": true,
+      "private_anchor_retained": "Stage anchor remains private evidence; only redundant display-path attachment consolidated onto the exact response prefix.",
+      "source_witness_before": 6,
+      "source_witness_after": 5,
+      "caps_prices_ownership_changed": false,
+      "scope": "Target-only two-edit observational experiment, not currentproduction10c or a relaxed criterion."
+    },
+    "research_visible_result": "New648-character local preference/opponent representatives/pawn-location facts delivered, but the actual defense effect and conversion price still absent."
+  },
+  "owned_current_forecasts_and_exact_prices": [
+    {
+      "work_id": "work:4",
+      "execution_key_sha256": "c31bd68199048c6b3c0bd724f45990e5733e2e3cb6bab5a92e9c209254394ed7",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3"
+      ],
+      "tested_reply": "Kd6",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 573
+      },
+      "pv_san": [
+        "Kd6",
+        "Ke2",
+        "Ke6",
+        "Kd2",
+        "Ke5",
+        "cxb4",
+        "cxb4",
+        "axb4",
+        "Kd4",
+        "Kc2",
+        "c3",
+        "bxc3+",
+        "Kxe4",
+        "Kb2",
+        "a3+",
+        "Kxa3",
+        "Ke5",
+        "Kb3",
+        "Kf5",
+        "b5",
+        "Ke5",
+        "Ka3"
+      ],
+      "pv_uci": [
+        "e5d6",
+        "f3e2",
+        "d6e6",
+        "e2d2",
+        "e6e5",
+        "c3b4",
+        "c5b4",
+        "a3b4",
+        "e5d4",
+        "d2c2",
+        "c4c3",
+        "b2c3",
+        "d4e4",
+        "c2b2",
+        "a4a3",
+        "b2a3",
+        "e4e5",
+        "a3b3",
+        "e5f5",
+        "b4b5",
+        "f5e5",
+        "b3a3"
+      ],
+      "legally_replayed": true,
+      "price_events": [
+        {
+          "absolute_ply_zero_based": 8,
+          "suffix": true,
+          "san": "cxb4",
+          "uci": "c3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "c3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "b4"
+          },
+          "capture_square": "b4"
+        },
+        {
+          "absolute_ply_zero_based": 9,
+          "suffix": true,
+          "san": "cxb4",
+          "uci": "c5b4",
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "c3"
+          },
+          "capture_square": "b4"
+        },
+        {
+          "absolute_ply_zero_based": 10,
+          "suffix": true,
+          "san": "axb4",
+          "uci": "a3b4",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "a3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "capture_square": "b4"
+        },
+        {
+          "absolute_ply_zero_based": 14,
+          "suffix": true,
+          "san": "bxc3+",
+          "uci": "b2c3",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "b2"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c4"
+          },
+          "capture_square": "c3"
+        },
+        {
+          "absolute_ply_zero_based": 15,
+          "suffix": true,
+          "san": "Kxe4",
+          "uci": "d4e4",
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "capture_square": "e4"
+        },
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix": true,
+          "san": "Kxa3",
+          "uci": "b2a3",
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "a4"
+          },
+          "capture_square": "a3"
+        }
+      ],
+      "ending_fen": "8/8/5p2/1P2k3/8/K1P3P1/8/8 b - - 2 47",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    },
+    {
+      "work_id": "work:4",
+      "execution_key_sha256": "c31bd68199048c6b3c0bd724f45990e5733e2e3cb6bab5a92e9c209254394ed7",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3"
+      ],
+      "tested_reply": "f5",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 573
+      },
+      "pv_san": [
+        "f5",
+        "exf5",
+        "Kxf5",
+        "g4+",
+        "Kg5",
+        "Kg3",
+        "Kg6",
+        "Kf4",
+        "Kf6",
+        "Ke4",
+        "Ke6",
+        "g5",
+        "Kd6",
+        "Kf5",
+        "Ke7",
+        "Ke5",
+        "Kf7",
+        "Kd5",
+        "Kg7",
+        "Kxc5",
+        "Kh7"
+      ],
+      "pv_uci": [
+        "f6f5",
+        "e4f5",
+        "e5f5",
+        "g3g4",
+        "f5g5",
+        "f3g3",
+        "g5g6",
+        "g3f4",
+        "g6f6",
+        "f4e4",
+        "f6e6",
+        "g4g5",
+        "e6d6",
+        "e4f5",
+        "d6e7",
+        "f5e5",
+        "e7f7",
+        "e5d5",
+        "f7g7",
+        "d5c5",
+        "g7h7"
+      ],
+      "legally_replayed": true,
+      "price_events": [
+        {
+          "absolute_ply_zero_based": 4,
+          "suffix": true,
+          "san": "exf5",
+          "uci": "e4f5",
+          "actor": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "capture_square": "f5"
+        },
+        {
+          "absolute_ply_zero_based": 5,
+          "suffix": true,
+          "san": "Kxf5",
+          "uci": "e5f5",
+          "actor": {
+            "side": "black",
+            "root_role": "king",
+            "root_square": "e5"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "capture_square": "f5"
+        },
+        {
+          "absolute_ply_zero_based": 22,
+          "suffix": true,
+          "san": "Kxc5",
+          "uci": "d5c5",
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "capture_square": "c5"
+        }
+      ],
+      "ending_fen": "8/7k/8/2K3P1/ppp5/P1P5/1P6/8 w - - 1 47",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    },
+    {
+      "work_id": "work:4",
+      "execution_key_sha256": "c31bd68199048c6b3c0bd724f45990e5733e2e3cb6bab5a92e9c209254394ed7",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "e3f3"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "Kf3"
+      ],
+      "tested_reply": "Ke6",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 591
+      },
+      "pv_san": [
+        "Ke6",
+        "Kf4",
+        "Kf7",
+        "Kf5",
+        "Kg7",
+        "g4",
+        "Kf7",
+        "e5",
+        "fxe5",
+        "Kxe5",
+        "Kg8",
+        "Kd5",
+        "Kf7",
+        "g5",
+        "Ke7",
+        "Kxc5",
+        "Kf7"
+      ],
+      "pv_uci": [
+        "e5e6",
+        "f3f4",
+        "e6f7",
+        "f4f5",
+        "f7g7",
+        "g3g4",
+        "g7f7",
+        "e4e5",
+        "f6e5",
+        "f5e5",
+        "f7g8",
+        "e5d5",
+        "g8f7",
+        "g4g5",
+        "f7e7",
+        "d5c5",
+        "e7f7"
+      ],
+      "legally_replayed": true,
+      "price_events": [
+        {
+          "absolute_ply_zero_based": 11,
+          "suffix": true,
+          "san": "fxe5",
+          "uci": "f6e5",
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "capture_square": "e5"
+        },
+        {
+          "absolute_ply_zero_based": 12,
+          "suffix": true,
+          "san": "Kxe5",
+          "uci": "f5e5",
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "capture_square": "e5"
+        },
+        {
+          "absolute_ply_zero_based": 18,
+          "suffix": true,
+          "san": "Kxc5",
+          "uci": "d5c5",
+          "actor": {
+            "side": "white",
+            "root_role": "king",
+            "root_square": "f3"
+          },
+          "victim": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "c5"
+          },
+          "capture_square": "c5"
+        }
+      ],
+      "ending_fen": "8/5k2/8/2K3P1/ppp5/P1P5/1P6/8 w - - 1 45",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    },
+    {
+      "work_id": "work:5",
+      "execution_key_sha256": "ddb83fcae03c0e102d6833089beafd6be454909a6adcc193ec2d7eba3432083f",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4"
+      ],
+      "tested_reply": "Ke6",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 0
+      },
+      "pv_san": [
+        "Ke6",
+        "Kd2",
+        "b3",
+        "Ke3",
+        "Ke7",
+        "Ke2",
+        "Ke6"
+      ],
+      "pv_uci": [
+        "e5e6",
+        "e3d2",
+        "b4b3",
+        "d2e3",
+        "e6e7",
+        "e3e2",
+        "e7e6"
+      ],
+      "legally_replayed": true,
+      "price_events": [],
+      "ending_fen": "8/8/4kp2/2p5/p1p1P1P1/PpP5/1P2K3/8 w - - 4 40",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    },
+    {
+      "work_id": "work:5",
+      "execution_key_sha256": "ddb83fcae03c0e102d6833089beafd6be454909a6adcc193ec2d7eba3432083f",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4"
+      ],
+      "tested_reply": "b3",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 0
+      },
+      "pv_san": [
+        "b3",
+        "Kf3",
+        "Kd6",
+        "Kf2",
+        "Ke6",
+        "Kg3",
+        "Ke7",
+        "Kf4",
+        "Ke6",
+        "e5",
+        "fxe5+",
+        "Kg5",
+        "e4",
+        "Kf4",
+        "Kd5",
+        "g5",
+        "e3",
+        "Kg3"
+      ],
+      "pv_uci": [
+        "b4b3",
+        "e3f3",
+        "e5d6",
+        "f3f2",
+        "d6e6",
+        "f2g3",
+        "e6e7",
+        "g3f4",
+        "e7e6",
+        "e4e5",
+        "f6e5",
+        "f4g5",
+        "e5e4",
+        "g5f4",
+        "e6d5",
+        "g4g5",
+        "e4e3",
+        "f4g3"
+      ],
+      "legally_replayed": true,
+      "price_events": [
+        {
+          "absolute_ply_zero_based": 13,
+          "suffix": true,
+          "san": "fxe5+",
+          "uci": "f6e5",
+          "actor": {
+            "side": "black",
+            "root_role": "pawn",
+            "root_square": "f7"
+          },
+          "victim": {
+            "side": "white",
+            "root_role": "pawn",
+            "root_square": "e4"
+          },
+          "capture_square": "e5"
+        }
+      ],
+      "ending_fen": "8/8/8/2pk2P1/p1p5/PpP1p1K1/1P6/8 b - - 1 45",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    },
+    {
+      "work_id": "work:5",
+      "execution_key_sha256": "ddb83fcae03c0e102d6833089beafd6be454909a6adcc193ec2d7eba3432083f",
+      "prefix_uci": [
+        "f3e3",
+        "f7f6",
+        "g3g4"
+      ],
+      "prefix_san": [
+        "Ke3",
+        "f6",
+        "g4"
+      ],
+      "tested_reply": "Kd6",
+      "depth": 16,
+      "white_score": {
+        "kind": "cp",
+        "value": 0
+      },
+      "pv_san": [
+        "Kd6",
+        "Kd2",
+        "b3",
+        "Ke2",
+        "Ke5",
+        "Kf3",
+        "Kd6"
+      ],
+      "pv_uci": [
+        "e5d6",
+        "e3d2",
+        "b4b3",
+        "d2e2",
+        "d6e5",
+        "e2f3",
+        "e5d6"
+      ],
+      "legally_replayed": true,
+      "price_events": [],
+      "ending_fen": "8/8/3k1p2/2p5/p1p1P1P1/PpP2K2/1P6/8 w - - 4 40",
+      "scope": "Finite owned observed forecast and actual original-actor captures, not a forced line, formal win or every later defense."
+    }
+  ],
+  "proved_but_absent_or_unorganized_human_connections": [
+    {
+      "topic": "Different useful plans under equally leading resistance",
+      "evidence": "After Ke3 f6 Kf3, work4 returns Kd6 and f5 tied at White+573, with Ke6+591. The Kd6 forecast uses Ke2/Ke6/Kd2 and queenside exchanges; the f5 forecast uses exf5/Kxf5/g4+ and king support. The Ke6 forecast uses useful king approach and a central trade.",
+      "missing_from_basic": "The prefix-consolidation body names Kd6 and Pg3 presence but gives none of the resulting tasks or response-dependent conversion.",
+      "limit": "Do not insist on the old five-move cycle or the same current next king move. Distinct plans preserve a useful task in these finite forecasts; not every later response is separately closed."
+    },
+    {
+      "topic": "Actual retained-arm queenside price",
+      "evidence": "The current Kd6 forecast exchanges original White c3 against original Black b4/c5, relocates original a3 to b4, later uses original b2 to capture original Black c4 on c3 with check, and allows Black Kxe4. White king then captures the original a4 pawn after its checking advance.",
+      "missing_from_basic": "Neither these prices nor why prepared Kd2 makes that exchange useful are stated.",
+      "limit": "Original e4 and c3 need not survive permanently. Their loss cannot invalidate the whole idea by event-list mismatch; the new task/user/king race must be assessed at its own board."
+    },
+    {
+      "topic": "Actual retained-arm central price and new use of the resource",
+      "evidence": "The equally leading f5 forecast contains exf5 Kxf5 g4+ Kg5 Kg3. Original e4 is lost after capturing original Black f7; the retained original g3 pawn checks the Black king and is then supported as a passer/king-route resource.",
+      "missing_from_basic": "The new pawn use/check and role transfer are not printed. Pg3 presence after Kd6 cannot stand in for this different leading defense.",
+      "limit": "Current finite PV shows useful continuation, not uniqueness or every conversion defense; no root sole-cause inference."
+    },
+    {
+      "topic": "How the spent-arm defender holds",
+      "evidence": "After Ke3 f6 g4, work5 has Ke6, b3 and Kd6 all at0. The b3 forecast delays White approach, then e5 fxe5+ forces a king reply and lets Black advance its resulting e-pawn. The pawn remains on g4 initially but that survival does not itself answer the blockade.",
+      "missing_from_basic": "Only b3 and Pg4 persistence are printed, with no blockade, forced check reply or contrasting useful result.",
+      "limit": "b3 is one tied returned leader; do not claim unique strongest, or confuse it with the original first reply to root g4 or a different late book b3."
+    }
+  ],
+  "first_remaining_human_operation": "Turn a completed owned option-value and resistance pair into the smallest meaningful consequence: which adequate defensive task survives or is broken, which friendly plan/user replaces the previous one, and what price makes the resulting activity useful. Merely replacing no-choice facts with original-pawn persistence after a reply is still insufficient.",
+  "original_root_connection_still_needed": "The numeric root result is held, and the same f6 timing transposition is legally meaningful, but current original first-Black coverage and an explained response-sensitive plan/price chain are needed before attributing the original choice loss to this component. The root pawn advance and king preparation also change placement/turn; no isolated single-feature cause is proved.",
+  "preserved_judgments": {
+    "old_four_full_utility": "0/4 unchanged",
+    "eight_source_full_utility": "0/8 unchanged",
+    "ordinary10b_basic": "Partial original human judgment unchanged",
+    "research_basic": "Bounded local delivery gain; partial original human judgment unchanged"
+  },
+  "scope": "No main/test/UI/runner edits, compiler or engines. Current supplied audit files read only after firstpass seals; original identities legally replayed from fixed H05 root. This is an evidence interpretation supplement, not a new fixture or criteria change."
+}

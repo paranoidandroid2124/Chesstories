@@ -1,0 +1,1034 @@
+{
+  "scope": "Order of observation table rows may change. Full nested content, including move order within each path, is preserved.",
+  "rows": [
+    {
+      "group": "opened35",
+      "id": "wch2016-07",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2016-08",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2016-09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2016-10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2016-11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2016-12",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-07",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-08",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "candidates2018-12",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-07",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-08",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "wch2024-12",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-01",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-02",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-03",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-04",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-05",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-08",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "COR06-11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-01",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-03",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-04",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-05",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-07",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "opened35",
+      "id": "TAT25-11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B01",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B02",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B03",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B04",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B05",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B06",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B07",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B08",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B09",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B10",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B11",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B12",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B13",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    },
+    {
+      "group": "prior14",
+      "id": "B07Q",
+      "fields": {
+        "statements": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "paths": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        },
+        "positions": {
+          "same_multiset": true,
+          "removed": 0,
+          "added": 0
+        }
+      }
+    }
+  ]
+}

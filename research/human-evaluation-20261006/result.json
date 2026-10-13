@@ -1,0 +1,394 @@
+{
+  "version": "humanv10",
+  "generated_at_utc": "2026-10-05T17:54:28.434433+00:00",
+  "objective": {
+    "goal_created_utc": "2026-10-05T15:17:55Z",
+    "deadline_utc": "2026-10-06T06:17:55Z",
+    "starting_version": "purposev7",
+    "objective": "기본 해설만 읽어 실제 선택의 의미, 중요한 응수, 대가를 회수할 수 있게 한다. 필요한 내용 보존과 과잉 설명을 별도로 판독한다.",
+    "first_observed_problem": "같은 대상에 대한 비교 질문이 독자에게 중요한 교환/손실 차이를 앞세우지 못하고, 반복되는 SAN과 기물 대명사가 두 수순의 구분을 흐린다.",
+    "sources": [
+      "이미 공개된 educational13",
+      "이미 개봉된 저장 보고서 35개",
+      "G드라이브 이론서에서 이번 대화 중 읽은 장면"
+    ],
+    "excluded": [
+      "sealed/held-out 입력",
+      "migration reference corpus"
+    ],
+    "human_reading_constraints": [
+      "현재 국면에서 해야 할 일과 실제 수가 해내는 일을 먼저 판독한다.",
+      "익숙한 목적을 수행한 수와 실제 손실/놓친 기회가 있는 수를 동일한 길이로 설명하지 않는다.",
+      "물질 대가는 평가의 이유를 자동으로 증명하지 않는다.",
+      "관찰된 응수를 강제 수순이나 실제 경기 기록으로 바꾸지 않는다.",
+      "책 저자의 판단을 새 엔진 결과로 주장하지 않는다.",
+      "출력 성공/관계 개수/문장 길이를 인간 이해의 성공률로 세지 않는다."
+    ]
+  },
+  "verified_tests": 362,
+  "changed_main": [
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\BasicPurposeReading.scala",
+      "before": null,
+      "after": "2506e598e21c7a1e3f5b09d09b45feacbb5e5157b8323e7419b304fda68157cb"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryAnswer.scala",
+      "before": "5eb08ea1f8a77ace109fc7a3a3eb9bb59eecd5afbf5857b71a2d2908c947e8eb",
+      "after": "7e9fba2062ec01830d84454d7f5dedebf7447cce30d81dab8c43628009680a76"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryEnglish.scala",
+      "before": "b9ad225453f82272c61ecbece5c5052aa78d12d8dfe1468bf4cc5b89ca63c360",
+      "after": "ee0876c2da1334f0f3fc94219f741f4ee5c45617ce658f374d3d2dd3bbc3071d"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\MoveWorkProjection.scala",
+      "before": "7c50633a55b3938c58d5ea5d7535be7fa64330c462ae880f825dc5e26c6fffd2",
+      "after": "1e6daf2efe2539b373d8b4064264cbd03f36aa5428933529da91d9b252f9fc70"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootQuestionSummary.scala",
+      "before": "11618eb349c57c4ff0b976532704637acb7e881a51a7ef76ce5a617422362938",
+      "after": "7bffd90c81efcf778b7a9fac576cea1ef0214c1444d3ddfd5be2216487ab5cef"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootSubjectComparison.scala",
+      "before": "2585346422ecfa6b815daab4d0baa997e4bc1e41f78594f289f9ee29111b3e01",
+      "after": "40c3adbb3789b4d6ff12f0b08554e277b8fc32bacd5593c458298fe8f7032018"
+    }
+  ],
+  "changed_tests": [
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\BasicPurposeReadingTest.scala",
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\CommentaryAnswerTest.scala",
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\CommentaryEnglishCompositionTest.scala",
+    "chesstory-runtime\\src\\test\\scala\\io\\chesstory\\runtime\\MaterialContrastTest.scala"
+  ],
+  "ui_and_schema_unchanged": true,
+  "verification": {
+    "actual_to_control": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "upstream_unchanged": 14,
+      "observed_facts_unchanged": 14,
+      "lost_delivery": 0,
+      "text_changed": 0,
+      "prices_moved_to_detail": 0,
+      "prices_lost_everywhere": 0,
+      "missing_mandatory": 0,
+      "duplicate_core_price_cases": 0
+    },
+    "fresh": {
+      "positions": 14,
+      "fully_replayed": 14,
+      "upstream_unchanged": 14,
+      "observed_facts_unchanged": 14,
+      "lost_delivery": 0,
+      "text_changed": 12,
+      "prices_moved_to_detail": 10,
+      "prices_lost_everywhere": 0,
+      "missing_mandatory": 0,
+      "duplicate_core_price_cases": 0
+    },
+    "regression": {
+      "positions": 35,
+      "fully_replayed": 35,
+      "upstream_unchanged": 35,
+      "observed_facts_unchanged": 35,
+      "lost_delivery": 0,
+      "text_changed": 25,
+      "prices_moved_to_detail": 0,
+      "prices_lost_everywhere": 0,
+      "missing_mandatory": 0,
+      "duplicate_core_price_cases": 0
+    }
+  },
+  "actual_engine_execution": {
+    "positions": 14,
+    "completed": 14,
+    "synthetic_reports": false,
+    "controlled_after_replay": true,
+    "new_after_engine_execution": false
+  },
+  "frontend": {
+    "fresh14": {
+      "snapshots": 14,
+      "exact_link_checks": 434,
+      "rejected_mutations": 10
+    },
+    "opened35": {
+      "snapshots": 35,
+      "exact_link_checks": 1786,
+      "rejected_mutations": 10
+    },
+    "synthetic13": {
+      "snapshots": 13,
+      "exact_link_checks": 252,
+      "rejected_mutations": 10
+    }
+  },
+  "reading": {
+    "version": "humanv10",
+    "scope": "같은 개발자가 기본 영어 문장을 직접 읽은 내용 판독이다. 필요한 요점과 과잉 설명을 별도 판단하며 독립적인 초심자 실험이나 전체 기능의 성공률로 세지 않는다. 개발에 사용한 사례이고 봉인 평가가 아니다.",
+    "source": "comparison-humanv10.json; freshbefore/freshcontrol2/freshafter10의 동일 엔진 보고서, 기존 개봉 35개, 별도 합성 educational13",
+    "scope_corrections": [
+      "교육용 B07의 사전 지정 Nxd4/Qxd4 비교와 새 실제 엔진 B07의 Nxd4/Bc4 비교는 다르다. Qxd4를 실제 착수로 요청한 B07Q를 별도로 실행했다.",
+      "새 실제 B05·B06·B07은 best_choice이다. 그 delta와 playable_loss는 runner-up 대안의 비교 판정이며 실제 착수의 손실로 보고하지 않는다.",
+      "새 실제 B03은 inaccuracy이다. 합성 B03의 같은 평가값을 새 실제 사례의 평범한 동등 선택으로 옮겨 쓰지 않는다.",
+      "원점뿐인 합성 B12와 후속 응수가 실제 검색된 B12를 구분한다. 전자는 응수 미관찰을 계속 명시한다.",
+      "합성 원자료 B11은 cp 0과 실제 메이트가 모순된다. 여기서는 평가/비교가 미전달된 것을 성공으로 세지 않는다. 공개 경로의 별도 합성 B11과 새 실제 엔진 B11에는 각각 일관된 보고서가 있다."
+    ],
+    "fresh14": [
+      {
+        "id": "B01",
+        "needed": "충족",
+        "excess": "수용 가능",
+        "note": "실제 Nf3의 전개와 d4/e5 통제, 대안 Be3의 전개를 현재 목적만으로 읽을 수 있다. 1465→116자로 바뀌었으며 기존 미래 교환 가격 8개는 상세에 보존된다. 가까운 엔진 비교와 현재 공격/방어의 검사로 제한한 충분한 답이지 이후 안전의 증명은 아니다."
+      },
+      {
+        "id": "B02",
+        "needed": "충족",
+        "excess": "남음",
+        "note": "기존 Nf3의 현재 전개 문장을 캐슬링 공간의 후속 사용보다 먼저 읽게 했다. 상대 d6 폰을 겨냥하는 Bf4의 현재 접촉 때문에 양쪽의 단순 전개로 축약하지 않았다. Bh6의 공격 종료, 폰의 최종 존재, 먼 미래 교환까지 660자가 이어지는 과잉은 남는다."
+      },
+      {
+        "id": "B03",
+        "needed": "부분 충족",
+        "excess": "남음",
+        "note": "Nc3의 전개와 e4 지원은 들어 있지만, 기본 답은 다음 Nd5부터 시작한다. 실제 inaccuracy의 이유를 분명히 답하지 못하고 미래 공격·차단·교환·체크가 1351자로 나열된다. 실수 등급을 평범한 짧은 목적 답으로 덮지 않은 것은 보존 경계이며 이 사례의 내용 성공은 아니다."
+      },
+      {
+        "id": "B04",
+        "needed": "충족",
+        "excess": "수용 가능",
+        "note": "캐슬링, 룩의 이동, 공격받는 f2 폰에 더해진 지원을 회수할 수 있다. 현재 방어가 바뀌므로 단순 목적 두 문장으로 축약하지 않았다. 253자의 기존 답을 보존했다."
+      },
+      {
+        "id": "B05",
+        "needed": "부분 충족",
+        "excess": "남음",
+        "note": "실제 best_choice Rfe1은 이제 첫 문장 'Rfe1 places the rook on the open e-file.'로 현재 목적을 말한다. 실제 엔진 대안은 g4이며 그 현재 폰 목적 자료는 없다. 그쪽의 미래 g5 공격과 킹 이동을 건전한 대안의 충분한 설명으로 세지 않는다. 기존 전체 비교 내용은 남아 668→709자가 됐다."
+      },
+      {
+        "id": "B06",
+        "needed": "충족",
+        "excess": "남음",
+        "note": "실제 best_choice Nc6가 현재 공격받는 e5 폰을 지원한다는 답과 Nf6 쪽 Nxe5의 대가를 모두 보존했다. exd4가 공격하던 폰을 잡았다는 뜻은 포획 문장에 담고 동일 회피 문장은 없앴다. 나이트의 후속 공격/회피와 캐슬링 공간까지 985자로 이어지는 과잉은 남는다."
+      },
+      {
+        "id": "B07",
+        "needed": "부분 충족",
+        "excess": "남음",
+        "note": "실제 Nxd4는 best_choice이며 대안은 Bc4이다. 두 기록에서 d4 폰을 잡는 내용과 Nxd4 가지 표지를 회수할 수 있다. 기존 Bc4 목적이 먼저 나오고 다른 가지의 반복 Nxd4는 아직 명료한 짧은 선택 설명으로 조직되지 않았다. Qxd4의 퀸 문제는 B07Q에 따로 판독했다."
+      },
+      {
+        "id": "B08",
+        "needed": "부분 충족",
+        "excess": "큼",
+        "note": "Nxd5 계열의 실제 포획과 Nxf7/Kxf7, Qf3+/Ke6, Bb5+/c6의 체크 응수 및 차단 관계를 남겼다. 잡힌 공격자의 동일 회피를 합쳤어도 3687자이고 같은 사건의 공격·회피·체크가 반복된다. 필수 사건 보존은 확인되지만 기본 답에서 실제 실수의 요점을 빨리 회수하는 문제는 해결되지 않았다."
+      },
+      {
+        "id": "B09",
+        "needed": "부분 충족",
+        "excess": "남음",
+        "note": "Bc5의 전개와 달리 Nxe5로 e5 폰이 잡히는 실제 가격, Nc6의 방어, Nxc6/dxc6 교환이 본문에 남는다. 동일 공격자의 포획/회피 반복은 줄었다. 전개 목적과 대안의 긴 수순이 먼저 나오므로 실수의 중요한 대가를 앞세우는 조직은 여전히 약하다."
+      },
+      {
+        "id": "B10",
+        "needed": "충족",
+        "excess": "남음",
+        "note": "실제 Re1 기록에는 포획/승격이 없고 Rxf6 기록에서는 흑 나이트가 잡힌다는 차이가 앞에서 읽힌다. 즉시 가능한 Rxf6와 Re1의 실제 e4 지원은 그대로 남았다. 604자의 뒤쪽 최종 존재 기록은 필요성이 약하다. 관찰한 물질 차이로 강제성이나 보상 부족을 새로 주장하지 않는다."
+      },
+      {
+        "id": "B11",
+        "needed": "충족",
+        "excess": "수용 가능",
+        "note": "실제 Re1 뒤 룩 손실과 Rxe1#의 메이트가 처음에 나오고 메이트 종료 문장은 한 번이다. 대안 Rd1의 Rxe8+/Kxe8 응수와 양쪽 룩 교환은 남았다. 354→299자이며 실제 착수의 결정적인 결과를 회수할 수 있다."
+      },
+      {
+        "id": "B12",
+        "needed": "충족",
+        "excess": "수용 가능",
+        "note": "이번 실제 엔진 요청에는 양쪽 후속 응수가 있다. Nf3와 Be3의 현재 전개가 충분한 기본 답으로 선택돼 391→116자가 됐고 미래 교환 가격 2개는 상세에 보존된다. 응수가 없던 합성 B12에 이 판단을 옮기지 않는다."
+      },
+      {
+        "id": "B13",
+        "needed": "부분 충족",
+        "excess": "남음",
+        "note": "이전에는 먼 미래 Nh4부터 시작했지만, 이제 이미 있던 현재 Nf3의 전개 문장을 해당 가지의 맨 앞에 읽게 했다. 같은 내용과 가격이 모두 남아 1029자다. 실제 e4 대안의 현재 중앙 폰 목적은 표현되지 않고 후속 비숍 공격과 교환이 대신한다. 순서 정리는 부분 개선이며 충분한 비교 답과 과잉 억제는 남았다."
+      },
+      {
+        "id": "B07Q",
+        "needed": "충족",
+        "excess": "남음",
+        "note": "실제 Qxd4 기록에서 퀸을 폰과 나이트에 내준다는 대가가 첫 문장이다. Nxd4 쪽은 bxc6까지의 나이트 교환과 폰 손실만 명시한다. 뒤의 다른 폰 포획을 이 부분 합계에 섞지 않았고 실제 모든 포획은 기존 본문/상세에 남는다. 전체 1089자에는 아직 먼 미래 공격/회피/존재 기록이 많다."
+      }
+    ],
+    "opened35_reading": [
+      {
+        "id": "COR06-02",
+        "needed": "가격 보존",
+        "note": "Nbd5에서 피한 나이트가 Nb4 뒤 Bxb4로 잡히는 가격이 기본 답에 남는다. Bc6의 공간 비우기와 Rb8 지원도 남는다. 비교 질문 뒤 기록 나열은 여전히 길다."
+      },
+      {
+        "id": "COR06-08",
+        "needed": "가격 보존",
+        "note": "Nd7 쪽 Nxd4/Qxd4와 exd6/Bxd6/Qxd6, Qxc3의 다른 기물 손실, Bd7 쪽 fxe6/fxe6와 Qxc2가 모두 기본 답에 남는다. 폰을 잡았다는 대명사는 정확한 역할로 바뀌었으며 여러 기물의 최종 존재 설명은 남는다."
+      },
+      {
+        "id": "COR06-09",
+        "needed": "가격·체크 응수 보존",
+        "note": "양쪽 비숍과 사용한 나이트의 후속 가격 및 Nxe7+에 대한 각각 Nxe7/Qxe7 응수가 기본 답에 남는다. c3 지원 사용의 cxd4 재포획도 남는다. 체크/회피/포획의 겹친 표현은 아직 반복되며 축약 성공으로 세지 않는다."
+      },
+      {
+        "id": "candidates2018-10",
+        "needed": "현재 방어·후속 가격 보존",
+        "note": "Bxf4와 exf4의 첫 되잡기만으로 닫지 않고 e5 폰의 지원 차이, 뒤 Raxb8/Qxc5 및 Bxg6/hxg6 손실을 남겼다. root 지원 기제와 자기 대가가 비교 물질 요약에 의해 대체되지 않았다."
+      },
+      {
+        "id": "COR06-03",
+        "needed": "사용한 폰의 가격 보존",
+        "note": "fxe6로 공격하던 비숍을 잡는 문장은 동일 회피와 합쳐졌지만 그 폰이 다음 fxe6로 잡히는 가격과 Bxe6+/Kh8 응수는 본문에 남는다. 다른 공격자/룩의 공격 회피와 반복 체크는 이번에 일반 축약하지 않았다."
+      },
+      {
+        "id": "TAT25-01",
+        "needed": "떠난 방어의 실제 가격 보존",
+        "note": "Rc8로 a7 지원이 사라진 뒤 Bxa7의 폰 손실이 남는다. 뒤 Ra8에서 비숍을 공격한다는 관계만 보여주고 앞선 Bxa7을 감추었던 이전 실패가 재발하지 않는다."
+      },
+      {
+        "id": "TAT25-04",
+        "needed": "공간을 사용한 기물의 손실 보존",
+        "note": "e5가 비운 e4를 Ne4가 실제 사용하고 그 나이트가 fxe4로 잡히는 비용을 기본 답에 남겼다. 공간 사용의 유용한 공격만 보여주고 뒤 가격을 상세로 보내지 않았다."
+      },
+      {
+        "id": "TAT25-11",
+        "needed": "지원 사용·선행 가격·체크 응수 보존",
+        "note": "캐슬링 뒤 h7의 킹 지원이 Bxh7+/Kxh7에서 실제 사용되는 사건, Qd3+/Kg8의 이어진 체크, 선행 e4 공간 비우기와 Nxc5/Bxc5/dxc5 가격이 모두 기본 답에 남는다. 포획의 여러 의미가 겹쳐 반복되는 과잉은 남는다."
+      }
+    ],
+    "synthetic13_notes": [
+      "원자료 B03은 Nc3와 d4의 같은 합성 평가다. d4 exd4 Nxd4에서 exd4의 잡힌 공격자를 포획 문장으로 설명하고 독립된 동일 회피는 없앴다. 이를 실제 B03의 부정확 원인을 해결한 결과로 세지 않는다.",
+      "원자료 B11의 평가와 종료 모순은 평가 답이 없는 상태로 보존했다. 모순된 가격/평가를 정상 답으로 전달하게 만들지 않았다.",
+      "원점뿐인 원자료 B12는 Nf3/Be2 목적 뒤 'no following reply is recorded'를 계속 명시한다. 현재 존재만으로 응수 성공을 인증하지 않는다.",
+      "공개 경로 13건은 합성 보고서를 받은 상태의 표시/전달 검증이다. 12건의 추가 investigation이 남았다는 표시를 완료 성공으로 세지 않는다."
+    ],
+    "remaining": [
+      "현재 목적 자료에 없는 중앙 폰 전진, 닫힌 파일을 여는 준비, 장기 계획은 여전히 미래 관계의 나열로 흘러가기 쉽다. 실제 B05의 g4와 B13의 e4 대안이 해당한다.",
+      "실수의 등급과 독자가 알아야 할 원인을 연결하는 공통 질문 선택은 미완성이다. 실제 B03·B08·B09의 기본 답은 그 한계를 보여준다.",
+      "B07처럼 대안 목적이 먼저 나오는 조직과 어떤 비교 질문을 먼저 고를지의 전역 중요도 경쟁은 남았다. B13에서 해당 가지의 독립 목적 문장을 앞에 놓았어도 그 뒤의 긴 미래 서술과 대안 목적 부재는 해결되지 않았다.",
+      "B08과 COR06-09처럼 공격·회피·체크·존재·차단을 함께 설명하는 답은 여전히 매우 길다. 정확히 잡힌 동일 공격자에 한정한 합침을 다른 사건 전체의 축약으로 확대하지 않았다.",
+      "보상이 있는 손실, 쉬운 실행, 최정밀은 아니지만 결과를 유지하는 선택을 독자의 목적에 맞춰 판단하는 기능은 추가하지 않았다. 물질 요약과 엔진 판정을 같은 것으로 다루지 않는다.",
+      "이 사례들은 개발에 사용한 개봉 자료다. 독립적인 초심자가 기본 답만 읽고 무엇을 이해했는지에 대한 평가와 새 게임/봉인 자료에서의 일반화 검증은 아직 없다."
+    ]
+  },
+  "book_inferences": {
+    "scope": "이번 대화에서 이미 읽고 저장한 이론서의 선택 장면을 다시 대조했다. 통독, 독립적인 사람 평가, 새 엔진 검증으로 세지 않는다. 저자의 판단과 제품에 적용한 해석은 구분한다.",
+    "sources": [
+      {
+        "title": "The Catalan - move by move",
+        "url": "https://drive.google.com/file/d/1TP-hFWlUE8LvlOR6tq2PNxXCFSZnW2Bc/view?usp=drivesdk",
+        "note": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/opening-reading.json"
+      },
+      {
+        "title": "John Doknjas, Opening Repertoire: The Modern Benoni",
+        "url": "https://drive.google.com/file/d/1oWaFlLsz95MMXmjwDZD7_PiU2A7Uv2Vm/view?usp=drivesdk",
+        "note": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/opening-reading.json"
+      },
+      {
+        "title": "Herman Grooten, Understanding Before Moving 3: Sicilian Structures Part 1",
+        "url": "https://drive.google.com/file/d/1H4rsfR0riThNdo6xD1u3s5_egzhl-mEX/view?usp=drivesdk",
+        "note": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/sicilian/reading.json"
+      },
+      {
+        "title": "Matthew Sadler and Natasha Regan, Game Changer",
+        "url": "https://drive.google.com/file/d/1U9OZ1YRZKOREpYC3IJFs9AAUtIBnJZtu/view",
+        "note": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/gamechanger/reading.json"
+      },
+      {
+        "title": "Jesus de la Villa, 100 Endgame Patterns You Must Know",
+        "url": "https://drive.google.com/file/d/1QN_salSDww0E14h6y-WPY8m8cDWzsrwW/view?usp=drivesdk",
+        "note": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/endgame/reading-notes.json"
+      }
+    ],
+    "inferences": [
+      {
+        "human_task": "일상적인 전개와 계획의 계속",
+        "evidence_scene_refs": "카탈란 C01·C02, 베노니 B03, 시실리안 S1·S2의 독서 기록",
+        "observed_in_reading": "카탈란의 평범한 전개 구간은 매 수에 독립적인 사건을 붙이지 않는다. Nbd2는 e4의 준비와 퀸의 길 보존이라는 현재 할 일을 갖는다. 베노니의 ...a6와 ...O-O처럼 여러 건전한 선택도 있다.",
+        "our_inference": "현재 목적을 이해한 독자에게 미래 수순의 모든 관계를 설명할 의무가 생기지는 않는다. 좋은 수가 여럿일 때 기록된 미래 차이만으로 허구의 우열을 만들지 않는다.",
+        "implemented": "정확한 엔진 비교가 허용하는 범위에서 현재 전개·캐슬링·파일 목적을 충분한 기본 답으로 인정한다. 한쪽만 확인되면 실제 착수의 목적을 보완하거나 이미 있던 독립 문장을 해당 가지의 앞에 놓는다. 현재 공격·체크·방어 변화는 별도로 검사한다.",
+        "remaining": "현재 목적 자료에 없는 중앙 폰 전진, 닫힌 파일의 준비, 장기 계획은 이 경로에서 설명하지 못한다."
+      },
+      {
+        "human_task": "좋은 계획이어도 지금 해야 할 일을 놓쳤는가",
+        "evidence_scene_refs": "카탈란 C03, 시실리안 S4·S6, 엔드게임 E03의 독서 기록",
+        "observed_in_reading": "카탈란의 평범한 ...Nbd7이 e5의 시간을 주는 장면, 시실리안의 ...Rd8보다 즉시 ...d5가 필요한 장면, 논리적인 Bg3가 Nf5의 기회를 놓치는 장면은 계획의 이름만으로 평가할 수 없다.",
+        "our_inference": "공격받는 기물의 의무, 상대의 즉각적인 응수, 놓친 실행 시점을 먼저 본다. 실수의 이름이나 물질 손실만으로 그 원인을 대신하지 않는다.",
+        "implemented": "부정확·실수·블런더 판정, 메이트 전망, 현재 방어 변화가 있는 사례는 평범한 짧은 목적 답으로 바꾸지 않는다. 실제 퀸 손실과 메이트는 중요한 결과부터 읽게 했다.",
+        "remaining": "물질 손실이 없는 전략적 실수와 놓친 타이밍의 원인을 공통 경로에서 고르는 문제는 남았다."
+      },
+      {
+        "human_task": "내준 재료에 어떤 보상이 있는가",
+        "evidence_scene_refs": "Game Changer GC3·GC4, 시실리안 S3, 엔드게임 E04·E06·E07의 독서 기록",
+        "observed_in_reading": "Game Changer의 폰 제공, 파일 개방, 기물 활동은 비용과 적극적인 용도를 함께 본다. 시실리안에서 최정밀이 아니어도 승리를 해치지 않는 수, 엔드게임에서 결과를 유지하면서 실행만 어려워지는 수는 별도 판단이다.",
+        "our_inference": "재료의 대가, 국면 평가, 실행의 난이도는 같은 항목이 아니다. 대가를 먼저 알려주되 보상 부족이나 패배의 원인을 새로 추정하지 않는다.",
+        "implemented": "본문이 이미 소유한 실제 교환의 대가를 요약하고, 부분 구간이면 끝 수를 명시한다. 지원의 실제 사용과 후속 손실은 본문에서 보존한다. 평가 판정은 변경하지 않는다.",
+        "remaining": "충분한 보상과 쉬운 실행, 이길 수 있는 결과의 유지 여부를 사람의 목적에 따라 판정하는 기능은 이번 변경에 포함되지 않는다."
+      },
+      {
+        "human_task": "결정적인 블런더의 결과를 빠르게 이해하기",
+        "evidence_scene_refs": "Game Changer GC7, 엔드게임 E08의 독서 기록",
+        "observed_in_reading": "엔드게임의 ...b2 뒤 Rxb2와 스테일메이트, Game Changer의 ...Qxh2 뒤 퀸 포획은 필요한 짧은 사건으로 판단의 핵심을 회수할 수 있다.",
+        "our_inference": "결과가 결정적인 경우에는 긴 주변 관계보다 그 결과와 확인한 응수를 먼저 읽게 한다. 같은 사건의 반복 문장이 증거를 강화하지는 않는다.",
+        "implemented": "실제로 둔 수의 메이트 결과를 대안보다 먼저 제시하고, 완료 검사에서 같은 종료 사실을 중복 추가하지 않는다. 포획으로 제거한 공격자의 회피 설명은 같은 문장에 담는다.",
+        "remaining": "모든 전술을 가장 쉬운 교육용 수순으로 선택하거나 자동으로 축약하는 기능은 아니다."
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "path": "research\\human-evaluation-20261006\\acceptance.json",
+      "sha256": "69528c5b08a37276a5f197b3d3e5c0c7fbad0a2db409d0ab2b651b6b126edb41"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\baseline-sources.json",
+      "sha256": "aec41aa344d8ed7a59eddf603446b2521f980c530cd0bbde31f687491c20a6f2"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\reading.json",
+      "sha256": "46add5db60fc57946e62aaf394a6d259e04b1b5276ed62f2ed2e738385b332fd"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\book-implications.json",
+      "sha256": "35fa3be8d38952b1e51ae69d60fd22f5f5b4da95c1d0a9ba07a292be9e1a1d14"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\comparison-humanv10.json",
+      "sha256": "21abdff8e8c06c0cbf2256b9336a870dbae44a437a7750efec774d3324532a33"
+    },
+    {
+      "path": "target\\relationship-delivery-20261004\\test-run-humanv10.log",
+      "sha256": "be6e6d6afb06b3ade0b019b9f95669619185d0c3df25e9ded2068d0c46dd51d1"
+    },
+    {
+      "path": "target\\relationship-delivery-20261004\\main-manifest-humanv10.json",
+      "sha256": "2f80dfe12d7c37f83c0ef48142c744ffd4b754cc0ac3f7e2be2aa5d34c6479f9"
+    },
+    {
+      "path": "target\\relationship-delivery-20261004\\test-manifest-humanv10.json",
+      "sha256": "af5b1fbc365d2190fb1c6ef0d8eba8659dcc33035846b140f152cafb39673e70"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\frontend-fresh14-humanv10.json",
+      "sha256": "1932da947e6239088f357274adb0e902cd994b814c8f4ab89c1d3038eb206d29"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\frontend-opened35-humanv10.json",
+      "sha256": "75d2c2d78191f77da93fea72a8f5cb5ce634c200dbc790f62b3d8cec073a2b17"
+    },
+    {
+      "path": "research\\human-evaluation-20261006\\frontend-synthetic13-humanv10.json",
+      "sha256": "9967d50ab2afdc83b6cdab100724fe31e532b87d4461fd36056d2e9b83b7fdee"
+    }
+  ]
+}

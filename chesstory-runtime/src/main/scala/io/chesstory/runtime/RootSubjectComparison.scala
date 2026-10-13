@@ -13,6 +13,15 @@ private[runtime] object RootSubjectComparison:
   import RootQuestionSummary.{Arm, MoveRef}
   import LineContinuationInvestigation.Event
 
+  private def selectedRootPair(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      pair: List[PreparedPath], answer: CommentaryInvestigation.Answer): Option[(PreparedPath, PreparedPath)] =
+    for
+      actual <- paths.paths.find(_.line.ref.id == answer.referenceLineId)
+      alternative <- paths.paths.find(_.line.ref.id == answer.alternativeLineId)
+      if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
+        packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+    yield actual -> alternative
+
   /** Read only the current owned root pair and its separate same-position
     * retreat test. Exact move/piece checks also protect typed realization. */
   def validReplyConstraint(paths: PreparedPaths, value: ReplyConstraint): Boolean =
@@ -79,10 +88,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val readings = proofs.flatMap { proof =>
       for
-        actual <- path(proof.owner.answer.referenceLineId)
-        alternative <- path(proof.owner.answer.alternativeLineId)
-        if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-          packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+        (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer)
         test <- proof.testAnswer
         available <- path(test.referenceLineId)
         otherwise <- path(test.alternativeLineId)
@@ -210,10 +216,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val candidates = for
       proof <- proofs
-      actual <- path(proof.owner.answer.referenceLineId).toList
-      alternative <- path(proof.owner.answer.alternativeLineId).toList
-      if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-        packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+      (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer).toList
       answer <- proof.answer.toList
       spent <- path(answer.referenceLineId).toList
       kept <- path(answer.alternativeLineId).toList
@@ -320,10 +323,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val candidates = for
       proof <- proofs
-      actual <- path(proof.owner.answer.referenceLineId).toList
-      alternative <- path(proof.owner.answer.alternativeLineId).toList
-      if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-        packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+      (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer).toList
       answer <- proof.answer.toList
       held <- path(answer.alternativeLineId).toList
       otherReply <- path(answer.referenceLineId).toList
@@ -469,10 +469,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val candidates = proofs.flatMap { proof =>
       for
-        actual <- path(proof.owner.answer.referenceLineId)
-        alternative <- path(proof.owner.answer.alternativeLineId)
-        if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-          packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+        (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer)
         test <- proof.testAnswer
         waited <- path(test.alternativeLineId)
         retreat <- path(test.referenceLineId)
@@ -737,10 +734,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val candidates = proofs.flatMap { proof =>
       for
-        actual <- path(proof.owner.answer.referenceLineId)
-        alternative <- path(proof.owner.answer.alternativeLineId)
-        if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-          packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+        (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer)
         test <- proof.testAnswer
         waited <- path(test.referenceLineId)
         counter <- path(test.alternativeLineId)
@@ -858,10 +852,7 @@ private[runtime] object RootSubjectComparison:
     def path(id: String) = paths.paths.find(_.line.ref.id == id)
     val candidates = proofs.flatMap { proof =>
       for
-        actual <- path(proof.owner.answer.referenceLineId)
-        alternative <- path(proof.owner.answer.alternativeLineId)
-        if pair.exists(_ eq actual) && pair.exists(_ eq alternative) &&
-          packet.assembly.playedTransition.exists(_.moveUci == actual.moves.head)
+        (actual, alternative) <- selectedRootPair(packet, paths, pair, proof.owner.answer)
         answer <- proof.testAnswer
         entry <- path(answer.referenceLineId)
         otherwise <- path(answer.alternativeLineId)

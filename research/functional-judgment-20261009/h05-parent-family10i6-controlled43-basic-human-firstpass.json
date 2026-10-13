@@ -1,0 +1,31 @@
+{
+  "sealed_utc": "2026-10-09T01:25:34.691429+00:00",
+  "before_core_detail_and_completed_receipt_values_read": true,
+  "criteria_sha256": "fb83404c4a4c3296aba1fd5221483384cabf67b4cd845e46c8b5462768483b94",
+  "new_basic_sha256": "1050be58efdf442911fbd51f5adba8830d67e20f0d8fb59d12dacfbb2f901d3d",
+  "old_completed_basic_sha256": "d6da1715ce6afd6a29bc98a533a19efd3f0baa694676473413cc9e576a43bcb2",
+  "scope": "Exact43 genuine report controlled two-main replay; native basic only, no injected statement or new engine comparison.",
+  "controlled_delivery_change": true,
+  "current_question": "functional_response",
+  "original_official_judgment_exactly_preserved": true,
+  "readable_progress": [
+    "Original g3 pawn advance versus Ke3 deferral is visible.",
+    "Exact after Ke3 Ke6 current comparison prefers Kd2 over immediate g4.",
+    "Current leading tested replies and the original pawn g4 versus g3 presence are stated.",
+    "The Ke5 response belongs to Kd2 at this stage; no late b3/g4 story is represented as that leading reply."
+  ],
+  "fixed_chain_reading": {
+    "original_purpose": "partial: factual spending/deferral visible; useful king progress not explained",
+    "adequate_defense": "partial: named f6/Ke5 responses, no explanation of the blockade/task they preserve",
+    "preparation": "partial: current Kd2 preference and retained original pawn visible, purpose/pressure not explained",
+    "changed_defender_pressure": "absent",
+    "response_specific_conversion_and_necessary_price": "absent from basic",
+    "return_to_original_root_judgment_reason": "absent; numerical root judgment remains separately owned"
+  },
+  "unnecessary_basic_breadth": false,
+  "full_minimum_chain_success": false,
+  "unchanged_0_of_4": true,
+  "unchanged_0_of_8": true,
+  "numeric_choice_preference_and_pawn_presence_not_complete_utility": true,
+  "details_may_be_factual_but_cannot_replace_default_chain": true
+}

@@ -1,0 +1,2875 @@
+{
+  "schema_version": 1,
+  "assessed_date": "2026-10-05",
+  "candidate_version": "selectionv9-18; final old18 saved-input research assessment",
+  "assessor": {
+    "type": "Research LLM reading saved English output and exact exported refs",
+    "independent_human_reader": false,
+    "product_LLM": false
+  },
+  "scope": {
+    "development_cases": 18,
+    "oracle12_fixed": true,
+    "existing_remaining6_added": 6,
+    "before": "ownershipv13-18",
+    "intermediate": "selectionv7-18",
+    "after": "selectionv9-18",
+    "product_source_edited": false,
+    "product_source_read_for_this_review": false,
+    "new_engine": false,
+    "new_replay_run_by_this_agent": false,
+    "new_18_read": false,
+    "protected_material_read": false,
+    "no_new_generalization_claim": true
+  },
+  "inputs": [
+    {
+      "path": "research/answer-selection-20261004/core-oracle.json",
+      "sha256": "e46a0cd5388ff010ff8ca81eeb297bc358bd33bae5bcc7db5c995dc3d77246ee",
+      "bytes": 457431
+    },
+    {
+      "path": "research/answer-selection-20261004/assessment-selectionv7.json",
+      "sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+      "bytes": 205571
+    },
+    {
+      "path": "research/answer-selection-20261004/same-input-selectionv9-18.json",
+      "sha256": "f9e33e70e7d08c43dde493d441812e9c603b35bb6b6b573309ad75524a3ea9c6",
+      "bytes": 1409619
+    },
+    {
+      "path": "research/relationship-delivery-20261004/independent-obligations-final.json",
+      "sha256": "4e9f40551a76802b5519933a0123cf2b119cc33d7b847d2bb7766b8994e48c62",
+      "bytes": 35469
+    },
+    {
+      "path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+      "sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+      "bytes": 75800
+    },
+    {
+      "path": "research/relation-ownership-20261004/content-assessment-ownershipv13-addendum.json",
+      "sha256": "2604314fad2523ff51ec95bfcc1e66e6c92cddc7ee532cbdd41dcf5fae56bc8f",
+      "bytes": 7440
+    },
+    {
+      "path": "target/relationship-delivery-20261004/replay-tools/runs/ownershipv13-18/readings.jsonl",
+      "sha256": "1c8e50a63ccf4bfb265ceaa93f4d12f8372c162c27558f6687e23e2459257320",
+      "bytes": 1515393
+    },
+    {
+      "path": "target/relationship-delivery-20261004/replay-tools/runs/selectionv7-18/readings.jsonl",
+      "sha256": "ca3f2705a0c72312c0dcdde64e4fdea90d16104d2cedf17c45deb3434f2a6359",
+      "bytes": 1513433
+    },
+    {
+      "path": "target/relationship-delivery-20261004/replay-tools/runs/selectionv9-18/readings.jsonl",
+      "sha256": "0ce0f68dbdc7872dae23debecd8ccdda982db84da8fda30179952966fcf11bbb",
+      "bytes": 1513106
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-07-obligation-facts.json",
+      "sha256": "ff1230c13f12afae8ad6367766538d0e4dda4efe73dd7cadfca0ccbc674be3d7",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-08-obligation-facts.json",
+      "sha256": "7969eb85df0caf0bbe5090aae5a606ecad521764a8690d72ff1ca2bae2401ae8",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-09-obligation-facts.json",
+      "sha256": "ed636bf8895951154572cc77be10ab0062b46a1aff44af8767e136f332e3e20e",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-10-obligation-facts.json",
+      "sha256": "725ab452a3606200b073dd99d41a4b4c783885d1dd038d7a60d51d49f617035c",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-11-obligation-facts.json",
+      "sha256": "79407f5a3e575adda27536e322563a40f7cdbfb66e86ae2cb7c69574712f30d9",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-12-obligation-facts.json",
+      "sha256": "7ea611c5cc026d997218b6e9bbabeb6f6fa7956cc4e52fa7cdcab711e8fd5310",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-07-obligation-facts.json",
+      "sha256": "f58cfb7875e0039d06fc1b38495ed0c683c03d2114de1b3700a6790d812e63df",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-08-obligation-facts.json",
+      "sha256": "f5365e1f094716ed150f08a57bfe560382de0d3fea8b84bfac17d36968cf9f77",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-09-obligation-facts.json",
+      "sha256": "458e18624ac9efdcae3a3fe9fb5ab1043a6105c83588a8393f8e64581757aa11",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-10-obligation-facts.json",
+      "sha256": "33e125e38d11e716fed60d9052ced53becd92d5eaa7581c21c78bbc0d7f1115c",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-11-obligation-facts.json",
+      "sha256": "3a19e709c96aad4629669bc683328b193f23bb51ec88fc6eabc744e65a4cbd70",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-12-obligation-facts.json",
+      "sha256": "41c32c8bb503d7175c0c91f71b0d7631cc5cec08cb44f08311fcc19fde46d2e9",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-07-obligation-facts.json",
+      "sha256": "97b07b5605415acf1a3ba56b92aa9afea136010af008993342c0fd4839055cbf",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-08-obligation-facts.json",
+      "sha256": "405b1cb39e28fb52fa5dcd2a0d37487a203b24133e6683a80d322f86288a1407",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-09-obligation-facts.json",
+      "sha256": "1699ea7873591e18c3d7b29e34565b497d941b2aba1eaf074ad5f3389d1b6070",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-10-obligation-facts.json",
+      "sha256": "475e57789235c3fed2e7b7f78f3b6e6125c6aeb1c0540e633ebba715a30afa98",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-11-obligation-facts.json",
+      "sha256": "3a4015e76aada992c525ad17e7048635e72f2b2e5ef840c52784bc7c915567af",
+      "matched_pre_written_obligation": true
+    },
+    {
+      "path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-12-obligation-facts.json",
+      "sha256": "69144c8089671d45719fe9434ce75fb0f549d06aa68317b183e92a11fb92ac1a",
+      "matched_pre_written_obligation": true
+    }
+  ],
+  "input_and_manifest_provenance": {
+    "before": "ownershipv13-18",
+    "after": "selectionv9-18",
+    "input_sha256": "880e0fb19fafe1fe8dc4896511368ea5aeecf3ab63fb93bb4d504b74f998f24a",
+    "manifest_sha256": {
+      "ownershipv13-18": "9ff49673c358dd6decc03935d9b8efde246bde2dcac7134c33b510045976f85e",
+      "selectionv9-18": "c33df37c1650cc21681ef5e5257341ac26088e0d3ea61229c17fca342ac50bc1"
+    },
+    "obligations_sha256": "4e9f40551a76802b5519933a0123cf2b119cc33d7b847d2bb7766b8994e48c62"
+  },
+  "method": [
+    "The twelve oracle cases are not regraded when actual question/basic/basic-unit/detail-unit content equals v7. Their v7 content, price and grammar judgments are explicitly inherited with a fixed artifact hash.",
+    "Read the remaining six existing cases against their original facts-only obligations, v13 baseline and exact original piece identities in both supplied arms. Retain primary versus useful bounded auxiliary answers as separate outcomes.",
+    "Only W16-11 actually changes between v7 and v9. Judge its initial central-pawn core as a useful narrow answer while keeping the prewritten broader primary failed.",
+    "Required/covered source occurrence checks are mechanical and separate from chess-content reading: path id, one-based offset, UCI and SAN must match the same stored actual path; covered refs must point to actual captures. These checks neither prove optimality nor force every proof SAN into visible prose.",
+    "Price omission is relative to the actual selected claim. Every later PV capture is not mandatory. Selected gains, their relevant loss/recovery and scope-changing endings must remain; irrelevant full-line proof is not automatically spoken content.",
+    "Original partial research packets and stale assessment states are preserved as execution caveats. An exact saved replay does not become a new conforming engine execution."
+  ],
+  "summary": {
+    "denominator": 18,
+    "oracle12_inherited_from_v7": 12,
+    "remaining6_manual_existing_case_reviews": 6,
+    "primary_useful_and_complete": {
+      "ownershipv13": 4,
+      "selectionv9": 5,
+      "threshold": 14,
+      "threshold_met": false
+    },
+    "auxiliary_useful_and_complete": {
+      "ownershipv13": 11,
+      "selectionv9": 14,
+      "does_not_replace_primary_threshold": true
+    },
+    "important_price_omissions": {
+      "ownershipv13_positions": [
+        "candidates2018-10"
+      ],
+      "ownershipv13_items": 1,
+      "selectionv9_positions": [],
+      "selectionv9_items": 0,
+      "scope": "Actually selected bounded claims; conditional/unselected topics remain separate."
+    },
+    "new_unsupported_causal_forced_or_result_claims_observed": 0,
+    "basic_available": 18,
+    "questions": {
+      "selected_comparison": 14,
+      "observed_move_order": 1,
+      "observed_capture_target": 3
+    },
+    "changed_basic_vs_v7": [
+      "wch2016-11"
+    ],
+    "identical_basic_units_to_v7": 17,
+    "identical_detail_units_to_v7": 17,
+    "changed_basic_vs_ownershipv13": [
+      "wch2016-11",
+      "candidates2018-08",
+      "candidates2018-09",
+      "candidates2018-10",
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "new_primary_success_vs_v13": [
+      "candidates2018-11"
+    ],
+    "new_auxiliary_success_vs_v13": [
+      "wch2016-11",
+      "candidates2018-10",
+      "candidates2018-11"
+    ],
+    "focused_initial_capture_cores": [
+      "wch2016-11",
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "focused_initial_capture_cores_primary_success": [
+      "candidates2018-11",
+      "wch2024-08"
+    ],
+    "W16_10_observed_capture_target_selected": false,
+    "W24_10_observed_capture_target_selected": false,
+    "W24_10_v4_short_core_retained": false,
+    "no_launch_completion_claim": true
+  },
+  "source_reference_audit": {
+    "pairs": 36,
+    "facts_hashes_matching_pre_written": 18,
+    "basic_required_refs": 256,
+    "basic_covered_captures": 89,
+    "detail_required_refs": 236,
+    "detail_covered_captures": 153,
+    "total_reference_usages": 734,
+    "issues": [],
+    "exact_occurrence_mismatches": 0,
+    "covered_refs_without_actual_capture": 0,
+    "counts_include_repeated_usage": true,
+    "reference_count_is_not_quality_score": true,
+    "board_legality_not_rerun_by_this_agent": true,
+    "frontend_decoder_VNode_or_board_interaction_not_run_by_this_agent": true,
+    "reader_export_does_not_expose_every_inline_Part_or_typed_statement_tag": true,
+    "no_structural_claim_safety_or_source_ownership_proof_from_count_alone": true
+  },
+  "execution_audit": {
+    "positions_fully_replayed": 18,
+    "saved_reports": 77,
+    "replayed_reports": 77,
+    "original_partial_packet_positions": 7,
+    "supplied_controls_exact": {
+      "request": 18,
+      "partial": 18,
+      "work_trace": 18,
+      "report_count": 18,
+      "pair": 18,
+      "positions": 18,
+      "paths": 18,
+      "statements": 18,
+      "verification": 18,
+      "assessment": 18,
+      "assessment_state": 18,
+      "assessment_scope": 18,
+      "progress": 18
+    },
+    "original_partial_cohort": {
+      "positions": 7,
+      "primary": 3,
+      "auxiliary": 7
+    },
+    "unflagged_by_that_research_driver": {
+      "positions": 11,
+      "primary": 2,
+      "auxiliary": 7
+    },
+    "cohort_warning": "Unflagged is not an independent production-executor certification. Partial flags concern original saved execution; no engine packets were regenerated or relabelled here."
+  },
+  "cases": [
+    {
+      "game_id": "wch2016-07",
+      "comparison_id": "comparison:move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:evidence:candidate-comparison:3b7ad6499c1812f68b7a7505695c672b498e8a51ed36b20e98a9ae2dc9264553",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-07-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 5,
+        "replayed_report_count": 5,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 9059,
+        "replayed_work_count": 5,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:line:6d33d87a23ccc8f10e5a53b32c81fa8802ba7beb6de977f790d46cdbc95b8938": "r",
+          "move-review:b625e778eb8a5db6056f7374f0697f2ed3d965aaae1509b1a7bfd8068f359e6d:46:c1c2:line:01488dad22bc99ff08ebad775dc51595da496912b200610477b381eff38fbfa4": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Do Rc4 and Rc2 use the same rook and bishop to exchange rooks on c8?",
+        "bounded_answer": "Both routes reach c8 and meet Rxc8/Bxc8. Rc4 Ra8 Rc8+ gives a check before that exchange; after Rc2 Kg7, Rc8 is not check. The same original a6 bishop recaptures in both.",
+        "required_if_claimed": [
+          "A rook-gain account retains both Rxc8 and Bxc8 and equal rook prices.",
+          "A b4-target claim for Rc4 must not become an actual pawn-gain claim: no b4 capture is provided."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "Do the two rook routes reach the same closed rook exchange?",
+        "subjects": [
+          "True:rook:c1",
+          "False:rook:f8",
+          "True:bishop:a6"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 5,
+          "candidate_through": 5,
+          "label": "shared c8 rook exchange",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1197,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "In the provided Rc2 line, the same rook next moves with Rc8 to c8. After Rc8, White's rook on c8 now targets Black's rook on f8. After Rxc8, the black rook originally on f8 is still present on c8. After Rxc8, White's bishop on a6 attacks Black's rook on c8. In the provided Rc4 line, the same rook next moves with Rc8+ to c8. After Rc8+, White's rook on c8 now targets Black's rook on a8. After Rxc8, the black rook originally on f8 is still present on c8. After Rxc8, White's bishop on a6 attacks Black's rook on c8. After Rc4, White's rook on c4 now targets Black's pawn on b4. Rc8+ moves the rook from c4 to c8, ending its attack on Black's pawn on b4. After g5, the black pawn originally on b4 is still present on b4. After Ra8, Black's rook on a8 now targets White's bishop on a6. Rxc8 moves the rook from a8 to c8, ending its attack on White's bishop on a6. After g5, the white bishop originally on a6 is still present on c8. In the provided Rc4 line: Rc8+ gives check to the Black king on g8 with White's rook on c8. Rxc8 captures the checking white rook on c8. Bxc8 recaptures the black rook on c8. In the Rc2 line: Rxc8 captures the white rook on c8. Bxc8 recaptures the black rook on c8.",
+        "basic_chars": 1197,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "The common rook exchange is recoverable, but the core still mixes initial b4 pressure, attack withdrawal, piece presence and later quiet history with both c8 transactions.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "fragmented",
+        "required_reply_and_price_status": "complete_for_stated_common_rook_exchange",
+        "mandatory_actual_occurrence_keys": [
+          "r:4",
+          "r:5",
+          "c:4",
+          "c:5"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Initial b4 pressure and terminal presence; rook attack on a6 bishop; later king/pawn histories remain basic although they do not change the chosen c8 trade.",
+        "core_oracle_match": "common exchange facts retained; no partition implementation observed",
+        "usefulness_rationale": "Hold prior primary-fail/auxiliary-pass assessment because exact basic text is unchanged.",
+        "detail_fact_availability": "Both full actual line accounts remain available.",
+        "failure_boundaries": [
+          "content_selection_fragmentation"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 10,
+        "basic_covered_refs": 4,
+        "detail_required_refs": 7,
+        "detail_covered_refs": 4,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-07-obligation-facts.json",
+        "facts_sha256": "ff1230c13f12afae8ad6367766538d0e4dda4efe73dd7cadfca0ccbc674be3d7",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2016-08",
+      "comparison_id": "comparison:move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:evidence:candidate-comparison:fcbec2bc9adb8ac2177016f33e12a9c469d76aa1cdc547531f6eaac1309c8a90",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-08-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 6402,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:line:33f9eea4dbd946b08297a7e1d181b56fd9af4171142c6afe69470e76640008a7": "r",
+          "move-review:91973b3350d17103e61eb9bfc08629d8c16efec552eff8669ea9d6a494d50399:47:g4f6:line:61dcf16c31e3de04bbcacab9ede351e5d4809510bc325f297b503ea0e1c234e4": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What happens to the same attacked g4 knight when different black knights move?",
+        "bounded_answer": "Nf6 moves the g4 knight out of the d4 rook attack immediately. N6e5 moves the other, g6 knight; the original g4 knight stays attacked until White Rd6 and later itself plays Nf6. The supplied Nf6 line eventually exchanges that knight for the original b5 knight, with Bxe4 recapturing.",
+        "required_if_claimed": [
+          "Do not attribute an immediate g4-knight escape to N6e5.",
+          "If discussing the eventual g4-knight capture or whole Nf6 material result, retain Nxe4/Bxe4 rather than a free knight."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "Does the attacked original g4 knight leave now, or is another knight moved first?",
+        "subjects": [
+          "False:knight:g4",
+          "False:knight:g6",
+          "True:rook:d4"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 1,
+          "candidate_through": 5,
+          "label": "initial rook pressure and departure of original g4 knight",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "observed_move_order",
+        "basic_chars": 628,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "observed_move_order",
+        "basic_english": "The recorded continuation is Nf6 Qd1 Rb8 g3 Ne5 Bg2. The same black knight originally on g4 follows Nf6 in the recorded line. The same black knight originally on g6 follows Ne5 in the recorded line. The same white queen originally on e1 follows Qd1 in the recorded line. In the N6e5 line: Rd6 clears d4; Qd4 later occupies that square in this line. The recorded continuation is N6e5 Qd2 Rb8 Rd6 Nf6 Qd4. The same black knight originally on g6 follows N6e5 in the recorded line. The same black knight originally on g4 follows Nf6 in the recorded line. The same white queen originally on e1 follows Qd2 … Qd4 in the recorded line.",
+        "basic_chars": 628,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "observed_move_order still gives route/order records without identifying that original g4 knight is the one initially under d4-rook pressure.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "no_semantic_pressure_answer",
+        "required_reply_and_price_status": "not_the_current_question",
+        "mandatory_actual_occurrence_keys": [],
+        "essential_or_primary_content_not_delivered": [
+          "initial original g4 knight attack/escape comparison",
+          "candidate Rd6 removes the attacker before original g4 knight later Nf6"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "General ordered continuation and unrelated routes substitute for the important quiet subject answer.",
+        "core_oracle_match": "essential attack-subject comparison absent despite owned history",
+        "usefulness_rationale": "Quiet-move importance is not solved by smaller or legal route lists.",
+        "detail_fact_availability": "Late Nxe4/Bxe4 remains a closed exchange in details and is not required unless a knight gain/full Nf6 result is claimed.",
+        "failure_boundaries": [
+          "question_selection_or_subject_gap"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 12,
+        "basic_covered_refs": 0,
+        "detail_required_refs": 0,
+        "detail_covered_refs": 0,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-08-obligation-facts.json",
+        "facts_sha256": "7969eb85df0caf0bbe5090aae5a606ecad521764a8690d72ff1ca2bae2401ae8",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2016-09",
+      "comparison_id": "comparison:move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:evidence:candidate-comparison:326c93d7a5ffe56dd2d6a02cf9b8d3eb08b7739efa60acb8ab7ee4e0c93025ee",
+      "review_provenance": {
+        "mode": "remaining6_manual_reading_with_v13_baseline_retention",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-09-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 3,
+        "replayed_report_count": 3,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 1815,
+        "replayed_work_count": 3,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:f3c7cbd819f4588f0131e8661b0d3e6f3ed4a37c46f32c0a5893e862a59c3114": "r",
+          "move-review:f82fd0554431794b3fbaa932605e179254d70d64169436b79e13ee23b9381b36:46:f1g1:line:748c5937e771a2e0765c4708946fb2541b1212947ef5051408f013b0a9957b91": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What price accompanies the later Nf4+ fork and the surrounding queen/rook exchanges?",
+        "bounded_answer": "In Rg1, the original h5 knight later forks the g2 king and d5 queen; Bxf4 removes it but Rxd5 then takes that queen. This follows an earlier queen-for-rook-and-bishop sequence and White Qxd5 taking a rook. In Qd3, Nf4+ is answered by Bxf4/Bxf4, and Qxb5/Rxb5 exchanges queens.",
+        "required_if_claimed": [
+          "A Rg1 queen-gain claim retains Qxd5/Bxd5/Rxd5 and the subsequent White Qxd5, Nf4+, Bxf4 and Rxd5 when describing its outcome.",
+          "A fork-escape claim for the king cannot hide the other target, the queen, or its actual rook capture.",
+          "A Qd3 minor-piece gain includes the bishop recapture; a queen gain includes Rxb5.",
+          "A whole-line net-price claim also includes the initial Bxd4 pawn loss; do not infer victory or draw from the net count."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 2661,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "In the provided Rg1 line, the same rook next moves with Rg5 to g5. After Rg5, White's rook on g5 now targets Black's knight on h5. Bg7 clears d4; later Qxd5 passes through that square in this line. After Qxd5, White's queen on d5 now targets Black's knight on h5. Nf4+ moves the knight out of the attack from White's queen on d5. After Qxd5, the black knight originally on h5 is still present on h5. After Rg1, White's rook on g1 now targets Black's pawn on g7. After Rd5, White's rook on a6 attacks Black's pawn on g6. Rd5 moves the rook from g5 to d5, ending its attack on Black's pawn on g6. After g6, White's rook on g5 attacks Black's pawn on g6. After Re8, the black pawn originally on g7 is still present on g6. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qd3, White's queen on d3 now targets Black's pawn on h7, and keeps supporting White's pawn on d4, which is under attack from Black's bishop on b6 and Black's queen on d6. Qxb5 moves the queen from d3 to b5, ending its attack on Black's pawn on h7. After Ra7, the black pawn originally on h7 is still present on h7. After Qd7, Black's queen on d7 keeps targeting White's pawn on d4. After Qb5, Black's rook on d8 attacks White's pawn on d4. Qb5 moves the queen from d7 to b5, ending its attack on White's pawn on d4. After Ra7, the white pawn originally on d4 is still present on d4. Qd3 clears d1; later Rb1 passes through that square in this line. In the provided Qd3 line, the same queen next moves with Qxb5 to b5. After Qxb5, White's queen on b5 now targets Black's rook on b8. After Bc4, White's bishop on c4 now targets Black's rook on b5. Rg5+ moves the rook out of the attack from White's bishop on c4. After Rxb5, the black rook originally on b8 is still present on b5. After Ra7, the black rook originally on b8 is still present on g5. In the Rg1 line: Bxd4 moves the bishop out of the attack from White's rook on a6. Qxd5 captures the white rook on d5. After Bxd4, Black's rook on b8 now targets White's bishop on b3. Bxd5 moves the bishop out of the attack from Black's rook on b8. Bxd5 recaptures the black queen on d5. After Bg7, Black's bishop on g7 now targets White's bishop on h6. Bxf4 moves the bishop out of the attack from Black's bishop on g7. In the Qd3 line: Qxb5 captures the black queen on b5. Rxb5 recaptures the white queen on b5. In the Rg1 line, White loses one pawn. In the provided Rg1 line: Nf4+ gives check to the White king on g2 with Black's knight on f4; Bxf4 captures the checking knight on f4. In the Rg1 line, White gives up one bishop and one queen for one knight and one rook. In the Qd3 line: The recorded continuation is Kf1.",
+        "basic_chars": 2661,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "provenance": "Same basic, basic units and details as v13 and v7; old v13 judgment retained after reading both stored arms and the prewritten obligation.",
+        "question_fit": "Actual Rg1 fork-check response and queen price are represented; Rg1 versus Qd3 and both fork targets are not organized as the main answer.",
+        "relevant_original_subjects": [
+          "False:knight:h5",
+          "True:queen:d1",
+          "True:king:h1",
+          "True:bishop:e3",
+          "True:rook:f1",
+          "False:queen:d6",
+          "False:rook:d8",
+          "False:rook:b8"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ],
+        "rationale": "Nf4+ and Bxf4 are stated, and a role-based price conveys the original White queen loss even without a second spoken Rxd5. This is a complete useful local price, but the same original knight's king-and-queen fork and the alternative minor trade remain scattered among attack, withdrawal and presence histories.",
+        "details_or_conditional_content": "Candidate c7 Bxf4 removes Black Nh5; c8 Bxf4 removes White Be3. That pair is needed if the unselected Qd3 fork episode is chosen. The absence of that episode does not make every PV capture a mandatory omission in the currently selected answer.",
+        "proof_vs_message_note": "The cost receipt covers r18 original White queen removal; Rxd5 need not be repeated in prose if that queen price is actually expressed.",
+        "mandatory_actual_occurrence_keys": [
+          "r:8",
+          "r:9",
+          "r:10",
+          "r:15",
+          "r:17",
+          "r:18",
+          "c:11",
+          "c:12"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "The cost receipt covers r18 original White queen removal; Rxd5 need not be repeated in prose if that queen price is actually expressed."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 32,
+        "basic_covered_refs": 9,
+        "detail_required_refs": 19,
+        "detail_covered_refs": 11,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-09-obligation-facts.json",
+        "facts_sha256": "ed636bf8895951154572cc77be10ab0062b46a1aff44af8767e136f332e3e20e",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ]
+      }
+    },
+    {
+      "game_id": "wch2016-10",
+      "comparison_id": "comparison:move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:evidence:candidate-comparison:34f1346ab01a3f675832e8e484342d40816dc921c81fc9fc3b2e7249a6751355",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-10-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 3335,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:line:b0cec07a3fd5f2f1c473431d4e671ec77dd7556b0714ab851227735c09fe5ee5": "r",
+          "move-review:ffd4dcf2bc3348bfc9851c92649f54a20f4f3796bc2e9159ed8f809e16057945:47:f8f3:line:6b8fdbb42a8748d6340e2a9119b2c6f5df49ac7488c270fec3a925b35693da5e": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "How does capturing the queen now differ from allowing it to take the f8 rook first?",
+        "bounded_answer": "Rxf3 captures the original White queen and the rook remains in the recorded line. After d4, Qxf8+ takes that same black rook before Nxf8 captures the White queen. Both remove the same queen, with a different black rook price.",
+        "required_if_claimed": [
+          "The d4 queen-capture account includes the preceding Qxf8+ rook loss and the actual Nxf8 check response.",
+          "Any pawn-exchange claim in d4 retains cxd4/exd4; any later knight capture retains Nxe5/fxe5."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "What is paid when the same White f3 queen is removed in either continuation?",
+        "subjects": [
+          "True:queen:f3",
+          "False:rook:f8",
+          "False:knight:g6"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 11,
+          "candidate_through": 3,
+          "label": "queen removal and prior f8 rook loss",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 2550,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "After Rxf3, Black's rook on f3 now targets White's knight on e3 and White's pawn on f2 and White's pawn on g3. After d4, Black's pawn on d4 now targets White's knight on e3 and White's pawn on c3. Rxf3 lines up Black's rook on f3 with White's rook on f1 through White's pawn on f2; the pawn screens the rook. The alignment remains after Rf7. Nf3 breaks that alignment in this line. After Kg2, White's king on g2 now targets Black's rook on f3. Rf7 moves the rook out of the attack from White's king on g2. After Nf3, White's knight on f3 blocks the line from Black's rook on f7 to White's pawn on f2. After b6, the white pawn originally on f2 is still present on f2. Rxf3 clears f8; Nf8 later occupies that square in this line. After h5, Black's pawn on h5 now targets White's knight on g4. Nh2 moves the knight out of the attack from Black's pawn on h5. Rf7 moves the rook from f3 to f7, ending its attack on White's knight on e3. After b6, the white knight originally on e3 is still present on f3. After b6, Black's rook on f7 attacks White's knight on f3. Rf7 moves the rook from f3 to f7, ending its attack on White's pawn on g3. After b6, the white pawn originally on g3 is still present on g3. After b6, the black rook originally on f8 is still present on f7. In the d4 line: After exd4, Black's pawn on d4 now targets White's knight on e3. Nc4 moves the knight out of the attack from Black's pawn on d4. After cxd4, the white knight originally on e3 is still present on e3. After cxd4, the white pawn originally on c3 is still present on d4. After cxd4, Black's pawn on e5 attacks White's pawn on d4. After Qxf8+, White's queen on f8 now targets Black's rook on a8 and Black's pawn on g7. After Nxf8, the black rook originally on a8 is still present on a8. After fxe5, the black rook originally on a8 is still present on b8. The black pawn originally on g7 is still present on g7 after Nxf8 and after fxe5. d4 moves the pawn out of the attack from White's knight on e3. d4 moves the pawn out of the attack from White's pawn on e4. After d4, Black's pawn on e5 adds support to Black's pawn on d4, which is under attack from White's pawn on c3. Rxf3 recaptures the white queen on f3. In the d4 line: Qxf8+ captures the black rook on f8. In the provided d4 line: Qxf8+ gives check to the Black king on g8 with White's queen on f8. Nxf8 recaptures the checking white queen on f8. In the d4 line: cxd4 captures the black pawn on d4. exd4 recaptures the white pawn on d4. Nxe5 captures the white knight on e5. fxe5 recaptures the black knight on e5.",
+        "basic_chars": 2550,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "Same queen removal and prior f8 rook loss are present, but the contrast remains buried in 2550-character relation and capture narration.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "fragmented",
+        "required_reply_and_price_status": "complete_for_stated_queen_capture",
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "c:2",
+          "c:3"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Other pawn targets, alignments, king pursuit and independent pawn/knight trades remain basic instead of supporting the queen-price comparison.",
+        "core_oracle_match": "Same original queen and prior f8 rook payment are present, but the new observed_capture_target path is not selected. The v13 long fallback remains.",
+        "usefulness_rationale": "Maintain prior primary fail and auxiliary pass. A price-complete fallback is not evidence that the intended narrow comparison path has executed.",
+        "detail_fact_availability": "Queen loss, prior rook capture and later independent exchanges preserved.",
+        "failure_boundaries": [
+          "content_selection_fragmentation"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 19,
+        "basic_covered_refs": 7,
+        "detail_required_refs": 8,
+        "detail_covered_refs": 7,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-10-obligation-facts.json",
+        "facts_sha256": "725ab452a3606200b073dd99d41a4b4c783885d1dd038d7a60d51d49f617035c",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2016-11",
+      "comparison_id": "comparison:move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:evidence:candidate-comparison:2b014a7aec6b1a5a2faeba7fd985d647551e9f817ebc501b1115d1136dac7732",
+      "review_provenance": {
+        "mode": "new_reading_only_changed_v7_case",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-11-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 5,
+        "replayed_report_count": 5,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 4048,
+        "replayed_work_count": 5,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:6f3370ad58c9fa9e9139aab7ba84e399ed1e35b5ee97fbe528a0e69e4fcc4d66": "r",
+          "move-review:368340527846fe0b504d2f729e5ee5cc294feb2b6f9fd447c64ee1d2f783adc3:46:c3d4:line:a63ca3cbd2a50b9c6f34eba91b686e384c3ea86abce3dd040a24a4d661a73eff": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Which central pawn is removed, and what is given up in the Re1 capture sequence?",
+        "bounded_answer": "cxd4 removes the original d4 pawn. In Re1, that pawn instead takes c3, while Rxe4 removes the other black central pawn; Rxe4/dxe4 then exchanges rooks. The longer Re1 line also loses a3 to Qxa3.",
+        "required_if_claimed": [
+          "A Re1 Rxe4 pawn-gain account retains preceding dxc3 and, if the same rook exchange is described, Rxe4/dxe4.",
+          "A final Re1 net-price account includes Qxa3; this later loss is not mandatory for an explicitly bounded initial central-pawn comparison."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 924,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "observed_capture_target",
+        "basic_english": "cxd4 captures the black pawn. In the Re1 line, dxc3 moves that same black pawn; it remains on the board at the end of the recorded line. In the Re1 line, both sides exchange one pawn.",
+        "basic_chars": 183,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": true,
+        "basic_units_identical_to_v7": false,
+        "detail_units_identical_to_v7": false
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "provenance": "Only v7→v9 semantic change among the old18; new manual bounded-answer reading uses the original obligation, not a revised oracle.",
+        "question_fit": "The original Black d4 pawn is captured by cxd4 but takes c3 and remains in Re1. An initial central-pawn trade is given, but the original primary's other e4-pawn removal and subsequent rook transaction are not explicitly the core answer.",
+        "relevant_original_subjects": [
+          "False:pawn:d4",
+          "True:pawn:c3",
+          "False:pawn:e4",
+          "True:rook:f1",
+          "False:rook:e8",
+          "True:pawn:d3"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [
+          "narrow_auxiliary_answer_does_not_fulfill_pre_written_primary",
+          "price_scope_requires_bounded_reading"
+        ],
+        "rationale": "The 183-character core genuinely contrasts removal of the same pawn with survival after its actual dxc3 capture, and includes one pawn exchanged by each side. It is useful as a narrow initial central-pawn answer. It does not directly identify White Rxe4 removing the other e4 pawn, nor answer the original primary's longer Re1 transaction including Rxe4/dxe4. Grant auxiliary only. Removing the v7 check/ray and rook material elaboration is not a new selected-claim price error: v9 does not assert the rook gain or a whole-line net result.",
+        "v7_to_v9_content_delta": {
+          "retained": "cxd4 removal; original d4 pawn's dxc3 and observed survival; initial c2/c3 pawn price",
+          "moved_out_of_basic": "Qb6+ clearance/e4 recapture ray; Qb6+/Kh1 check-and-evasion narrative; both-rook exchange from c6/c7",
+          "still_in_details": "c6 Rxe4 removes original White Rf1, c7 dxe4 removes original Black Re8, c10 Qxa3 removes original White Pa3; full line price includes them",
+          "before_text": "cxd4 captures the black pawn. In the Re1 line, dxc3 moves that same black pawn; it remains on the board at the end of the recorded line. Qb6+ clears e6; later Rxe4 passes through that square in this line. In the provided Re1 line: Qb6+ gives check to the White king on g1 with Black's queen on b6; Kh1 moves the king to h1. In the Re1 line, both sides exchange one pawn and one rook."
+        },
+        "claim_scope": "Role total refers to the initial c2/c3 pawn episode, not final Re1 balance; end-of-recorded-line survival refers only to the original Black d4 pawn.",
+        "scope_ambiguity": "The phrase 'In the Re1 line, both sides exchange one pawn' does not itself name an episode boundary. A whole-line reading would omit the a3 loss and rook trade, so the artifact limits the accepted reading and does not count full-primary success.",
+        "proof_vs_message_note": "c3 Rxe4 and c4 Qb6+/c5 Kh1 are proof references, not a separately spoken rook gain. c6/c7 prices remain detailed facts; using this narrow receipt later as a line-wide result would be invalid.",
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "c:2",
+          "c:3"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "c3 Rxe4 and c4 Qb6+/c5 Kh1 are proof references, not a separately spoken rook gain. c6/c7 prices remain detailed facts; using this narrow receipt later as a line-wide result would be invalid."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 7,
+        "basic_covered_refs": 3,
+        "detail_required_refs": 28,
+        "detail_covered_refs": 9,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-11-obligation-facts.json",
+        "facts_sha256": "79407f5a3e575adda27536e322563a40f7cdbfb66e86ae2cb7c69574712f30d9",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": [
+          "narrow_auxiliary_answer_does_not_fulfill_pre_written_primary",
+          "price_scope_requires_bounded_reading"
+        ]
+      }
+    },
+    {
+      "game_id": "wch2016-12",
+      "comparison_id": "comparison:move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:evidence:candidate-comparison:fca531c77c75b5d14c0244b5c75657c75df0dd1a84139883fdce0555cd2ec90b",
+      "review_provenance": {
+        "mode": "remaining6_manual_reading_with_v13_baseline_retention",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2016-12-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2330,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:4436e0fc0b563fda76df49ae3be2998b392545a59624da632bb3596eae0b87c2": "r",
+          "move-review:ca86e2be474a6e4e00705c64391a8fbf25d9e003ca3c3596fdf494a4552e48d7:47:g8f7:line:c9b5aba878188e30591c124092400c76d87509925fe1ecf5e1e9e3f85b507dbc": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What happens to the f8 bishop and the rooks after Kf7 or Be7?",
+        "bounded_answer": "Be7 is met by Rxe7 taking the original f8 bishop, which is not recovered in the supplied line. Kf7 keeps that bishop and later Rxe1+/Kxe1 exchanges rooks equally.",
+        "required_if_claimed": [
+          "A rook-gain claim in Kf7 includes the king recapture answering Rxe1+.",
+          "A final Be7 price includes dxc4, Rxc6 and gxf5: Black loses its bishop and two pawns while White loses one pawn."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 782,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "In the Be7 line: After Rxe7, White's rook on e7 now targets Black's pawn on b7 and Black's pawn on h7. After g5, Black's pawn on g5 now targets White's bishop on f4. Bg3 moves the bishop out of the attack from Black's pawn on g5. b6 moves the pawn out of the attack from White's rook on e7. After gxf5, the black pawn originally on b7 is still present on b6. After gxf5, White's rook on c6 attacks Black's pawn on b6. Rxc6 moves the rook from c7 to c6, ending its attack on Black's pawn on h7. After gxf5, the black pawn originally on h7 is still present on h7. Be7 clears f8; Rf8 later occupies that square in this line. Rxe7 captures the black bishop on e7. The recorded continuation is Kf7. In the Be7 line: Rxc6 captures the black pawn on c6. gxf5 captures the black pawn on f5.",
+        "basic_chars": 782,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false,
+        "provenance": "Same question/basic/units/details as v13 and v7; retain the existing failure and conditional-price distinction.",
+        "question_fit": "Be7 bishop loss is stated, but Kf7 is only a recorded-continuation label and does not answer same bishop retention or the rook exchange.",
+        "relevant_original_subjects": [
+          "False:bishop:f8",
+          "True:rook:e1",
+          "False:rook:a8"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [
+          "question_selection_or_contrast",
+          "scope_sensitive_price_delivery"
+        ],
+        "rationale": "The body lists Be7's later rook attacks and pawn gains but does not give a useful two-choice answer. A quiet Kf7 subject cannot be established merely by its SAN label. The actual Be7 bishop capture is present; failure is missing comparison/subject organization, not absence of that event.",
+        "conditional_price_requirements": [
+          {
+            "keys": [
+              "c:9",
+              "c:10",
+              "c:12"
+            ],
+            "original_victim": "True:pawn:c3",
+            "when_mandatory": "A whole Be7 pawn-price or net-result account must include dxc4 before Rxc6 and gxf5.",
+            "current_class": "Scope-sensitive, inherited from v13. Current isolated later pawn gains create an incomplete wider impression, but are not counted as a new unconditional price omission for the initial bishop comparison.",
+            "original_diagnostic_uses_zero_based_source_index": true
+          }
+        ],
+        "details_or_conditional_content": "If selecting Kf7 rook exchange, r17 Rxe1+ and r18 Kxe1 must stay together. Basic currently asserts neither a rook gain nor a successful bishop-retention comparison.",
+        "proof_vs_message_note": "Kf7 being an owned exact ref is insufficient to deliver its chess content.",
+        "mandatory_actual_occurrence_keys": [
+          "c:2"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "Kf7 being an owned exact ref is insufficient to deliver its chess content."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 11,
+        "basic_covered_refs": 3,
+        "detail_required_refs": 10,
+        "detail_covered_refs": 6,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2016-12-obligation-facts.json",
+        "facts_sha256": "7ea611c5cc026d997218b6e9bbabeb6f6fa7956cc4e52fa7cdcab711e8fd5310",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": [
+          "question_selection_or_contrast",
+          "scope_sensitive_price_delivery"
+        ]
+      }
+    },
+    {
+      "game_id": "candidates2018-07",
+      "comparison_id": "comparison:move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:evidence:candidate-comparison:bb8b76cc3e0bf1c8c3553893d3ecf9c1af54a917e9b47342e33863d8734a458b",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-07-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2397,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:line:2883e00b663a09431c5de8a8003ec4936d8bf14452f6e777141f1c44eb66c80a": "r",
+          "move-review:409456d7ee1fde7385cd0da2cd9b9593772d98a355f1dba33afe3698f4bf6486:46:f1e3:line:df19d568cba15046853146302e14229fb4b18bb5580edf29415ea5f0e83ba1b4": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Does either knight move keep the supported c4 pawn in the supplied response?",
+        "bounded_answer": "Both Ne3 and Nd2 use the original f1 knight to support c4. In both, Nxc4/Nxc4/Bxc4 still loses the c4 pawn while exchanging knights. The Nd2 episode then has Rxb7 taking a black pawn; the longer Ne3 line has other later trades and pawn recovery.",
+        "required_if_claimed": [
+          "An initial support-use claim includes the original pawn loss and bishop capture of the recapturing White knight.",
+          "A Nd2 net-price claim through Rxb7 retains both the c4 loss and b7 recovery.",
+          "An entire Ne3 material result includes the a/b, g/h, e/f trades, equal rook exchange and Rxa5; these are not all mandatory for the initial support episode."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "Does either supporting knight preserve the original c4 pawn in the provided responses?",
+        "subjects": [
+          "True:pawn:c4",
+          "True:knight:f1",
+          "False:knight:b6",
+          "False:bishop:e6"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 4,
+          "candidate_through": 12,
+          "label": "c4 pawn loss, supporting-knight recapture and its removal",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1529,
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "After Ne3, White's knight on e3 adds support to White's pawn on c4, which is under attack from Black's knight on b6, Black's bishop on e6. That support continues until Nxc4 captures the supported pawn; Nxc4 recaptures its capturer with the supporting knight. After Ne3, White's rook on e1 does not support White's pawn on e5, whereas the e1-rook does after Nd2. After Ne3, White's pawn on f2 adds support to White's knight on e3. After Ne3, White's bishop on g5 adds support to White's knight on e3. After Nxc4, Black's knight on c4 now targets White's knight on e3 and White's pawn on a3 and White's pawn on e5. After Nxc4, the white knight originally on f1 is still present on c4. After Nxc4, Black's bishop on e6 attacks White's knight on c4. After Nxc4, the white pawn originally on a3 is still present on a3. After Nxc4, the white pawn originally on e5 is still present on e5. After Nd2, White's knight on d2 adds support to White's pawn on c4, which is under attack from Black's knight on b6, Black's bishop on e6. That support continues until Nxc4 captures the supported pawn; Nxc4 recaptures its capturer with the supporting knight. In the Ne3 line: axb4 captures the black pawn on b4. cxb4 recaptures the white pawn on b4. fxe6 captures the white pawn on e6. Rxe6 recaptures the black pawn on e6. In the Ne3 line, both sides exchange one knight; White also loses one pawn. In the Nd2 line: Nxc4 clears b2; later Rxb7 passes through that square in this line. In the Nd2 line, both sides exchange two pawns and one knight.",
+        "basic_chars": 1529,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "Already answers that neither support move preserves the original c4 pawn; the knight recapture is then paid by Bxc4.",
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "useful_but_broad",
+        "required_reply_and_price_status": "complete_for_initial_support_episode",
+        "mandatory_actual_occurrence_keys": [
+          "r:2",
+          "r:3",
+          "r:4",
+          "c:10",
+          "c:11",
+          "c:12"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Many later pawn exchanges, Rxb7 compensation and other rook/minor episodes remain basic; they are not all required for original c4-pawn survival.",
+        "core_oracle_match": "Existing semantic control remains intact, but proposed content partition is not applied.",
+        "usefulness_rationale": "No new success: this was a pre-existing useful and complete answer.",
+        "detail_fact_availability": "All later prices remain available; moving complete later topics is still feasible.",
+        "failure_boundaries": [
+          "excess_independent_content"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 15,
+        "basic_covered_refs": 13,
+        "detail_required_refs": 24,
+        "detail_covered_refs": 20,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-07-obligation-facts.json",
+        "facts_sha256": "f58cfb7875e0039d06fc1b38495ed0c683c03d2114de1b3700a6790d812e63df",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "candidates2018-08",
+      "comparison_id": "comparison:move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:evidence:candidate-comparison:d417711f7e148477e033d28572e8377d7af1f061c5afa8884a9dfcd107c4d0c0",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-08-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2412,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:391a36ac2ab5d7566bf0c8369d8d53c627305f6a3914421624a96a71ca5356b7": "r",
+          "move-review:c8a3fad9ce9d9194d242a803ad4fd588a6658424a546040c476c68a7d0436be1:47:a8b8:line:739cb8ae71825e298a72e8fdfcc849bfc01ecd8e4e74b31565e5773b1e150c86": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What does the immediate rook move threaten, and what price does the recorded Nf8 fork response have?",
+        "bounded_answer": "Rab8 immediately attacks the b7 queen, but its provided line has no reply. Nf8 later has Rdb8/Qc6 and Nd7 forking the f6 queen and b8 rook; Qxd4 saves the queen and takes a pawn, while Nxb8/Rxb8 exchanges that rook for the White knight.",
+        "required_if_claimed": [
+          "Rab8 has no recorded reply: do not assert a queen win or verified response.",
+          "The Nf8 fork-price account keeps Qxd4, Nxb8 and Rxb8: rook lost for knight and pawn gained.",
+          "A queen-gain account in Nf8 retains Qxc5/Rxc5; its last Rc8+ has no recorded reply."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "What is the immediate rook pressure, and what price accompanies the knight fork in the other arm?",
+        "subjects": [
+          "True:queen:b7",
+          "True:knight:f3",
+          "False:queen:f6",
+          "False:rook:d8",
+          "False:rook:a8"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 1,
+          "candidate_through": 9,
+          "label": "Rab8 attack only; Nf8 fork response and rook-for-knight price",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1813,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "After Rab8, Black's rook on b8 now targets White's queen on b7. After Rab8, Black's knight on d7 adds support to Black's rook on b8, which is under attack from White's queen on b7. In the Nf8 line: After Ne5, White's knight on e5 now targets Black's bishop on c4 and Black's pawn on f7. After Rdb8, Black's rook on b8 now targets White's queen on b7. Qc6 moves the queen out of the attack from Black's rook on b8. Nf8 clears d7; Nd7 later occupies that square in this line. Nd7 moves the knight out of the attack from Black's queen on f6. After Nd7, White's queen on c6 attacks Black's bishop on c4. Nd7 moves the knight from e5 to d7, ending its attack on Black's bishop on c4. After Rc8+, the black bishop originally on c4 is still present on c4. Nd7 moves the knight from e5 to d7, ending its attack on Black's pawn on f7. After Rc8+, the black pawn originally on f7 is still present on f7. In the provided Nf8 line, the same knight next moves with Ng6 to g6. After Nf8, White's rook on c7 attacks Black's pawn on f7, but not after Rab8. In the Nf8 line: After Ng6, Black's knight on g6 now targets White's knight on e5. Nd7 moves the knight out of the attack from Black's knight on g6. Nf8 moves the knight out of the attack from White's rook on c7. After Nf8, Black's rook on d8 adds support to Black's pawn on d5, which is under attack from White's queen on b7. Nxb8 captures the black rook on b8. Rxb8 moves the rook out of the attack from White's queen on c6. Rxb8 recaptures the white knight on b8. The recorded line stops after Rab8; no following reply is recorded. The recorded line stops after Rab8; no following reply is recorded.",
+        "basic_chars": 1643,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": true,
+        "selected_question_fit": "Immediate Rab8 pressure and no-following-reply limitation remain, but the Nf8 fork itself is still not explained as attacks on queen and rook.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "fragmented",
+        "required_reply_and_price_status": "local_rook_knight_trade_complete_but_fork_price_not_selected",
+        "mandatory_actual_occurrence_keys": [
+          "c:8",
+          "c:9"
+        ],
+        "essential_or_primary_content_not_delivered": [
+          "fork two-target relation",
+          "Qxd4 queen escape plus pawn gain if fork-price question is selected"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Route/withdrawal/presence facts remain extensive; no-reply notice repeats twice, reduced from four baseline copies.",
+        "core_oracle_match": "Weak/evidence-limit negative remains. An actual Rab8 outcome cannot be recovered by shortening.",
+        "usefulness_rationale": "Current price count stays unchanged: Qxd4 omission is conditional on selecting the fork-price question, not scored as a new unconditional omission.",
+        "detail_fact_availability": "Qxd4/Nxb8/Rxb8 and queen exchange are all in existing detailed account; this is not the same as fork-price delivery.",
+        "failure_boundaries": [
+          "question_selection_or_subject_gap",
+          "evidence_limit_for_full_comparison",
+          "conditional_price_delivery"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 12,
+        "basic_covered_refs": 2,
+        "detail_required_refs": 8,
+        "detail_covered_refs": 5,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-08-obligation-facts.json",
+        "facts_sha256": "f5365e1f094716ed150f08a57bfe560382de0d3fea8b84bfac17d36968cf9f77",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "candidates2018-09",
+      "comparison_id": "comparison:move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:evidence:candidate-comparison:7e5c9d763a632c4780a75fe3231a06b6071bcaf9d51c66ebc9bf973e06050ca9",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-09-31",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 5,
+        "replayed_report_count": 5,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2916,
+        "replayed_work_count": 5,
+        "assessment_state": "needs_refresh",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:a460e3adcdbeea127cc3536b24164c743e0f5f0c73f06c5b74f23d3b4f2fbc1b": "r",
+          "move-review:3feddef3efbb50683c0923db68e1085d1c27c3ed5dba7e4eb29e3195e1097a1f:30:d4c4:line:3106f63521ef03128e7c54f35a87bc1f3aa790b90ed02ffc094bfbe18c56f513": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "How does the original queen escape the c5 pawn attack and later pressure?",
+        "bounded_answer": "Qd3 directly moves the d4 queen away from the c5 pawn attack. Qc4 first escapes that pawn too, but Be6 attacks it on c4; Qd3 then meets Rd8 pressure and Qc2 is the next actual escape.",
+        "required_if_claimed": [
+          "A queen-pressure answer retains the actual Be6/Qd3 and Rd8/Qc2 responses rather than merely listing queen arrivals.",
+          "A Qd3 knight or bishop gain includes Bxd5/cxd5; a whole pawn-price account also includes fxe4, Rxd5, Qxa7 and Qxb2.",
+          "A Qc4 trade account includes Rxg5/hxg5; if including Nf4/gxf4 and the ensuing attack, retain Rh3+/Kg2 and bound the later recorded ending."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "How does the same queen escape c5 pawn pressure, and what renewed pressure follows Qc4?",
+        "subjects": [
+          "True:queen:d4",
+          "False:pawn:c5",
+          "False:bishop:c8",
+          "False:rook:a8"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 1,
+          "candidate_through": 5,
+          "label": "initial escape and successive Qc4-arm pressure",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 2343,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "Qc4 lines up White's queen on c4 with Black's rook on g8 through Black's pawn on f7; the pawn screens the rook. Be6 breaks that alignment in this line. After Qc4, White's queen on c4 now targets Black's pawn on f7, and keeps targeting Black's pawn on c5. After Be6, Black's bishop on e6 blocks the line from White's queen on c4 to Black's pawn on f7. In the provided Qc4 line, the same queen next moves with Qd3 to d3. After Qd3, White's queen on d3 adds support to White's pawn on g3, which is under attack from Black's knight on h5. Qd3 moves the queen out of the attack from Black's bishop on e6. After Be6, Black's bishop on e6 now targets White's queen on c4. Qd3 moves the queen from c4 to d3, ending its attack on Black's pawn on c5. After b5, the black pawn originally on c5 is still present on c5. After Rd8, Black's rook on d8 now targets White's queen on d3. Qc2 moves the queen out of the attack from Black's rook on d8. After Bd3, Black's bishop on d3 now targets White's queen on c2. Qa4+ moves the queen out of the attack from Black's bishop on d3. After b5, the white queen originally on d4 is still present on a4. Qc4 moves the queen out of the attack from Black's pawn on c5. In the Qd3 line: After fxe4, Black's pawn on e4 now targets White's queen on d3. In the provided Qd3 line, the same queen next moves with Qa3 to a3. Qd3 moves the queen out of the attack from Black's pawn on c5. After Qa3, White's queen on a3 adds support to White's pawn on b2, which is under attack from Black's queen on e5, and now targets Black's pawn on a7 and Black's pawn on c5. Qa3 moves the queen out of the attack from Black's pawn on e4. After Qb6, Black's queen on b6 blocks the line from White's queen on a7 to Black's pawn on c5. After Qc6, the black pawn originally on c5 is still present on c5. After Qc6, White's queen on a3 attacks Black's pawn on c5. After Qd3, White's queen on d3 adds support to White's pawn on g3, which is under attack from Black's knight on h5. In the Qc4 line: exf5 captures the black pawn on f5. In the Qd3 line: After Qxa7, White's queen on a7 does not support White's pawn on b2. With Qxa7, the white queen originally on d4 captures the black pawn originally on a7. With Qxb2, the black queen originally on e7 captures the white pawn originally on b2. In the Qc4 line: The recorded continuation is b5. In the Qd3 line: fxe4 captures the white pawn on e4.",
+        "basic_chars": 2393,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": true,
+        "selected_question_fit": "The previously visible Qc4/Qd3 escape and renewed pressure answer is restored. It contains actual Be6/Qd3 and Rd8/Qc2, plus the Qxa7 support departure/Qxb2 pawn price, but still scatters them among other contacts.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "useful_bounded_parts_but_fragmented",
+        "required_reply_and_price_status": "complete_for_current_selected_local_capture_and_support_departure_topics",
+        "mandatory_actual_occurrence_keys": [
+          "c:1",
+          "c:2",
+          "c:3",
+          "c:4",
+          "c:5",
+          "r:1",
+          "r:16",
+          "r:19",
+          "r:20"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Repeated g3 support, c5 attack/withdrawal/presence records, later queen routes and the isolated b5 continuation still occupy default text.",
+        "core_oracle_match": "Initial queen escape and actual pressure/reply atoms returned; no compact common original-queen answer composed.",
+        "usefulness_rationale": "Auxiliary usefulness returns to the ownershipv13 level after v4 unavailable regression. Primary remains failed; restoration is not a new content-selection success.",
+        "detail_fact_availability": "Public detail units are available again; full actual accounts and finite line scope remain. Basic also explicitly states the prior fxe4 White e4-pawn loss.",
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 18,
+        "basic_covered_refs": 4,
+        "detail_required_refs": 18,
+        "detail_covered_refs": 10,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-09-obligation-facts.json",
+        "facts_sha256": "458e18624ac9efdcae3a3fe9fb5ab1043a6105c83588a8393f8e64581757aa11",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "candidates2018-10",
+      "comparison_id": "comparison:move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:evidence:candidate-comparison:5af58618b5a5be4841f3ebfef4174a519db38a6a004e9024abddd24e6d2cdfc0",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-10-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 3306,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:e9e5900c8bfbc9296a064445aa24591a9f7c391af85cbce9e47c14156550e100": "r",
+          "move-review:799b4562a6484aa6ae926cf7b162fd3783ca382001e300ba8f83d590a48e721e:47:h6f4:line:17b2af62d1931ca3a363299e3cc542abf13210a5814d4b03877fedf0cd1e6a8b": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Which piece captures the same f4 bishop, and what is exchanged with the same black knight later?",
+        "bounded_answer": "Bxf4 and exf4 both take the original f4 bishop with different pieces. Bxf4 later loses the White c6 knight to Raxb8 while Qxc5 takes the original d7 knight. In exf4, Bxg6/hxg6 instead exchanges the other White bishop for that same black knight.",
+        "required_if_claimed": [
+          "Do not describe the initial f4 capture as unique to one choice.",
+          "A later black-knight loss in Bxf4 includes prior Raxb8 taking the White knight; in exf4 it includes hxg6 taking the White bishop.",
+          "A pawn net-price or whole result includes bxa4 and Qxd6 in both arms, plus axb2 if extending the exf4 endpoint.",
+          "A queen-gain claim in Bxf4 includes Qxb5/axb5."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "Which piece captures the same f4 bishop, and what differs in the later price of the same Black d7 knight?",
+        "subjects": [
+          "True:bishop:f4",
+          "False:bishop:h6",
+          "False:pawn:e5",
+          "False:knight:d7",
+          "True:knight:c6",
+          "True:bishop:e4"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 16,
+          "candidate_through": 13,
+          "label": "initial common bishop removal plus later same Black knight trade at different White price",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 3111,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "Bxf4 captures the bishop on f4 with the bishop, keeping the pawn on e5 to support it on f4. exf4 captures that same bishop with the e5-pawn instead. After Bxf4, Black's bishop on f4 does not support Black's pawn on g7; after exf4, Black's bishop on h6 supports Black's pawn on g7. In the Bxf4 line: After Qa5, White's queen on a5 now targets Black's pawn on a6, and keeps targeting Black's pawn on b5. After Be3, Black's bishop on e3 now targets White's rook on g1. After Be3, Black's rook on f6 now targets White's pawn on f3. Rge1 moves the rook out of the attack from Black's bishop on e3. After axb5, the black pawn originally on a6 is still present on b5. Qc7 moves the queen from a5 to c7, ending its attack on Black's pawn on a6. Qxc5 moves the queen from d6 to c5, ending its attack on Black's pawn on a6. After Bc6, the black pawn originally on a6 is still present on b4. After Qxc5, White's queen on c5 now targets Black's pawn on b5. bxa4 moves the pawn out of the attack from White's queen on c5. After Qc7, White's pawn on a4 attacks Black's pawn on b5. The black pawn originally on b5 is still present on a4 after axb5 and after Bc6. Qc7 moves the queen from a5 to c7, ending its attack on Black's pawn on b5. In the provided Bxf4 line, the same bishop next moves with Be3 to e3. After Bc6, the white rook originally on g1 is still present on g1. After Bxf4, Black's bishop on f4 adds support to Black's pawn on e5, which is under attack from White's knight on c6. In the exf4 line: After Rge1, White's rook on e1 now targets Black's queen on e2. Qc4 moves the queen out of the attack from White's rook on e1. After axb2, the black queen originally on e2 is still present on c4. exf4 keeps the line from Black's bishop on h6 toward d2 blocked: after exf4, Black's pawn on f4 remains in that line as its sole blocker. In the same provided line, Rd2 brings White's rook on d2 there while that line is still blocked. After Qc7, White's queen on c7 now targets Black's knight on d7. exf4 clears e5; Ne5 later occupies that square in this line. Ne5 moves the knight out of the attack from White's queen on c7. After Ne5, Black's knight on e5 now targets White's knight on c6 and White's pawn on f3. After Ng6, Black's queen on c4 attacks White's knight on c6. Ng6 moves the knight from e5 to g6, ending its attack on White's knight on c6. After axb2, the white knight originally on c6 is still present on e6. Ng6 moves the knight from e5 to g6, ending its attack on White's pawn on f3. After axb2, the white pawn originally on f3 is still present on f3. exf4 moves the pawn out of the attack from White's knight on c6. In the Bxf4 line: bxa4 captures the white pawn on a4. Qxb5 captures the black queen on b5. axb5 recaptures the white queen on b5. In the Bxf4 line, both sides exchange one knight. Bxf4 recaptures the white bishop on f4. exf4 recaptures the white bishop on f4.",
+        "basic_chars": 2887,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": true,
+        "selected_question_fit": "First two sentences explain same original f4 bishop captured by bishop versus pawn with retained e5 support. The later same Black d7-knight comparison across both arms is still not a selected clear answer.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "useful_local_root_comparison_but_fragmented",
+        "required_reply_and_price_status": "previous_high_confidence_omission_repaired_in_basic_meaning",
+        "mandatory_actual_occurrence_keys": [
+          "r:15",
+          "r:16"
+        ],
+        "essential_or_primary_content_not_delivered": [
+          "candidate same original d7-knight Bxg6/hxg6 episode under the full primary question"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": {
+          "before_missing": "r:15",
+          "before_selected_gain": "r:16",
+          "after_material_meaning": "both sides exchange one knight",
+          "exact_white_original_victim": "True:knight:c6",
+          "exact_black_original_victim": "False:knight:d7",
+          "all_in_same_basic_cost_receipt": true
+        },
+        "unnecessary_basic_content": "Long queen/pawn attacks, withdrawal and presence lists remain. Initial victim contrast is followed by several independent topics.",
+        "core_oracle_match": "Raxb8 White knight loss plus Qxc5 Black knight loss are now explicitly represented by 'both sides exchange one knight' in basic. Full two-arm later-knight oracle not fulfilled.",
+        "usefulness_rationale": "Grant only auxiliary usefulness for the already-present root capture/support difference with its selected prices now closed. Do not call initial f4 scope alone a primary success, and do not derive improvement from shorter text.",
+        "detail_fact_availability": "Exact Raxb8/Qxc5 and candidate Bxg6/hxg6 remain in full details; required/covered of the basic knight-total unit now owns r15 and r16.",
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit",
+          "scope_importance_unresolved"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [
+          "r:15"
+        ],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "The basic price states each side loses one knight; Raxb8 is not spoken but its actual White original c6-knight loss is in the same cost receipt as Qxc5. This is expressed price with proof-only SAN, not an omission.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 26,
+        "basic_covered_refs": 7,
+        "detail_required_refs": 13,
+        "detail_covered_refs": 13,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-10-obligation-facts.json",
+        "facts_sha256": "33e125e38d11e716fed60d9052ced53becd92d5eaa7581c21c78bbc0d7f1115c",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error.",
+          "The knight exchange total is grammatical and conveys the bill; it does not itself explain who took each knight or make the two-arm later-knight topic clear."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "candidates2018-11",
+      "comparison_id": "comparison:move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:evidence:candidate-comparison:df6a41d09fe5cf5166ae7dd46446fb9f490f0e084ef870cf53c9a81a29099177",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-11-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 1571,
+        "replayed_work_count": 4,
+        "assessment_state": "needs_refresh",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:line:3ba1d41a5ea6bade4796d9fc34749768a144950e4d8ca97a806e7b943bd02cd8": "r",
+          "move-review:4b34e6cd5767d2ded935b2796542f63dc277d7e322274f1df89b79e6b878e9c6:46:c2a4:line:32fba2c0912a37dbe837775d927c8248415a8f443baef77d2d7f7934a2990191": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Does White take the a4 rook or allow it to leave?",
+        "bounded_answer": "Qxa4 takes the original a4 rook; the White queen is not captured in the recorded line. Qb1 is met by Ra8, preserving that same black rook through the provided ending.",
+        "required_if_claimed": [
+          "Track the same original rook in both arms.",
+          "Bound queen survival and rook gain to the supplied continuation rather than every legal alternative."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "Is the same original Black a4 rook removed now, or does it survive after leaving?",
+        "subjects": [
+          "False:rook:a4",
+          "True:queen:c2"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 7,
+          "candidate_through": 7,
+          "label": "original rook removal versus observed retention",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1275,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "observed_capture_target",
+        "basic_english": "Qxa4 captures the black rook. In the Qb1 line, Ra8 moves that same black rook; it remains on the board at the end of the recorded line.",
+        "basic_chars": 135,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": true,
+        "selected_question_fit": "Observed_capture_target directly answers original a4 rook removal with Qxa4 versus same rook departure to a8 and observed retention after Qb1.",
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": true,
+        "observed_capture_target_path_selected": true,
+        "topic_clarity": "clear_single_comparison",
+        "required_reply_and_price_status": "complete_for_observed_target_outcome",
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "c:2"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Independent queen supports/targets and knight-blockage records moved to detail; no unrelated basic facts remain.",
+        "core_oracle_match": "Matches original-target removal/retention oracle without a general plan or forced-win claim.",
+        "usefulness_rationale": "Genuine content improvement over prior one-arm/trace-only comparison, with original needs_refresh and partial research packet caveat retained.",
+        "detail_fact_availability": "Old relation facts plus full Qxa4 cost and candidate no-material-change detail remain.",
+        "failure_boundaries": [],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [
+          "c:7"
+        ],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Nf5 end occurrence remains required; basic expresses observed end retention without spelling that proof move.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 4,
+        "basic_covered_refs": 1,
+        "detail_required_refs": 10,
+        "detail_covered_refs": 1,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-11-obligation-facts.json",
+        "facts_sha256": "3a19e709c96aad4629669bc683328b193f23bb51ec88fc6eabc744e65a4cbd70",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "candidates2018-12",
+      "comparison_id": "comparison:move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:evidence:candidate-comparison:132400e283aa1ec081a28104f656d293d7778f9814392bada338eb5f0a470897",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-candidates2018-12-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 3,
+        "replayed_report_count": 3,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 1065,
+        "replayed_work_count": 3,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:line:955f96ac2cb818813fc4f6af23a38026dc107de71f9ba79eedb9e4f515245c66": "r",
+          "move-review:b4178407fb07c84c5dd19dd4a9551b4af02c984a185701bf7b0100e1f571dfe1:47:b5b4:line:457152484ef1788e09dc106998a03898cd290cc939a780b512aee80fe4ae1c77": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "How does moving the b5 pawn or protecting it affect the rook route to d5?",
+        "bounded_answer": "b4 clears b5 from the a5 rook route to the d5 pawn, and Rxd5 is the actual response. Be6 attacks that rook and Rb5 is its escape. Rb8 keeps the b5 blocker and supports it; White then actually advances the original b2 pawn two squares to b4.",
+        "required_if_claimed": [
+          "A b4 clearance/use claim keeps the actual d5 pawn capture and, if describing the response episode, Be6/Rb5.",
+          "A rook-gain claim includes Rxd5/Bxd5; a later knight/bishop account includes Bxd5/cxd5/Rxd5, including loss of the recapturing c3 pawn.",
+          "A whole b4 price keeps both the d5 black pawn loss and later White c3 pawn loss; the equal rook exchange and knight-for-bishop trade also remain.",
+          "The Rb8 response is b2-b4, not b2-b3; exact legal two-square pawn identity must survive public delivery."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "How does moving or retaining the b5 pawn affect the rook route to d5, and what closes the actual rook capture price?",
+        "subjects": [
+          "False:pawn:b5",
+          "True:rook:a5",
+          "False:pawn:d5",
+          "False:rook:d8",
+          "False:bishop:f5",
+          "True:pawn:b2"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 9,
+          "candidate_through": 2,
+          "label": "b5 clearance versus retention, d5 pawn capture and same-capturer rook exchange",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1776,
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "b4 occupies b4, blocking White's pawn on b2 from advancing to b4. After Rb8, that same b2-pawn advances with b4. After b4, Black's bishop on d6 now targets White's pawn on b4. After b4, White's rook on a5 attacks Black's pawn on d5, but not after Rb8. After b4, Black's pawn on b4 now targets White's pawn on c3. b4 clears b5; later Rxd5 passes through that square in this line. After Rxd5, White's rook on d5 now targets Black's bishop on d6 and Black's bishop on f5. Be6 moves the bishop out of the attack from White's rook on d5. c4 moves the pawn out of the attack from Black's pawn on b4. After Be6, Black's bishop on e6 now targets White's rook on d5. b4 clears b5; Rb5 later occupies that square in this line. Rb5 moves the rook out of the attack from Black's bishop on e6. Rb5 moves the rook from d5 to b5, ending its attack on Black's bishop on d6. After Ra1, the black bishop originally on d6 is still present on f8. After Ne3, White's knight on e3 now targets Black's bishop on d5. Be4 moves the bishop out of the attack from White's knight on e3. After Nd5, White's rook on e1 now targets Black's bishop on e4. Bxd5 moves the bishop out of the attack from White's rook on e1. b4 moves the pawn out of the attack from White's rook on a5. After b4, Black's bishop on d6 adds support to Black's pawn on b4, which is under attack from White's pawn on c3. In the provided Rb8 line, the same rook next moves with Rbc8 to c8. After Rbc8, Black's rook on c8 now targets White's knight on c5. After Rb8, Black's rook on b8 adds support to Black's pawn on b5, which is under attack from White's rook on a5. In the b4 line: Rxd5 captures the black pawn on d5. Bxd5 captures the white knight on d5. cxd5 recaptures the black bishop on d5. Rxd5 recaptures the white pawn on d5.",
+        "basic_chars": 1776,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "Existing b5 clearance, actual Rxd5 and Be6/Rb5 answer remains; exact White b2-b4 in peer is preserved.",
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "useful_but_broad",
+        "required_reply_and_price_status": "complete_for_current_stated_capture_topics",
+        "mandatory_actual_occurrence_keys": [
+          "r:2",
+          "r:15",
+          "r:16",
+          "r:17"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Many other bishop/knight pressure, withdrawals, presence and route records remain basic.",
+        "core_oracle_match": "Initial clearance/control question survives. Oracle extended same-capturer rook trade r8/r9 is available in details but not newly selected into this core.",
+        "usefulness_rationale": "Do not count r8/r9 absent basic as a new current rook-gain omission because current core does not claim that rook capture; do not infer full whole-line net price from the local pawn/minor account.",
+        "detail_fact_availability": "Full detail includes r8/r9 equal rook exchange and the final recapturing c3-pawn loss.",
+        "failure_boundaries": [
+          "excess_independent_content"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": "Old executor/public-contract caveats remain historical; this replay quality reading does not regrade original execution.",
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 15,
+        "basic_covered_refs": 4,
+        "detail_required_refs": 9,
+        "detail_covered_refs": 6,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/candidates2018-12-obligation-facts.json",
+        "facts_sha256": "41c32c8bb503d7175c0c91f71b0d7631cc5cec08cb44f08311fcc19fde46d2e9",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2024-07",
+      "comparison_id": "comparison:move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:evidence:candidate-comparison:e0ef6153ccbb659bd346de24b3112c9a178753dc6ea244b6bf18a36c097c618d",
+      "review_provenance": {
+        "mode": "remaining6_manual_reading_with_v13_baseline_retention",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-07-39",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 6,
+        "replayed_report_count": 6,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 3827,
+        "replayed_work_count": 6,
+        "assessment_state": "needs_refresh",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:line:da4086cd0de8bac9e26d714449ac07c54cc5afbda7e4ac018e676c748ae16689": "r",
+          "move-review:a3728c37461fa58ce2683e48be9b22d62b5a14f6e58b1c5d5ff156f9e0e18142:38:f4e3:line:73d850bf820971dc363a25d7afae71ad43f3a33ad4eb7e2744ce98aae8accdb1": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Does White exchange immediately or first attack the b6 queen with the bishop?",
+        "bounded_answer": "Rxe8/Nxe8 immediately exchanges rooks and later Rxe8/Nxe8 exchanges the other pair. Be3 attacks the original b6 queen along e3-d4-c5-b6, followed by Qb8. Its later Ne4/Bxe4/Rxe4 exchanges White bishop for Black knight.",
+        "required_if_claimed": [
+          "A Be3 queen-pressure claim includes Qb8 and does not become a queen-gain claim.",
+          "A Ne4 knight-gain claim includes Rxe4 taking the same White bishop.",
+          "A rook or queen-gain account retains the actual Nxe8, Rxa8 and Rxe1+/Rxe1 responses for the selected respective episode."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 2283,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "After Be3, White's bishop on e3 now targets Black's queen on b6. Qb8 moves the queen out of the attack from White's bishop on e3. After Qb8, Black's queen on b8 now targets White's pawn on g3. After d6, White's pawn on d6 blocks the line from Black's queen on b8 to White's pawn on g3. After Re8, the white pawn originally on g3 is still present on g3. After Qb8, White's bishop on e3 now targets Black's pawn on a7. a6 moves the pawn out of the attack from White's bishop on e3. Qb8: Opens the line from White's bishop on e3 to Black's pawn on a7. After Re8, the black pawn originally on a7 is still present on a6. After Be3, White's knight on c2 adds support to White's bishop on e3, which is under attack from Black's queen on b6, Black's rook on e8. After Be3, White's rook on e1 adds support to White's bishop on e3, which is under attack from Black's queen on b6, Black's rook on e8. After Be3, White's pawn on f2 adds support to White's bishop on e3, which is under attack from Black's queen on b6, Black's rook on e8. After Rxe8, White's rook on e8 now targets Black's rook on d8 and Black's knight on f8. After Nxe8, the black rook originally on d8 is still present on d8. The black knight originally on f8 is still present on f8 after Nxe8 and after Nf5. After Nxe8, Black's bishop on g7 now targets White's rook on a1. Re1 moves the rook out of the attack from Black's bishop on g7. Rxe8 clears e1; Re1 later occupies that square in this line. After Re1, White's rook on e1 now targets Black's knight on e8. Nd6 moves the knight out of the attack from White's rook on e1. After Qe4, White's queen on e4 now targets Black's knight on e8. Nd6 moves the knight out of the attack from White's queen on e4. After Qe7, White's queen on e7 now targets Black's knight on d6. Nf5 moves the knight out of the attack from White's queen on e7. After Nf5, the black knight originally on f6 is still present on f5. Rxe8 captures the black rook on e8. Nxe8 recaptures the white rook on e8. Rxe8 captures the black rook on e8. After Qf4, White's queen on f4 now targets Black's knight on d6. Nxe8 moves the knight out of the attack from White's queen on f4. Nxe8 recaptures the white rook on e8. In the Be3 line: Qxa8 captures the black queen on a8. Rxa8 recaptures the white queen on a8.",
+        "basic_chars": 2283,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "provenance": "Same basic/units/details as v13 and v7; retain original primary failure and useful bounded pressure/exchange answer.",
+        "question_fit": "Be3 attacks the original b6 queen and Qb8 escapes; immediate Rxe8/Nxe8 is closed. Those are complete but not selected as one clear comparison.",
+        "relevant_original_subjects": [
+          "True:bishop:f4",
+          "False:queen:b6",
+          "True:rook:e1",
+          "True:rook:a1",
+          "False:rook:e8",
+          "False:rook:d8"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "answer_buried_by_independent_content"
+        ],
+        "rationale": "Price and real queen response are there. The main contrast is crowded by g3/a7 attacks and survival, three separate e3 supports, and repeated knight pursuit. Correct facts do not make the bounded immediate-exchange versus queen-displacement question easy to recover.",
+        "details_or_conditional_content": "Unselected c4 Ne4/c5 Bxe4/c6 Rxe4 and later c14 Rxe1+/c15 Rxe1 must be closed if those episodes are claimed; do not require them merely because they are later PV captures.",
+        "proof_vs_message_note": "r1/r2 and r9/r10 involve different original rook pairs despite repeated SAN. Distinct exact occurrences are preserved.",
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "r:2",
+          "r:9",
+          "r:10",
+          "c:1",
+          "c:2",
+          "c:11",
+          "c:12"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "r1/r2 and r9/r10 involve different original rook pairs despite repeated SAN. Distinct exact occurrences are preserved."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 18,
+        "basic_covered_refs": 6,
+        "detail_required_refs": 11,
+        "detail_covered_refs": 10,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-07-obligation-facts.json",
+        "facts_sha256": "97b07b5605415acf1a3ba56b92aa9afea136010af008993342c0fd4839055cbf",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": [
+          "content_selection_fragmentation",
+          "answer_buried_by_independent_content"
+        ]
+      }
+    },
+    {
+      "game_id": "wch2024-08",
+      "comparison_id": "comparison:move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:evidence:candidate-comparison:93d4a739c2145763f63050c51c2b9e62d06298b082382b01753fb0f7113ec433",
+      "review_provenance": {
+        "mode": "remaining6_manual_reading_with_v13_baseline_retention",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-08-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2413,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:line:c304c2cb71b84c2dc831a699a6cb4f88a9729cdf2a45a1f4d0c156a75ab26c9f": "r",
+          "move-review:4e844a75a7967aae9730557d44855dd814ab6511d3d5402a8326513e2adc580b:47:c6b5:line:4bffd3c1028c5e82295e00dd79024948032e3f759aeff5f8866266e07a1c07f2": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What is the price of capturing b5 with a pawn versus the queen?",
+        "bounded_answer": "cxb5 removes the White b5 pawn with the c6 pawn. Qxb5 instead lets Rxb5 take the Black queen, followed by cxb5 taking that rook: queen lost for rook and pawn. The cxb5 arm later has a queen/rook fork and gives up both black knights while taking the White rook.",
+        "required_if_claimed": [
+          "The Qxb5 price keeps Qxb5/Rxb5/cxb5, and cannot call the pawn gain free.",
+          "If explaining the late Nb3 fork, retain Qa2 escaping the queen target, Bxc5 taking the other black knight, Nxa1 taking the rook, and Qxa1 removing the fork attacker when the account spans that episode.",
+          "A whole cxb5 price includes Bxa2/Qxa5, Bxg2+/Nxg2 and the two-knight-for-rook sequence; the whole Qxb5 arm also includes Bxd7/Nxd7 and Qxa4."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1302,
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "observed_capture_target",
+        "basic_english": "cxb5 captures the white pawn. Qxb5 captures the white pawn. In the Qxb5 line, White gives up one pawn and one rook for one queen.",
+        "basic_chars": 129,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": true,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true,
+        "provenance": "The existing v13 primary success is retained. New short core from v7 remains byte-for-byte with identical basic/detail units in v9; no new primary success is claimed.",
+        "question_fit": "Both root captures remove original White Pb5; the queen option pays a queen for pawn and rook while the pawn option removes the same pawn without that local queen price.",
+        "relevant_original_subjects": [
+          "True:pawn:b5",
+          "False:pawn:c6",
+          "False:queen:b6",
+          "True:rook:b1"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [],
+        "rationale": "The 129-character core retains exactly the locally important initial b5 comparison. It says White gives pawn and rook for a queen in the Qxb5 arm, so omitting the spoken Rxb5 and recapturing cxb5 SANs does not hide the queen loss or rook recovery.",
+        "details_or_conditional_content": "The late Nb3 fork in the cxb5 arm is a separate episode. If chosen, r16 Qa2, r20 Bxc5, r21 Nxa1 and r22 Qxa1 need to accompany it; an explicitly initial b5 capture comparison does not become a whole-line price by naming this game.",
+        "proof_vs_message_note": "The same basic cost receipt owns c1/c2/c3. Original Black Qb6 is removed at c2 and original White Rb1 at c3. Those exact prices stay in proof while the role total speaks them.",
+        "actual_core_retained_from_v7": true,
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "c:1",
+          "c:2",
+          "c:3"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "The same basic cost receipt owns c1/c2/c3. Original Black Qb6 is removed at c2 and original White Rb1 at c3. Those exact prices stay in proof while the role total speaks them."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 4,
+        "basic_covered_refs": 4,
+        "detail_required_refs": 22,
+        "detail_covered_refs": 15,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-08-obligation-facts.json",
+        "facts_sha256": "405b1cb39e28fb52fa5dcd2a0d37487a203b24133e6683a80d322f86288a1407",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": []
+      }
+    },
+    {
+      "game_id": "wch2024-09",
+      "comparison_id": "comparison:move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:evidence:candidate-comparison:4c545a24392ec2072e34909b24316383c88006a64796348643c9c07b3053eac6",
+      "review_provenance": {
+        "mode": "remaining6_manual_reading_with_v13_baseline_retention",
+        "source_path": "research/relation-ownership-20261004/content-assessment-ownershipv12.json",
+        "source_sha256": "25c8f47553e3d3bc35e2bfd46effdc1cecc2572f14e793c2f6f47522dc8f7db9",
+        "baseline_judgment_not_revised": true,
+        "original_obligation_not_revised": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-09-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": true,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 1018,
+        "replayed_work_count": 4,
+        "assessment_state": "needs_refresh",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:23aa5c79157b19c70ab315b7675e0698fe9af883c5d456ae22153a43790a4807": "r",
+          "move-review:9fd98aee8ac302ca8548b041fdbec37f30eb0e3de9b0661b907129139eb5f009:46:b1b5:line:91317ddd01ffe99d72c154dff5d0e091ca4c0c95edcb45e5d19bd8b27cae0273": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "Do the two recapturing pieces save the original b6 knight?",
+        "bounded_answer": "Both lines have Bxc5 taking the original c5 pawn and Qxb6 taking the original b6 knight. Kg2 uses Rxc5 to take the bishop, while Qb5 uses Qxc5. In either supplied line White loses knight and pawn for Black bishop.",
+        "required_if_claimed": [
+          "A bishop-gain or c5 support-use claim retains the original c5 pawn loss and the subsequent b6 knight loss when explaining that exchange outcome.",
+          "A Qb5 support-of-b6 claim must notice Qxc5 moving the supporting queen off that file before Qxb6; support at root is not persistence or actual knight survival.",
+          "An isolated c5 exchange may be bounded, but cannot imply that the simultaneously attacked knight has been saved."
+        ]
+      },
+      "oracle": null,
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1731,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "After Qb5, White's queen on b5 adds support to White's pawn on c5, which is under attack from Black's bishop on e7, and keeps supporting White's knight on b6, which is under attack from Black's rook on a6 and Black's queen on a7 and Black's rook on b8, and now targets Black's rook on a6. In the Qb5 line, White's queen on b5 keeps supporting White's pawn on c5 until Bxc5 captures the supported pawn; Qxc5 recaptures its capturer with the supporting queen. In the Kg2 line: After Bxc5, Black's bishop on c5 now targets White's knight on b6 and White's pawn on f2. In the Qb5 line: After Bxc5, Black's bishop on c5 now targets White's knight on b6 and White's pawn on f2. In the Kg2 line: After Rxc5, the white knight originally on b6 is still present on b6. After Rxc5, Black's rook on a6 attacks White's knight on b6. After Rxc5, Black's queen on a7 attacks White's knight on b6. After Rxc5, Black's rook on b8 attacks White's knight on b6. In the Qb5 line: After Qxc5, the white knight originally on b6 is still present on b6. After Qxc5, Black's rook on a6 attacks White's knight on b6. After Qxc5, Black's queen on a7 attacks White's knight on b6. After Qxc5, Black's rook on b8 attacks White's knight on b6. In the Kg2 line: The white pawn originally on f2 is still present on f2 after Rxc5 and after Qb5. In the Qb5 line: The white pawn originally on f2 is still present on f2 after Qxc5 and after Ne8. Qxc5 moves the queen from b5 to c5, ending its attack on Black's rook on a6. After Ne8, the black rook originally on a6 is still present on a6. In the Qb5 line, White gives up one pawn and one knight for one bishop. The recorded continuation is Kg2. In the Kg2 line, White gives up one pawn and one knight for one bishop.",
+        "basic_chars": 1731,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "provenance": "Same basic/units/details as v13 and v7; retain the existing complete price but fragmented subject answer.",
+        "question_fit": "Both arms correctly say White pays pawn and knight for bishop, but they do not organize different recapturers and same b6-knight removal as the clear answer.",
+        "relevant_original_subjects": [
+          "True:pawn:c5",
+          "True:knight:b6",
+          "False:bishop:e7",
+          "True:queen:b1",
+          "True:rook:c1",
+          "False:queen:a7"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ],
+        "rationale": "Each cost receipt actually includes Qxb6 removing the same original White b6 knight, and the role price states the loss. Do not count its unspoken SAN as a missing price. Repeated statements that the knight is still present immediately after recapture make the later price difficult to connect to the root support claim.",
+        "details_or_conditional_content": "Qb5's b6 support is current support, not continued protection after Qxc5 leaves b5. Exact root support cannot prove survival.",
+        "proof_vs_message_note": "Both r4 and c4 are actual original White Nb6 captures, with identical SAN but different path ownership.",
+        "mandatory_actual_occurrence_keys": [
+          "r:2",
+          "r:3",
+          "r:4",
+          "c:2",
+          "c:3",
+          "c:4"
+        ]
+      },
+      "proof_vs_message": {
+        "price_delivery_checked_as_meaning_not_SAN_presence": true,
+        "note": "Both r4 and c4 are actual original White Nb6 captures, with identical SAN but different path ownership."
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 12,
+        "basic_covered_refs": 6,
+        "detail_required_refs": 8,
+        "detail_covered_refs": 6,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-09-obligation-facts.json",
+        "facts_sha256": "1699ea7873591e18c3d7b29e34565b497d941b2aba1eaf074ad5f3389d1b6070",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false,
+        "readability_issues": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ]
+      }
+    },
+    {
+      "game_id": "wch2024-10",
+      "comparison_id": "comparison:move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:evidence:candidate-comparison:a024147aef2fd2422537464f1456010b110a157f007b70c4e5109d95605dcdb3",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-10-48",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 1801,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:line:8141227501c04c9a96d2caafbbd76f021ee3ee45490deb4c780dd5132e8f1ec9": "r",
+          "move-review:bf6d6ce99e358475e256083a9652a1fade8492e2416450c41f614b059cf7086d:47:e7c8:line:0b8026c44e22294d1d817154d6b5192e5a855b6e83481a60e8e80ceafdf9af0d": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What is paid to remove the same White c8 rook?",
+        "bounded_answer": "Nxc8 takes the rook directly. Bc6 lets that rook first take the original e8 bishop with Rxc6, then Nxc6 removes the rook. The alternative gives a bishop for the same rook that is taken directly in the other arm.",
+        "required_if_claimed": [
+          "The Bc6 rook-gain claim includes Rxc6 taking the bishop before Nxc6 recaptures.",
+          "Follow the original White c8 rook despite its change to c6."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "What is paid to remove the same original White c8 rook?",
+        "subjects": [
+          "True:rook:c8",
+          "False:knight:e7",
+          "False:bishop:e8"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 1,
+          "candidate_through": 3,
+          "label": "same rook direct removal versus removal after its bishop capture",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1678,
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "Nxc8 clears e7; Ke7 later occupies that square in this line. After Nxc8, Black's knight on c8 does not support Black's pawn on f5; after Bc6, Black's knight on e7 supports Black's pawn on f5. In the Nxc8 line: After Nd4, White's knight on d4 now targets Black's pawn on e6 and Black's pawn on f5. e5 moves the pawn out of the attack from White's knight on d4. After e5, Black's pawn on e5 now targets White's knight on d4. Bd3 clears e2; Ne2 later occupies that square in this line. Ne2 moves the knight out of the attack from Black's pawn on e5. After Kc3, the black pawn originally on e6 is still present on e5. After Ne2, White's bishop on d3 attacks Black's pawn on f5. Ne2 moves the knight from d4 to e2, ending its attack on Black's pawn on f5. After Kc3, the black pawn originally on f5 is still present on f5. In the provided Nxc8 line, the same knight next moves with Nd6 to d6. After Nd6, Black's knight on d6 adds support to Black's pawn on f5, which is under attack from White's knight on d4. After Bc6, Black's bishop on c6 now targets White's knight on f3. After Rxc6, the white knight originally on f3 is still present on f3. After a6, the white knight originally on f3 is still present on d2. After Rxc6, White's rook on c6 now targets Black's pawn on e6. The black pawn originally on e6 is still present on e6 after Nxc6 and after a6. After Bc6, Black's pawn on b7 adds support to Black's bishop on c6, which is under attack from White's rook on c8. After Bc6, Black's knight on e7 adds support to Black's bishop on c6, which is under attack from White's rook on c8. In the Bc6 line, White gives up one rook for one bishop. Nxc8 recaptures the white rook on c8.",
+        "basic_chars": 1678,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "The two prices for the same White rook are recoverable from the broad fallback, as in the ownershipv13 borderline pass, but v7 does not select the 139-character v4 observed_capture_target core.",
+        "primary_useful_and_complete": true,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "price_answer_recoverable_but_buried",
+        "required_reply_and_price_status": "complete_for_stated_direct_vs_bishop_payment",
+        "mandatory_actual_occurrence_keys": [
+          "r:1",
+          "c:2",
+          "c:3"
+        ],
+        "essential_or_primary_content_not_delivered": [],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "f5 support, multiple knight/pawn attacks, departures, terminal presence and king/pawn moves remain basic.",
+        "core_oracle_match": "Price conditions retained, but minimal same-original-rook answer is not chosen into a focused core.",
+        "usefulness_rationale": "Keep prior primary/auxiliary pass without counting a new success. Do not claim v4 focus survives v7: the actual new question is selected_comparison and body exactly matches v13.",
+        "detail_fact_availability": "Rxc6 bishop capture and Nxc6 same rook removal remain in detail and basic required/covered refs.",
+        "failure_boundaries": [
+          "answer_buried_by_independent_content"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Basic structured price 'White gives up one rook for one bishop' is delivered. Exact proofs remain. Price preservation is separate from selecting the clear short core.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": [
+          "c:2",
+          "c:3"
+        ]
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 13,
+        "basic_covered_refs": 3,
+        "detail_required_refs": 6,
+        "detail_covered_refs": 3,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-10-obligation-facts.json",
+        "facts_sha256": "475e57789235c3fed2e7b7f78f3b6e6125c6aeb1c0540e633ebba715a30afa98",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2024-11",
+      "comparison_id": "comparison:move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:evidence:candidate-comparison:3e1944141977402082cf7913f10a9b6d1657f49fe6353b7d26a1ca327e35dc44",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-11-47",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 4,
+        "replayed_report_count": 4,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 2923,
+        "replayed_work_count": 4,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:line:078bcfe4754ab3ee12149528c1f5f97a878a335489f0d5f3472409e597306e3e": "r",
+          "move-review:2b94a55c95deb9bad926b46aaec9aea4546e8054f73cab486296130bd22993ea:46:b1b5:line:33dea821bd236cc66de61d9ce55753e34e96a1ebb0e83d26a5fdcf678c55021b": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "How do the two orders use the b-file and open it for the rook exchange?",
+        "bounded_answer": "Both lines use Rb5 and Rdb1. Bxc6/bxc6 trades the White g2 bishop for the Black c6 knight and clears the original b7 pawn from the b-file; Rxb8/Rxb8/Rxb8+/Qxb8 then exchanges all four rooks. The later pawn gains differ.",
+        "required_if_claimed": [
+          "A c6 knight-gain or file-opening claim retains bxc6 taking the White bishop.",
+          "Any b8 rook-gain account retains all four rook removals and the queen recapture answering the check.",
+          "A whole endpoint price retains Nxd4 in Rb5, or Qxa5 and Qxe5 in h4; these are not needed for a bounded common b-file exchange.",
+          "Do not claim exact move-order convergence: h4 and e6/queen choices also change the board."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "How do both orders use and open the b-file for the same closed rook exchange?",
+        "subjects": [
+          "True:rook:b1",
+          "True:rook:d1",
+          "False:rook:h8",
+          "False:rook:d7",
+          "True:bishop:g2",
+          "False:knight:c6",
+          "False:pawn:b7",
+          "False:queen:c7"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 12,
+          "candidate_through": 14,
+          "label": "common b-file clearance/use and all four rook removals",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 1591,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "In the Rb5 line: bxc6 clears b7; later Rxb8 passes through that square in this line. In the provided Rb5 line, the same rook next moves with Rxb8 to b8. After Rxb8, White's rook on b8 now targets Black's rook on d8. Rxb8 moves the rook out of the attack from Black's pawn on c6. After Rxb8, the black rook originally on d7 is still present on b8. After Rxb8, White's rook on b1 attacks Black's rook on b8. Rb5 clears b1; Rdb1 later occupies that square in this line. After Rb5, White's rook on b5 now targets Black's pawn on a5 and Black's pawn on h5, and keeps targeting Black's pawn on b7. Rxb8 moves the rook from b5 to b8, ending its attack on Black's pawn on a5. After Qe4, the black pawn originally on a5 is still present on a5. bxc6 moves the pawn out of the attack from White's rook on b5. After bxc6, Black's pawn on c6 now targets White's rook on b5. bxc6: Opens the line from White's rook on b5 to Black's rook on b8. After Qe4, the black pawn originally on b7 is still present on c5. After Rxb8, White's queen on e2 attacks Black's pawn on h5. Rxb8 moves the rook from b5 to b8, ending its attack on Black's pawn on h5. After Qe4, the black pawn originally on h5 is still present on h5. Qe2 clears e4; later Bxc6 passes through that square in this line. Bxc6 captures the black knight on c6. Rxb8+ recaptures the black rook on b8. In the provided Rb5 line: Rxb8+ gives check to the Black king on g8 with White's rook on b8. Qxb8 recaptures the checking white rook on b8. In the Rb5 line, both sides exchange one rook; White also loses one bishop. The recorded continuation is h4.",
+        "basic_chars": 1591,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "The reference b-file transaction remains broad; peer h4 is still only a continuation label rather than the same actual clearance/use and full price answer.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": false,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "one_arm_and_fragmented",
+        "required_reply_and_price_status": "reference_price_complete_candidate_topic_not_delivered",
+        "mandatory_actual_occurrence_keys": [
+          "r:7",
+          "r:8",
+          "r:9",
+          "r:10",
+          "r:11",
+          "r:12"
+        ],
+        "essential_or_primary_content_not_delivered": [
+          "candidate common b-file use/price r-equivalent c9 through c14"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Attack/escape/presence records and reference local totals still dominate basic.",
+        "core_oracle_match": "Both-arm mechanism composition is still missing; same end trade does not prove h4 benefit or exact transposition.",
+        "usefulness_rationale": "Keep v13 local-price repair distinct from overall useful question failure.",
+        "detail_fact_availability": "Both full transactions are preserved in detail, including all four rook removals and bxc6; availability is not core delivery.",
+        "failure_boundaries": [
+          "question_selection_or_contrast",
+          "content_selection_fragmentation"
+        ],
+        "scope_sensitive_note": null,
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 11,
+        "basic_covered_refs": 6,
+        "detail_required_refs": 21,
+        "detail_covered_refs": 15,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-11-obligation-facts.json",
+        "facts_sha256": "3a4015e76aada992c525ad17e7048635e72f2b2e5ef840c52784bc7c915567af",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    },
+    {
+      "game_id": "wch2024-12",
+      "comparison_id": "comparison:move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:evidence:candidate-comparison:7903e970648af7730b44ce6e79d00553ea12d3e3acb8b33912bcde03dbb7f403",
+      "review_provenance": {
+        "mode": "inherited_v7_without_semantic_regrading",
+        "source_path": "research/answer-selection-20261004/assessment-selectionv7.json",
+        "source_sha256": "38c043adaad4b9d8653d10587350c4519c95dfd4e0f88fb179b833092746b3f7",
+        "actual_basic_units_identical_to_v7": true,
+        "actual_detail_units_identical_to_v7": true
+      },
+      "source_and_execution": {
+        "request_id": "fresh-wch2024-12-40",
+        "replay_status": "fully_replayed",
+        "saved_report_count": 6,
+        "replayed_report_count": 6,
+        "mismatched_work_fields": [],
+        "pending_issued_work": null,
+        "unreplayed_saved_work_ids": [],
+        "research_executor_partial_packet": false,
+        "research_clock_elapsed_ms": 0,
+        "replay_wall_elapsed_ms": 4521,
+        "replayed_work_count": 6,
+        "assessment_state": "current",
+        "supplied_controls": {
+          "request": true,
+          "partial": true,
+          "work_trace": true,
+          "report_count": true,
+          "pair": true,
+          "positions": true,
+          "paths": true,
+          "statements": true,
+          "verification": true,
+          "assessment": true,
+          "assessment_state": true,
+          "assessment_scope": true,
+          "progress": true
+        },
+        "exact_pair_source_ids": {
+          "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:f7208ea6279b1da3a2df099849af23e6f01a327b4a84cd96fef212f2268bb5fe": "r",
+          "move-review:9912efc39b929517d6ef9d894d379e5cf09c98ed1fae8d9a73cbab2bee94752a:39:e7f6:line:25ae9f40399c77916666b27f2037b2086a895a314b240db0e9e741ca525e4125": "c"
+        }
+      },
+      "prewritten_obligation": {
+        "primary_question": "What is actually paid for the captures when the d5 knight vacates the queen file?",
+        "bounded_answer": "In Bf6, Nbxd5 takes the d-pawn; Nxe3 then takes a bishop and clears the d-file to the d7 queen. Rxd7 takes that queen, while Nxg2/Kxg2 and Bxd7 exchange the attacking knight and White rook after both White bishops have gone. In f5, Bxb6/cxb6 trades bishop for knight, and White takes e4 and f5 before Rxc4 recovers a pawn.",
+        "required_if_claimed": [
+          "A Bf6 Nxe3 or Nxg2 gain must retain the exposed queen loss, Kxg2 removing that same knight and Bxd7 removing the White rook when describing the episode price.",
+          "A queen-gain claim includes prior Nbxd5/Nxe3 and both bishops, plus actual Kxg2/Bxd7; it is not a free queen.",
+          "A f5 support/result claim retains fxe4 and exf5 if claiming protection or final price; a full result also includes Rxc4.",
+          "A full Bf6 net-price includes Nxe4 after the central pawn loss and heavy/minor trades."
+        ]
+      },
+      "oracle": {
+        "file": "research/answer-selection-20261004/core-oracle.json",
+        "question": "What is paid when the same original b6 knight changes from a minor exchange to captures that open the queen file?",
+        "subjects": [
+          "False:knight:b6",
+          "True:bishop:e3",
+          "True:bishop:g2",
+          "False:queen:d8",
+          "True:rook:d1",
+          "False:bishop:g6",
+          "True:pawn:d4",
+          "False:pawn:e4"
+        ],
+        "scope": {
+          "kind": "observed_line_episode",
+          "reference_through": 9,
+          "candidate_through": 18,
+          "label": "same b6 knight trade, d-file opening and complete heavy/minor price",
+          "universal_reply_or_evaluation_cause_claim": false
+        },
+        "entire_oracle_answer_not_replaced_by_a_trivial_root_description": true
+      },
+      "before": {
+        "version": "ownershipv13-18",
+        "question": "selected_comparison",
+        "basic_chars": 2157,
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true
+      },
+      "after": {
+        "version": "selectionv9-18",
+        "question": "selected_comparison",
+        "basic_english": "Bf6 lines up Black's bishop on f6 with White's queen on c3 through White's pawn on d4; the pawn screens the queen. Qc2 breaks that alignment in this line. After Bf6, Black's bishop on f6 now targets White's pawn on d4. d5 moves the pawn out of the attack from Black's bishop on f6. Bf6 clears e7; Ne7 later occupies that square in this line. After Bf6, Black's rook on e8 adds support to Black's pawn on e4, which is under attack from White's bishop on g2. After f5, Black's pawn on f5 adds support to Black's pawn on e4, which is under attack from White's bishop on g2. After f5, Black's bishop on g6 does not support Black's pawn on e4, whereas the g6-bishop does after Bf6. In the f5 line: After f3, White's pawn on f3 now targets Black's pawn on e4. After Bf6, Black's bishop on f6 now targets White's pawn on d4. d5 moves the pawn out of the attack from Black's knight on c6. d5 moves the pawn out of the attack from Black's bishop on f6. After Ne5, Black's knight on e5 now targets White's pawn on f3. fxe4 moves the pawn out of the attack from Black's knight on e5. With fxe4, the white pawn originally on f2 captures the black pawn originally on e4. In the Bf6 line: After d5, White's bishop on e3 now targets Black's knight on b6. Nbxd5 moves the knight out of the attack from White's bishop on e3. Nbxd5 captures the white pawn on d5. After Nbc3, White's knight on c3 now targets Black's knight on d5. After Nbxd5, White's pawn on c4 now targets Black's knight on d5. After Nbxd5, White's rook on d1 now targets Black's knight on d5. Nxe3 moves the knight out of the attack from White's rook on d1. Nxe3 moves the knight out of the attack from White's pawn on c4. Nxe3 moves the knight out of the attack from White's knight on c3. After Nxe3, White's queen on c1 now targets Black's knight on e3. After Nxe3, White's pawn on f2 now targets Black's knight on e3. Nxg2 moves the knight out of the attack from White's pawn on f2. Nxg2 moves the knight out of the attack from White's queen on c1. Nxe3 clears d5; later Rxd7 passes through that square in this line. In the Bf6 line, White gives up two bishops and one rook for one knight and one queen.",
+        "basic_chars": 2157,
+        "summary_unavailable": null,
+        "visible_basic_source": "question_units",
+        "basic_changed_vs_v13": false,
+        "basic_changed_vs_v7": false,
+        "basic_units_identical_to_v7": true,
+        "detail_units_identical_to_v7": true
+      },
+      "content_judgement": {
+        "change": "Inherited v7 semantic judgment; actual question/basic/basic units/details unchanged.",
+        "basic_changed_vs_v13": false,
+        "selected_question_fit": "Candidate d-file opening and heavy/minor price can be recovered, but the original b6-knight comparison is not the chosen clear subject; many support/escape facts remain.",
+        "primary_useful_and_complete": false,
+        "auxiliary_useful_and_complete": true,
+        "focused_minimum_core_selected": false,
+        "observed_capture_target_path_selected": false,
+        "topic_clarity": "useful_local_price_fragmented_subject",
+        "required_reply_and_price_status": "complete_for_stated_candidate_heavy_minor_price",
+        "mandatory_actual_occurrence_keys": [
+          "c:9",
+          "c:13",
+          "c:14",
+          "c:15",
+          "c:16",
+          "c:17"
+        ],
+        "essential_or_primary_content_not_delivered": [
+          "reference original b6 knight trade as the peer of candidate subject"
+        ],
+        "high_confidence_important_price_omissions": [],
+        "scope_sensitive_unselected_requirements_are_not_new_unconditional_price_errors": true,
+        "price_repair": null,
+        "unnecessary_basic_content": "Other knight-pressure/escape and support/arrival facts obscure the actual queen-file price.",
+        "core_oracle_match": "Candidate full heavy/minor price retained; peer knight exchange and alternative f5 support-loss question still not assembled into the selected comparison.",
+        "usefulness_rationale": "Keep auxiliary useful price answer but do not upgrade primary from structured total alone.",
+        "detail_fact_availability": "Reference Bxb6/cxb6, fxe4/exf5/Rxc4 and candidate equal pawn pair c9/c18 retained in detail; matched pawn omitted from local heavy/minor claim is scope, not free-queen error.",
+        "failure_boundaries": [
+          "content_selection_fragmentation",
+          "same_subject_comparison_not_explicit"
+        ],
+        "scope_sensitive_note": "If selecting the f5 protection/result topic, target fxe4 and supporter exf5 losses are mandatory; current isolated support clauses are not a full protection lesson.",
+        "historical_execution_note": null,
+        "unsupported_causal_or_forced_claims_observed": [],
+        "internal_dispatch_or_guard_cause_claimed": false
+      },
+      "proof_vs_message": {
+        "exact_proof_SAN_not_spoken_in_basic_keys": [],
+        "price_delivery_is_checked_as_meaning_not_as_SAN_presence": true,
+        "note": "Reader required/covered is evidence linkage. An account or SAN mention in detail is not itself a basic answer; every proof move need not be spoken when its typed price/result is expressed.",
+        "explicit_capture_exposition_not_spoken_but_aggregate_price_delivered": null
+      },
+      "reference_audit": {
+        "paths": 2,
+        "basic_required_refs": 17,
+        "basic_covered_refs": 7,
+        "detail_required_refs": 14,
+        "detail_covered_refs": 12,
+        "facts_path": "target/relationship-delivery-20261004/fresh-probe-v6/run/wch2024-12-obligation-facts.json",
+        "facts_sha256": "69144c8089671d45719fe9434ce75fb0f549d06aa68317b183e92a11fb92ac1a",
+        "exact_reference_issues": []
+      },
+      "grammar_and_readability": {
+        "clear_grammatical_errors_observed": [],
+        "readability_issues": [
+          "Repeated piece/coordinate introductions and event-by-event relation narration remain; this is topic/readability criticism, not an asserted subject-verb grammar error."
+        ],
+        "semantic_fragmentation_not_relabelled_as_grammar_error": true,
+        "independent_human_or_native_speaker_rating": false
+      }
+    }
+  ],
+  "conclusions": [
+    {
+      "finding": "Final old18 remain 5 primary-useful answers, not 14.",
+      "evidence": "Price closure improves and three initial capture cores are short, but many quiet/support/clearance/attack comparisons still enumerate independent facts rather than foreground one useful answer."
+    },
+    {
+      "finding": "W16-11's local core survives the safety narrowing without becoming full-primary success.",
+      "evidence": "Same original Black d4 pawn removal versus dxc3 retention and initial one-pawn-each price remain. The v7 Qb6+ ray/check and rook-price elaboration leave basic; actual later rook exchange and a3 loss remain in details. Accept only the initial bounded answer."
+    },
+    {
+      "finding": "W24-08 preserves the important price while omitting proof SANs.",
+      "evidence": "One receipt retains Qxb5/Rxb5/cxb5 actual captures, and its visible role price conveys queen paid for rook and pawn. Both the 129-character text and unit metadata equal v7."
+    },
+    {
+      "finding": "C18-10 repaired price is not a primary-question solution.",
+      "evidence": "The retained 'both sides exchange one knight' account covers Raxb8 removing original White Nc6 and Qxc5 removing original Black Nd7. The broader same-knight alternative price is still not selected as the main answer."
+    },
+    {
+      "finding": "Source correctness and content usefulness remain distinct.",
+      "evidence": "734 required/covered usages match exact stored occurrences, yet the prewritten primary passes only 5/18. A recorded-continuation anchor or exact SAN ownership alone is not a chess answer."
+    }
+  ],
+  "limits": [
+    "All 18 positions were opened development/replay cases; this artifact contains no new generalization corpus and does not modify the twelve-case oracle or original obligations.",
+    "No human/native-speaker reader assessment was conducted. No new engine, legal board replay, full web-app or production/mobile performance verification was performed.",
+    "Scope-sensitive conditional omissions such as W16-12's full pawn price, C18-08's unselected fork compensation, and W24-12's unselected f5 protection outcome are not silently converted to successes or added as unconditional selected-claim omissions.",
+    "W16-11's material sentence uses an arm prefix rather than an explicit episode boundary; a whole-line reading would be inaccurate. The accepted auxiliary judgment is bounded to its initial central-pawn episode.",
+    "Partial packets and needs_refresh labels retain original meaning. Price completeness within a supplied observed line does not prove the result against every legal reply.",
+    "Grammar judgments inherited for oracle12 and observational for remaining6 concern actual English syntax, not an independent fluency certification. Repetition/topic fragmentation is recorded separately."
+  ]
+}

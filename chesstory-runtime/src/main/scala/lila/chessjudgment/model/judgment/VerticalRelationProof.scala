@@ -358,6 +358,11 @@ private[chessjudgment] object VerticalRelationPremiseRole:
       source match
         case VerticalRelationPremiseSource.Position(occurrence) => occurrences.contains(occurrence)
         case _                                                  => false
+    def snapshotAt(occurrence: RelationSnapshotOccurrence): Boolean = occurrence match
+      case RelationSnapshotOccurrence.Before =>
+        positionAt(RelationPremiseOccurrence.Before, RelationPremiseOccurrence.Removed)
+      case RelationSnapshotOccurrence.After =>
+        positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
     def rootTransition: Boolean = source == VerticalRelationPremiseSource.RootTransition
     def derived: Boolean = source == VerticalRelationPremiseSource.Derived
     def legalMove(moveUci: String): Boolean =
@@ -417,11 +422,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
               establishedControllers.nonEmpty
           case _ => false)
       case CheckerControl(occurrence, controllingSide, checker, kingSquare) =>
-        val exactOccurrence = occurrence match
-          case RelationSnapshotOccurrence.Before =>
-            positionAt(RelationPremiseOccurrence.Before, RelationPremiseOccurrence.Removed)
-          case RelationSnapshotOccurrence.After =>
-            positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
+        val exactOccurrence = snapshotAt(occurrence)
         exactOccurrence && enemyControl(
           controllingSide,
           checker,
@@ -448,11 +449,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
           case RelationWitnessDetail.LegalMove(_, _, _, _, _, Some(_)) => true
           case _                                                        => false)
       case AbsolutePinBarrier(occurrence, restrictedSide, pinner, pinned, kingSquare, axis) =>
-        val exactOccurrence = occurrence match
-          case RelationSnapshotOccurrence.Before =>
-            positionAt(RelationPremiseOccurrence.Before, RelationPremiseOccurrence.Removed)
-          case RelationSnapshotOccurrence.After =>
-            positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
+        val exactOccurrence = snapshotAt(occurrence)
         exactOccurrence && (relation.detail match
           case ray @ RelationWitnessDetail.RayBarrier(owner, attacker, attackerRole, occupants, geometry) =>
             RelationRayProjection.isAbsoluteKingPinGeometry(ray) &&
@@ -495,20 +492,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
               resource.mode == mode
           case _ => false)
       case PawnTopologyFacetSource(occurrence, side, pawn, facet, componentPawns, semanticId) =>
-        val exactOccurrence = (occurrence, source) match
-          case (
-                RelationSnapshotOccurrence.Before,
-                VerticalRelationPremiseSource.Position(
-                  RelationPremiseOccurrence.Before | RelationPremiseOccurrence.Removed
-                )
-              ) => true
-          case (
-                RelationSnapshotOccurrence.After,
-                VerticalRelationPremiseSource.Position(
-                  RelationPremiseOccurrence.After | RelationPremiseOccurrence.Established
-                )
-              ) => true
-          case _ => false
+        val exactOccurrence = snapshotAt(occurrence)
         def pawnFileDistance(file: EvidenceFile): Int =
           file.key.toLowerCase.headOption
             .map(value => (value.toInt - pawn.key.toLowerCase.head.toInt).abs)
@@ -600,20 +584,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
                 case _ => false)
         exactOccurrence && semanticId == relation.semanticId && exactFacetSource
       case PawnPassageStateSource(occurrence, side, pawn, semanticId) =>
-        val exactOccurrence = (occurrence, source) match
-          case (
-                RelationSnapshotOccurrence.Before,
-                VerticalRelationPremiseSource.Position(
-                  RelationPremiseOccurrence.Before | RelationPremiseOccurrence.Removed
-                )
-              ) => true
-          case (
-                RelationSnapshotOccurrence.After,
-                VerticalRelationPremiseSource.Position(
-                  RelationPremiseOccurrence.After | RelationPremiseOccurrence.Established
-                )
-              ) => true
-          case _ => false
+        val exactOccurrence = snapshotAt(occurrence)
         exactOccurrence && semanticId == relation.semanticId && (relation.detail match
           case RelationWitnessDetail.PawnPassage(owner, exactPawn, _) =>
             owner == side && exactPawn == pawn

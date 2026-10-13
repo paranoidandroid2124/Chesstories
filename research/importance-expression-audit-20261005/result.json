@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-05",
+  "task": "이전 개발 기록과 현재 코드를 대조해 중요도 판단과 표현 문제가 반복해서 남는 원인을 확인",
+  "worktree": "C:/Users/양자/.codex/worktrees/8f44/Chesstories",
+  "product_sources_changed_in_this_audit": false,
+  "method": {
+    "historical_thread": {
+      "title": "체스 해설 접근 방식 독립 재검토",
+      "id": "01a0d95e-97a9-7561-8c71-62c16e8b6ed4",
+      "relevant_turns": [
+        "01a0f213-6eb3-7bb0-87ca-c7570752dcbd",
+        "01a0f217-d20d-7050-888b-eae9a7ac89f1",
+        "01a0f230-3560-7fa2-a7f6-3162be0a6df9",
+        "01a0fc44-26ca-7332-ba20-92c34955ba9f",
+        "01a10829-5d99-7ad3-be0b-313c55f2bdbc"
+      ]
+    },
+    "records": "2026-09-30부터 2026-10-05까지의 재구성·내용 선택·거절 실험·완료 검사·최신 비교 답 기록을 현재 소스와 대조",
+    "cases": "이미 열린 old18/fresh17 사례의 저장 사실과 구조화된 기본 해설만 사용",
+    "new_engine_execution": false,
+    "new_product_test_execution": false,
+    "new_unseen_or_human_quality_evaluation": false,
+    "sealed_material_read": false,
+    "product_llm": false
+  },
+  "main_finding": "정확하고 완결된 관계를 보존하는 판정은 강화됐지만, 그 관계들로 이번 비교의 중심 답을 구성하고 독립 설명의 우선순위를 결정하는 판정은 부분적으로만 구현됐다. 범위를 줄이는 실험의 의미·가격 회귀 뒤 기존 경로와 설명 묶음을 보존하는 쪽으로 채택 범위가 좁아졌고, 표현기는 남은 문장 목록을 개별적으로 출력한다.",
+  "history": [
+    {
+      "period": "2026-09-30~10-01",
+      "attempt": "내용과 문장 생성 분리, 구조화된 공통 답 및 전달 보존",
+      "confirmed_gain": "CommentaryAnswer와 공통 완료·표현 경로, 정확한 참조 전달",
+      "remaining": "별도 Tata2020 18국면에서 유용하고 완결된 기본 답 6/18, 읽기 편한 답 2/18. 구조 분리가 중요도·읽기 품질을 함께 해결하지 못했다.",
+      "source": {
+        "path": "research/commentary-reconstruction-20261001/checkpoint.json",
+        "line": 23
+      }
+    },
+    {
+      "period": "2026-10-01",
+      "attempt": "지원 사용·필수 조건·가격 보완, 좁은 문장 결합",
+      "confirmed_gain": "저장 36개 전달 유지, 필요한 누락 가격 보완, 관련 259개 검사 통과 기록",
+      "remaining": "선택 질문 변화 0. 29/36 해설이 길어짐. 기록 자체가 fact ledger 및 전반적 중요도·가독성 미완료를 명시.",
+      "source": {
+        "path": "research/commentary-followup-20261001/result.json",
+        "line": 150
+      }
+    },
+    {
+      "period": "2026-10-02",
+      "attempt": "내용 선택 연구와 검증된 QuestionFocus의 정확한 조건·사용 분리",
+      "confirmed_gain": "검증된 초점이 있을 때 무관한 h5 상태를 상세로 내리는 합성 대조",
+      "remaining": "저장 마스터 재생에는 완전한 QuestionFocus/조사 문맥이 없어서 해당 경로의 일반 개선을 입증하지 못함. 초점이 없으면 넓은 fallback 유지. 독립 완결 질문의 중요도 판단 미완료.",
+      "source": {
+        "path": "research/content-selection-20261002/implementation.json",
+        "line": 145
+      }
+    },
+    {
+      "period": "2026-10-04",
+      "attempt": "질문을 먼저 정하고 필수 응수·가격만 남기는 정책",
+      "confirmed_gain": "실제로 채택된 새 후보는 결과·가격이 다른 초기 포획의 원래 피해 기물로 제한",
+      "remaining": "새 경로 적용은 기존 열린 사례 3개, 새 사용 가능 사례 0/17. 기본 질문 완결 기준은 old18에서 4/18→5/18로 미달. 회피·일반 사용·독립 질문 중요도는 유보.",
+      "source": {
+        "path": "research/answer-selection-20261004/development-decisions.json",
+        "line": 9
+      }
+    },
+    {
+      "period": "2026-10-05 latest subjectv9",
+      "attempt": "공통 원래 기물, 실제 양쪽 대응·가격, 독립 초기 사용 보존",
+      "confirmed_gain": "공통 대상 후보 24/35 적용. 관련 332개 검사 및 기존 사실·가격 전달 보존 기록. COR06-02/08/09에 실제 내용 개선.",
+      "remaining": "기존 질문 우선순위 유지. 보호된 관계는 큰 묶음으로 함께 남음. W24-11 비대칭 설명, COR06-09 교차 유형 반복, 독립 질문 중요도 미해결. 24/35는 품질 합격률이 아님.",
+      "source": {
+        "path": "research/subject-comparison-20261005/result.json",
+        "line": 133
+      }
+    }
+  ],
+  "causes": [
+    {
+      "id": "question_admission_precedes_priority",
+      "confidence": "코드와 이전 계측으로 확인; 일반 제품 전체의 빈도 추정 아님",
+      "finding": "후보의 중요도 경쟁 이전에 후보 자격·구성에서 막히는 사례가 많다.",
+      "evidence": "최신 이전 진단의 저장35개에서 QuestionFocus0/35, 기록된 legacy 호출34개 중 후보 목록이 빈 호출33개, 복수 legacy 후보0. 최신 경로도 초기 포획·위험 회피·초기 접점 및 실제 결과 차이에 의해 자격을 제한.",
+      "consequence": "독립 질문 순위를 추가하는 것만으로 W24-11 같은 공통 사용 질문의 부재가 해결되지 않는다. 검증된 초점이 없는 저장 입력의 실패를 제품 전반에 질문이 없다는 결론으로 확대해서도 안 된다.",
+      "sources": [
+        {
+          "path": "research/selection-cause-audit-20261005/result.json",
+          "line": 427
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+          "line": 46
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 1089
+        }
+      ]
+    },
+    {
+      "id": "explainable_does_not_select_primary_answer",
+      "confidence": "현재 코드에서 확인",
+      "finding": "이력·실제 사용·basicAction의 존재와 결과 차이가 기본 답 자격으로 쓰이지만, 그 자체로 이번 비교의 중심 질문은 확정되지 않는다.",
+      "evidence": "넓은 core 자격이 bundle.histories/effect.use/basicAction을 허용. 최종 답은 terminal→convergence→exchange→investigated→legacy→threat/contact/physical 순서. 완결 후보가 둘 이상일 때의 선택은 기존 정책에 남아 있다.",
+      "consequence": "조건과 가격이 참인 설명을 추가해도, 독자가 먼저 이해해야 할 선택의 답이 자동으로 조직되지는 않는다.",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2242
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "line": 2960
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "line": 2007
+        }
+      ]
+    },
+    {
+      "id": "regression_retreat_and_bundle_protection",
+      "confidence": "거절 기록과 현재 코드에서 확인",
+      "finding": "범위 축소의 의미·가격 회귀를 막기 위해 보호를 넓혔고, 보호가 개별 의미보다 큰 단위로 적용된다.",
+      "evidence": "selectionv3은 같은 결과·가격의 포획 답으로 기존 지원 의미를 밀어내 1개 회귀. selectionv5의 전역 회수 범위 축소는 실제 체크 끝·지연 개방 손실·다른 대상 응수·혼합 가격 4개 회귀. 최신 protect는 초기 사용을 가진 Statement 하나가 있으면 해당 Section의 모든 Statement를 기본 답에 붙임.",
+      "consequence": "필수 의미와 가격의 보존은 필요하지만, 한 설명 묶음에 함께 있던 부수 공격·잔존도 기본 본문에 남을 수 있다. 후보 추가만으로 반복·길이·중심 선택이 해결되지 않는다.",
+      "sources": [
+        {
+          "path": "research/answer-selection-20261004/development-decisions.json",
+          "line": 21
+        },
+        {
+          "path": "target/relationship-delivery-20261004/test-run-selectionv3.log",
+          "line": 5
+        },
+        {
+          "path": "target/relationship-delivery-20261004/test-run-selectionv5.log",
+          "line": 5
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+          "line": 19
+        },
+        {
+          "path": "research/answer-selection-20261004/policy-review.json",
+          "line": 244
+        }
+      ]
+    },
+    {
+      "id": "statement_rendering_not_comparative_composition",
+      "confidence": "최신 구조화된 답·본문·표현 코드에서 확인",
+      "finding": "문장 표현의 잔여 문제는 개별 문법보다 공통점·차이·응수·대가를 하나의 답으로 조직하는 문제다.",
+      "evidence": "ComparisonSubject는 비교 대상을 소개한다. 표현기는 Section마다 exact Statement 중복을 제거하고 같은 행동·지원·회피·잔존 일부를 묶지만, 여러 Section/서로 다른 유형이 같은 사건을 설명하는 의미를 함께 조직하지 않는다.",
+      "consequence": "교환 가격의 한 번 소유와 동일 포획의 한 번 표현은 서로 다른 조건이다. 비교 제목 아래 긴 사건 목록이 남는다.",
+      "sources": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 220
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "line": 420
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "line": 224
+        }
+      ]
+    },
+    {
+      "id": "completion_scope_does_not_complete_user_objective",
+      "confidence": "여러 작업의 완료·한계 기록에서 확인; 작업 순서에 관한 진단",
+      "finding": "중기 작업이 반복해서 가격·참조·새 후보의 안전 적용까지 마감되고, 중요도와 전체 답 조직은 다음 과제로 남았다.",
+      "evidence": "기록들은 품질 기준 미달을 명시하고 있다. 259/319/332 검사 통과나 경로 적용률을 품질 점수로 보고한 사실을 주장하지 않는다. 다만 같은 사용자 목표가 다음 목표로 재등장하며 이번 채택 범위도 후보 확대와 보호 보존까지였다.",
+      "consequence": "국소 수정의 성공이 누적되어도 남은 핵심 목표가 닫히지 않았다. 최신24/35 적용만으로 전체 중요도·표현 해결률을 계산할 수 없다.",
+      "sources": [
+        {
+          "path": "research/commentary-followup-20261001/result.json",
+          "line": 31
+        },
+        {
+          "path": "research/answer-selection-20261004/development-decisions.json",
+          "line": 2
+        },
+        {
+          "path": "research/subject-comparison-20261005/result.json",
+          "line": 133
+        }
+      ]
+    }
+  ],
+  "case_controls": [
+    {
+      "id": "wch2024-11",
+      "actual_evidence": {
+        "reference_root": "Rb5",
+        "reference_moves": 19,
+        "candidate_root": "h4",
+        "candidate_moves": 23
+      },
+      "useful_bounded_question": "두 순서가 어떻게 같은 b파일 개방과 네 룩의 교환을 수행하는가?",
+      "historical_finding": "양쪽 Bxc6/bxc6와 모든 룩 제거가 상세에 있으며, 기본은 Rb5 설명이 풍부하고 h4는 초기 수 이름만 남는다.",
+      "latest_finding": "subjectv9에서 subjects가 비어 있고 기본 본문은 baseline과 동일",
+      "first_boundary": "유용한 공통 사용 질문의 후보 구성·기본 답 선택",
+      "exact_latest_guard_instrumented": false,
+      "correction": "중요한 h4 선택의 우열·평가 원인을 확정할 근거가 부족하다는 것과, 양쪽 실제 공통 사용·가격을 비교할 근거가 없는 것은 다르다. 이 사례를 응수 자료 부족으로 묶지 않는다.",
+      "sources": [
+        {
+          "path": "research/answer-selection-20261004/core-oracle.json",
+          "line": 9952
+        },
+        {
+          "path": "research/answer-selection-20261004/assessment-selectionv9.json",
+          "line": 2653
+        },
+        {
+          "path": "research/subject-comparison-20261005/subjectv9-comparison.json",
+          "line": 74062
+        }
+      ]
+    },
+    {
+      "id": "candidates2018-08",
+      "actual_evidence": {
+        "reference_root": "Rab8",
+        "reference_moves": 1,
+        "candidate_root": "Nf8",
+        "candidate_moves": 26
+      },
+      "first_boundary": "양쪽 후속 결과 비교에는 실제 응수 근거가 부족함. 한쪽 압력과 다른 쪽의 실제 거래에 한정된 답은 가능.",
+      "consequence": "비교 완료로 계산하거나 미관측 Rab8 응수를 만들어서는 안 된다.",
+      "sources": [
+        {
+          "path": "research/answer-selection-20261004/core-oracle.json",
+          "line": 4595
+        },
+        {
+          "path": "research/subject-comparison-20261005/subjectv9-comparison.json",
+          "line": 33460
+        }
+      ]
+    },
+    {
+      "id": "COR06-09",
+      "latest_finding": "새 비교 대상·실제 원래 기물 거래가 기본 본문에 전달되지만, Bb3 arm의 Qxe7 포획이 교환과 체크 응수에서 반복됨",
+      "exact_same_event": {
+        "root_uci": "d5b3",
+        "offset": 7,
+        "uci": "d8e7",
+        "occurrence_id_suffix": "de16b1bd7a12"
+      },
+      "typed_locations": [
+        {
+          "section_index": 2,
+          "type": "PieceExchange",
+          "price_coverage": true
+        },
+        {
+          "section_index": 3,
+          "type": "CheckSequence",
+          "price_coverage": false
+        }
+      ],
+      "consequence": "duplicate_core_prices=0과 표현 반복이 동시에 성립한다. 체크 응수라는 의미를 보존하면서 동일 사건을 함께 표현하는 경계가 필요하다.",
+      "source": {
+        "path": "research/subject-comparison-20261005/subjectv9-comparison.json",
+        "line": 124450
+      }
+    }
+  ],
+  "conditions_for_a_claim_of_resolution": [
+    "실제 자료가 있는 공통 사용 질문과 응수 자료가 없는 비교를 분리해 첫 실패 단계를 판정한다.",
+    "기존 독립 설명을 보호할 때 유지할 의미·필수 대가와 상세로 옮길 부수 내용을 개별적으로 확인한다.",
+    "한 답이 다른 답의 의미를 이미 포함하는 경우와 독립된 중요한 질문이 함께 있는 경우를 분리한다. 새 포획·회피 후보 추가만으로 이를 완료했다고 하지 않는다.",
+    "기본 본문에서 공통점 또는 중요한 차이, 실제 응수, 대가를 회수할 수 있는지 확인하고, 같은 사실·참조의 보존 검사와 별도로 판정한다.",
+    "이미 열린35개 재생과 최신 후보24개 선택은 회귀·적용 범위다. 새로운 독립 일반화 점수 또는 사람 독자 평가로 바꾸어 해석하지 않는다."
+  ],
+  "limits": [
+    "이번 원인 확인은 이전 실행 기록 및 현재 소스의 판독이다. 엔진·전체 앱·새 제품 테스트를 실행하지 않았다.",
+    "W24-11의 최신 None 반환에서 어느 최초 분기가 작동했는지는 새 계측으로 확정하지 않았다. 자격 조건과 미선택, 실제 양쪽 자료 존재를 확인한 범위에서 진단한다.",
+    "현재35개에 복수 legacy 후보가 관찰되지 않은 사실은 일반 제품에서 복수 질문 경쟁이 없다는 결론이 아니다.",
+    "서로 다른 날짜·코호트의 유용성 점수를 하나의 연속 해결률로 합치지 않는다.",
+    "기존 미커밋 제품 변경은 보존한다."
+  ]
+}

@@ -1,0 +1,315 @@
+{
+  "fixed_human_reading_sha256": "ddcd411e9522177bd9b3eff2e17ea33bba12b64f6cd93202b163ad3b2ba26b3b",
+  "source_control_file": "independent-theory-controls.json",
+  "scope": "5개의 새 장면, 주목 수 5개와 미묘한 중화/실제 오류 반례 3개. 저자 PV와 예상 평가값은 제품 입력에 포함하지 않는다.",
+  "cases": [
+    {
+      "id": "IC-SG23",
+      "human_control_id": "IC-SG23",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "e1g1",
+        "f8e7",
+        "f1e1",
+        "b7b5",
+        "a4b3",
+        "d7d6",
+        "c2c3",
+        "e8g8",
+        "h2h3",
+        "c6b8",
+        "d2d4",
+        "b8d7",
+        "f3h4",
+        "e5d4",
+        "c3d4",
+        "d7b6",
+        "h4f3",
+        "c7c5",
+        "c1f4",
+        "c8b7",
+        "d4c5",
+        "d6c5",
+        "d1d8",
+        "e7d8",
+        "f4d6",
+        "f8e8",
+        "d6c5",
+        "b6d7",
+        "c5d4",
+        "f6e4",
+        "b1c3",
+        "d8f6"
+      ],
+      "lines": [
+        [
+          "b3d5"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SG23-ND5",
+      "human_control_id": "IC-SG23",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "move_prefix_uci": [
+        "e2e4",
+        "e7e5",
+        "g1f3",
+        "b8c6",
+        "f1b5",
+        "a7a6",
+        "b5a4",
+        "g8f6",
+        "e1g1",
+        "f8e7",
+        "f1e1",
+        "b7b5",
+        "a4b3",
+        "d7d6",
+        "c2c3",
+        "e8g8",
+        "h2h3",
+        "c6b8",
+        "d2d4",
+        "b8d7",
+        "f3h4",
+        "e5d4",
+        "c3d4",
+        "d7b6",
+        "h4f3",
+        "c7c5",
+        "c1f4",
+        "c8b7",
+        "d4c5",
+        "d6c5",
+        "d1d8",
+        "e7d8",
+        "f4d6",
+        "f8e8",
+        "d6c5",
+        "b6d7",
+        "c5d4",
+        "f6e4",
+        "b1c3",
+        "d8f6"
+      ],
+      "lines": [
+        [
+          "c3d5"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SG41",
+      "human_control_id": "IC-SG41",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "d7d6",
+        "c1g5",
+        "e7e6",
+        "f2f4",
+        "f8e7",
+        "d1d2",
+        "a7a6",
+        "e1c1",
+        "c8d7",
+        "f1e2",
+        "b7b5",
+        "e2f3",
+        "a8c8",
+        "c1b1",
+        "d8b6",
+        "h1e1",
+        "h7h6",
+        "g5f6",
+        "g7f6",
+        "f4f5",
+        "b6d4",
+        "d2d4",
+        "c6d4",
+        "d1d4",
+        "h6h5",
+        "h2h4",
+        "c8c5",
+        "a2a3",
+        "e8d8"
+      ],
+      "lines": [
+        [
+          "e1d1"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SG41-FXE6",
+      "human_control_id": "IC-SG41",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "fen": "3k3r/3bbp2/p2ppp2/1pr2P1p/3RP2P/P1N2B2/1PP3P1/1K2R3 w - - 1 20",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "g1f3",
+        "b8c6",
+        "d2d4",
+        "c5d4",
+        "f3d4",
+        "g8f6",
+        "b1c3",
+        "d7d6",
+        "c1g5",
+        "e7e6",
+        "f2f4",
+        "f8e7",
+        "d1d2",
+        "a7a6",
+        "e1c1",
+        "c8d7",
+        "f1e2",
+        "b7b5",
+        "e2f3",
+        "a8c8",
+        "c1b1",
+        "d8b6",
+        "h1e1",
+        "h7h6",
+        "g5f6",
+        "g7f6",
+        "f4f5",
+        "b6d4",
+        "d2d4",
+        "c6d4",
+        "d1d4",
+        "h6h5",
+        "h2h4",
+        "c8c5",
+        "a2a3",
+        "e8d8"
+      ],
+      "lines": [
+        [
+          "f5e6"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SG45",
+      "human_control_id": "IC-SG45",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "fen": "3rnrk1/2qn1pbp/1p4p1/2p1p3/4P3/4B1PP/1PPNQPB1/R4RK1 w - - 0 18",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c6",
+        "d2d3",
+        "d7d5",
+        "b1d2",
+        "g7g6",
+        "g1f3",
+        "f8g7",
+        "g2g3",
+        "g8f6",
+        "f1g2",
+        "e8g8",
+        "e1g1",
+        "c8g4",
+        "h2h3",
+        "g4f3",
+        "d1f3",
+        "b8d7",
+        "f3e2",
+        "d5e4",
+        "d3e4",
+        "d8c7",
+        "a2a4",
+        "a8d8",
+        "d2b3",
+        "b7b6",
+        "c1e3",
+        "c6c5",
+        "a4a5",
+        "e7e5",
+        "b3d2",
+        "f6e8",
+        "a5b6",
+        "a7b6"
+      ],
+      "lines": [
+        [
+          "f1d1"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SG28",
+      "human_control_id": "IC-SG28",
+      "initial_fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+      "fen": "8/8/8/2P1rpk1/2R2p1p/4p2P/2P1K1P1/8 b - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "e5d5"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SWK62",
+      "human_control_id": "IC-SWK62",
+      "initial_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "d1d6"
+        ]
+      ]
+    },
+    {
+      "id": "IC-SWK70-KH4",
+      "human_control_id": "IC-SWK62",
+      "initial_fen": "8/6p1/2kn3p/2r5/8/p1N3P1/B5P1/3R2K1 w - - 0 62",
+      "fen": "8/6p1/4B2p/8/6P1/p3k1K1/6P1/8 w - - 5 70",
+      "move_prefix_uci": [
+        "d1d6",
+        "c6d6",
+        "c3e4",
+        "d6c6",
+        "e4c5",
+        "c6c5",
+        "g1f2",
+        "c5d4",
+        "f2f3",
+        "d4d3",
+        "g3g4",
+        "d3d2",
+        "a2e6",
+        "d2d3",
+        "f3g3",
+        "d3e3"
+      ],
+      "lines": [
+        [
+          "g3h4"
+        ]
+      ]
+    }
+  ]
+}

@@ -71,6 +71,37 @@ def strict_json_loads(value: str, *, location: str) -> Any:
         raise ContractError(f"{location}: invalid strict JSON: {error}") from error
 
 
+def process_output_bytes(value: str | bytes | None) -> bytes:
+    if value is None:
+        return b""
+    if isinstance(value, bytes):
+        return value
+    return value.encode("utf-8", errors="replace")
+
+
+def provider_io_record(
+    base: Mapping[str, Any],
+    *,
+    returncode: int | None,
+    stdout: str | bytes | None,
+    stderr: str | bytes | None,
+    failure: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    stdout_bytes = process_output_bytes(stdout)
+    stderr_bytes = process_output_bytes(stderr)
+    record = {
+        **base,
+        "returncode": returncode,
+        "stdout": stdout_bytes.decode("utf-8", errors="replace"),
+        "stderr": stderr_bytes.decode("utf-8", errors="replace"),
+        "stdout_base64": base64.b64encode(stdout_bytes).decode("ascii"),
+        "stderr_base64": base64.b64encode(stderr_bytes).decode("ascii"),
+    }
+    if failure is not None:
+        record["failure"] = dict(failure)
+    return record
+
+
 def _bound_file_security_mode() -> str:
     return (
         _WINDOWS_BOUND_FILE_SECURITY_MODE
@@ -1036,7 +1067,7 @@ class CommandStageAdapter(StageAdapter):
                     env=environment,
                 )
         except subprocess.TimeoutExpired as error:
-            provider_io = self._provider_io_record(
+            provider_io = provider_io_record(
                 base_provider_io,
                 returncode=None,
                 stdout=error.stdout,
@@ -1052,7 +1083,7 @@ class CommandStageAdapter(StageAdapter):
                 provider_io=provider_io,
             ) from error
         except (OSError, TypeError, ValueError) as error:
-            provider_io = self._provider_io_record(
+            provider_io = provider_io_record(
                 base_provider_io,
                 returncode=None,
                 stdout=None,
@@ -1069,7 +1100,7 @@ class CommandStageAdapter(StageAdapter):
                 f"external command could not start: {type(error).__name__}",
                 provider_io=provider_io,
             ) from error
-        provider_io = self._provider_io_record(
+        provider_io = provider_io_record(
             base_provider_io,
             returncode=completed.returncode,
             stdout=completed.stdout,
@@ -1081,7 +1112,7 @@ class CommandStageAdapter(StageAdapter):
                 f"external command failed with exit code {completed.returncode}",
                 provider_io=provider_io,
             )
-        stdout_bytes = self._safe_process_bytes(completed.stdout)
+        stdout_bytes = process_output_bytes(completed.stdout)
         try:
             response_text = stdout_bytes.decode("utf-8")
         except UnicodeDecodeError as error:
@@ -1158,38 +1189,6 @@ class CommandStageAdapter(StageAdapter):
         if not isinstance(chain, str) or not chain.strip():
             raise ContractError(f"{stage} oracle invocation requires oracle_chain")
         return stage, Source.ORACLE, chain
-
-    @staticmethod
-    def _safe_process_bytes(value: str | bytes | None) -> bytes:
-        if value is None:
-            return b""
-        if isinstance(value, bytes):
-            return value
-        return value.encode("utf-8", errors="replace")
-
-    @classmethod
-    def _provider_io_record(
-        cls,
-        base: Mapping[str, Any],
-        *,
-        returncode: int | None,
-        stdout: str | bytes | None,
-        stderr: str | bytes | None,
-        failure: Mapping[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        stdout_bytes = cls._safe_process_bytes(stdout)
-        stderr_bytes = cls._safe_process_bytes(stderr)
-        record = {
-            **base,
-            "returncode": returncode,
-            "stdout": stdout_bytes.decode("utf-8", errors="replace"),
-            "stderr": stderr_bytes.decode("utf-8", errors="replace"),
-            "stdout_base64": base64.b64encode(stdout_bytes).decode("ascii"),
-            "stderr_base64": base64.b64encode(stderr_bytes).decode("ascii"),
-        }
-        if failure is not None:
-            record["failure"] = dict(failure)
-        return record
 
     @staticmethod
     def _validated_environment(

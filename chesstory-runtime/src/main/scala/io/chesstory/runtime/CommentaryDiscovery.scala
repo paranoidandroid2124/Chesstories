@@ -1708,7 +1708,7 @@ private[runtime] object CommentaryDiscovery:
                     val test = CompareMoves("reserve_entry_value", branch.init, entry.move, otherChoice.move)
                     emit(Anchor(Nil, played), List("direct_last_wait") ++ branch ++
                         source.toList.map((test, arm, _) => linkKey(test, arm)) ++ lineage.map((owner, arm) => linkKey(owner.comparison, arm)),
-                      "reserve-entry", (wait.sourceRefs ++ releaseRefs.filter(_.length <= 256)).distinct, wait.source,
+                      "reserve-entry", (wait.sourceRefs ++ releaseRefs.filter(_.length <= MaximumSourceRefLength)).distinct, wait.source,
                       choice :: source.toList.map(_._1) ++ ancestors.flatMap((pair, fact) => List(pair, fact)) ++
                         facts ++ List(context, test, entryFact), List(choice.id, context.id, test.id),
                       question = Some(s"After the retained pawn move and the recorded king reply, is the available ${notation.move(test.prefixMovesUci, test.referenceMove)} a comparable option alongside ${notation.move(test.prefixMovesUci, test.alternativeMove)}? All legal replies release $square; no guarding pawn counter is assumed."))

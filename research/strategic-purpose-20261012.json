@@ -1,0 +1,317 @@
+{
+  "goal": "Long purpose and duty identity beyond the moved piece and knight regrouping",
+  "registered_before_product_output": true,
+  "limits": {
+    "quality_cases": 2,
+    "depth_max": 18,
+    "wall_clock_budget_ms": 10000,
+    "real_browser": true
+  },
+  "existing": {
+    "id": "FJ-SG42-BD3",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "strategic-existing",
+      "variant": "standard",
+      "initial_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "move_prefix_uci": [],
+      "current_fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "f5d3",
+        "resulting_fen": "4r3/pp6/2p2k2/3p2p1/PP1P4/1BPbr3/4p1PP/2R1R2K w - - 1 2"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "criteria_source": "functional-judgment-20261009/human-criteria-and-scenes.json",
+    "failure_source": "functional-judgment-20261009/source-scene-current10s-normal21-human-text-reading.json",
+    "minimum": [
+      "Connect Bd3 supporting the advanced e2 pawn to the continuing clamp on White and a rook changing its activity, including the f-file plan or an actual adequate conversion.",
+      "Do not claim Bd3 makes Rf8 newly legal. Describe which defender continues the pawn duty when a rook is repurposed.",
+      "Compare actual replies and realization of that purpose while retaining selected capture/check/recapture costs. Do not claim a whole-score cause or unique win."
+    ]
+  },
+  "fresh": {
+    "id": "GF-CANAL-RUBINSTEIN-1929-58-KE6",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "strategic-new",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "g1f3",
+        "g8f6",
+        "b2b3",
+        "g7g6",
+        "g2g3",
+        "b7b6",
+        "c1b2",
+        "f8g7",
+        "f1g2",
+        "c8b7",
+        "e1g1",
+        "e8g8",
+        "c2c4",
+        "c7c5",
+        "d2d3",
+        "d7d5",
+        "c4d5",
+        "f6d5",
+        "b2g7",
+        "g8g7",
+        "d1d2",
+        "b8c6",
+        "b1c3",
+        "d5c3",
+        "d2c3",
+        "g7g8",
+        "c3b2",
+        "d8d6",
+        "f1d1",
+        "a8d8",
+        "d1d2",
+        "d8d7",
+        "a1d1",
+        "f8d8",
+        "h2h4",
+        "e7e5",
+        "e2e3",
+        "h7h6",
+        "g2h3",
+        "d7e7",
+        "h3g2",
+        "d6f6",
+        "f3h2",
+        "h6h5",
+        "h2f3",
+        "c6b4",
+        "f3e1",
+        "b7g2",
+        "g1g2",
+        "a7a5",
+        "e1c2",
+        "e7d7",
+        "c2b4",
+        "a5b4",
+        "b2c2",
+        "f6c6",
+        "f2f3",
+        "d7d5",
+        "g2f2",
+        "c6d7",
+        "f2g2",
+        "f7f5",
+        "c2c4",
+        "g8g7",
+        "g2f2",
+        "d8f8",
+        "f3f4",
+        "f8d8",
+        "f4e5",
+        "d5e5",
+        "c4f4",
+        "e5d5",
+        "f4c4",
+        "d7c6",
+        "c4c2",
+        "c6f6",
+        "c2c4",
+        "f6c6",
+        "c4c2",
+        "b6b5",
+        "d1c1",
+        "d8d6",
+        "d3d4",
+        "c6d7",
+        "c1d1",
+        "g7f7",
+        "c2b2",
+        "d7d8",
+        "f2g2",
+        "d6d7",
+        "g2h2",
+        "f7g8",
+        "h2g2",
+        "g8h7",
+        "g2h2",
+        "f5f4",
+        "e3f4",
+        "d5d4",
+        "d2d4",
+        "c5d4",
+        "d1d3",
+        "d8f6",
+        "b2d2",
+        "f6d6",
+        "h2g1",
+        "h7g7",
+        "g1h2",
+        "d6c5",
+        "h2g2",
+        "c5d5",
+        "g2h2",
+        "d5e4",
+        "h2g1",
+        "g7f6",
+        "g1f2"
+      ],
+      "current_fen": "8/3r4/5kp1/1p5p/1p1pqP1P/1P1R2P1/P2Q1K2/8 b - - 15 58",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "f6e6",
+        "resulting_fen": "8/3r4/4k1p1/1p5p/1p1pqP1P/1P1R2P1/P2Q1K2/8 w - - 16 59"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 10000
+    },
+    "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+    "pages": [
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
+    "minimum": [
+      "Explain Ke6 as centralizing the king toward d5 to help sustain the advanced d4 pawn and release heavy-piece activity, rather than just a king route or immediate attack.",
+      "Connect the retained pawn constraint to c-file or another actually observed heavy-piece activity, preserving the current queen/rook support and exact handoff conditions.",
+      "Contrast actual replies, including interruption by pawn counterplay or checks if returned; distinguish the same supported asset from a different target or task.",
+      "Retain the real material/check cost of selected actions and distinguish conditional planning from realized or forced play."
+    ]
+  },
+  "completion": "Both predefined purposes and actual reply differences must appear in basic product screens within new ten-second jobs. Test passes, templates, or one improved case do not complete this goal.",
+  "sources_read": [
+    {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Think Like a Super-GM - Reading Edition.pdf",
+      "pages": [
+        422,
+        423,
+        424
+      ],
+      "lesson": "Support of e2 sustains the clamp while rooks are repurposed. Bd3/Bc4 can perform the same pawn-support duty from different squares. Rook transfers were already legal."
+    },
+    {
+      "path": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+      "pages": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "visually_inspected": [
+        41
+      ],
+      "lesson": "Ke6 prepares Kd5 to help hold d4 while the rook changes file. The queen can keep the duty during the approach. f5+ and Rf3 change the practical conditions."
+    }
+  ],
+  "baseline_findings": [
+    {
+      "case": "FJ-SG42-BD3",
+      "elapsed_ms": 4793.214999973774,
+      "state": "completed",
+      "meaning": "Repeated support and attack facts without connecting the passed-pawn clamp to rook activity; the historical failure recurred."
+    },
+    {
+      "case": "GF-CANAL-RUBINSTEIN-1929-58-KE6",
+      "elapsed_ms": 5865.870000004768,
+      "state": "fault",
+      "meaning": "The support purpose was not a question. Unrelated comparisons reached an unavailable review instead of explaining the long task."
+    }
+  ],
+  "root_cause": "MovePurpose recognized another pawn advancing, rook entry, or the original actor attacking an enemy later. It could not represent a continuing friendly asset, a changing support provider, and a different active heavy piece in the same question. Discovery, response selection and basic reading therefore never investigated this duty.",
+  "implementation": {
+    "question": "One shared support_release task: original passed pawn, present blockader, current guards, actual or conditional support post, already-legal rook transfer. No FEN, book move or case-name branch.",
+    "discovery_limit": "An advanced blocked passed pawn already supported by a heavy piece; the root adds support directly, or a quiet king move newly approaches a safe one-step support post. Rook transfer must have been legal at root and still geometrically available, with only an explicitly named own-king clearance allowed along its entry file.",
+    "identity": "Track the original pawn continuously, continuous support, the current moved-piece contribution, and the original blockader separately. A different supporter or post may keep the guarding duty. Keeping a supported pawn is not proof that the same piece remains tied to its blockade.",
+    "replies": "The same legal reply class watches the asset, support post and supporting actor, including checks. Actual branches from a single owned response search supply activity, support changes and selected capture/check/recapture costs.",
+    "delivery": "Browser validates the asset, passed-pawn geometry, current guards, support post, existing legal rook move, clearance and exact reply classification before accepting the question and owned answer. Independent numerical assessment is retained when explanation validation fails.",
+    "unchanged": "Depth policy D12 for ten-second jobs; D18 normal maximum; root/conflict policy and previous incomplete-work preservation. No dependencies added."
+  },
+  "development_failures": [
+    {
+      "failure": "Ke6 was initially excluded by a king-to-pawn distance heuristic even though it newly reaches a useful support post. The screen still lacked the purpose.",
+      "fix": "Test that the support post is newly reachable after the move, rather than insisting that king-move distance to the pawn decreases.",
+      "record": "target/research-runs/strategic-purpose-20261012/new-distance-failure.json"
+    },
+    {
+      "failure": "The first frontend test expected awaiting-core for a focus comparison without an assessment.",
+      "fix": "Correct the test expectation: only initial root search waits for core; focus comparison awaits evidence. No product acceptance rule was weakened."
+    }
+  ],
+  "final": {
+    "cases": [
+      {
+        "id": "existing",
+        "elapsed_ms": 7027.194999992847,
+        "depths": [
+          12,
+          12
+        ],
+        "work_purposes": [
+          "root_search",
+          "response_comparison"
+        ],
+        "purpose": "Bd3 reinforces e2 and preserves its promotion blockade while preparing rook activity on the f-file. The rook transfer was already legal.",
+        "reply_difference": "g4 Rf3 keeps e2 supported by Bd3 and Re8; after Bc2 Bc4 and later R3e6-Rf6+, the bishop still supports e2 from c4 while the original e1 rook has moved away, changing the blockade condition.",
+        "root_comparison": "g4 / Bd3",
+        "screen": "research/strategic-purpose-20261012/bd3.png"
+      },
+      {
+        "id": "new",
+        "elapsed_ms": 3227.729999959469,
+        "depths": [
+          12,
+          12
+        ],
+        "work_purposes": [
+          "root_search",
+          "response_comparison"
+        ],
+        "purpose": "Ke6 approaches d5 to support d4 and share heavy-piece duties; d7-c7 toward c2 is a conditional plan already legal before Ke6. Current Qe4/Rd7 support and the still-pending king takeover are explicit.",
+        "reply_difference": "Qc2 Re7 leaves Qe4 guarding d4. f5+ gxf5 Rf3 Ra7 retains that pawn guard but releases the original d3 blockader and creates a-file activity against a2. The checking pawn capture remains in core.",
+        "root_comparison": "Kf7 / Ke6",
+        "screen": "research/strategic-purpose-20261012/ke6.png"
+      }
+    ],
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/strategic-purpose-browser.json.gz",
+    "fixture_sha256": "442b01cf669c170f3394f038313990b4f51720d26c6f63a7a970b57a6df1949f",
+    "actual_screen_scope": "Product coordinator, decoder, view and Chessground with a fresh browser Stockfish 18 worker (2 threads, 16 MB) and Java HTTP; English component screen. Analysis start through redraw, not saved-report replay. Bd3 was the first user request after a new server process.",
+    "validation": {
+      "backend": "SupportPurposeTest: 2 passed, replaying the first meaningful real reports of these same two positions; support-provider changes, king realization vs pending, blockade difference and packet ownership.",
+      "frontend": "moveReviewSupportPurpose.test.ts: 3 passed on the final two raw snapshots; question and work ownership, board mutations, reply class, D19 rejection and selected capture-price removal.",
+      "build": "All runtime Scala sources compiled after the model changes; final touched Scala files compiled again; product UI bundle built.",
+      "quality_position_count": 2
+    },
+    "not_checked": [
+      "Full regression suite",
+      "Docker full Lila integration",
+      "Korean screen",
+      "Independent held-out generalization",
+      "All-position or all-device ten-second guarantee"
+    ],
+    "remaining_limits": [
+      "Long purpose discovery remains limited to explicit bounded task families; it does not infer every strategic plan.",
+      "Support identity is a scoped board relationship, not proof of tactical sufficiency or full strategic equivalence.",
+      "The explanation does not establish the complete causal origin of engine score differences or global best defense.",
+      "The fresh position was used during development and is no longer a held-out evaluation."
+    ]
+  },
+  "semantic_controls": "The same two development records additionally show Bd3 Bc2 Bc4 preserving the bishop duty versus c4 Bf5 with Re8 taking it over; and Ke6 Qd1 Kd5 ... Rc7 realizing king support versus f5+ ... Qc2+ with Rd5 carrying the pawn duty. These reports are frozen only for semantic replay, not for timing or additional quality cases.",
+  "completion_reading": "Both preregistered minimums are met in the final basic screens within ten seconds. Completion is this common support-duty/other-piece-activity path beyond knight redeployment, not all long strategy or release-wide readiness.",
+  "preservation": {
+    "initial_dirty_entries": 364,
+    "changed_existing_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "research/README.md"
+    ],
+    "all_other_initial_files_byte_identical": true,
+    "no_existing_files_deleted": true,
+    "no_existing_deletions_restored": true,
+    "previous_readme_body_byte_identical": true,
+    "committed": false
+  }
+}

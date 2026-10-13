@@ -1,0 +1,38 @@
+{
+  "atlas-spec.json": {
+    "bytes": 36371,
+    "sha256": "371939ac167e738b364cdf24665c64a580b48a7108314571629e22f0fc4695bc"
+  },
+  "report.html": {
+    "bytes": 84830,
+    "sha256": "d7ffeee3fc8f8542403bb662b3293740cbd807a6066029eaa315c617dcc31201"
+  },
+  "report.json": {
+    "bytes": 84060,
+    "sha256": "babc48dfc3edb49c791590e2a20cdec7da7333366bcc73319bedbf857d05fac5"
+  },
+  "code-inventory.json": {
+    "bytes": 91671,
+    "sha256": "e0077eeb331a6873fc3400efab3d776f3b2789df95f77c314bc2958ed828a6a9"
+  },
+  "local-reference-map.json": {
+    "bytes": 65645,
+    "sha256": "412b285f0fb5ce71a00cce35cadf77cf0a2c1aa7688f42adc6507ecb0373a2df"
+  },
+  "external-reference-map.json": {
+    "bytes": 89757,
+    "sha256": "7cc9ccacfcf8fdce23895366544565eaa4e47bfbfa709f0037a3d8aa60745b3d"
+  },
+  "root-reference-map.json": {
+    "bytes": 13942,
+    "sha256": "16cfec7d595b17a097321f5c5dbda782862d8dd1c14e753ecc06f713ba6b99ea"
+  },
+  "review-notes.json": {
+    "bytes": 1934,
+    "sha256": "e31bafe8c5f89cb087128b7565b399499e4b31c5d1b98e46358c509f766bcae3"
+  },
+  "artifact-checks.json": {
+    "bytes": 344,
+    "sha256": "c2a611b1a9f6d6ccf381a34ac1b54cedbb56e8efcc933bf0a76f814e1f217bfb"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "created_utc": "2026-10-05T21:50:45.038620+00:00",
+  "scope": "Rules fixed before new engine output is inspected. Constructed related task families, not independently sampled games or novice evaluation.",
+  "cases": [
+    {
+      "id": "D01",
+      "initial_fen": "6k1/5p2/5n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1",
+      "fen": "6k1/5p2/5n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "f1c4"
+        ]
+      ],
+      "human_task": "A normal bishop move leaves the attacked e4 pawn without support. Read the actual first response and compare how the selected alternative handles the pawn; do not invent a forced loss.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D02",
+      "initial_fen": "6k1/5p2/5n2/8/4P3/5P2/1P5P/1N3BK1 w - - 0 1",
+      "fen": "6k1/5p2/5n2/8/4P3/5P2/1P5P/1N3BK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "f1c4"
+        ]
+      ],
+      "human_task": "The f3 pawn already supports e4. A defended pawn capture is not an unanswered undefended attack; preserve any real recapture and avoid judging the move from attack count alone.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D03",
+      "initial_fen": "6k1/5p2/p4n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1",
+      "fen": "6k1/5p2/p4n2/8/4P3/8/1P5P/1N3BK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "b1c3"
+        ]
+      ],
+      "human_task": "Nc3 adds current support to the attacked e4 pawn. Several useful choices can exist; the alternative and its response determine the appropriate comment.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D04",
+      "initial_fen": "5k1r/8/5n2/8/4P3/8/7P/2B2RK1 w - - 0 1",
+      "fen": "5k1r/8/5n2/8/4P3/8/7P/2B2RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "c1f4"
+        ]
+      ],
+      "human_task": "The f6 knight is pinned to its king by the f1 rook. Geometric contact does not establish a legal Nxe4 threat or a defensive failure.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D05",
+      "initial_fen": "r7/1k6/8/4p3/7p/5N2/8/6K1 b - - 0 1",
+      "fen": "r7/1k6/8/4p3/7p/5N2/8/6K1 b - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "a8e8"
+        ]
+      ],
+      "human_task": "Two initially attacked pawns on e5 and h4 require a complete comparison. Do not silently choose one arbitrary duty or hide the other actual capture.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D06",
+      "initial_fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "fen": "5rk1/8/5q2/8/4P3/2N5/8/5RK1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "f1e1"
+        ]
+      ],
+      "human_task": "Re1 supports e4 but the immediate Rxf6 opportunity takes a queen for a rook if the recorded Rxf6 follows. State the observed opportunity and its cost; do not assert that one PV proves forcing or compensation.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D07",
+      "initial_fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R b KQkq - 3 3",
+      "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R b KQkq - 3 3",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "g8f6"
+        ]
+      ],
+      "human_task": "Ordinary development with existing support on both central pawns. Let multiple sound moves retain adequate purposes; do not manufacture an undefended-pawn failure.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    },
+    {
+      "id": "D08",
+      "initial_fen": "6k1/8/8/2n5/4p3/8/5N2/4Q1K1 w - - 0 1",
+      "fen": "6k1/8/8/2n5/4p3/8/5N2/4Q1K1 w - - 0 1",
+      "move_prefix_uci": [],
+      "lines": [
+        [
+          "e1e4"
+        ]
+      ],
+      "human_task": "A natural queen capture can lose that queen to Nxe4 and a further recapture. Root capture prices must remain complete, with the actual move judged before the alternative.",
+      "provided_future_lines": false,
+      "provided_scores": false
+    }
+  ]
+}

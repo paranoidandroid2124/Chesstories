@@ -1,0 +1,3653 @@
+{
+  "recorded_utc": "2026-10-05T22:45:31.716008+00:00",
+  "scope": "Read-only task planning audit. No production changes or new engine searches. D05 is independently checked against the public Lichess tablebase API; stored product reports are inspected without rerunning the product.",
+  "tablebase_documentation": "https://github.com/lichess-org/lila-tablebase",
+  "d05_tablebase": [
+    {
+      "root_move_uci": null,
+      "root_move_san": null,
+      "fen": "r7/1k6/8/4p3/7p/5N2/8/6K1 b - - 0 1",
+      "side_to_move": "black",
+      "url": "https://tablebase.lichess.ovh/standard?fen=r7%2F1k6%2F8%2F4p3%2F7p%2F5N2%2F8%2F6K1+b+-+-+0+1",
+      "retrieved_utc": "2026-10-05T22:45:32.752480+00:00",
+      "response_sha256": "7a70ad3a07f9e6805defe6c810f5eb2dfb80fb03628b0ca85581b59925cd751b",
+      "response": {
+        "checkmate": false,
+        "stalemate": false,
+        "variant_win": false,
+        "variant_loss": false,
+        "insufficient_material": false,
+        "dtz": 1,
+        "precise_dtz": 1,
+        "dtm": 35,
+        "dtw": null,
+        "dtc": null,
+        "category": "win",
+        "moves": [
+          {
+            "uci": "e5e4",
+            "san": "e4",
+            "zeroing": true,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -34,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8g8",
+            "san": "Rg8+",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -34,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a1",
+            "san": "Ra1+",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -36,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8e8",
+            "san": "Re8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -36,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a3",
+            "san": "Ra3",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -40,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a5",
+            "san": "Ra5",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -40,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7c6",
+            "san": "Kc6",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -40,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7c7",
+            "san": "Kc7",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -40,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a2",
+            "san": "Ra2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a4",
+            "san": "Ra4",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a6",
+            "san": "Ra6",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8a7",
+            "san": "Ra7",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8b8",
+            "san": "Rb8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8c8",
+            "san": "Rc8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8d8",
+            "san": "Rd8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8f8",
+            "san": "Rf8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "a8h8",
+            "san": "Rh8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7b6",
+            "san": "Kb6",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -42,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7c8",
+            "san": "Kc8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -44,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "h4h3",
+            "san": "h3",
+            "zeroing": true,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -56,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7a6",
+            "san": "Ka6",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -56,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7a7",
+            "san": "Ka7",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": -2,
+            "precise_dtz": -2,
+            "dtm": -56,
+            "dtw": null,
+            "dtc": null,
+            "category": "loss"
+          },
+          {
+            "uci": "b7b8",
+            "san": "Kb8",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 0,
+            "precise_dtz": 0,
+            "dtm": 0,
+            "dtw": null,
+            "dtc": null,
+            "category": "draw"
+          }
+        ]
+      }
+    },
+    {
+      "root_move_uci": "a8e8",
+      "root_move_san": "Re8",
+      "fen": "4r3/1k6/8/4p3/7p/5N2/8/6K1 w - - 1 2",
+      "side_to_move": "white",
+      "url": "https://tablebase.lichess.ovh/standard?fen=4r3%2F1k6%2F8%2F4p3%2F7p%2F5N2%2F8%2F6K1+w+-+-+1+2",
+      "retrieved_utc": "2026-10-05T22:45:33.631516+00:00",
+      "response_sha256": "70f1d8a5275d0dd8a4f33f476b60386249f502b9327a3ac97ee768e87d557363",
+      "response": {
+        "checkmate": false,
+        "stalemate": false,
+        "variant_win": false,
+        "variant_loss": false,
+        "insufficient_material": false,
+        "dtz": -2,
+        "precise_dtz": -2,
+        "dtm": -36,
+        "dtw": null,
+        "dtc": null,
+        "category": "loss",
+        "moves": [
+          {
+            "uci": "f3h4",
+            "san": "Nxh4",
+            "zeroing": true,
+            "conversion": true,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 35,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1g2",
+            "san": "Kg2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 33,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1h2",
+            "san": "Kh2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 33,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3e1",
+            "san": "Ne1",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 31,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3d2",
+            "san": "Nd2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 31,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1h1",
+            "san": "Kh1",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 31,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1f2",
+            "san": "Kf2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 31,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3h2",
+            "san": "Nh2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 29,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1f1",
+            "san": "Kf1",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 29,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3e5",
+            "san": "Nxe5",
+            "zeroing": true,
+            "conversion": true,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 21,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3g5",
+            "san": "Ng5",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 17,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3d4",
+            "san": "Nd4",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 15,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          }
+        ]
+      }
+    },
+    {
+      "root_move_uci": "a8a1",
+      "root_move_san": "Ra1+",
+      "fen": "8/1k6/8/4p3/7p/5N2/8/r5K1 w - - 1 2",
+      "side_to_move": "white",
+      "url": "https://tablebase.lichess.ovh/standard?fen=8%2F1k6%2F8%2F4p3%2F7p%2F5N2%2F8%2Fr5K1+w+-+-+1+2",
+      "retrieved_utc": "2026-10-05T22:45:34.525623+00:00",
+      "response_sha256": "376033b7c7f2ec7f3ee4b7d1e1e9ab17fe7263dcf0fce0d86cfd495053c29ddf",
+      "response": {
+        "checkmate": false,
+        "stalemate": false,
+        "variant_win": false,
+        "variant_loss": false,
+        "insufficient_material": false,
+        "dtz": -2,
+        "precise_dtz": -2,
+        "dtm": -36,
+        "dtw": null,
+        "dtc": null,
+        "category": "loss",
+        "moves": [
+          {
+            "uci": "g1g2",
+            "san": "Kg2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 35,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1h2",
+            "san": "Kh2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 31,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "g1f2",
+            "san": "Kf2",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 29,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          },
+          {
+            "uci": "f3e1",
+            "san": "Ne1",
+            "zeroing": false,
+            "conversion": false,
+            "checkmate": false,
+            "stalemate": false,
+            "variant_win": false,
+            "variant_loss": false,
+            "insufficient_material": false,
+            "dtz": 1,
+            "precise_dtz": 1,
+            "dtm": 19,
+            "dtw": null,
+            "dtc": null,
+            "category": "win"
+          }
+        ]
+      }
+    }
+  ],
+  "stored_case_audit": [
+    {
+      "id": "B03",
+      "source": "target/human-evaluation-20261006/dutyafter4/final-snapshots.jsonl.gz",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "proposal_count": 61,
+      "local_expansions_used": 0,
+      "producer_counts": {
+        "C-opponent-choice": 3,
+        "C-action-enablement": 3,
+        "C-action_route": 11,
+        "C-action_support": 22,
+        "C-opponent_access": 1,
+        "C-pawn_passage": 2,
+        "C-preparation-alternative": 2,
+        "C-sacrifice": 1,
+        "C-support": 13,
+        "C-target_access": 3
+      },
+      "comparison_requirements": [
+        {
+          "proposal_id": "discovery:0c1bd5bb8d97cb7575a1637258ba607d74ab2a37c28a2326da9e9aeb42c2a5dd",
+          "producer": "C-opponent-choice",
+          "question": "How do Bb5 and Bc4 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "alternative_move": "f1c4"
+        },
+        {
+          "proposal_id": "discovery:38b875ab04a09b8fca065ded73031570585830c9cb662d4de38826e25e776b3a",
+          "producer": "C-opponent-choice",
+          "question": "How do Bb5 and Nc3 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "alternative_move": "b1c3"
+        },
+        {
+          "proposal_id": "discovery:80bcedc5bbc04d5fdfc0ce291f9db33d7b3bd543c199de5de0c5e75bec4800f0",
+          "producer": "C-opponent-choice",
+          "question": "How do Bb5 and d4 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "alternative_move": "d2d4"
+        },
+        {
+          "proposal_id": "discovery:5c725c4546931468bbdff9555d0a1199b18ab2f54ee4063570f0e579495e2a95",
+          "producer": "C-preparation-alternative",
+          "question": "Does Bc4 also prepare the white knight originally on b1 acting on d5, and how does it compare with Nc3? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "b1c3",
+          "alternative_move": "f1c4"
+        },
+        {
+          "proposal_id": "discovery:08b35db24d3a51080437d9869c79745f2aa66b07469f4a47700b806459bbe235",
+          "producer": "C-sacrifice",
+          "question": "After Bb5, what compensates white for the observed material loss beginning with Nxe4? Does avoiding that capture or changing the response invalidate the named continuation? There are 29 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "alternative_move": "b1c3"
+        },
+        {
+          "proposal_id": "discovery:08b35db24d3a51080437d9869c79745f2aa66b07469f4a47700b806459bbe235",
+          "producer": "C-sacrifice",
+          "question": "After Bb5, what compensates white for the observed material loss beginning with Nxe4? Does avoiding that capture or changing the response invalidate the named continuation? There are 29 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "f1b5",
+            "a7a6",
+            "b5a4",
+            "g8f6",
+            "e1g1"
+          ],
+          "reference_move": "f6e4",
+          "alternative_move": "d7d5"
+        },
+        {
+          "proposal_id": "discovery:d33cfabbec75dc0c4aa9f8d7b0b4ab0dc7820d451d7ee57e44221f570409e428",
+          "producer": "C-preparation-alternative",
+          "question": "Does Nc3 also prepare the white king originally on e1 acting on g1, and how does it compare with Bb5? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "alternative_move": "b1c3"
+        }
+      ],
+      "discovery_scans": [
+        {
+          "prefix_moves_uci": [],
+          "reference_move": "f1b5",
+          "examined_moves": [
+            "b1c3",
+            "d2d4",
+            "f1b5",
+            "f1c4"
+          ],
+          "legal_moves": [
+            "a2a3",
+            "a2a4",
+            "b1a3",
+            "b1c3",
+            "b2b3",
+            "b2b4",
+            "c2c3",
+            "c2c4",
+            "d1e2",
+            "d2d3",
+            "d2d4",
+            "e1e2",
+            "f1a6",
+            "f1b5",
+            "f1c4",
+            "f1d3",
+            "f1e2",
+            "f3d4",
+            "f3e5",
+            "f3g1",
+            "f3g5",
+            "f3h4",
+            "g2g3",
+            "g2g4",
+            "h1g1",
+            "h2h3",
+            "h2h4"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "f1b5",
+            "f8c5",
+            "e1g1",
+            "c6d4",
+            "b2b4",
+            "d4f3",
+            "d1f3",
+            "c5b4"
+          ],
+          "reference_move": "f3g3",
+          "examined_moves": [
+            "c1b2",
+            "c2c3",
+            "f3g3"
+          ],
+          "legal_moves": [
+            "a2a3",
+            "a2a4",
+            "b1a3",
+            "b1c3",
+            "b5a4",
+            "b5a6",
+            "b5c4",
+            "b5c6",
+            "b5d3",
+            "b5d7",
+            "b5e2",
+            "c1a3",
+            "c1b2",
+            "c2c3",
+            "c2c4",
+            "d2d3",
+            "d2d4",
+            "f1d1",
+            "f1e1",
+            "f3a3",
+            "f3b3",
+            "f3c3",
+            "f3d1",
+            "f3d3",
+            "f3e2",
+            "f3e3",
+            "f3f4",
+            "f3f5",
+            "f3f6",
+            "f3f7",
+            "f3g3",
+            "f3g4",
+            "f3h3",
+            "f3h5",
+            "g1h1",
+            "g2g3",
+            "g2g4",
+            "h2h3",
+            "h2h4"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "f1b5",
+            "f8c5",
+            "e1g1",
+            "c6d4"
+          ],
+          "reference_move": "f3d4",
+          "examined_moves": [
+            "b2b4",
+            "b5e2",
+            "f3d4"
+          ],
+          "legal_moves": [
+            "a2a3",
+            "a2a4",
+            "b1a3",
+            "b1c3",
+            "b2b3",
+            "b2b4",
+            "b5a4",
+            "b5a6",
+            "b5c4",
+            "b5c6",
+            "b5d3",
+            "b5d7",
+            "b5e2",
+            "c2c3",
+            "c2c4",
+            "d1e1",
+            "d1e2",
+            "d2d3",
+            "f1e1",
+            "f3d4",
+            "f3e1",
+            "f3e5",
+            "f3g5",
+            "f3h4",
+            "g1h1",
+            "g2g3",
+            "g2g4",
+            "h2h3",
+            "h2h4"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        }
+      ],
+      "stored_searches": [
+        {
+          "work_id": "work:0",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 8,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "b1c3",
+                "g8f6",
+                "d2d4",
+                "e5d4",
+                "f3d4"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 76
+              }
+            },
+            {
+              "moves": [
+                "d2d4",
+                "e5d4",
+                "f3d4",
+                "c6d4",
+                "d1d4"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 62
+              }
+            },
+            {
+              "moves": [
+                "f1b5",
+                "a7a6",
+                "b5c6",
+                "d7c6",
+                "e1g1",
+                "c8g4",
+                "d2d3"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": 26
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:1",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 5000000,
+            "movetime_ms": 5000,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1b5",
+                "a7a6",
+                "b5a4",
+                "g8f6",
+                "e1g1",
+                "f6e4",
+                "d2d4",
+                "e5d4",
+                "f1e1",
+                "d7d5",
+                "a4c6",
+                "b7c6",
+                "d1d4",
+                "c6c5",
+                "d4e5",
+                "c8e6",
+                "b1c3",
+                "e4c3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 37
+              }
+            },
+            {
+              "moves": [
+                "d2d4",
+                "e5d4",
+                "f3d4",
+                "f8c5",
+                "d4b3",
+                "c5b6",
+                "b1c3",
+                "g8f6",
+                "c1g5",
+                "h7h6",
+                "g5h4",
+                "e8g8",
+                "d1e2",
+                "a7a5",
+                "a2a4",
+                "c6d4",
+                "e2d3",
+                "d4b3",
+                "c2b3",
+                "c7c6",
+                "e1c1",
+                "f8e8",
+                "d3c2",
+                "d8e7",
+                "c1b1",
+                "g7g5",
+                "h4g3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 37
+              }
+            },
+            {
+              "moves": [
+                "f1c4",
+                "g8f6",
+                "d2d3",
+                "f8c5",
+                "c2c3",
+                "d7d6",
+                "b2b4",
+                "c5b6",
+                "a2a4",
+                "a7a5",
+                "b4b5",
+                "c6e7",
+                "b1d2",
+                "e8g8",
+                "c4b3",
+                "e7g6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 29
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:2",
+          "purpose": "focus_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "f1b5",
+              "b1c3"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1b5",
+                "f8c5",
+                "e1g1",
+                "c6d4",
+                "f3d4",
+                "c5d4",
+                "c2c3",
+                "d4b6",
+                "d2d4",
+                "e5d4",
+                "c3d4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 48
+              }
+            },
+            {
+              "moves": [
+                "b1c3",
+                "g8f6",
+                "c3d5",
+                "f8e7",
+                "d5f6",
+                "e7f6",
+                "f1c4",
+                "c6a5",
+                "c4d3",
+                "d7d5",
+                "e1g1"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 15
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:3",
+          "purpose": "response_comparison",
+          "search_anchor": {
+            "root_move": "f1b5",
+            "root_occurrence_id": "move-review:6e99ba5c3477daca86c70c233e220d2c2f8e869593c12cbd811c76f05b64176e:4:b1c3:evidence:transition:79e718476493784cc3fcc9f97697c246df8e36c063bf9b1db4c9d1d3b5997334",
+            "position_id": "7038f2d6142fbcf48a5b9cbac9a004034507880c4f5ed0600aa4bd010b74d50f",
+            "prefix_moves_uci": [
+              "f1b5",
+              "f8c5",
+              "e1g1",
+              "c6d4"
+            ]
+          },
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "f3d4",
+                "c5d4",
+                "c2c3",
+                "d4b6",
+                "d2d4",
+                "c7c6",
+                "b5c4",
+                "d7d6",
+                "a2a4",
+                "g8f6",
+                "d4e5",
+                "d6e5",
+                "d1d8",
+                "b6d8",
+                "a4a5",
+                "e8e7",
+                "f2f3",
+                "c8e6",
+                "c4e6",
+                "e7e6",
+                "c1e3",
+                "f6e8"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 53
+              }
+            },
+            {
+              "moves": [
+                "b2b4",
+                "d4f3",
+                "d1f3",
+                "c5b4",
+                "c1b2",
+                "c7c6",
+                "b5c4",
+                "g8f6",
+                "b2e5",
+                "e8g8",
+                "c4b3",
+                "d7d6",
+                "e5b2",
+                "f8e8",
+                "d2d3",
+                "b4a5",
+                "f3f4",
+                "d6d5",
+                "b2f6",
+                "d8f6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 35
+              }
+            },
+            {
+              "moves": [
+                "b5e2",
+                "d7d6",
+                "f3d4",
+                "c5d4",
+                "c2c3",
+                "d4b6",
+                "a2a4",
+                "c7c6",
+                "d2d4",
+                "g8f6",
+                "d4e5",
+                "d6e5",
+                "d1d8",
+                "b6d8",
+                "f2f3",
+                "d8b6",
+                "g1h1",
+                "a7a5",
+                "b1d2",
+                "b6c7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 27
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:4",
+          "purpose": "response_comparison",
+          "search_anchor": {
+            "root_move": "f1b5",
+            "root_occurrence_id": "move-review:6e99ba5c3477daca86c70c233e220d2c2f8e869593c12cbd811c76f05b64176e:4:b1c3:evidence:transition:79e718476493784cc3fcc9f97697c246df8e36c063bf9b1db4c9d1d3b5997334",
+            "position_id": "9191ad2afdb532ea69da272020e323fb85c51a435ad544a44f365f042e399093",
+            "prefix_moves_uci": [
+              "f1b5",
+              "f8c5",
+              "e1g1",
+              "c6d4",
+              "b2b4",
+              "d4f3",
+              "d1f3",
+              "c5b4"
+            ]
+          },
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "f3g3",
+                "g8f6",
+                "d2d4",
+                "e8g8",
+                "c1h6",
+                "f6h5",
+                "g3e5",
+                "f7f5",
+                "b5e2",
+                "g7h6",
+                "a2a3",
+                "b4e7",
+                "e2h5",
+                "c7c6",
+                "e5g3",
+                "g8h8",
+                "b1c3",
+                "f5e4",
+                "c3e4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 42
+              }
+            },
+            {
+              "moves": [
+                "c1b2",
+                "c7c6",
+                "b5c4",
+                "d8e7",
+                "d2d4",
+                "g8f6",
+                "d4e5",
+                "f6e4",
+                "a2a3",
+                "b4c5",
+                "c4d3",
+                "e4g5",
+                "f3g3",
+                "d7d5",
+                "e5d6",
+                "c5d6",
+                "f2f4",
+                "g5e6",
+                "b1d2",
+                "c8d7",
+                "d2c4",
+                "d6c7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 28
+              }
+            },
+            {
+              "moves": [
+                "c2c3",
+                "b4e7",
+                "d2d4",
+                "c7c6",
+                "b5c4",
+                "d7d5",
+                "e4d5",
+                "e5e4",
+                "f3e4",
+                "g8f6",
+                "e4d3",
+                "c6d5",
+                "c4b3",
+                "e8g8",
+                "c1f4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": 13
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B09",
+      "source": "target/human-evaluation-20261006/dutyafter4/final-snapshots.jsonl.gz",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "proposal_count": 57,
+      "local_expansions_used": 0,
+      "producer_counts": {
+        "C-opponent-choice": 3,
+        "C-action-enablement": 1,
+        "C-action_route": 10,
+        "C-action_support": 15,
+        "C-opponent_entry": 1,
+        "C-pawn_passage": 4,
+        "C-plan-counter": 1,
+        "C-preparation-alternative": 3,
+        "C-preparation-effect": 2,
+        "C-sacrifice": 1,
+        "C-support": 14,
+        "C-target_access": 2
+      },
+      "comparison_requirements": [
+        {
+          "proposal_id": "discovery:3e5830a151ba02c8d0cccca68b5fa6950d49ff65a13ec5f0560633b232e43edf",
+          "producer": "C-opponent-choice",
+          "question": "How do Nc6 and Nf6 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "g8f6"
+        },
+        {
+          "proposal_id": "discovery:6cb93b1e92a843ab81a9db74f1977b4d202021b6cc57cf434a8d27311c22826d",
+          "producer": "C-opponent-choice",
+          "question": "How do Nc6 and d6 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "d7d6"
+        },
+        {
+          "proposal_id": "discovery:9a6be5579366677aa3c2f6ddb5f0baaba4c2ab324bacc56ce4afc8f89e837578",
+          "producer": "C-opponent-choice",
+          "question": "How do Nc6 and Bc5 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "f8c5"
+        },
+        {
+          "proposal_id": "discovery:c6eea3a559e2ad2ccec6d90b5e34e07922442335a91957a590e2039cd3d8d0c1",
+          "producer": "C-plan-counter",
+          "question": "Does the quiet reply Nc3 prevent or change the black pawn originally on e5 acting on d4, and is it stronger than d4 at this position?",
+          "id": "contrast_strength",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "b8c6"
+          ],
+          "reference_move": "d2d4",
+          "alternative_move": "b1c3"
+        },
+        {
+          "proposal_id": "discovery:8d3106fb289c04dd859a83add26b78b7ad3265550e9758a5d250c2cc05f4500c",
+          "producer": "C-preparation-alternative",
+          "question": "Does d6 also prepare the black knight originally on g8 acting on f6, and how does it compare with Nc6? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "d7d6"
+        },
+        {
+          "proposal_id": "discovery:535a563852270bc02108c6cf82d8a32fa8ef445c264ca39fac9396041ac0b417",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the black knight originally on b8 acting on c6 after Bc5, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f8c5",
+          "alternative_move": "b8c6"
+        },
+        {
+          "proposal_id": "discovery:194feab5e088ab2ccb2cfa71fa5ffc66e79f89c4ab241f81e17eec09419c98ca",
+          "producer": "C-sacrifice",
+          "question": "After Bc5, what compensates black for the observed material loss beginning with Nxe5? Does avoiding that capture or changing the response invalidate the named continuation? There are 26 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f8c5",
+          "alternative_move": "b8c6"
+        },
+        {
+          "proposal_id": "discovery:194feab5e088ab2ccb2cfa71fa5ffc66e79f89c4ab241f81e17eec09419c98ca",
+          "producer": "C-sacrifice",
+          "question": "After Bc5, what compensates black for the observed material loss beginning with Nxe5? Does avoiding that capture or changing the response invalidate the named continuation? There are 26 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "f8c5"
+          ],
+          "reference_move": "f3e5",
+          "alternative_move": "d2d3"
+        },
+        {
+          "proposal_id": "discovery:da807f868bae7ea4ab59718734cb902e5dc4443bda318ac7f4bc4dca3dca6148",
+          "producer": "C-preparation-alternative",
+          "question": "Does Bc5 also prepare the black knight originally on g8 acting on f6, and how does it compare with Nc6? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "f8c5"
+        },
+        {
+          "proposal_id": "discovery:fd5d2fc1f371d26dfbc98a47660097b81684ec86d57660a04193c80a414a5d15",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the black knight originally on g8 acting on f6 after Nc6, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "g8f6"
+        },
+        {
+          "proposal_id": "discovery:f1a2fe939449955b80aa99ffdaa78455bd5309ea52a509fc91f88329307390e6",
+          "producer": "C-preparation-alternative",
+          "question": "Does d6 also prepare the black pawn originally on e5 acting on d4, and how does it compare with Nc6? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "alternative_move": "d7d6"
+        }
+      ],
+      "discovery_scans": [
+        {
+          "prefix_moves_uci": [],
+          "reference_move": "b8c6",
+          "examined_moves": [
+            "b8c6",
+            "d7d5",
+            "d7d6",
+            "f8c5",
+            "g8f6"
+          ],
+          "legal_moves": [
+            "a7a5",
+            "a7a6",
+            "b7b5",
+            "b7b6",
+            "b8a6",
+            "b8c6",
+            "c7c5",
+            "c7c6",
+            "d7d5",
+            "d7d6",
+            "d8e7",
+            "d8f6",
+            "d8g5",
+            "d8h4",
+            "e8e7",
+            "f7f5",
+            "f7f6",
+            "f8a3",
+            "f8b4",
+            "f8c5",
+            "f8d6",
+            "f8e7",
+            "g7g5",
+            "g7g6",
+            "g8e7",
+            "g8f6",
+            "g8h6",
+            "h7h5",
+            "h7h6"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "f8c5",
+            "f3e5",
+            "b8c6"
+          ],
+          "reference_move": "e5c6",
+          "examined_moves": [
+            "e5c6",
+            "e5f3",
+            "f1e2"
+          ],
+          "legal_moves": [
+            "a2a3",
+            "a2a4",
+            "b1a3",
+            "b1c3",
+            "b2b3",
+            "b2b4",
+            "c2c3",
+            "c2c4",
+            "d1e2",
+            "d1f3",
+            "d1g4",
+            "d1h5",
+            "d2d3",
+            "d2d4",
+            "e1e2",
+            "e5c4",
+            "e5c6",
+            "e5d3",
+            "e5d7",
+            "e5f3",
+            "e5f7",
+            "e5g4",
+            "e5g6",
+            "f1a6",
+            "f1b5",
+            "f1c4",
+            "f1d3",
+            "f1e2",
+            "f2f3",
+            "f2f4",
+            "g2g3",
+            "g2g4",
+            "h1g1",
+            "h2h3",
+            "h2h4"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "f8c5"
+          ],
+          "reference_move": "f3e5",
+          "examined_moves": [
+            "d2d3",
+            "f3e5"
+          ],
+          "legal_moves": [
+            "a2a3",
+            "a2a4",
+            "b1a3",
+            "b1c3",
+            "b2b3",
+            "b2b4",
+            "c2c3",
+            "c2c4",
+            "d1e2",
+            "d2d3",
+            "d2d4",
+            "e1e2",
+            "f1a6",
+            "f1b5",
+            "f1c4",
+            "f1d3",
+            "f1e2",
+            "f3d4",
+            "f3e5",
+            "f3g1",
+            "f3g5",
+            "f3h4",
+            "g2g3",
+            "g2g4",
+            "h1g1",
+            "h2h3",
+            "h2h4"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        }
+      ]
+    },
+    {
+      "id": "D05",
+      "source": "target/current-duty-20261006/new8complete/final-snapshots.jsonl.gz",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "proposal_count": 51,
+      "local_expansions_used": 0,
+      "producer_counts": {
+        "C-opponent-choice": 4,
+        "C-action_route": 17,
+        "C-action_support": 10,
+        "C-opponent_access": 2,
+        "C-preparation-alternative": 4,
+        "C-preparation-effect": 2,
+        "C-sacrifice": 5,
+        "C-support": 3,
+        "C-target_access": 3,
+        "C-action-enablement": 1
+      },
+      "comparison_requirements": [
+        {
+          "proposal_id": "discovery:4299ac86d8e40696386ee0db94347dee729d3a095d6fa97be515c81aeb642d5c",
+          "producer": "C-opponent-choice",
+          "question": "How do Ra1+ and Rg8+ change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8g8"
+        },
+        {
+          "proposal_id": "discovery:77575bd2008e47cc92e2eb1e32704990c0b811ea9c06f08ad88266372e827b82",
+          "producer": "C-opponent-choice",
+          "question": "How do Ra1+ and Re8 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8e8"
+        },
+        {
+          "proposal_id": "discovery:93e0ce96a7f664a4a5d027949dda00b3ca63b2c463bf1c20aa2154a3a2a434d8",
+          "producer": "C-opponent-choice",
+          "question": "How do Ra1+ and Ra5 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8a5"
+        },
+        {
+          "proposal_id": "discovery:50591176820698a3a48f4e8489b4f5b0e3afb05e99a5708299c68e495edc4c10",
+          "producer": "C-preparation-alternative",
+          "question": "Does Rg8+ also prepare the black king originally on b7 acting on c6, and how does it compare with Re8? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8g8"
+        },
+        {
+          "proposal_id": "discovery:001ca2f7afeebb9f770a8ad0ecc19aacefda3eba74eaee801a021619dd90e11b",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the black king originally on b7 acting on c6 after Re8, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "b7c6"
+        },
+        {
+          "proposal_id": "discovery:86c42eec8aedaaf21faf468805163e788715053920931d0282fe968ffd657887",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 11 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a1"
+        },
+        {
+          "proposal_id": "discovery:86c42eec8aedaaf21faf468805163e788715053920931d0282fe968ffd657887",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 11 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "a8e8"
+          ],
+          "reference_move": "f3h4",
+          "alternative_move": "g1f2"
+        },
+        {
+          "proposal_id": "discovery:50ac8fd3933bf4dd618173ab08a1c02bd8c60813c8f4b64f21a4eebb09066dba",
+          "producer": "C-preparation-alternative",
+          "question": "Does Ra1+ also prepare the black king originally on b7 acting on c6, and how does it compare with Re8? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a1"
+        },
+        {
+          "proposal_id": "discovery:6bc4c978af1fccdeab8e9abc377d46a25476cb05e09d19696a4b539cff2c1347",
+          "producer": "C-sacrifice",
+          "question": "After Ra1+, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 8 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8e8"
+        },
+        {
+          "proposal_id": "discovery:6bc4c978af1fccdeab8e9abc377d46a25476cb05e09d19696a4b539cff2c1347",
+          "producer": "C-sacrifice",
+          "question": "After Ra1+, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 8 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "a8a1",
+            "g1f2",
+            "a1a2",
+            "f2g1",
+            "e5e4"
+          ],
+          "reference_move": "f3h4",
+          "alternative_move": "g1f1"
+        },
+        {
+          "proposal_id": "discovery:bc455cb0018d49810a4b7ba878cee6e74f01c3436c0dcd1256b282540b10a2d7",
+          "producer": "C-preparation-alternative",
+          "question": "Does Ra5 also prepare the black king originally on b7 acting on c6, and how does it compare with Re8? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a5"
+        },
+        {
+          "proposal_id": "discovery:9dee74f9642491e94efbd08262f8690d6c834d8e4314c48ad794c9499bf36245",
+          "producer": "C-sacrifice",
+          "question": "After Ra1+, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 8 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8e8"
+        },
+        {
+          "proposal_id": "discovery:9dee74f9642491e94efbd08262f8690d6c834d8e4314c48ad794c9499bf36245",
+          "producer": "C-sacrifice",
+          "question": "After Ra1+, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 8 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "a8a1",
+            "g1h2",
+            "a1a2",
+            "h2g1",
+            "e5e4"
+          ],
+          "reference_move": "f3h4",
+          "alternative_move": "g1f1"
+        },
+        {
+          "proposal_id": "discovery:6590695e70e558eddf39189c3e902feed35cdb5b458337d44e38c73a8bfb52a5",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Kxf3? Does avoiding that capture or changing the response invalidate the named continuation? There are 3 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a1"
+        },
+        {
+          "proposal_id": "discovery:6590695e70e558eddf39189c3e902feed35cdb5b458337d44e38c73a8bfb52a5",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Kxf3? Does avoiding that capture or changing the response invalidate the named continuation? There are 3 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "a8e8",
+            "g1f2",
+            "e8f8",
+            "f2e3",
+            "f8f3"
+          ],
+          "reference_move": "e3f3",
+          "alternative_move": "e3d2"
+        },
+        {
+          "proposal_id": "discovery:9b0c88784b95704015319653f5437e72b0c8e60da1e4f5523825854f35a9ea9e",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the black rook originally on a8 acting on f8 after Re8, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8f8"
+        },
+        {
+          "proposal_id": "discovery:b69cee914e155dada6bdfea610b528dca207b5c1e41bfcfb855e3231ac4e7691",
+          "producer": "C-preparation-alternative",
+          "question": "Does Ra1+ also prepare the black rook originally on a8 acting on f8, and how does it compare with Re8? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a1"
+        },
+        {
+          "proposal_id": "discovery:a6ed75939d9a1972cd344f7a151af3ca32788036e348d1b5cfbf22430486d9ad",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 11 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "a8e8",
+          "alternative_move": "a8a1"
+        },
+        {
+          "proposal_id": "discovery:a6ed75939d9a1972cd344f7a151af3ca32788036e348d1b5cfbf22430486d9ad",
+          "producer": "C-sacrifice",
+          "question": "After Re8, what compensates black for the observed material loss beginning with Nxh4? Does avoiding that capture or changing the response invalidate the named continuation? There are 11 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "a8e8"
+          ],
+          "reference_move": "f3h4",
+          "alternative_move": "g1f2"
+        },
+        {
+          "proposal_id": "discovery:930cfda7ef7173a7e1d76f1a6d38be86d94bff6fece43cdd8057735623217f6e",
+          "producer": "C-opponent-choice",
+          "question": "How do Ra1+ and Rf8 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "alternative_move": "a8f8"
+        }
+      ],
+      "discovery_scans": [
+        {
+          "prefix_moves_uci": [],
+          "reference_move": "a8a1",
+          "examined_moves": [
+            "a8a1",
+            "a8a5",
+            "a8e8",
+            "a8f8",
+            "a8g8"
+          ],
+          "legal_moves": [
+            "a8a1",
+            "a8a2",
+            "a8a3",
+            "a8a4",
+            "a8a5",
+            "a8a6",
+            "a8a7",
+            "a8b8",
+            "a8c8",
+            "a8d8",
+            "a8e8",
+            "a8f8",
+            "a8g8",
+            "a8h8",
+            "b7a6",
+            "b7a7",
+            "b7b6",
+            "b7b8",
+            "b7c6",
+            "b7c7",
+            "b7c8",
+            "e5e4",
+            "h4h3"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "a8e8"
+          ],
+          "reference_move": "f3h4",
+          "examined_moves": [
+            "f3h4",
+            "g1f2"
+          ],
+          "legal_moves": [
+            "f3d2",
+            "f3d4",
+            "f3e1",
+            "f3e5",
+            "f3g5",
+            "f3h2",
+            "f3h4",
+            "g1f1",
+            "g1f2",
+            "g1g2",
+            "g1h1",
+            "g1h2"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        }
+      ],
+      "stored_searches": [
+        {
+          "work_id": "work:0",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 8,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8a5",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2f3",
+                "a5a3",
+                "f3g4",
+                "a3a4",
+                "g4g5",
+                "d5e4"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -342
+              }
+            },
+            {
+              "moves": [
+                "a8g8",
+                "g1h2",
+                "e5e4",
+                "f3h4",
+                "b7c6",
+                "h4g2",
+                "c6d5",
+                "h2g1",
+                "g8b8",
+                "g1f2"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -333
+              }
+            },
+            {
+              "moves": [
+                "a8a1",
+                "g1g2",
+                "a1a5",
+                "f3h4",
+                "b7c6",
+                "g2f3"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -329
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:1",
+          "purpose": "focus_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "a8a5",
+              "a8e8"
+            ]
+          },
+          "limits": {
+            "depth": 8,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8a5",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "a5a3",
+                "h4f3",
+                "c6d5",
+                "f3g5",
+                "a3c3",
+                "g5h7"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -353
+              }
+            },
+            {
+              "moves": [
+                "a8e8",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2e3",
+                "e8c8",
+                "h4f5",
+                "c8c3",
+                "e3d2"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -326
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:2",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 5000000,
+            "movetime_ms": 5000,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8a1",
+                "g1f2",
+                "a1a2",
+                "f2g1",
+                "e5e4",
+                "f3h4",
+                "b7c6",
+                "h4g6",
+                "c6d5",
+                "g6f4",
+                "d5d4",
+                "g1f1",
+                "d4e3",
+                "f4h3",
+                "a2a4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -584
+              }
+            },
+            {
+              "moves": [
+                "a8g8",
+                "g1h1",
+                "e5e4",
+                "f3h4",
+                "b7c6",
+                "h4f5",
+                "c6c5",
+                "h1h2",
+                "c5c4",
+                "h2h3",
+                "c4d3",
+                "f5e7",
+                "g8g5",
+                "h3h4",
+                "e4e3",
+                "h4g5",
+                "e3e2",
+                "e7g6",
+                "e2e1q",
+                "g5f6",
+                "e1f2",
+                "f6e7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -564
+              }
+            },
+            {
+              "moves": [
+                "a8a5",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "h4g6",
+                "d5e4",
+                "f2e2",
+                "a5a2",
+                "e2d1",
+                "a2a6",
+                "g6h4",
+                "e4d3",
+                "d1c1",
+                "e5e4",
+                "h4g2",
+                "a6a1",
+                "c1b2",
+                "a1f1",
+                "b2b3",
+                "e4e3",
+                "g2e3",
+                "d3e3",
+                "b3c4",
+                "f1d1",
+                "c4b3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -533
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:3",
+          "purpose": "focus_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "a8a1",
+              "a8e8"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8a1",
+                "g1h2",
+                "a1a2",
+                "h2g1",
+                "e5e4",
+                "f3h4",
+                "b7c6",
+                "h4g6",
+                "c6d5",
+                "g6e7",
+                "d5d4",
+                "e7c6",
+                "d4c3",
+                "g1f1",
+                "c3d2",
+                "c6e5",
+                "e4e3",
+                "e5c4",
+                "d2d3",
+                "c4e5",
+                "d3e4",
+                "e5d7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -554
+              }
+            },
+            {
+              "moves": [
+                "a8e8",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2f3",
+                "e8a8",
+                "f3e3",
+                "a8a3",
+                "e3d2",
+                "d5e4",
+                "h4g6",
+                "a3a6",
+                "g6h8",
+                "e4d4",
+                "d2e2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -497
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:4",
+          "purpose": "response_comparison",
+          "search_anchor": {
+            "root_move": "a8e8",
+            "root_occurrence_id": "move-review:b21e541c04feb447d9466eacb6f84f2bbfc4d12b355054b925958747a768ca99:1:a8e8:evidence:transition:fd2b1e966f4b997d4849e1a53b95fa9da705726a89da6ecd3ab0d3e0be0b21a1",
+            "position_id": "cb9d4934e0501d89e306c5f528871c78f8be96a9a3e5fdfdd6d48084249abcd1",
+            "prefix_moves_uci": [
+              "a8e8"
+            ]
+          },
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "f3h4",
+              "g1f2"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2e3",
+                "e8a8",
+                "e3d3",
+                "a8a3",
+                "d3c2",
+                "d5e4",
+                "h4g6",
+                "a3a6",
+                "g6f8",
+                "e4f4",
+                "f8h7",
+                "e5e4",
+                "c2d2",
+                "a6a2",
+                "d2e1",
+                "f4e3",
+                "e1f1",
+                "a2a1",
+                "f1g2",
+                "e3d3",
+                "h7f6"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -525
+              }
+            },
+            {
+              "moves": [
+                "g1f2",
+                "e8f8",
+                "f2e3",
+                "f8f3",
+                "e3f3",
+                "b7c6",
+                "f3g4",
+                "c6d5",
+                "g4h4",
+                "d5d4",
+                "h4h3",
+                "e5e4",
+                "h3g3",
+                "e4e3",
+                "g3g4",
+                "e3e2",
+                "g4f4",
+                "d4d3",
+                "f4e5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -665
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:5",
+          "purpose": "investigation_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "a8e8",
+              "a8f8"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8e8",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2e3",
+                "e8a8",
+                "h4f3",
+                "a8a3",
+                "e3e2",
+                "d5e4",
+                "f3g5",
+                "e4f5",
+                "g5f3",
+                "f5f4",
+                "f3d2",
+                "e5e4",
+                "e2d1",
+                "a3a2",
+                "d2c4",
+                "a2a4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -474
+              }
+            },
+            {
+              "moves": [
+                "a8f8",
+                "f3e5",
+                "f8f5",
+                "e5d3",
+                "f5f3",
+                "d3e1",
+                "f3h3",
+                "e1g2",
+                "b7c6",
+                "g1f2",
+                "c6d6",
+                "g2f4",
+                "h3g3",
+                "f4e2",
+                "g3g4",
+                "f2f3",
+                "g4a4",
+                "e2g1",
+                "d6e5",
+                "g1h3",
+                "e5f5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -282
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:6",
+          "purpose": "investigation_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "a8a1",
+              "a8e8"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "a8a1",
+                "g1g2",
+                "a1a2",
+                "g2h1",
+                "e5e4",
+                "f3h4",
+                "b7c6",
+                "h1g1",
+                "c6d5",
+                "h4f5",
+                "d5e5",
+                "f5g7",
+                "e5f4",
+                "g7e6",
+                "f4e3",
+                "g1f1",
+                "a2a5",
+                "f1g2",
+                "e3d3",
+                "g2g3",
+                "e4e3",
+                "e6f4",
+                "d3d2",
+                "g3g4",
+                "e3e2",
+                "f4e2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -529
+              }
+            },
+            {
+              "moves": [
+                "a8e8",
+                "f3h4",
+                "b7c6",
+                "g1f2",
+                "c6d5",
+                "f2e3",
+                "e8a8",
+                "e3d3",
+                "a8a3",
+                "d3e2",
+                "d5e4",
+                "e2d2",
+                "a3a6",
+                "d2c3",
+                "a6c6",
+                "c3b2",
+                "e4d3",
+                "h4f5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -444
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D06",
+      "source": "target/current-duty-20261006/new8complete/final-snapshots.jsonl.gz",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "proposal_count": 43,
+      "local_expansions_used": 0,
+      "producer_counts": {
+        "C-opponent-choice": 3,
+        "C-action_route": 4,
+        "C-action_support": 15,
+        "C-opponent_access": 4,
+        "C-preparation-effect": 2,
+        "C-sacrifice": 4,
+        "C-support": 3,
+        "C-target_access": 2,
+        "C-action-enablement": 1,
+        "C-opponent_entry": 2,
+        "C-preparation-alternative": 2,
+        "C-sacrifice-counter": 1
+      },
+      "comparison_requirements": [
+        {
+          "proposal_id": "discovery:2f14c5988350100cc82252b18a3bcfa38d6f3967470a47237ca8f5787c86d741",
+          "producer": "C-opponent-choice",
+          "question": "How do Rxf6 and Re1 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1e1"
+        },
+        {
+          "proposal_id": "discovery:ccacd3c559376d77786068834d96c8b883e53cb7805fb7e486cf11575ef71335",
+          "producer": "C-opponent-choice",
+          "question": "How do Rxf6 and Rf5 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1f5"
+        },
+        {
+          "proposal_id": "discovery:dceb11824e6693c3397a5b9d34307373cdc5b7b3be569e47622f8137d2321949",
+          "producer": "C-opponent-choice",
+          "question": "How do Rxf6 and Ra1 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1a1"
+        },
+        {
+          "proposal_id": "discovery:f7c9b6f05ff7725a16ca9306e76b566584d5096892527ab41d6f2c6997f2e53b",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the white king originally on g1 acting on h1 after Re1, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [],
+          "reference_move": "f1e1",
+          "alternative_move": "g1h1"
+        },
+        {
+          "proposal_id": "discovery:e8d86eb40d7e95da0dad799a8a7ef68de9c39b71348ad34bf8fc1d5e366aa31b",
+          "producer": "C-sacrifice",
+          "question": "After Re1, what compensates white for the observed material loss beginning with Qxe1+? Does avoiding that capture or changing the response invalidate the named continuation? There are 35 legal replies that do not take this target; only the named comparisons are tested. No subsequent compensation has yet been observed in this finite line.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1e1",
+          "alternative_move": "f1f6"
+        },
+        {
+          "proposal_id": "discovery:e8d86eb40d7e95da0dad799a8a7ef68de9c39b71348ad34bf8fc1d5e366aa31b",
+          "producer": "C-sacrifice",
+          "question": "After Re1, what compensates white for the observed material loss beginning with Qxe1+? Does avoiding that capture or changing the response invalidate the named continuation? There are 35 legal replies that do not take this target; only the named comparisons are tested. No subsequent compensation has yet been observed in this finite line.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "f1e1",
+            "f6f2",
+            "g1h1"
+          ],
+          "reference_move": "f2e1",
+          "alternative_move": "f2g1"
+        },
+        {
+          "proposal_id": "discovery:af51357ccd6e78d48e222ccc4c7532ce4e09672eba4bd5fbe613e44f9085258f",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1e1"
+        },
+        {
+          "proposal_id": "discovery:af51357ccd6e78d48e222ccc4c7532ce4e09672eba4bd5fbe613e44f9085258f",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1a1"
+        },
+        {
+          "proposal_id": "discovery:b3171f918cb701b534f61cab5fd706356d0f9d3ac9c595a15c104dde29086522",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1e1"
+        },
+        {
+          "proposal_id": "discovery:b3171f918cb701b534f61cab5fd706356d0f9d3ac9c595a15c104dde29086522",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1a1"
+        },
+        {
+          "proposal_id": "discovery:0d8fbb43f391bcdc235dff74e6bb8e112386feebdbc0c34125ae191e1e9d75db",
+          "producer": "C-preparation-alternative",
+          "question": "Does Kg2 also prepare the white king originally on g1 acting on f2, and how does it compare with Ng3? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "f1f6",
+            "f8f6",
+            "c3e2",
+            "f6e6"
+          ],
+          "reference_move": "e2g3",
+          "alternative_move": "g1g2"
+        },
+        {
+          "proposal_id": "discovery:62b82d41c06403648f0f92b1b69067c31c0fb05df24eff3c67f9c18474bd5fbd",
+          "producer": "C-sacrifice-counter",
+          "question": "After the observed loss to Rxf6, does Ng3 stop or change the return Rxe4, and is it stronger than Kf2? The material observations describe this exact continuation; the comparison tests this response only.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1e1"
+        },
+        {
+          "proposal_id": "discovery:62b82d41c06403648f0f92b1b69067c31c0fb05df24eff3c67f9c18474bd5fbd",
+          "producer": "C-sacrifice-counter",
+          "question": "After the observed loss to Rxf6, does Ng3 stop or change the return Rxe4, and is it stronger than Kf2? The material observations describe this exact continuation; the comparison tests this response only.",
+          "id": "contrast_strength",
+          "state": "refuted",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "f1f6",
+            "f8f6",
+            "c3e2",
+            "f6e6"
+          ],
+          "reference_move": "g1f2",
+          "alternative_move": "e2g3"
+        },
+        {
+          "proposal_id": "discovery:856f97e720af94de68b04a731039a91af4cf6370971335f9802007476a6a540b",
+          "producer": "C-preparation-alternative",
+          "question": "Does Ng3 also prepare the white king originally on g1 acting on f3, and how does it compare with Kf2? The named continuations specify the scope of that comparison.",
+          "id": "contrast_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "f1f6",
+            "f8f6",
+            "c3e2",
+            "f6e6"
+          ],
+          "reference_move": "g1f2",
+          "alternative_move": "e2g3"
+        },
+        {
+          "proposal_id": "discovery:1a119215980e981993895fd0c58b3f0a0f2ad4bc9063503a1636eb6acc05277d",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the white king originally on g1 acting on f2 after Kg2, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [
+            "f1f6",
+            "f8f6",
+            "c3e2",
+            "f6e6"
+          ],
+          "reference_move": "g1g2",
+          "alternative_move": "g1f2"
+        },
+        {
+          "proposal_id": "discovery:7af0df0166beac4e5304e0221d125229b15e9adc2b688eebf8d545365df841ca",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1e1"
+        },
+        {
+          "proposal_id": "discovery:7af0df0166beac4e5304e0221d125229b15e9adc2b688eebf8d545365df841ca",
+          "producer": "C-sacrifice",
+          "question": "After Rxf6, what compensates black for the observed material loss beginning with Rxf6? Does avoiding that capture or changing the response invalidate the named continuation? There are 20 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "alternative_move": "f1a1"
+        }
+      ],
+      "discovery_scans": [
+        {
+          "prefix_moves_uci": [],
+          "reference_move": "f1f6",
+          "examined_moves": [
+            "f1a1",
+            "f1d1",
+            "f1e1",
+            "f1f5",
+            "f1f6"
+          ],
+          "legal_moves": [
+            "c3a2",
+            "c3a4",
+            "c3b1",
+            "c3b5",
+            "c3d1",
+            "c3d5",
+            "c3e2",
+            "e4e5",
+            "f1a1",
+            "f1b1",
+            "f1c1",
+            "f1d1",
+            "f1e1",
+            "f1f2",
+            "f1f3",
+            "f1f4",
+            "f1f5",
+            "f1f6",
+            "g1g2",
+            "g1h1",
+            "g1h2"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "f1f6",
+            "f8f6",
+            "c3e2",
+            "f6e6"
+          ],
+          "reference_move": "e4e5",
+          "examined_moves": [
+            "e2g3",
+            "e4e5",
+            "g1f2",
+            "g1g2"
+          ],
+          "legal_moves": [
+            "e2c1",
+            "e2c3",
+            "e2d4",
+            "e2f4",
+            "e2g3",
+            "e4e5",
+            "g1f1",
+            "g1f2",
+            "g1g2",
+            "g1h1",
+            "g1h2"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        }
+      ],
+      "stored_searches": [
+        {
+          "work_id": "work:0",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 8,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1f6",
+                "f8f6",
+                "e4e5",
+                "f6a6",
+                "c3d5",
+                "a6a5"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -5
+              }
+            },
+            {
+              "moves": [
+                "f1f5",
+                "f6c3",
+                "f5f8",
+                "g8f8",
+                "g1f1",
+                "c3d3",
+                "f1e1"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -540
+              }
+            },
+            {
+              "moves": [
+                "f1d1",
+                "f6c3",
+                "g1h1",
+                "c3h8",
+                "h1g1"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -677
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:1",
+          "purpose": "focus_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "f1f6",
+              "f1e1"
+            ]
+          },
+          "limits": {
+            "depth": 8,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1f6",
+                "f8f6",
+                "e4e5",
+                "g8g7",
+                "c3e2",
+                "f6f5",
+                "g1g2",
+                "f5e5",
+                "g2f2"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -5
+              }
+            },
+            {
+              "moves": [
+                "f1e1",
+                "f6f2",
+                "g1h1",
+                "f2e1",
+                "h1h2",
+                "f8f2",
+                "h2g3"
+              ],
+              "depth": 8,
+              "white_score": {
+                "kind": "cp",
+                "value": -822
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:2",
+          "purpose": "root_search",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 5000000,
+            "movetime_ms": 5000,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1f6",
+                "f8f6",
+                "c3d5",
+                "f6e6",
+                "g1f2",
+                "g8f7",
+                "f2f3",
+                "e6e4",
+                "f3e4",
+                "f7e6",
+                "e4d3"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -2
+              }
+            },
+            {
+              "moves": [
+                "f1a1",
+                "f6c3",
+                "a1a2",
+                "c3e1",
+                "g1g2",
+                "e1b1",
+                "a2a5",
+                "b1e4",
+                "g2h3",
+                "e4e6",
+                "h3h2",
+                "e6e2",
+                "h2h3",
+                "f8f3",
+                "h3h4"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -751
+              }
+            },
+            {
+              "moves": [
+                "f1f5",
+                "f6c3",
+                "f5g5",
+                "g8h7",
+                "g5f5",
+                "c3g3",
+                "g1f1",
+                "f8f5",
+                "e4f5",
+                "h7g8",
+                "f1e2",
+                "g3b3",
+                "e2f2",
+                "g8f7",
+                "f2g2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -917
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:3",
+          "purpose": "focus_comparison",
+          "search_anchor": null,
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "f1f6",
+              "f1e1"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "f1f6",
+                "f8f6",
+                "c3e2",
+                "f6e6",
+                "g1f2",
+                "e6e4",
+                "f2f3",
+                "e4e3",
+                "f3f2",
+                "e3b3",
+                "f2f1",
+                "b3d3",
+                "f1g2",
+                "d3d7",
+                "g2f3",
+                "d7g7",
+                "f3e3",
+                "g7e7",
+                "e3f2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -19
+              }
+            },
+            {
+              "moves": [
+                "f1e1",
+                "f6f2",
+                "g1h1",
+                "f2e1",
+                "h1h2",
+                "f8f2",
+                "h2h3",
+                "e1h1",
+                "h3g3",
+                "h1g1",
+                "g3h3",
+                "f2h2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "mate",
+                "value": -6
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:4",
+          "purpose": "response_comparison",
+          "search_anchor": {
+            "root_move": "f1f6",
+            "root_occurrence_id": "move-review:c8f109dd205106cae51303b1de44042aab8c0d7f54395a511c9de907ebdeac7a:0:f1e1:evidence:transition:96b3d755e06f82ec37e60d4be328b02b61e424d725a335ce1963f4b22be5a496",
+            "position_id": "037a3bf7be6eca564e1cde727f36f04424ea6b00476f9899a499a54dcaea3d6b",
+            "prefix_moves_uci": [
+              "f1f6",
+              "f8f6",
+              "c3e2",
+              "f6e6"
+            ]
+          },
+          "root_restriction": {
+            "kind": "unrestricted"
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 3
+          },
+          "lines": [
+            {
+              "moves": [
+                "g1f2",
+                "e6e4",
+                "f2f3",
+                "e4e3",
+                "f3f2",
+                "e3d3",
+                "e2g1",
+                "g8g7",
+                "f2f1",
+                "g7g6",
+                "f1e2",
+                "g6f5",
+                "e2e1"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -16
+              }
+            },
+            {
+              "moves": [
+                "e2g3",
+                "e6e4",
+                "g1f2",
+                "e4f4",
+                "f2e1",
+                "f4f3",
+                "g3e2",
+                "g8f7",
+                "e1d2",
+                "f3d3",
+                "d2e1",
+                "f7e6",
+                "e2g1",
+                "e6f5",
+                "e1f2"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -17
+              }
+            },
+            {
+              "moves": [
+                "g1g2",
+                "e6e4",
+                "g2f2",
+                "e4e3",
+                "f2e1",
+                "g8f7",
+                "e1f2",
+                "e3f3",
+                "f2e1",
+                "f7e7",
+                "e2c1",
+                "e7d7"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -19
+              }
+            }
+          ]
+        },
+        {
+          "work_id": "work:5",
+          "purpose": "response_comparison",
+          "search_anchor": {
+            "root_move": "f1f6",
+            "root_occurrence_id": "move-review:c8f109dd205106cae51303b1de44042aab8c0d7f54395a511c9de907ebdeac7a:0:f1e1:evidence:transition:96b3d755e06f82ec37e60d4be328b02b61e424d725a335ce1963f4b22be5a496",
+            "position_id": "037a3bf7be6eca564e1cde727f36f04424ea6b00476f9899a499a54dcaea3d6b",
+            "prefix_moves_uci": [
+              "f1f6",
+              "f8f6",
+              "c3e2",
+              "f6e6"
+            ]
+          },
+          "root_restriction": {
+            "kind": "restricted",
+            "moves_uci": [
+              "e4e5",
+              "g1f2"
+            ]
+          },
+          "limits": {
+            "depth": 16,
+            "nodes": 2000000,
+            "movetime_ms": 2500,
+            "multi_pv": 2
+          },
+          "lines": [
+            {
+              "moves": [
+                "e4e5",
+                "e6e5",
+                "g1f2",
+                "e5e3",
+                "f2e1",
+                "g8f7",
+                "e1d1",
+                "e3d3",
+                "d1e1",
+                "f7e7",
+                "e1f2",
+                "e7f6",
+                "f2e1",
+                "f6e5",
+                "e2c1"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -13
+              }
+            },
+            {
+              "moves": [
+                "g1f2",
+                "e6e4",
+                "f2e1",
+                "e4e3",
+                "e1f2",
+                "g8f7",
+                "f2e1",
+                "f7f6",
+                "e1d1",
+                "e3d3",
+                "d1e1",
+                "f6e5",
+                "e1f2",
+                "e5e4",
+                "e2g3",
+                "e4d5"
+              ],
+              "depth": 16,
+              "white_score": {
+                "kind": "cp",
+                "value": -14
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D07",
+      "source": "target/current-duty-20261006/new8complete/final-snapshots.jsonl.gz",
+      "verification": {
+        "state": "complete",
+        "target_depth": 16,
+        "reason": "initial_verification",
+        "trigger_work_ids": [],
+        "completed_depth": 16,
+        "stop_reason": null
+      },
+      "proposal_count": 52,
+      "local_expansions_used": 0,
+      "producer_counts": {
+        "C-opponent-choice": 3,
+        "C-action_route": 5,
+        "C-action_support": 18,
+        "C-opponent_entry": 3,
+        "C-pawn_passage": 3,
+        "C-preparation-effect": 1,
+        "C-sacrifice": 1,
+        "C-support": 15,
+        "C-target_access": 2,
+        "C-plan-counter": 1
+      },
+      "comparison_requirements": [
+        {
+          "proposal_id": "discovery:549c33b9bb23254373c44cdee0f7a48562908824c9abc103cc51dd24226dbb4e",
+          "producer": "C-opponent-choice",
+          "question": "How do Nf6 and d6 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "alternative_move": "d7d6"
+        },
+        {
+          "proposal_id": "discovery:c4a164777639188931499341a11bf8e10dff3f68d03f070c9d70a0dbcb55a77c",
+          "producer": "C-opponent-choice",
+          "question": "How do Nf6 and Bb4 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "alternative_move": "f8b4"
+        },
+        {
+          "proposal_id": "discovery:6ce15a1d61eb0b743466c827d0c2a90f8901df80f5b460cfb750bd65992d2468",
+          "producer": "C-preparation-effect",
+          "question": "What changes before the black bishop originally on f8 acting on d6 after Nf6, which moves cause them, and is acting immediately available or preferable?",
+          "id": "contrast_immediate",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "alternative_move": "f8d6"
+        },
+        {
+          "proposal_id": "discovery:1ed04952987adbffb2e55dc17ee2d4bcb1b300b61c797b3ecd5ff76581538977",
+          "producer": "C-sacrifice",
+          "question": "After Nf6, what compensates white for the observed material loss beginning with Nxe4? Does avoiding that capture or changing the response invalidate the named continuation? There are 33 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_value",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "alternative_move": "d7d6"
+        },
+        {
+          "proposal_id": "discovery:1ed04952987adbffb2e55dc17ee2d4bcb1b300b61c797b3ecd5ff76581538977",
+          "producer": "C-sacrifice",
+          "question": "After Nf6, what compensates white for the observed material loss beginning with Nxe4? Does avoiding that capture or changing the response invalidate the named continuation? There are 33 legal replies that do not take this target; only the named comparisons are tested. Observed returns and their adequacy are separate questions.",
+          "id": "sacrifice_decline",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "g8f6",
+            "c3d5",
+            "f8d6",
+            "d2d4",
+            "e5d4",
+            "f3d4"
+          ],
+          "reference_move": "f6e4",
+          "alternative_move": "a7a5"
+        },
+        {
+          "proposal_id": "discovery:5b9bbac5d5cca2c161ace2fdb4d1a2c604a6a44f28566efda21ef28d0c72dd15",
+          "producer": "C-opponent-choice",
+          "question": "How do Nf6 and Bd6 change the opponent's concrete options and replies, and which continuation is preferable? A legal capture alone does not establish a threat or a loss; simultaneous attacks do not establish a forced gain.",
+          "id": "contrast_opponent_choice",
+          "state": "answered",
+          "stop_reason": null,
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "alternative_move": "f8d6"
+        },
+        {
+          "proposal_id": "discovery:2266610faf983ed5a838af3af743bced0e9cb3a80bd8ed0f67a215bca00f9d62",
+          "producer": "C-plan-counter",
+          "question": "Does the quiet reply d4 prevent or change the black knight originally on c6 acting on d4, and is it stronger than Bb5 at this position?",
+          "id": "contrast_strength",
+          "state": "stopped",
+          "stop_reason": "investigation_limit",
+          "prefix_moves_uci": [
+            "g8f6"
+          ],
+          "reference_move": "f1b5",
+          "alternative_move": "d2d4"
+        }
+      ],
+      "discovery_scans": [
+        {
+          "prefix_moves_uci": [],
+          "reference_move": "g8f6",
+          "examined_moves": [
+            "d7d6",
+            "f8b4",
+            "f8d6",
+            "g8f6"
+          ],
+          "legal_moves": [
+            "a7a5",
+            "a7a6",
+            "a8b8",
+            "b7b5",
+            "b7b6",
+            "c6a5",
+            "c6b4",
+            "c6b8",
+            "c6d4",
+            "c6e7",
+            "d7d5",
+            "d7d6",
+            "d8e7",
+            "d8f6",
+            "d8g5",
+            "d8h4",
+            "e8e7",
+            "f7f5",
+            "f7f6",
+            "f8a3",
+            "f8b4",
+            "f8c5",
+            "f8d6",
+            "f8e7",
+            "g7g5",
+            "g7g6",
+            "g8e7",
+            "g8f6",
+            "g8h6",
+            "h7h5",
+            "h7h6"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        },
+        {
+          "prefix_moves_uci": [
+            "g8f6",
+            "f1b5",
+            "c6d4",
+            "f3d4",
+            "e5d4",
+            "e4e5"
+          ],
+          "reference_move": "d4c3",
+          "examined_moves": [
+            "c7c6",
+            "d4c3",
+            "d8e7"
+          ],
+          "legal_moves": [
+            "a7a5",
+            "a7a6",
+            "a8b8",
+            "b7b6",
+            "c7c5",
+            "c7c6",
+            "d4c3",
+            "d4d3",
+            "d8e7",
+            "e8e7",
+            "f6d5",
+            "f6e4",
+            "f6g4",
+            "f6g8",
+            "f6h5",
+            "f8a3",
+            "f8b4",
+            "f8c5",
+            "f8d6",
+            "f8e7",
+            "g7g5",
+            "g7g6",
+            "h7h5",
+            "h7h6",
+            "h8g8"
+          ],
+          "state": "partial",
+          "reason": "requirement_limit"
+        }
+      ]
+    }
+  ],
+  "source_files": [
+    {
+      "path": "target/human-evaluation-20261006/dutyafter4/final-snapshots.jsonl.gz",
+      "sha256": "408c54ddcda13fd3170e711b656351e65e34a2445ec14516cc9f45837c2976b2"
+    },
+    {
+      "path": "target/current-duty-20261006/new8complete/final-snapshots.jsonl.gz",
+      "sha256": "015b69fc5f2409af8c7e60f7059e973566c9b9b180d93b2eeff57fb0b7ae38b1"
+    },
+    {
+      "path": "target/human-evaluation-20261006/freshbefore/stored-reports.jsonl",
+      "sha256": "f3fb7b5a7318ebe79a6dc6fbf4f68257434ec6ac76eba9f40c8fd083e39c9331"
+    },
+    {
+      "path": "target/current-duty-20261006/new8/stored-reports.jsonl",
+      "sha256": "db12ff8767b21d6b07e3fda8345d7f98a9cceed6e6020fc9c1bf72337371ed69"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryDiscovery.scala",
+      "sha256": "cf64ef3cfdade4afff4f715d2fe1b4976220529346038aa79605d96f9cf9d977"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryIdea.scala",
+      "sha256": "4fde5c21db96898a8b93f9107bcd9ef59b0ba9de9c38e57a7f74cd36d866c83e"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\CommentaryJobReducer.scala",
+      "sha256": "9a97e8a76f9e7c155323dd17f40e532d205419820ad46ffe1f4ce35aa9d65a8f"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\BasicPurposeReading.scala",
+      "sha256": "2506e598e21c7a1e3f5b09d09b45feacbb5e5157b8323e7419b304fda68157cb"
+    },
+    {
+      "path": "chesstory-runtime\\src\\main\\scala\\io\\chesstory\\runtime\\RootSubjectComparison.scala",
+      "sha256": "5e3e012d25c6c9b83bc566ad6ec737d9854d5be8175f97a1da6248c5bbe4efb7"
+    }
+  ],
+  "interpretation": {
+    "D05": "Both Re8 and Ra1+ lead to loss for White, with precise_dtz=-2 and dtm=-36. This verifies the same winning result and the reported distance metrics, not equal practical difficulty or a causal explanation of the finite engine-score difference. The prior framing of D05 as requiring an explanation of Ra1+ superiority is revised.",
+    "B03": "61 generated proposals are not 61 candidate central answers. The final score pair comes from depth16; earlier depth8 favored Nc3. This does not establish instability at adequate depth or explain Nc3; further comparable root verification is still needed. Both extra investigation searches in the saved job examined downstream Bb5 branches, not a demonstrated cause of the Bb5/Nc3 preference.",
+    "architecture": "Preparation-versus-immediate-action, alternative preparation, quiet reply challenges, fact comparisons, returned-plan withdrawal, engine comparison ownership and refresh already exist. The next goal should diagnose and complete an existing end-to-end question, not add another generic hypothesis subsystem. The runtime verification complete flag means its target depth was reached, not score convergence or human explanatory sufficiency."
+  }
+}

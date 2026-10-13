@@ -1,0 +1,191 @@
+{
+  "date": "2026-10-13",
+  "goal": "PGN/FEN, board, engine analysis and existing commentary run independently of the Lila application and Docker.",
+  "status": "achieved_within_agreed_local_scope",
+  "branch": "codex/functional-choice-value",
+  "commit_created": false,
+  "prior_records": [
+    {
+      "source": "chesstory-runtime/PROVENANCE.md",
+      "finding": "The runtime was already extracted in July 2026; renaming its namespace would not remove an execution dependency."
+    },
+    {
+      "source": "research/functional-judgment-20261009/duplication-audit-20261010.json",
+      "finding": "Previous exact-block candidates fell from 114 to 98; changed-scope groups fell from 51 to 35. Semantic duplication and latency were not measured. The historical full suites were not green."
+    },
+    {
+      "source": "research/README.md",
+      "finding": "Recent 10-second screens used real runtime and product components but imported frontend sources from Lila and dependencies/assets from ignored research caches."
+    },
+    {
+      "source": "lila-docker/compose.yml",
+      "finding": "The base launch includes the Lila application, two MongoDB instances, Redis and Caddy. These services are not needed for local commentary."
+    }
+  ],
+  "audit_findings": [
+    {
+      "priority": "must",
+      "status": "fixed",
+      "finding": "The independent runtime had no supported independent product host; repeated research runners were carrying that integration.",
+      "change": "Added a locked, buildable local host with PGN/FEN, legal board interaction, analysis, commentary and local save/export."
+    },
+    {
+      "priority": "must",
+      "status": "fixed",
+      "finding": "A copied standalone UI would create a second commentary implementation.",
+      "change": "Moved 14 canonical modules/styles (20,200 previous lines) and extracted engine/chess boundary helpers. Old source paths are exports, not copies. One existing regression test moved with its assertions."
+    },
+    {
+      "priority": "must",
+      "status": "fixed",
+      "finding": "Typed commentary refers to conditional reply paths that were excluded from preview ownership by the original two-line list.",
+      "change": "An exact typed text occurrence now licenses that preview; a different occurrence or line remains rejected. Verified through the real screen and a retained actual response."
+    },
+    {
+      "priority": "should",
+      "status": "bounded",
+      "finding": "The decoder and renderer remain large; broad purpose discovery and evaluation causality remain limited.",
+      "change": "Preserved their behavior and previous failure criteria; did not combine the producer with its independent verifier or rewrite commentary reasoning during extraction."
+    },
+    {
+      "priority": "later",
+      "status": "outside_scope",
+      "finding": "The retained full Lila tree and historical research runners still occupy repository space.",
+      "change": "Kept them to preserve previous work. The new app neither builds from nor executes those paths. Full legacy Docker build, accounts and collaborative study storage were not migrated."
+    }
+  ],
+  "implementation": {
+    "canonical_frontend": "chesstory-web/src/review",
+    "launcher": "Start-Chesstories.cmd",
+    "runtime": "chesstory-runtime",
+    "frontend_inputs": 68,
+    "lila_or_research_cache_build_inputs": 0,
+    "runtime_classpath_lila_dependency": false,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "maximum_commentary_depth": 18,
+    "ordinary_analysis_depth": 16,
+    "commentary_budget_ms": 10000,
+    "server_processes": [
+      "Node local UI/proxy",
+      "Java commentary runtime"
+    ],
+    "databases": []
+  },
+  "verification": {
+    "runtime_compile_sources": 85,
+    "typescript": "passed",
+    "core_tests": {
+      "passed": 8,
+      "failed": 0
+    },
+    "live_cases": {
+      "existing": {
+        "state": "completed",
+        "elapsed_ms": 5326,
+        "depths": [
+          12,
+          12
+        ],
+        "visible_text": "Why this move\nExplain · 10 seconds\ncompleted · 5.33s\nLast move review\nLast move review complete.\n\nThis assessment uses moves checked together during the additional investigation. It does not establish the best of all legal moves.\n\n?!\nBd5\nInaccuracy\nEvaluation details\nCompare the two choices\nc6 ↔ Bd5\n\nThe evaluation compares c6 with Bd5. The reference move prepares piece play on d5 with support from Black's pawn on c6. It also blocks White's bishop on g2 from attacking Black's pawn on b7. The played move instead uses Black's bishop on d5 to attack White's bishop on g2; d5 has no pawn support. The replies distinguish preparation from committing the piece or pawn now.\n\nThe recorded continuation is c6 Rc1 Rc8 bxc6 bxc6. After bxc6, d5 is still covered by Black's pawn on c6. Black's bishop on b3 is retained here; the played continuation gives that piece up. In the c6 line, both sides exchange one pawn.\n\nIn the Bd5 line: After Nxd5, Black's knight on d5 now targets White's bishop on e3. Bxd4 moves the bishop out of the attack from Black's knight on d5. After exd4, Black's pawn on d4 now targets White's knight on c3. Nxd5 moves the knight out of the attack from Black's pawn on d4. The recorded continuation is Bd5 Bxd5 Nxd5 Bxd4 exd4 Nxd5 Qxd5. After Qxd5, d5 still has no pawn support; Black's queen on d5 occupies it. The original b3 bishop has been exchanged away. In the Bd5 line, both sides exchange one knight and one bishop; White gives up one bishop for one knight.\n\nWhat happens next\n\nThe engine evaluations favor one move over the other. The observations below accompany that difference.\n\nComparison details\nExplore the two lines\nAlternative · c6\n+0.31 from White’s side · depth 12\nInspect the comparison line · c6\nPlayed move · Bd5\n+0.68 from White’s side · depth 12\nInspect the comparison line · Bd5\nOther comparisons and follow-up questions (3)\n\nThese changes occur in the shown lines. They are not proven against every reply or established as the cause of the score difference.\n\nEvaluation and observation records",
+        "cross_origin_isolated": true
+      },
+      "new_final": {
+        "state": "completed",
+        "elapsed_ms": 1784,
+        "depths": [
+          12,
+          12
+        ],
+        "visible_text": "Why this move\nExplain · 10 seconds\ncompleted · 1.78s\nLast move review\nLast move review complete.\n?\ne4\nMistake\nEvaluation details\nCompare the two choices\nNd4 ↔ e4\n\nThe evaluation compares Nd4 with e4. The reference move places the knight on d4 with support from Black's pawn on e5. It also blocks White's bishop on e3 from attacking Black's knight on b6. The played move instead uses Black's pawn on e4 to attack White's pawn on d3 and White's knight on f3; d4 has no pawn support. The replies distinguish preparation from committing the piece or pawn now.\n\nThe recorded continuation is Nd4 a4 Bg4. After Bg4, d4 is still covered by Black's pawn on e5; Black's knight on d4 occupies it. The supported knight remains on that post. Black's pawn on e5 is retained here; the played continuation gives that piece up.\n\nAfter e4, Black's bishop on g7 now targets White's knight on c3. Nxe4 moves the knight out of the attack from Black's bishop on g7. The recorded continuation is e4 Nxe4 Nxb4. After Nxb4, d4 still has no pawn support. The original e5 pawn has been exchanged away. The reply leaves White's knight on e4 on the square vacated by the captured pawn, supported by White's pawn on d3. In the e4 line, both sides exchange one pawn.\n\nWhat happens next\n\nThe engine evaluations favor one move over the other. The observations below accompany that difference.\n\nComparison details\nExplore the two lines\nAlternative · Nd4\n+0.42 from White’s side · depth 12\nInspect the comparison line · Nd4\nPlayed move · e4\n+1.32 from White’s side · depth 12\nInspect the comparison line · e4\nOther comparisons and follow-up questions (1)\n\nThese changes occur in the shown lines. They are not proven against every reply or established as the cause of the score difference.\n\nEvaluation and observation records",
+        "cross_origin_isolated": true
+      }
+    },
+    "new_first_run": {
+      "state": "completed",
+      "elapsed_ms": 2500,
+      "depths": [
+        12,
+        12,
+        12
+      ],
+      "visible_text": "Why this move\nExplain · 10 seconds\ncompleted · 2.50s\nLast move review\nLast move review complete.\n?\ne4\nMistake\nEvaluation details\nComparison of the two choices\n\nAfter e4, Black's pawn on e4 now targets White's knight on f3 and White's pawn on d3. After e4, Black's pawn on e4 is under attack from White's knight on c3 and White's pawn on d3 and has no defender.\n\nAfter e4, Nxe4 is the stronger tested reply than Bg5.\n\nAfter e4, Black's bishop on g7 now targets White's knight on c3. Nxe4 moves the knight out of the attack from Black's bishop on g7. The recorded continuation is Nxe4 Nxb4. Nxe4 captures the black pawn on e4. Nxb4 captures the white pawn on b4. After Nxe4, Black's bishop on g7 now targets White's rook on a1. After Nxb4, Black's knight on b4 now targets White's pawn on a2 and White's pawn on d3.\n\nIn the e4 line: The recorded continuation is Bg5 f6. After Bg5, Black's queen on d8 now targets White's bishop on g5. After f6, Black's pawn on f6 now targets White's bishop on g5.\n\nThe compared root choices are a6 and e4.\n\nWhat happens next\nAlternative · a6 · Replay\nPlayed move · e4 · Replay\nEvaluation and observation records",
+      "cross_origin_isolated": true
+    },
+    "screens": [
+      "research/lila-exit-20261013/existing.png",
+      "research/lila-exit-20261013/new.png",
+      "research/lila-exit-20261013/linked-board.png",
+      "research/lila-exit-20261013/mobile-dark.png"
+    ],
+    "ui_core": [
+      "PGN import with full played history",
+      "FEN import",
+      "D16 ordinary analysis",
+      "ordinary engine paused/resumed around commentary",
+      "Nxb4 before/after popup and main-board inspection",
+      "board drag adds legal Nxe4",
+      "reload restores the game, selected move and language",
+      "PGN download",
+      "dark theme and 390px viewport"
+    ],
+    "transport": [
+      "foreign Host rejected 403",
+      "foreign Origin rejected 403",
+      "invalid commentary input rejected 400",
+      "COOP/COEP active"
+    ],
+    "startup": [
+      "Java launches directly without sbt",
+      "ASCII socket temp workaround included for Windows JDK 21",
+      "root .cmd launcher started on port 8788",
+      "Ctrl+C closed the owned UI and runtime ports"
+    ],
+    "not_checked": [
+      "entire historical regression suites",
+      "full legacy Lila/Docker build",
+      "cold dependency install on another machine",
+      "general latency distribution",
+      "new commentary generalization or full Korean prose coverage"
+    ]
+  },
+  "observed_service_memory_mib": {
+    "java_working_set": 384.7,
+    "node_working_set": 66.9,
+    "scope": "One post-review snapshot; excludes browser/Stockfish and launch shell. No before/after Lila memory benchmark."
+  },
+  "development_failures": [
+    "Initial Java start failed because JDK 21 selector sockets inherited a non-ASCII TEMP path; launch now supplies an ASCII directory.",
+    "Independent type checking exposed legacy narrowing issues; retained guards and made validated values explicit.",
+    "Clicking a conditional reply showed no board; repaired the exact text-occurrence ownership path.",
+    "Legacy main-board overlay CSS filled the viewport in the new host; constrained it to the independent board square and confirmed 560x560 within the board column.",
+    "The first preview regression omitted input_lines from its decode context and was correctly rejected; the test now supplies the actual PGN provenance."
+  ],
+  "limitations": [
+    "The second position first compared a6/e4 (2.500s), then Nd4/e4 (1.784s); short-search variability is retained, not a fixed reference claim.",
+    "Both positions were previously used development cases, not a new held-out chess evaluation.",
+    "Standalone execution is complete within local scope; full explanation quality and release readiness are not claimed."
+  ],
+  "baseline_manifest": "target/research-runs/lila-exit-20261013/baseline.json",
+  "extraction_manifest": "target/research-runs/lila-exit-20261013/extraction.json",
+  "fixture": "judgment-evaluation/fixtures/public-commentary-v6/lila-exit-browser.json.gz",
+  "fixture_sha256": "2db60a498728b88e2180be68674e0c95fec8fd1e773c9a295f431698d0cc221b",
+  "preservation": {
+    "baseline_entries": 392,
+    "unchanged_entries": 386,
+    "changed_entries": [
+      "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewCoordinator.ts",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewRuntimeSource.ts",
+      "lila-docker/repos/lila/ui/analyse/src/moveReviewSelection.ts",
+      "lila-docker/repos/lila/ui/analyse/tests/moveReviewReferencePurpose.test.ts",
+      "research/README.md"
+    ],
+    "newly_missing": [],
+    "backup_hash_mismatches": [],
+    "previous_research_readme_exactly_retained": true,
+    "extraction_manifest": "target/research-runs/lila-exit-20261013/extraction.json",
+    "task_diff_whitespace_check": 0,
+    "wrapper_targets_missing": [],
+    "commit_created": false
+  }
+}

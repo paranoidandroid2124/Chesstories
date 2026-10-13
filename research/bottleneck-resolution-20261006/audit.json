@@ -1,0 +1,130 @@
+{
+  "date_kst": "2026-10-06",
+  "scope": "Read-only reassessment of prior attempts, current code, saved actual executions and selected book passages. No new engine execution, product change, full-book reading or independent reader study.",
+  "question": "Is there a concrete way to relieve the remaining explanatory bottleneck, what was already tried, and does the proposed interpretation recur across reference scenes?",
+  "finding": "The current system can record facts and rank alternatives more broadly than it can justify their decision relevance. Missing useful questions, investigation allocation, an insufficient functional witness and answer organization are different failures. Merely adding a plan label or another generic comparison would repeat existing work.",
+  "historical_attempts": [
+    {
+      "period": "2026-09-21 through 2026-10-01 checkpoints",
+      "attempt": "Existing ideas, preparation versus immediate execution, alternative preparation, quiet counterplay and mechanism witnesses.",
+      "verification": "git history and the 5b6bc8c4d6 version of CommentaryIdea.scala confirm the direct comparison and mechanism witness predate the latest goal.",
+      "remaining": "The ordinary mechanism witness mainly connects a root-owned change to an exact action or capture becoming legally available. Already-legal actions with different strategic usefulness need another supported interpretation.",
+      "sources": ["chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala:131", "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala:1324"]
+    },
+    {
+      "period": "2026-10-01 through 2026-10-05 research records",
+      "attempt": "Price completion, exact focus, common-subject selection and preservation of independently important explanations.",
+      "gain": "More reliable response, piece identity, price and delivery preservation; shared subject selected in 24 of 35 already-open inputs at subjectv9.",
+      "remaining": "Completion can preserve a broad bundle while the primary judgment stays unclear. Global scope reductions previously lost meaningful prices. Selection rate is not a quality rate.",
+      "sources": ["research/importance-expression-audit-20261005/result.json", "research/selection-cause-audit-20261005/result.json", "research/subject-comparison-20261005/result.json"]
+    },
+    {
+      "period": "humanv10 and dutyv4",
+      "attempt": "Short ordinary purpose, actual move judgment, current defensive obligation and actual counterplay.",
+      "remaining": "Strategic causes, compensation and practical difficulty were explicitly outside the implemented proof. A small numerical preference could still cause an unhelpful comparison.",
+      "sources": ["research/human-evaluation-20261006/result.json", "research/current-duty-20261006/result.json"]
+    },
+    {
+      "period": "timingv15",
+      "attempt": "Occupied useful retreat square, distinguishing a reaction from a prepared goal, exact child reply comparison and basic answer delivery.",
+      "gain": "C03 has an automatically discovered and verified contributing constraint.",
+      "remaining": "No additional important-difference explanation succeeded in the original four frozen new cases. The separately added reserve-tempo example also remained unexplained.",
+      "sources": ["research/decision-timing-20261006/human-reading.json", "research/decision-timing-20261006/verification.json"]
+    }
+  ],
+  "current_diagnostics": [
+    {
+      "case": "H05",
+      "observed": "The product generated both a preparation-alternative and a preparation-effect question, answered the g4/Ke3 comparison, and observed legal actions in both arms. Its preparation-effect question concerns whether g4 prepares the later Ke3. Its basic answer compares pawn transactions.",
+      "boundary": "The missing relation is the reusable waiting move and how the opponent's responses affect later king entry. A correct root score and legal next move do not establish that relation.",
+      "code_correction_to_overbroad_diagnosis": "KingEntry already exists. MoveWorkProjection.scala:4111 records newly controlled empty squares next to the enemy king. This local geometry is not a reserve-tempo or multi-turn entry proof.",
+      "sources": ["research/decision-timing-20261006/supplemental1-reading.json", "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala:4111", "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFact.scala:65"]
+    },
+    {
+      "case": "H02",
+      "observed": "42 proposals; two plan-counter questions compare a6 and Nb6 as interference with a later Bb5. Their comparisons stop at search_budget_exhausted. Nd2/Re1 root preference is already available.",
+      "boundary": "Verify the current Nd2/Re1 defense and the same Nb6 challenge before spending work on the later bishop plan. The book's Nfxd5 explanation remains a falsifiable hypothesis.",
+      "sources": ["research/decision-timing-20261006/holdout2-reading.json", "research/decision-timing-20261006/holdout-cases.json"]
+    },
+    {
+      "case": "S4",
+      "observed": "The saved baseline investigated 21 plies into the Rd8 branch, then asked for root depth37 following a child challenge. A manual test also hit verification limits.",
+      "boundary": "Current question relevance, investigation budget and consistent root/child evidence must be diagnosed separately from the missing prose. Independent analysis supports a timing difference but the product does not verify its full mechanism.",
+      "sources": ["research/decision-timing-20261006/diagnosis.json", "research/decision-timing-20261006/human-reading.json"]
+    }
+  ],
+  "reference_scope": "Reviewed saved notes for 33 selected scene groups from five books, then visually reread nine already-rendered pages. These deliberately selected examples demonstrate recurrence and counterexamples, not prevalence across all chess positions. Authors' analysis is distinct from newly engine-verified product claims.",
+  "reference_scenes": [
+    {
+      "book": "The Catalan: move by move",
+      "file_pages": [7],
+      "scene": "Naiditsch-Kopylov, Basel 2016, 8.Nbd2",
+      "author_reason": "Prepare e4 while preserving the queen's defense of c4; Nc3 can obstruct that duty.",
+      "recurring_relation": "One improvement must preserve another necessary function.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/catalan-page-7.png"
+    },
+    {
+      "book": "The Catalan: move by move",
+      "file_pages": [7, 8],
+      "scene": "Same game, 9...Nbd7 and 10.e5",
+      "author_reason": "Routine development gives White a durable central wedge and restricts the b7 bishop.",
+      "distinction": "The product's d7 retreat comparison is a separately tested contributing condition; do not present it as the entirety of the author's explanation.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/catalan-page-8.png"
+    },
+    {
+      "book": "Understanding Before Moving 3: Sicilian Structures Part 1",
+      "file_pages": [39, 40],
+      "scene": "Movsesian-Grooten, Cappelle la Grande 1998, 22...Rd8",
+      "author_reason": "The d5 break was already available and the rook was better placed on the c-file. Preparation costs time while White reorganizes.",
+      "recurring_relation": "The timing and cost of a useful plan are separate from its name.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/sicilian/page-40.png"
+    },
+    {
+      "book": "Understanding Before Moving 3: Sicilian Structures Part 1",
+      "file_pages": [326],
+      "scene": "Vogt-Andersson, Cienfuegos 1975, rook deployment and 19...g6",
+      "author_reason": "White has an open d-file but no useful entry square. Black can retain its rooks for queenside work. The g6 move fixes f4 and permits later king activity.",
+      "recurring_relation": "A geometric feature matters through usable access or an opponent's lasting obligation.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/sicilian/page-326.png"
+    },
+    {
+      "book": "100 Endgame Patterns You Must Know, personal reading edition",
+      "file_pages": [60, 61],
+      "scene": "Zamarbide-Benitez, La Roda 2005, 35.g4 versus 35.Ke3",
+      "author_reason": "Preserve g4 until it changes who must give way; triangulation induces Black to spend b3. Spending g4 first lets the defender prevent the king from entering f5.",
+      "counterexample": "The same analysis explicitly uses g4 successfully after Black has spent b3. Pawn advancement is not inherently a wasted tempo.",
+      "visuals": ["C:/Codes/Chesstories/target/human-commentary-reading-20261006/endgame/page-60.png", "C:/Codes/Chesstories/target/human-commentary-reading-20261006/endgame/page-61.png"]
+    },
+    {
+      "book": "100 Endgame Patterns You Must Know, personal reading edition",
+      "file_pages": [169],
+      "scene": "Beliavsky-Kupreichik, Minsk 1987, 82.Kxd4 versus 82.cxd4",
+      "author_reason": "Both can draw. Kxd4 keeps king and bishop controlling e3 together; cxd4 requires the precise Ke2 and a changed defensive arrangement.",
+      "recurring_relation": "Practical execution burden can differ while the theoretical result is unchanged.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/endgame/page-169.png"
+    },
+    {
+      "book": "Game Changer",
+      "file_pages": [424],
+      "scene": "13.Ne2 in Defence and attack of the gods",
+      "author_reason": "After testing natural alternatives, the author identifies the enemy bishop interfering with White's activity through Bg2 and Bf3 as the relevant piece to neutralize.",
+      "recurring_relation": "A piece's decision relevance is the job it performs or disrupts, not merely that it is a defender or capture target.",
+      "visual": "C:/Codes/Chesstories/target/human-commentary-reading-20261006/gamechanger/page424.png"
+    }
+  ],
+  "proposed_resolution_not_implemented": [
+    "Write a concrete, falsifiable functional claim before trying to auto-discover it: which useful option, defensive duty, entry or waiting resource changes, against which opponent replies, and what would refute the claim.",
+    "For H02, use the existing exact Fact and CompareMoves infrastructure to test the current same-reply question first; diagnose whether prioritization alone is sufficient. For S4, distinguish selection failure from the separate root/child verification budget problem.",
+    "For H05, use exact positions, turn, pawn availability and legal multi-move paths to test preservation and consumption of the waiting resource and entry into f5. Bounded line witnesses must not be promoted to universal strategy or forced-win proofs.",
+    "Extend the existing typed answer only after the functional witness exists. Keep the enabling or blocking condition, relevant reply, achieved or prevented progress and essential cost together.",
+    "Before broader deployment, freeze the conditions and evaluate multiple different positions per proposed mechanism, including matching counterexamples. Reversing board colors is a structural regression check, not independent generalization.",
+    "Evaluate whether an explanation helps a reader anticipate the relevant reply or identify when the same move becomes good; fluent labels, more proposals and shorter sentences are separate metrics."
+  ],
+  "external_primary_reference": {
+    "title": "Bridging the human-AI knowledge gap through concept discovery and transfer in AlphaZero",
+    "year": 2025,
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12002201/",
+    "observed": "The work treats dynamic concepts through sequences, filters for teachability and novelty, and evaluates concept prototypes with four grandmasters in a preliminary small study.",
+    "our_inference": "This supports testing transfer through several positions and actions rather than accepting a concept name as an explanation. It is not a drop-in solution for this runtime or proof of faithful natural-language causes for every engine move."
+  }
+}
