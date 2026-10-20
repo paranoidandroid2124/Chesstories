@@ -9,7 +9,7 @@ private[runtime] object CommentaryDiscovery:
   import CommentaryProposal.*
   import ObservedLineProtocol.{PreparedPath, PreparedPaths}
 
-  val GeneratorVersion = "35"
+  val GeneratorVersion = "36"
 
   final case class Anchor(prefixMoves: List[String], referenceMove: String)
   final case class SourcePath(moves: List[String], source: Source,
@@ -1176,10 +1176,15 @@ private[runtime] object CommentaryDiscovery:
                   // other piece. The conditional recapture is not a value test.
                   for
                     (provider, destination, sourceId) <- ownedControls
-                    (goal, middleLeft) <- witnessedActionPaths.filter((goal, line) =>
-                      line.headOption.contains(anchor.referenceMove) && line.size > 1 &&
+                    (goal, witnessed) <- witnessedActionPaths.filter((goal, line) =>
+                      (line.headOption.contains(anchor.referenceMove) ||
+                        line.headOption.contains(alternativeMove) && goal.capture.nonEmpty) && line.size > 1 &&
                         goal.actor.side == side && goal.actor != provider && goal.to == destination.key)
                       .distinctBy(_._2).sortBy(_._2.size)
+                    // The actual other choice can witness a recapture that the
+                    // protected line avoids. Replay it under both roots; this
+                    // supplies a conditional option, never the root's forecast.
+                    middleLeft = referencePrefix ++ witnessed.drop(referencePrefix.size)
                     middleRight = alternativePrefix ++ middleLeft.drop(referencePrefix.size)
                     a <- functionalBoard(middleLeft)
                     b <- functionalBoard(middleRight)

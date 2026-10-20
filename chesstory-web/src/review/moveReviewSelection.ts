@@ -1953,8 +1953,9 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
   const selectedAnswer = ['observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question));
   const typedAnswer = value.schema_version === 2;
   const firstResponseAnswer = ['first_target_response', 'exchange_function'].includes(String(value.question));
-  const purposeAnswer = value.question === 'move_purpose' ||
-    typedAnswer && value.question === 'selected_comparison' && value.move_purpose !== undefined;
+  const composedPurpose = typedAnswer &&
+    ['selected_comparison', 'functional_response'].includes(String(value.question)) && value.move_purpose !== undefined;
+  const purposeAnswer = value.question === 'move_purpose' || composedPurpose;
   if (value.question === 'current_defense' && !typedAnswer) return;
   const commonAnswer = typedAnswer || selectedAnswer;
   const terminal = (path: ObservationPath) => {
@@ -2056,16 +2057,16 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       child?.legal_moves?.complete && sameIds(search.root_restriction.moves_uci,
         child.legal_moves.moves.map(move => move.uci));
     const witness = purpose.plan ? purpose.plan.use >= 0 && purpose.plan.line_id : purpose.source_line_id;
-    const surveyed = value.question === 'selected_comparison' && fullSurvey && search.candidates.length >= 2 &&
+    const surveyed = composedPurpose && fullSurvey && search.candidates.length >= 2 &&
       search.candidates.some(c => c.line_id === witness && observations.paths.some(path =>
         path.id === c.line_id && path.moves.slice(2).some(move => move.uci === purpose.use_move)));
     // A full survey can select different activities for its strongest pair.
     // An already owned recheck can also report an activity on just one path.
     const activitiesOwned = Boolean(purpose.reply_activities &&
       purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)));
-    const activitiesSurveyed = value.question === 'selected_comparison' && fullSurvey && activitiesOwned &&
+    const activitiesSurveyed = composedPurpose && fullSurvey && activitiesOwned &&
       purpose.reply_activities?.length === 2 && purpose.reply_activities[0].line_id === search.candidates[0]?.line_id;
-    const witnessed = value.question === 'selected_comparison' && search.root_restriction.kind === 'restricted' &&
+    const witnessed = composedPurpose && search.root_restriction.kind === 'restricted' &&
       search.candidates.length === 2 &&
       sameIds(search.candidates.map(candidate => candidate.move_uci), search.root_restriction.moves_uci) &&
       purposeWitnessMovesMatch(purpose, search.root_restriction.moves_uci, {

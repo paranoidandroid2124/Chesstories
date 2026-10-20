@@ -331,6 +331,27 @@ private[runtime] object FunctionalReplyReading:
       if valid(paths, rebased) && relevant(paths, pair, rebased)
     yield rebased).minByOption(value => value.references.map(_.path).distinct.size)
 
+  /** The actual line owns the setup. After it diverges at an opponent capture,
+    * only consecutive recaptures of that same transaction may complete a
+    * conditional example. A later quiet plan cannot borrow this ownership. */
+  def ownsSetup(paths: PreparedPaths, actual: PreparedPath, pair: List[PreparedPath],
+      value: LegalReplyOption): Boolean =
+    val proof = value.proof
+    if actual.moves.startsWith(proof.reference.init) then true
+    else if proof.price.nonEmpty || !pair.exists(_.moves.startsWith(proof.alternative)) then false
+    else
+      val common = actual.moves.zip(proof.reference).takeWhile((a, b) => a == b).size
+      val end = proof.option.size
+      common >= 1 && common % 2 == 1 && common < actual.moves.size && common < proof.reference.size &&
+        (common until end).forall { offset =>
+          paths.positionView(value.available, offset).flatMap(_.legalRows).exists(_.exists(row =>
+            row.move == proof.option(offset) && row.capture.nonEmpty && row.promotionRole.isEmpty &&
+              (offset == common || paths.positionView(value.available, offset - 1).flatMap(_.legalRows)
+                .flatMap(_.find(_.move == proof.option(offset - 1))).exists(previous =>
+                  row.capture.exists(victim => victim.side == previous.actor.side &&
+                    victim.role == previous.actor.role && victim.square == previous.to)))))
+        }
+
   def withAnswer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       pair: List[PreparedPath], proofs: List[Proof], previous: Answer,
       protect: (Answer, List[Section]) => Answer = (answer, sections) => RootSubjectComparison.protect(answer, sections)): Answer =
@@ -378,12 +399,12 @@ private[runtime] object FunctionalReplyReading:
     val supplementedPurpose = previousPurpose.flatMap { reading =>
       val selected = reading.arms.flatMap { arm =>
         val options = values.filter(value => value.proof.owner.comparison.referenceMove == arm.path.moves.head &&
-          (!reading.hasPurpose(arm) || reading.rootUses.exists {
+          (!reading.explanation(arm).answered || reading.rootUses.exists {
             case Action(move, MoveWorkProjection.Detail.OpenedRay(_, user, end)) =>
               (move.path eq arm.path) && move.offset == 0 && value.proof.condition.kind == "control" &&
                 value.proof.condition.subject.exists(_.witness == user) && value.proof.condition.square.contains(end)
             case _ => false
-          }))
+          }) && ownsSetup(paths, arm.path, pair, value))
         val groups = options.groupBy(value => (value.proof.condition, value.proof.effect.kind))
         Option.when(groups.size == 1)(options.head).map { value =>
           val shared = value.copy(reference = value.available)

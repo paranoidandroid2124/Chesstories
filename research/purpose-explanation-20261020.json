@@ -152,6 +152,10 @@
     {
       "sha": "850c4c4d7e4dd735e35b84e3acca1eb09748086c",
       "meaning": "Keep independently owned returned activities distinct from the original purpose"
+    },
+    {
+      "sha": "c58e4f3064",
+      "meaning": "Keep past reply receipts valid when the current purpose changes"
     }
   ],
   "implementation": [
@@ -420,6 +424,38 @@
         "independent_success": false
       },
       "evidence": "purpose-explanation-20261020/stage15-evidence.json.gz"
+    },
+    {
+      "stage": 16,
+      "status": "unfinished_actual_choice_can_reach_conditional_discovery",
+      "changes": [
+        "Finishing one function-specific reply pool no longer closes an unexplained actual comparison while bounded budget remains. The existing discovery agenda, local replay cap, engine slots and deadline are reused. An already complete realized intent keeps its earlier stopping path.",
+        "The actual alternative can witness a capturing arrival whose price changes under the reviewed root. Both local branches are legally replayed, using original physical pieces and continuous root-owned control.",
+        "A missing actual setup cannot be supplied by an arbitrary later plan. After the actual root line diverges on an opponent capture, only uninterrupted same-transaction recaptures can extend the conditional example, and the actual other evaluated line must witness its full corresponding branch.",
+        "Conditional options compete when the actual account remains unanswered, even if a useful support fact was already found. The same setup proof qualifies purpose admission.",
+        "The frontend independently admits the combined conditional example and existing reply-purpose ownership rather than rejecting their coexistence under the functional_response question."
+      ],
+      "observed_gain": "On the unchanged last Qg2/Nc3 reports, the basic account now distinguishes Nc3 Rh4 h3 Rxh3 Rxh3 Qxh3 from the same legal exchange after Qg2, where Qxh3 can recapture the black queen. All local material costs remain explicit. This is a conditional legal comparison, not a claim that Black must continue the exchange or an explanation of the full engine value.",
+      "validation": {
+        "new_affected": "2/2 final: bounded discovery/recapture core and Re2/Qa4 deadline preservation",
+        "legacy_preservation": "9/10 before updating the last obsolete finish expectation; the remaining case then passed with the same content/evidence assertions and explicit depth/actual-root/deadline requirements",
+        "conditional_checks": "10/14 passed. Four unchanged literal phrase expectations conflict with the unchanged renderer at c58e4f3064; source identity recorded, not falsely reported as a clean suite.",
+        "frontend": "30/30",
+        "typescript": "passed",
+        "local_replay_expansions": 29,
+        "generated_proposals": 62,
+        "accepted_engine_reports": 4,
+        "new_engine_requests": 0,
+        "independent_success": false
+      },
+      "evidence": "purpose-explanation-20261020/stage16-evidence.json.gz",
+      "replay": "purpose-explanation-20261020/qg2-bounded-discovery-replay.json.gz",
+      "limits": [
+        "The full purpose account remains incomplete after this local exchange explanation.",
+        "The initial broad fallthrough reopened already complete intent accounts; fixed by preserving their established completion check.",
+        "No changed-source Rfe1 replay, new search or dedicated detector/test.",
+        "One final Qg2 development UI request will check time and composed delivery; it cannot become an independent success."
+      ]
     }
   ],
   "verification": {
@@ -678,6 +714,16 @@
       "bytes": 19361,
       "receipt": "purpose-explanation-20261020/stage15-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage15-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact archive roundtrip, resolved task directory/ancestor and SHA256 checks."
+    },
+    {
+      "files": 15,
+      "bytes": 8874069,
+      "receipt": "purpose-explanation-20261020/stage16-recycled.json.gz",
+      "retained": [
+        "purpose-explanation-20261020/stage16-evidence.json.gz",
+        "purpose-explanation-20261020/qg2-bounded-discovery-replay.json.gz"
+      ],
       "method": "Windows Recycle Bin after exact archive roundtrip, resolved task directory/ancestor and SHA256 checks."
     }
   ],

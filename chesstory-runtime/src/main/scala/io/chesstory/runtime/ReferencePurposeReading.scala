@@ -170,7 +170,8 @@ private[runtime] object ReferencePurposeReading:
       val conditional = conditionalPurposes.filter(value =>
         value.proof.owner.comparison.referenceMove == arm.path.moves.head &&
           (arm.path.moves.startsWith(value.proof.option) ||
-            value.proof.price.isEmpty && arm.path.moves.startsWith(value.proof.reference.init)))
+            value.proof.price.isEmpty && FunctionalReplyReading.ownsSetup(owner, arm.path,
+              arms.map(_.path), value)))
       val escapedOption = conditionalPurposes.filter(value =>
         value.proof.owner.comparison.alternativeMove == arm.path.moves.head && arm.escaped.nonEmpty &&
           value.proof.price.isEmpty && arm.path.moves.startsWith(value.proof.alternative.init) &&

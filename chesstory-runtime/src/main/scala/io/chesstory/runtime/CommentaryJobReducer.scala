@@ -3555,21 +3555,29 @@ object CommentaryJobReducer:
           issueInvestigation(active, Investigating(baseline,
             inquiry :: active.inquiries.filterNot(_.question.id == q.id), q, targetResponses), actualRoots.toList.sorted)
         }
-    def finishPurpose: CommentaryJobState =
-      remainingPairWork.getOrElse(finishInvestigation(active, baseline, active.inquiries, targetResponses))
+    def finishPurpose(completeIntent: Boolean = false): Option[CommentaryJobState] =
+      remainingPairWork.orElse {
+        // Exhausting this function's reply probes does not answer the actual
+        // choice. Let the existing bounded discovery agenda examine that gap;
+        // its deadline and local/engine allowances are unchanged. Newly retained
+        // examples must still be returned with their owner rather than discarded.
+        if !completeIntent && assessedPurpose.isEmpty && active.remainingBudgetMs >= 4000 &&
+            (active.packet eq before.packet) then None
+        else Some(finishInvestigation(active, baseline, active.inquiries, targetResponses))
+      }
     // Discovery, work allocation and delivery use the same prepared idea.
     // Returning two arbitrary reply classes is not a certificate of its purpose.
     MoveIntent.read(active.packet, paths, active.responseSearches) match
       case Some(intent) =>
         val remaining = MoveIntent.probes(active.packet, paths, intent.question, active.responseSearches)
         if intent.complete && MoveIntent.realize(active.packet, paths, intent).nonEmpty then
-          return Some(finishPurpose)
+          return finishPurpose(completeIntent = true)
         val issued = remaining.headOption.filter(_ => active.remainingBudgetMs >= 2500).flatMap { (anchor, moves) =>
           issueResponseComparison(active, baseline, active.inquiries, targetResponses, anchor,
             EngineRootRestriction.Restricted(moves.sorted), intent.question.id)
         }
         if issued.nonEmpty then return issued
-        return Some(finishPurpose)
+        return finishPurpose()
       case None => ()
     val functional = functionalReading.map(_.question)
       .orElse(MovePurpose.question(active.packet, paths, active.responseSearches)).map { q =>
@@ -3611,7 +3619,7 @@ object CommentaryJobReducer:
     functional match
       case Some((q, searches, needsWork)) =>
         if !needsWork || searches.size >= 2 || active.remainingBudgetMs < 2500 then
-          return Some(finishPurpose)
+          return finishPurpose()
         val restriction = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
           .fold[EngineRootRestriction] {
             EngineRootRestriction.Unrestricted
@@ -3625,7 +3633,7 @@ object CommentaryJobReducer:
             EngineRootRestriction.Restricted(moves)
           }
         return issueResponseComparison(active, baseline, active.inquiries, targetResponses, q.anchor, restriction, q.id,
-          requiredTarget = true).orElse(Some(finishPurpose))
+          requiredTarget = true).orElse(finishPurpose())
       case None => ()
     if current.size != 1 then return remainingPairWork
     val responses = targetResponses
@@ -3634,7 +3642,7 @@ object CommentaryJobReducer:
       search.anchor.prefixMoves == List(q.rootMove) && search.anchor.rootOccurrenceId == q.rootMoveOccurrenceId &&
       search.anchor.positionId == q.childPositionId)
     if TargetResponseInvestigation.firstTargets(active.packet, paths, responses, searches).nonEmpty then
-      return Some(finishPurpose)
+      return finishPurpose()
     val pool = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
     val restriction = pool.fold[EngineRootRestriction](EngineRootRestriction.Unrestricted) { full =>
       val missing = List(q.captureMoves, q.declineMoves).filterNot(moves => searches.exists(search =>
@@ -3648,10 +3656,10 @@ object CommentaryJobReducer:
     // At most one pool and one class comparison. Missing proof remains missing;
     // it cannot start a new chain or extend the original deadline.
     if searches.size >= 2 || active.remainingBudgetMs < 2500 then
-      Some(finishPurpose)
+      finishPurpose()
     else issueResponseComparison(active, baseline, Nil, responses,
       EngineSearchAnchor(q.rootMove, q.rootMoveOccurrenceId, q.childPositionId), restriction, q.id,
-      requiredTarget = true).orElse(Some(finishPurpose))
+      requiredTarget = true).orElse(finishPurpose())
 
   private def responseAnswer(active: ActiveCommentaryJob, question: TargetResponseInvestigation.Question,
       search: TargetResponseInvestigation.Search): Option[CommentaryResponseAnswer] =

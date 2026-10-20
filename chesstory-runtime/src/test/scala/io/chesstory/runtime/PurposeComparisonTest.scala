@@ -33,7 +33,12 @@ class PurposeComparisonTest extends munit.FunSuite:
       state = CommentaryJobReducer.submitIssuedWorkReport(state, report, index.toLong + 2L).toOption.get
       onReport(state)
     }
-    if finished then assert(!state.isInstanceOf[AwaitingEngineWork])
+    if finished then assert(!state.isInstanceOf[AwaitingEngineWork],
+      s"${(row \ "id").asOpt[String]} pending=${state match
+        case job: AwaitingEngineWork => Some(job.issuedWork.purpose -> job.issuedWork.rootRestriction)
+        case _ => None} intent=${state.observationsPacket.zip(state.preparedPaths).map((packet, paths) =>
+          MoveIntent.read(packet, paths, state.responseSearches).map(value =>
+            (value.complete, value.comparison.map(_.completePurpose))))}")
     state
 
   private lazy val re2 = replay((fixture("core-idea-browser") \ "cases").as[List[JsObject]]
@@ -245,7 +250,17 @@ class PurposeComparisonTest extends munit.FunSuite:
 
   test("a continuous root function is explained once with its endpoint while changed functions remain"):
     val output = (fixture("concise-purpose-browser") \ "cases").as[List[JsObject]].map { row =>
-      val state = replay(row, budgetMs = 20000L)
+      val pending = replay(row, finished = false, budgetMs = 20000L)
+      if pending.isInstanceOf[AwaitingEngineWork] then
+        val packet = pending.observationsPacket.get
+        val paths = pending.preparedPaths.get
+        assert(!MoveIntent.read(packet, paths, pending.responseSearches).exists(_.complete),
+          "an already explained intent must not reopen generic discovery")
+        val work = pending.asInstanceOf[AwaitingEngineWork].issuedWork
+        val roots = ReferencePurposeReading.assessmentPair(packet, paths).map(_.moves.head).toSet
+        assert(work.requiredDepth <= 18 && work.searchAnchor.exists(anchor => roots(anchor.rootMove)),
+          "remaining investigation must still belong to an actual assessed choice")
+      val state = CommentaryJobReducer.expireJob(pending, 20002L)
       val packet = state.observationsPacket.get
       val paths = state.preparedPaths.get
       val intent = MoveIntent.read(packet, paths, state.responseSearches).get

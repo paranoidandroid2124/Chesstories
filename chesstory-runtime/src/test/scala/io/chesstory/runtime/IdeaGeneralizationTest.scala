@@ -21,7 +21,23 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     fixture("reply-functions-browser") ++ fixture("counterplay-browser") ++ fixture("obligation-browser") ++
     fixture("preparation-browser") ++ fixture("prevention-browser") ++ fixture("resources-browser") ++
     fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser") ++ fixture("root-refresh-browser") ++
-    fixture("unrealized-replies-browser")
+    fixture("unrealized-replies-browser") ++ List(returnedActivityCase)
+
+  private lazy val returnedActivityCase: JsObject =
+    val stream = new GZIPInputStream(Files.newInputStream(Path.of(
+      "../research/purpose-explanation-20261020/qg2-returned-activity-wire.json.gz")))
+    val wire = try Json.parse(stream.readAllBytes()) finally stream.close()
+    def request(id: String) = Json.parse((wire \ "events").as[List[JsObject]].find(e =>
+      (e \ "method").as[String] == "Network.requestWillBeSent" &&
+        (e \ "params" \ "requestId").as[String] == id).get
+      .apply("params").apply("request").apply("postData").as[String])
+    def response(id: String) = Json.parse((wire \ "bodies" \ id \ "body").as[String])
+    val ids = List("420.259", "420.267", "420.268", "420.269", "420.270")
+    Json.obj("id" -> "qg2-returned-activity-screen", "request" -> request(ids.head),
+      "job_id" -> (response(ids.head) \ "job_id").as[String],
+      "saved_reports" -> ids.sliding(2).map(pair => Json.obj(
+        "issued_work" -> (response(pair.head) \ "issued_engine_work").get,
+        "report" -> request(pair.last))).toList)
 
   private def replay(id: String, reportCount: Int = Int.MaxValue): List[CommentaryJobState] =
     val row = screenCases.find(r => (r \ "id").as[String] == id).get
@@ -413,6 +429,36 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     Files.writeString(folder.resolve("qg2-unrealized-replies-replay.json"),
       Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
         "note" -> "Development replay of three unchanged original reports, expired before any additional engine work.")), UTF_8)
+
+  test("an exhausted function probe does not skip bounded discovery for unexplained actual choices"):
+    val state = replay("qg2-returned-activity-screen").last
+    assert(state.discoveryState.scans.nonEmpty,
+      "a finished reply pool must not suppress the existing discovery agenda while the purpose is unanswered")
+    val proofs = FunctionalReplyReading.read(state.proposalEntries)
+    assert(proofs.exists(proof => proof.reference == List("e2g2", "f4h4", "h2h3", "h4h3") &&
+      proof.alternative == List("a2c3", "f4h4", "h2h3", "h4h3") && proof.option.last == "g2h3"),
+      s"the actual h3 setup must expose the changed recapture option: ${proofs.map(_.option)}")
+    val ended = CommentaryJobReducer.expireJob(state, 20002L)
+    val packet = ended.observationsPacket.get
+    val paths = ended.preparedPaths.get
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val functional = MovePurpose.read(packet, paths, ended.responseSearches, Nil,
+      ended.rootSearches.flatMap(_.receipt))
+    val answer = MoveWorkProjection.purposeAnswer(packet, paths, pair, functional, proofs, Nil).get
+    val option = answer.core.flatMap(_.statements).collectFirst {
+      case value: LegalReplyOption if value.proof.reference ==
+        List("e2g2", "f4h4", "h2h3", "h4h3", "g3h3", "h5h3") => value
+    }.getOrElse(fail("the actual alternative's exchange and changed final recapture must reach the core account"))
+    assertEquals(option.proof.action.target.map(_.role), Some("queen"))
+    assert(FunctionalReplyReading.ownsSetup(paths, pair.find(_.moves.head == "e2g2").get, pair, option))
+    assert(!MoveWorkProjection.completePurpose(answer),
+      "one conditional exchange explanation does not answer every independent reply or the whole evaluation")
+    val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
+      (returnedActivityCase \ "job_id").as[String],
+      (returnedActivityCase \ "request" \ "request_id").as[String], 20001L, ended))
+    Files.writeString(Path.of("../target/research-runs/purpose-explanation-20261020/qg2-bounded-discovery-replay.json"),
+      Json.stringify(Json.obj("request" -> (returnedActivityCase \ "request").get, "snapshot" -> snapshot,
+        "note" -> "Exact four stored reports; no new engine search or independent screen.")), UTF_8)
 
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(

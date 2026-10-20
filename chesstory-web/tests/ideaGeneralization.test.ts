@@ -194,6 +194,28 @@ test('a changed current purpose cannot invalidate an earlier independently owned
   }
 });
 
+test('a conditional exchange and its independently owned reply comparison share the basic account', () => {
+  const { request, snapshot } = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-bounded-discovery-replay.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const decoded = decodeMoveReviewSnapshot(snapshot, contextFor(request));
+  const answer = decoded?.observations?.selection?.candidates.find(c => c.selection === 'selected' &&
+    c.detail.summary_question)?.detail.summary_question;
+  assert.equal(answer?.question, 'functional_response');
+  assert.equal(answer.move_purpose?.work_id, 'work:1');
+  assert.ok(answer.units.every(u => !u.english_only));
+  for (const mutate of [
+    (s: any) => { s.proposals = s.proposals.filter((p: any) => p.origin.question.producer !== 'C-reply-function'); },
+    (s: any) => { s.candidates.find((c: any) => c.selection === 'selected' && c.detail.summary_question)
+      .detail.summary_question.move_purpose.work_id = 'work:2'; },
+  ]) {
+    const changed = structuredClone(snapshot);
+    mutate(changed.observations.selection);
+    assert.equal(decodeMoveReviewSnapshot(changed, contextFor(request))?.observations?.selection, undefined,
+      'the conditional branch and reply survey must retain their separate proofs');
+  }
+});
+
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
   const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(
