@@ -21,6 +21,8 @@ private[runtime] object ReferencePurposeReading:
   final case class SharedCapture(actor: Piece, victim: Piece, referenceOffset: Int, playedOffset: Int)
   final case class FunctionContrast(reference: Function, played: Function)
   final case class SupportedArrival(original: Piece, target: Piece, offset: Int)
+  final case class SupportContrast(provider: Piece, original: Piece, supported: MoveRef, other: MoveRef):
+    def references = List(MoveRef(supported.path, 0), MoveRef(other.path, 0), supported, other)
   final case class ControlUse(path: PreparedPath, controller: Piece, change: Int, removed: Boolean,
       target: Option[Piece], originalUser: Piece, user: Piece, use: Int, remaining: List[Piece],
       evidence: List[String]):
@@ -65,6 +67,26 @@ private[runtime] object ReferencePurposeReading:
         price.path.certified.flatMap(_._2.material).exists(_.events.filter(_.plyOffset <= n) == price.cost.events))
         .flatMap(_ => CommentaryMaterialAccount.physicalLosses(owner, price))
     def arms = List(reference, played)
+    // Compare an already useful supported action with that same original
+    // piece's actual entry in the other assessed line. Absence of an entry is
+    // not evidence of missing support, and another defender is not excluded.
+    lazy val supportContrasts: List[SupportContrast] = arms.flatMap { arm =>
+      for
+        activity <- arm.activity.toList if (activity.path eq arm.path) && !activity.incidentalDuty
+        provider <- activity.seed.provider.toList
+        other <- arms.filterNot(_ eq arm)
+        destination = activity.path.moves(activity.entry).slice(2, 4)
+        offset <- (2 to other.through by 2).find { n =>
+          other.path.moves(n).slice(2, 4) == destination &&
+            owner.trackedPieceAfter(other.path, activity.original, n).flatten.exists(
+              _.at == other.path.moves(n).take(2))
+        }.toList
+        at <- owner.purposePosition(other.path, offset + 1).toList
+          if at.complete(RelationFactKind.GeometricControl)
+        present <- owner.trackedPieceAfter(other.path, provider, offset + 1).flatten.toList
+          if !at.controlledBy(present)(destination)
+      yield SupportContrast(provider, activity.original, MoveRef(arm.path, activity.entry), MoveRef(other.path, offset))
+    }
     def replyDefense(arm: Arm): Option[ReplyDefense] = arm.counterplay.flatMap(_.control).flatMap { use =>
       arms.filterNot(_ eq arm).iterator.flatMap { other =>
         (1 until other.through by 2).iterator.flatMap { offset =>
@@ -107,6 +129,7 @@ private[runtime] object ReferencePurposeReading:
         sharedShieldExchange
       val compared = conditional.nonEmpty || escapedOption.nonEmpty || prepared.nonEmpty || task.exists(_.explanation.compared) ||
         arm.evasion.nonEmpty || arm.captured.nonEmpty || changedFunction || sameUse ||
+        supportContrasts.exists(_.supported.path eq arm.path) ||
         arm.castlePreparation.exists(p => other.deferredCastle.exists(_.original == p.original)) ||
         arm.supportedArrival.exists(use => other.actor == use.original && other.moved == use.target)
       val response = uses.exists(use => use.offset >= 2 && CommentarySequenceText.sameRoot(use.path, arm.path)) ||
@@ -975,10 +998,12 @@ private[runtime] object ReferencePurposeReading:
           continuation(branch.path, branch.through, statement, priceHere = true)
         }
     }
-    val replyRanking = responses.toList.filter(value => value.question.replyActivities.nonEmpty &&
+    val replyRanking = responses.toList.filter(value =>
       value.branches.size == 2 && value.search.belongsTo(packet)).flatMap { value =>
-      val first = value.branches.head.path
-      val second = value.branches.last.path
+      val ranked = value.branches.map(_.path).sortBy(path =>
+        value.search.lines.indexWhere(_.evaluation.moves.head == path.moves(1)))
+      val first = ranked.head
+      val second = ranked.last
       value.search.pairAnswer(packet, first.moves(1), second.moves(1)).flatMap(_.qualityBand)
         .filter(_ == PrincipalVariationComparison.QualityBand.Separated).map(quality =>
           Section(List(FirstReplyChoice(MoveRef(first, 0), MoveRef(first, 1), MoveRef(second, 1), quality))))

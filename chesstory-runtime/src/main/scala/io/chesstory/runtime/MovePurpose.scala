@@ -346,34 +346,36 @@ private[runtime] object MovePurpose:
     val witnesses = values.filter(search => search.belongsTo(packet) &&
       search.anchor.prefixMoves == List(packet.assembly.input.playedMoveUci) &&
       search.coversAllLegalMoves).flatMap(_.pathsByMove.values)
-    if witnesses.isEmpty then discovered(packet, paths, Nil) else
-      val existing = discovered(packet, paths, witnesses)
-      val root = ReferencePurposeReading.assessmentPair(packet, paths)
-        .find(_.moves.head == packet.assembly.input.playedMoveUci)
-      val sources = (root.toList ++ witnesses).distinct
-      val mechanisms = MoveWorkProjection.select(packet, paths).rootUses(sources)
-      // Immediate entry/capture already has its response account. This question
-      // carries a beneficiary whose useful role appears only after that entry.
-      val activities = witnesses.flatMap(path => PurposeActivityReading.discover(packet, paths, path, mechanisms))
-        .filter(value => value.seed.cause.nonEmpty && value.use > value.entry)
-      val enabled = activities.iterator.flatMap { value =>
-        for
-          before <- position(paths, value.path, 0)
-          actor <- before.occupant(value.path.moves.head.take(2))
-          if actor != value.original && before.view.currentCheckSources(actor.side).isEmpty &&
-            value.path.certified.flatMap(_._2.material).exists(!_.events.exists(_.plyOffset == 0))
-          after <- packet.assembly.input.positionHistory.extend(List(value.path.moves.head)).toOption
-          watched = List(value.path.moves(value.entry).slice(2, 4), value.actor.at)
-          challenges = after.currentLegalMoveUcis.filter(move => after.extend(List(move)).toOption.exists(next =>
-            watched.exists(at => move.slice(2, 4) == at ||
-              controllers(next.currentPosition.board, !actor.side, at)
-                .map(origin => if origin == move.slice(2, 4) then move.take(2) else origin)
-                .diff(controllers(after.currentPosition.board, !actor.side, at)).nonEmpty)))
-          if challenges.nonEmpty
-        yield Question(value.path, actor, value.original, value.use, value.actor.at,
-          "enabled_activity", challenges, purposeActivity = Some(value))
-      }.toList
-      (existing ++ enabled).distinctBy(_.id)
+    val existing = discovered(packet, paths, witnesses)
+    val root = ReferencePurposeReading.assessmentPair(packet, paths)
+      .find(_.moves.head == packet.assembly.input.playedMoveUci)
+    val sources = (root.toList ++ witnesses).distinct
+    val mechanisms = MoveWorkProjection.select(packet, paths).rootUses(sources)
+    // Immediate entry/capture already has its response account. This question
+    // carries a beneficiary whose useful role appears only after that entry.
+    // The actual assessed line can already contain the delayed useful role.
+    // It must enter the same candidate pool as an independent survey, not
+    // appear only later when the root paragraph is rendered.
+    val activities = sources.flatMap(path => PurposeActivityReading.discover(packet, paths, path, mechanisms))
+      .filter(value => value.seed.cause.nonEmpty && value.use > value.entry)
+    val enabled = activities.iterator.flatMap { value =>
+      for
+        before <- position(paths, value.path, 0)
+        actor <- before.occupant(value.path.moves.head.take(2))
+        if actor != value.original && before.view.currentCheckSources(actor.side).isEmpty &&
+          value.path.certified.flatMap(_._2.material).exists(!_.events.exists(_.plyOffset == 0))
+        after <- packet.assembly.input.positionHistory.extend(List(value.path.moves.head)).toOption
+        watched = List(value.path.moves(value.entry).slice(2, 4), value.actor.at)
+        challenges = after.currentLegalMoveUcis.filter(move => after.extend(List(move)).toOption.exists(next =>
+          watched.exists(at => move.slice(2, 4) == at ||
+            controllers(next.currentPosition.board, !actor.side, at)
+              .map(origin => if origin == move.slice(2, 4) then move.take(2) else origin)
+              .diff(controllers(after.currentPosition.board, !actor.side, at)).nonEmpty)))
+        if challenges.nonEmpty
+      yield Question(value.path, actor, value.original, value.use, value.actor.at,
+        "enabled_activity", challenges, purposeActivity = Some(value))
+    }.toList
+    (existing ++ enabled).distinctBy(_.id)
 
   def question(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search]): Option[Question] =
     if MoveIntent.discover(packet, paths, values).nonEmpty then None else candidate(packet, paths, values)

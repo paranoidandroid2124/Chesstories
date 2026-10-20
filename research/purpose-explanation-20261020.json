@@ -12,7 +12,8 @@
     ],
     "preserve_previous_failures": true,
     "commits": "Coherent intermediate outcomes, never claim goal completion from tests.",
-    "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin."
+    "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin.",
+    "development_retry": "One Qg2 retry after the observed common ownership defect is corrected. First failure remains the result at the first freeze; the retry is development evidence, never an independent generalization result. Rfe1 remains unused until the final source freeze."
   },
   "baseline": "target/research-runs/purpose-explanation-20261020/baseline.json",
   "heldout_preregistration": {
@@ -57,6 +58,10 @@
     {
       "sha": "45f9b1be69",
       "meaning": "Shared purpose decision checkpoint; fresh UI not yet validated."
+    },
+    {
+      "sha": "dd14b64cf1",
+      "meaning": "Leading selected purpose and actual alternative; first fresh Qg2 below still failed."
     }
   ],
   "implementation": [
@@ -99,9 +104,43 @@
         "fresh_ui": 0
       },
       "evidence": "purpose-explanation-20261020/stage2-evidence.json.gz"
+    },
+    {
+      "stage": 3,
+      "status": "shared_root_and_response_checkpoint_not_goal_completion",
+      "changes": [
+        "Admit useful delayed activity from the actual assessed root into the same candidate pool as independent reply surveys; use the selected task to own the next response question.",
+        "Rank any displayed two-reply comparison by its owned search before stating a weaker reply as an alternative.",
+        "Compare the same original supported piece at its actual entry in both assessed lines. State the same provider support difference at those witnessed points; do not infer absence from an unobserved entry or deny other defenders."
+      ],
+      "trigger": "First fresh Qg2 failure, retained unchanged; no Rfe1 output used.",
+      "validation": {
+        "backend": "44/44 focused saved-report and ownership checks",
+        "fresh_searches_after_change": 0,
+        "heldout_used": false
+      },
+      "evidence": "purpose-explanation-20261020/stage3-evidence.json.gz"
     }
   ],
-  "verification": {},
+  "verification": {
+    "qg2_first": {
+      "status": "failed",
+      "commit": "dd14b64cf1f1b5bda0d58eaa00be417fd5fd6e1a",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 5.42,
+      "actual_pair": [
+        "a2c3",
+        "e2g2"
+      ],
+      "engine_reports": 4,
+      "max_issued_depth": 11,
+      "failure": "The actual root explanation selected h2-h3-hxg4 support, but the response investigation and basic reply paragraphs still answered the different g3-g4 rook task. A weaker queen-sacrifice reply was not explicitly ranked.",
+      "retained_wire": "purpose-explanation-20261020/qg2-first-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-first-screen.txt",
+      "fixture": "../judgment-evaluation/fixtures/public-commentary-v6/purpose-decision-browser.json.gz",
+      "pixel_capture": "Unavailable: IAB capture timed out and OS capture showed wallpaper. AX and real request/response retained; no pixel verification claimed."
+    }
+  },
   "cleanup": [
     {
       "files": 237,
@@ -115,6 +154,12 @@
       "receipt": "purpose-explanation-20261020/stage1-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage1-evidence.json.gz",
       "method": "Windows Recycle Bin; absolute workspace paths and SHA256 checked before deletion. Includes first failures and final checks in retained pack."
+    },
+    {
+      "files": 8,
+      "bytes": 11007599,
+      "receipt": "purpose-explanation-20261020/stage3-recycled.json.gz",
+      "method": "Windows Recycle Bin after exact compression roundtrip or saved log comparison, absolute worktree path and SHA256 checks."
     }
   ],
   "studied_failures": [

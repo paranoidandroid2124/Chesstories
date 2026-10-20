@@ -20,7 +20,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     fixture("activity-browser") ++ fixture("hypothesis-browser") ++ fixture("priority-browser") ++
     fixture("reply-functions-browser") ++ fixture("counterplay-browser") ++ fixture("obligation-browser") ++
     fixture("preparation-browser") ++ fixture("prevention-browser") ++ fixture("resources-browser") ++
-    fixture("quiet-resources-browser")
+    fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser")
 
   private def replay(id: String, reportCount: Int = Int.MaxValue): List[CommentaryJobState] =
     val row = screenCases.find(r => (r \ "id").as[String] == id).get
@@ -182,6 +182,39 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assert(text.contains("maintaining that support") && text.contains("R4f7") && text.contains("g6") &&
       text.contains("Rg4") && text.contains("followed later") && text.contains("exchanged") &&
       !text.contains("purpose is not established"), text)
+
+  test("a delayed purpose in the actual root also owns the next response question"):
+    val state = replay("qg2-purpose-first-screen", 3).last
+    val packet = state.observationsPacket.get
+    val paths = state.preparedPaths.get
+    val question = MovePurpose.question(packet, paths, state.responseSearches).get
+    assertEquals(question.user.at, "h2")
+    assertEquals(question.purposeActivity.map(a => (a.entry, a.use)), Some(2 -> 12))
+    assertEquals(question.path.moves.slice(10, 13), List("g3g4", "h4g4", "h3g4"))
+    assert(state.isInstanceOf[AwaitingEngineWork],
+      "a response to another rook plan cannot complete this pawn-support purpose")
+    val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+    assertEquals(work.searchAnchor.get.prefixMoves, List("e2g2"))
+    assert(work.rootRestriction match
+      case EngineRootRestriction.Restricted(moves) => moves.contains("f4h4") && moves.contains("h5h6")
+      case _ => false)
+    val saved = screenCases.find(r => (r \ "id").as[String] == "qg2-purpose-first-screen").get
+    assert(work.executionKeySha256 != (saved \ "saved_reports").as[List[JsObject]].last
+      .value("issued_work").as[JsObject].value("execution_key_sha256").as[String],
+      "the first failed screen's different inquiry must not be replayed as the new work")
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val reading = ReferencePurposeReading.read(packet, paths, pair,
+      MoveWorkProjection.select(packet, paths).rootUses(pair)).get
+    val contrast = reading.supportContrasts.head
+    assertEquals(contrast.provider.at, "e2")
+    assertEquals(contrast.original.at, "h2")
+    assertEquals(contrast.supported.path.moves.take(3), List("e2g2", "f4h4", "h2h3"))
+    assertEquals(contrast.other.path.moves.take(3), List("a2c3", "f4h4", "h2h3"))
+    assert(contrast.references.forall(ReferencePurpose(reading).references.contains))
+    val words = ReferencePurposeText.purpose(reading, ko = false).collect { case s: String => s }.mkString
+    assert(words.contains("Both shown lines bring the original h2 pawn to h3") &&
+      words.contains("has no support from that same queen") &&
+      !words.contains("Newly guards h3"), words)
 
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(

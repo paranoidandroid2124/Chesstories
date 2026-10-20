@@ -182,6 +182,7 @@ private[runtime] object ReferencePurposeText:
       mechanisms: List[CommentaryAnswer.Statement] = Nil): List[Part] =
     val ref = value.reference
     val played = value.played
+    val readingSupport = value.supportContrasts
     val sharedShields = ref.shields.filter(s => played.shields.contains(s) &&
       !ref.evasion.exists(_.king == s._2))
     def limitation(arm: Arm): List[String] = Option.when(!value.hasPurpose(arm))(
@@ -279,7 +280,8 @@ private[runtime] object ReferencePurposeText:
         val supported = if value.original == arm.actor || arm.supportUse.nonEmpty then sentences(use) else Nil
         val condition: List[Part] = if value.path eq arm.path then Nil else
           List(MoveRef(value.path, 1), if ko then " 응수에서는 " else " is the observed reply; ")
-        supported ++ List(condition ++ activity(value, ko, includeCause = supported.isEmpty,
+        supported ++ List(condition ++ activity(value, ko, includeCause = supported.isEmpty &&
+          !readingSupport.exists(_.supported.path eq arm.path),
           includeReply = supported.isEmpty)) ++ sentences(escape ++ check ++ released)
       else sentences(capture ++ escape) ++ guard ++ sentences(shield ++ check) ++ attack ++
         sentences(file ++ exchange ++ use ++ post ++ released)) ++ sentences(limitation(arm))
@@ -289,7 +291,19 @@ private[runtime] object ReferencePurposeText:
         (if ko then " 모두 " else " both ") + sharedShields.map((attacker, target) =>
           if ko then s"${name(attacker, ko)}에서 ${name(target, ko)} 쪽으로 이어지는 공격선을 막습니다."
           else s"block the line from ${name(attacker, ko)} to ${name(target, ko)}.").mkString(" ") + " ")
-    val opening: List[Part] = common ++ value.arms.flatMap { arm =>
+    val supportComparison = readingSupport.flatMap { contrast =>
+      val square = contrast.supported.path.moves(contrast.supported.offset).slice(2, 4)
+      List[Part](if ko then
+        s"두 제시 수순 모두 ${original(contrast.original, ko)}${obj(contrast.original)} ${square}로 옮기지만, "
+      else s"Both shown lines bring ${original(contrast.original, ko)} to $square, but ",
+        MoveRef(contrast.supported.path, 0), if ko then " 수순의 " else " supplies ",
+        contrast.supported, if ko then s"에는 ${roles(contrast.provider.role.name)}의 지원이 있고 "
+          else s" with ${contrast.provider.role.name} support. In the ",
+        MoveRef(contrast.other.path, 0), if ko then " 수순의 " else " line, ",
+        contrast.other, if ko then s"에는 같은 ${roles(contrast.provider.role.name)}의 지원이 없습니다. "
+          else s" has no support from that same ${contrast.provider.role.name}. ")
+    }
+    val opening: List[Part] = common ++ supportComparison ++ value.arms.flatMap { arm =>
       value.preparation.filter(_.root eq arm.path).fold {
         val words = root(arm)
         val uses = mechanisms.filter(m => m.references.exists(_.path eq arm.path) &&
