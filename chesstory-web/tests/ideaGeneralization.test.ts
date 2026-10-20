@@ -15,6 +15,46 @@ function contextFor(r: any) { return { requestId: r.request_id, engineProfile: r
 } as MoveReviewSubject }; }
 const context = contextFor(row.request);
 
+test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
+  // This is the unchanged first empty-screen response, not a regenerated success fixture.
+  const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-final-wire.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const source = wire.at(-1).response;
+  const context = contextFor(wire[0].request);
+  const selected = source.observations.selection.candidates.find((c: any) => c.selection === 'selected');
+  const answer = selected.detail.summary_question;
+  const decoded = decodeMoveReviewSnapshot(source, context);
+  const shown = decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question;
+  assert.deepEqual(shown, answer);
+  assert.ok(shown?.units.every(u => !u.english_only));
+  const purpose = answer.move_purpose;
+  const search = source.observations.selection.response_searches.find((s: any) => s.work_id === purpose.work_id);
+  assert.ok(!search.candidates.some((c: any) => c.line_id === purpose.source_line_id),
+    'the actual root witness is independent of this reply survey');
+  assert.deepEqual(purpose.reply_activities.map((a: any) => a.user),
+    [{ side: 'white', role: 'rook', square: 'g3' }, { side: 'white', role: 'rook', square: 'g3' }]);
+  assert.ok(shown?.units.some(u => u.covered_moves.length > 0), 'both root and reply exchange costs remain delivered');
+  for (const mutate of [
+    (raw: any, q: any) => {
+      raw.observations.selection.purpose_question.reply_activities.reverse();
+      q.move_purpose.reply_activities.reverse();
+    },
+    (_raw: any, q: any) => { q.move_purpose.work_id = 'unowned-survey'; },
+    (raw: any, q: any) => {
+      raw.observations.selection.purpose_question.reply_activities[0].user.square = 'd3';
+      q.move_purpose.reply_activities[0].user.square = 'd3';
+    },
+    (_raw: any, q: any) => { q.units.find((u: any) => u.covered_moves?.length).covered_moves = []; },
+  ]) {
+    const raw = structuredClone(source);
+    const q = raw.observations.selection.candidates.find((c: any) => c.id === selected.id).detail.summary_question;
+    mutate(raw, q);
+    assert.equal(decodeMoveReviewSnapshot(raw, context)?.observations?.selection, undefined,
+      'different entries do not waive strongest-reply ownership, original-piece identity or exchange accounting');
+  }
+});
+
 test('a prepared alternative retains its original target and owns the actual evaluated choice', () => {
   const source = JSON.parse(gunzipSync(readFileSync(new URL(
     '../../judgment-evaluation/fixtures/public-commentary-v6/purpose-evidence-reading.json.gz', import.meta.url,

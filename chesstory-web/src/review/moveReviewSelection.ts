@@ -1963,10 +1963,15 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     const surveyed = value.question === 'selected_comparison' && fullSurvey && search.candidates.length >= 2 &&
       search.candidates.some(c => c.line_id === witness && observations.paths.some(path =>
         path.id === c.line_id && path.moves.slice(2).some(move => move.uci === purpose.use_move)));
-    if (!contrasted && !surveyed || purpose.kind === 'enabled_activity' && !surveyed) return;
-    if (purpose.reply_activities && (!fullSurvey ||
-      purpose.reply_activities[0].line_id !== search.candidates[0]?.line_id ||
-      !purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)))) return;
+    // The independently checked reply activities can use different entries.
+    // Their strongest reply and both line owners must still come from this full survey.
+    const activitiesOwned = Boolean(fullSurvey &&
+      purpose.reply_activities && purpose.reply_activities[0].line_id === search.candidates[0]?.line_id &&
+      purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)));
+    const activitiesSurveyed = value.question === 'selected_comparison' && activitiesOwned;
+    if (!contrasted && !surveyed && !activitiesSurveyed ||
+      purpose.kind === 'enabled_activity' && !surveyed && !activitiesSurveyed) return;
+    if (purpose.reply_activities && !activitiesOwned) return;
     for (const candidate of search.candidates) conditionalPaths.add(candidate.line_id);
     if (owner.choice !== undefined) {
       const choice = owner.choice;
