@@ -68,6 +68,10 @@
     {
       "sha": "cb7a4ccf82",
       "meaning": "Root delayed activity owns the reply inquiry; same supported entry is compared across actual roots. Subsequent Qg2 retry remains failed."
+    },
+    {
+      "sha": "06b6c77354",
+      "meaning": "Common conditional sufficiency and final receipt state repair; first unused Rfe1 failed and is retained."
     }
   ],
   "implementation": [
@@ -179,6 +183,18 @@
       "validation": "All 35 IdeaGeneralizationTest checks passed with current semantic/final-receipt changes. All 10 PurposeComparisonTest checks passed after removing the scheduling guard. No fresh engine/UI verification after these changes.",
       "known_extra_check_failure": "One additional LineContinuationJobTest recapture-agenda expectation failed on both c2c8192b03 and this stage. It was not weakened or relabeled as passing; it is outside the 45 focused purpose checks.",
       "evidence": "purpose-explanation-20261020/stage7-evidence.json.gz"
+    },
+    {
+      "stage": 8,
+      "status": "development_reply_ownership_repair_not_generalization_completion",
+      "changes": [
+        "Share the exact witnessed reply pair selection between the scheduler and the response reader. Keep its earlier full survey, actual source, engine and depth ownership.",
+        "Consume the returned pair in the actual-choice basic account even if both replies belong to the same geometric class. Branches still need their own activity and costs; non-realization is explicitly bounded and not counted as a completed purpose.",
+        "Use the same independent witness validator for pending work, returned work and final basic delivery."
+      ],
+      "validation": "46 backend purpose checks, 25 frontend checks and TypeScript passed. All searches are the unchanged saved Qg2 reports; no new screen or engine run.",
+      "evidence": "purpose-explanation-20261020/stage8-evidence.json.gz",
+      "remaining": "Qg2 R4f7 still lacks an explanation of its different useful activity; a returned reply pair is no substitute for that missing account. First Rfe1 stays failed."
     }
   ],
   "verification": {
@@ -319,6 +335,12 @@
       "bytes": 954773.0,
       "receipt": "purpose-explanation-20261020/stage7-recycled.json.gz",
       "method": "Windows Recycle Bin; exact base64 retention, decoded SHA256, absolute task paths verified."
+    },
+    {
+      "files": 10,
+      "bytes": 3552702.0,
+      "receipt": "purpose-explanation-20261020/stage8-recycled.json.gz",
+      "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
     }
   ],
   "studied_failures": [

@@ -385,6 +385,22 @@ private[runtime] object MovePurpose:
       value.anchor.rootOccurrenceId == question.anchor.rootOccurrenceId &&
       value.anchor.positionId == question.anchor.positionId && value.anchor.prefixMoves == List(question.rootMove))
 
+  /** The same observed task owns both the requested and the returned reply pair.
+    * This identifies which question was tested; each returned branch must still
+    * supply its own realization and price. */
+  def witnessedReplyMoves(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      q: Question, pool: Search): Option[List[String]] =
+    if q.use < 0 || !pool.coversAllLegalMoves || searches(packet, q, List(pool)).isEmpty then return None
+    val source = q.plan.map(_.path).getOrElse(q.path)
+    val present = pool.lines.map(_.evaluation.moves.head)
+    val actual = ReferencePurposeReading.assessmentPair(packet, paths).exists(_ eq source)
+    val classesReturned = present.exists(q.challenges.contains) && present.exists(move => !q.challenges.contains(move))
+    for
+      _ <- Option.when(actual || classesReturned)(())
+      witness <- source.moves.lift(1)
+      other <- present.find(_ != witness)
+    yield List(witness, other).sorted
+
   /** Publish the same owned realization as the answer, including when a later
     * response comparison supplies a different route to the discovered task. */
   def observedQuestion(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
@@ -603,8 +619,18 @@ private[runtime] object MovePurpose:
             .find(path => !(path eq witness))
           if search.pairAnswer(packet, witness.moves(1), other.moves(1)).nonEmpty
         yield List(witness, other).sortBy(path => search.lines.indexWhere(_.evaluation.moves.head == path.moves(1)))
+        val witnessed = for
+          pool <- candidates.takeWhile(_ ne search).reverseIterator.find(previous =>
+            previous.work.rootRestriction == EngineRootRestriction.Unrestricted &&
+              previous.work.engineProfile == search.work.engineProfile &&
+              previous.work.requiredDepth >= search.work.requiredDepth)
+          moves <- witnessedReplyMoves(packet, paths, q, pool)
+          if search.work.rootRestriction == EngineRootRestriction.Restricted(moves)
+          if search.pairAnswer(packet, moves.head, moves.last).nonEmpty
+        yield search.lines.filter(line => moves.contains(line.evaluation.moves.head))
+          .map(line => search.pathsByMove(line.evaluation.moves.head))
         val replyActivities = PurposeActivityReading.replyPair(packet, search, activities, q.purposeActivity)
-        val paired = replyActivities.map(_.map(_.path)).orElse(surveyed).orElse(contrasted)
+        val paired = replyActivities.map(_.map(_.path)).orElse(surveyed).orElse(witnessed).orElse(contrasted)
         paired.flatMap { pair =>
           val branches = pair.map { path =>
             val exact = useOf(path)

@@ -626,15 +626,22 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
   return raw as unknown as CommentaryPurposeQuestion;
 }
 
+interface PurposeReplyContext {
+  observations: MoveReviewObservations; searches: CommentaryResponseSearch[]; roots?: CommentaryRootSearch[];
+  workId: string; engineProfile: string; requiredDepth: number;
+}
+
 export function purposeResponseMovesMatch(question: CommentaryPurposeQuestion, moves: readonly Uci[],
-  legalMoves: readonly Uci[], context?: {
-    observations: MoveReviewObservations; searches: CommentaryResponseSearch[]; roots?: CommentaryRootSearch[];
-    workId: string; engineProfile: string; requiredDepth: number;
-  }): boolean {
+  legalMoves: readonly Uci[], context?: PurposeReplyContext): boolean {
   if (moves.length < 2 || !moves.every(move => legalMoves.includes(move))) return false;
   if ([question.challenge_moves, legalMoves.filter(move => !question.challenge_moves.includes(move))].some(group =>
     group.length > 0 && group.every(move => moves.includes(move)) && moves.some(move => !group.includes(move))))
     return true;
+  return purposeWitnessMovesMatch(question, moves, context);
+}
+
+function purposeWitnessMovesMatch(question: CommentaryPurposeQuestion, moves: readonly Uci[],
+  context?: PurposeReplyContext): boolean {
   if (!context || moves.length !== 2) return false;
   const earlier = (workId: string) => Number(workId.slice(5)) < Number(context.workId.slice(5));
   const pool = [...context.searches].reverse().find(search => earlier(search.work_id) &&
@@ -2000,8 +2007,15 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       purpose.reply_activities && purpose.reply_activities[0].line_id === search.candidates[0]?.line_id &&
       purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)));
     const activitiesSurveyed = value.question === 'selected_comparison' && activitiesOwned;
-    if (!contrasted && !surveyed && !activitiesSurveyed ||
-      purpose.kind === 'enabled_activity' && !surveyed && !activitiesSurveyed) return;
+    const witnessed = value.question === 'selected_comparison' && search.root_restriction.kind === 'restricted' &&
+      search.candidates.length === 2 &&
+      sameIds(search.candidates.map(candidate => candidate.move_uci), search.root_restriction.moves_uci) &&
+      purposeWitnessMovesMatch(purpose, search.root_restriction.moves_uci, {
+        observations, searches: responseSearches, roots: rootSearches, workId: search.work_id,
+        engineProfile: search.engine_profile, requiredDepth: search.required_depth,
+      });
+    if (!contrasted && !surveyed && !activitiesSurveyed && !witnessed ||
+      purpose.kind === 'enabled_activity' && !surveyed && !activitiesSurveyed && !witnessed) return;
     if (purpose.reply_activities && !activitiesOwned) return;
     for (const candidate of search.candidates) conditionalPaths.add(candidate.line_id);
     if (owner.choice !== undefined) {

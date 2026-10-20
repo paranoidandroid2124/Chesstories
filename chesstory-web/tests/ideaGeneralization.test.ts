@@ -43,6 +43,30 @@ test('a witnessed purpose can request the strongest other reply in the same geom
     false, 'the root path must actually witness the purpose being investigated');
 });
 
+test('the returned witnessed pair reaches the actual-choice account with bounded non-realization', () => {
+  const replay = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-witnessed-replay.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const source = replay.snapshot;
+  const selected = source.observations.selection.candidates.find((c: any) => c.selection === 'selected');
+  const answer = selected.detail.summary_question;
+  const decoded = decodeMoveReviewSnapshot(source, contextFor(replay.request));
+  const shown = decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question;
+  assert.ok(shown, 'the owned witnessed reply summary must decode');
+  assert.deepEqual(shown, answer);
+  assert.equal(shown?.move_purpose?.work_id, 'work:2');
+  assert.ok(shown?.units.every(u => !u.english_only));
+  assert.ok(selected.detail.summary.includes('the plan is not realized in this segment'));
+  const work = source.observations.selection.response_searches.find((s: any) => s.work_id === 'work:2');
+  assert.deepEqual(work.candidates.map((c: any) => c.move_uci), ['f4f7', 'h5f7']);
+  assert.ok(work.candidates.every((c: any) => !answer.move_purpose.challenge_moves.includes(c.move_uci)));
+  const missingSurvey = structuredClone(source);
+  missingSurvey.observations.selection.response_searches =
+    missingSurvey.observations.selection.response_searches.filter((s: any) => s.work_id !== 'work:1');
+  assert.equal(decodeMoveReviewSnapshot(missingSurvey, contextFor(replay.request))?.observations?.selection, undefined,
+    'the exact returned pair still needs its earlier independent survey');
+});
+
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
   const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(

@@ -3617,15 +3617,7 @@ object CommentaryJobReducer:
             EngineRootRestriction.Unrestricted
           } { pool =>
             val present = pool.lines.map(_.evaluation.moves.head)
-            val source = q.plan.map(_.path).getOrElse(q.path)
-            val classesReturned = present.exists(q.challenges.contains) && present.exists(move => !q.challenges.contains(move))
-            val witnessed = Option.when(q.use >= 0 && (assessmentPair.exists(_ eq source) || classesReturned))(
-              source.moves(1))
-            val contrast = for
-              witness <- witnessed
-              other <- present.find(_ != witness)
-            yield List(witness, other).sorted
-            val moves = contrast.getOrElse {
+            val moves = MovePurpose.witnessedReplyMoves(active.packet, paths, q, pool).getOrElse {
               val legal = paths.positionView(q.path, 1).flatMap(_.legalRows).get.map(_.move)
               val missing = if present.exists(q.challenges.contains) then legal.filterNot(q.challenges.contains) else q.challenges
               (missing ++ present.take(1)).distinct.sorted

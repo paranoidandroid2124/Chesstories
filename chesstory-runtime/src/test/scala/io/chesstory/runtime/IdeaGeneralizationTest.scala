@@ -243,6 +243,33 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assertEquals(work.rootRestriction, EngineRootRestriction.Restricted(List("g7g6", "h5h6")))
     assert(work.requiredDepth <= 18)
 
+  test("a returned witnessed reply comparison stays attached without turning non-realization into proof"):
+    val state = replay("qg2-purpose-witnessed-replies").last
+    val packet = state.observationsPacket.get
+    val paths = state.preparedPaths.get
+    val reading = MovePurpose.read(packet, paths, state.responseSearches, Nil).get
+    assertEquals(reading.search.work.workId, "work:2")
+    assertEquals(reading.branches.map(_.path.moves(1)), List("f4f7", "h5f7"))
+    assert(reading.branches.forall(b => !reading.question.challenges.contains(b.path.moves(1))),
+      "two replies in the same geometric class still answer the issued comparison")
+    assert(!reading.branches.head.realizes && reading.branches.last.realizes)
+    assert(!reading.explanation.answered,
+      "the returned pair does not itself explain why the strongest reply uses another activity")
+    assert(MovePurpose.read(packet, paths, List(reading.search), Nil).isEmpty,
+      "a restricted pair cannot certify the independent survey which selected it")
+    val row = screenCases.find(r => (r \ "id").as[String] == "qg2-purpose-witnessed-replies").get
+    val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
+      (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
+    val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
+      .find(c => (c \ "selection").asOpt[String].contains("selected")).get
+    assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
+      Some("work:2"), "the actual-pair account must retain the reply question it investigated")
+    val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
+    Files.createDirectories(folder)
+    Files.writeString(folder.resolve("qg2-witnessed-replay.json"),
+      Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
+        "note" -> "Development replay of unchanged Qg2 reports; not a new screen or independent validation.")), UTF_8)
+
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
       fen = "6k1/2p3b1/8/8/8/8/8/5K1R w - - 0 1", playedMoveUci = moves.head,
