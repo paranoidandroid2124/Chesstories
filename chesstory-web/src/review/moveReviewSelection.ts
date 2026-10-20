@@ -211,6 +211,7 @@ export interface CommentaryPurposeQuestion {
   challenge_moves: Uci[];
   activity_plan?: CommentaryActivityPlan;
   reply_activities?: (CommentaryActivityPlan & { line_id: string })[];
+  prepared_choice?: { line_id: string; targets: Pick<CommentaryInquiryPiece, 'side' | 'role' | 'square'>[] };
   activity?: {
     targets: Pick<CommentaryInquiryPiece, 'side' | 'role' | 'square'>[];
     offers: Uci[];
@@ -238,7 +239,7 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
   playedMove?: Uci, owned = false): CommentaryPurposeQuestion | undefined {
   if (!object(raw) || !exactKeys(raw, ['id', 'root_move', 'root_occurrence_id', 'child_position_id',
     'source_line_id', 'use_move', 'kind', 'square', 'challenge_moves',
-      ...(owned ? ['work_id', 'execution_key_sha256'] : [])], ['plan', 'support', 'activity', 'activity_plan', 'reply_activities', ...(owned ? ['choice'] : [])]) ||
+      ...(owned ? ['work_id', 'execution_key_sha256'] : [])], ['plan', 'support', 'activity', 'activity_plan', 'reply_activities', ...(owned ? ['choice', 'prepared_choice'] : [])]) ||
     !['id', 'root_occurrence_id', 'child_position_id', 'source_line_id'].every(field => id(raw[field])) ||
     raw.root_move !== playedMove || !['supported_advance', 'entry_route', 'piece_pressure', 'support_release', 'exchange_activity', 'enabled_activity'].includes(String(raw.kind)) ||
     typeof raw.square !== 'string' || !/^[a-h][1-8]$/.test(raw.square) ||
@@ -253,6 +254,32 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
   if (!path || !before?.controls.complete || !after?.controls.complete || !after.legal_moves.complete ||
     !raw.challenge_moves.every(move => after.legal_moves.moves.some(row => row.uci === move))) return;
   const actor = after.controls.pieces.find(row => row.piece.square === playedMove?.slice(2, 4));
+  if (raw.prepared_choice !== undefined) {
+    const choice = raw.prepared_choice;
+    const plan = object(raw.plan) ? raw.plan : undefined;
+    const usePath = plan ? observations.paths.find(p => p.id === plan.line_id) : path;
+    const use = usePath?.moves.findIndex(move => move.uci === raw.use_move) ?? -1;
+    const user = usePath && use >= 2 && trackedPieces(usePath, use)
+      ?.find(p => p.current?.square === String(raw.use_move).slice(0, 2))?.original;
+    if (!owned || !user || !object(choice) || !exactKeys(choice, ['line_id', 'targets']) ||
+      !id(choice.line_id) || !Array.isArray(choice.targets) || !choice.targets.length) return;
+    const peer = observations.paths.find(p => p.id === choice.line_id && p.positionIds?.[0] === path.positionIds?.[0] &&
+      p.moves[0]?.uci !== playedMove && p.moves[0]?.uci === user.square + raw.square);
+    const end = peer && observations.positions?.find(p => p.id === peer.positionIds?.[1]);
+    const old = before.controls.pieces.find(row => row.piece.side === user.side &&
+      row.piece.role === user.role && row.piece.square === user.square);
+    const mover = end?.controls.pieces.find(row => row.piece.side === user.side &&
+      row.piece.role === user.role && row.piece.square === raw.square);
+    if (!old || !end?.controls.complete || !mover) return;
+    const targets = before.controls.pieces.filter(row => row.piece.side !== user.side &&
+      !old.squares.includes(row.piece.square) && mover.squares.includes(row.piece.square) &&
+      end.controls.pieces.some(current => current.piece.square === row.piece.square &&
+        current.piece.side === row.piece.side && current.piece.role === row.piece.role)).map(row => row.piece);
+    if (choice.targets.length !== targets.length || new Set(choice.targets.map(p =>
+      object(p) ? `${p.side}:${p.role}:${p.square}` : '')).size !== targets.length || !choice.targets.every(p => object(p) &&
+      exactKeys(p, ['side', 'role', 'square']) && targets.some(t => t.side === p.side &&
+        t.role === p.role && t.square === p.square))) return;
+  }
   function newlySupported(line: ObservationPath, original: CommentaryInquiryPiece, destination: Key, through: number): boolean {
     const provider = before?.controls.pieces.find(row => row.piece.square === playedMove?.slice(0, 2));
     if (!actor || !provider || original.side !== actor.piece.side || original.square === provider.piece.square ||
@@ -1920,6 +1947,7 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     if (!purpose || !object(owner) || !purposeQuestion ||
       !(Object.keys(purposeQuestion) as (keyof CommentaryPurposeQuestion)[]).every(key =>
         JSON.stringify(purpose[key]) === JSON.stringify(purposeQuestion[key]))) return;
+    if (purpose.prepared_choice && !usedPaths.some(path => path.id === purpose.prepared_choice?.line_id)) return;
     const search = responseSearches.find(search => search.work_id === owner.work_id &&
       search.execution_key_sha256 === owner.execution_key_sha256 &&
       search.root_move === purpose.root_move && search.root_move_occurrence_id === purpose.root_occurrence_id &&

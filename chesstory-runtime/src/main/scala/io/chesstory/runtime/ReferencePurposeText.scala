@@ -184,6 +184,9 @@ private[runtime] object ReferencePurposeText:
     val played = value.played
     val sharedShields = ref.shields.filter(s => played.shields.contains(s) &&
       !ref.evasion.exists(_.king == s._2))
+    def limitation(arm: Arm): List[String] = Option.when(!value.hasPurpose(arm))(
+      if ko then "관측된 기능만으로는 실제 두 선택에서 이 수의 핵심 목적을 아직 설명하지 못합니다."
+      else "This move's purpose is not established by the observed functions in the actual choice comparison.").toList
     def root(arm: Arm): List[Part] =
       def sentences(values: List[String]): List[List[Part]] = values.map(s => List(
         if ko then s else s.take(1).toUpperCase(java.util.Locale.ROOT) + s.drop(1)))
@@ -268,9 +271,6 @@ private[runtime] object ReferencePurposeText:
         else s"${names(arm.guards, ko)} supports piece play on $square."
       else if ko then s"$square 칸은 폰의 지원을 받지 못합니다."
       else s"$square has no pawn support.")
-      val unknown = Option.when(!value.hasPurpose(arm))(
-        if ko then "이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다."
-        else "This move's longer-term purpose is not established by the shown continuation.").toList
       val causal = arm.controlUse.filter(_ => value.sharedControlUse.isEmpty)
       val parts = sentences(obligation ++ castling) ++ deferred ++ (if causal.nonEmpty then
         List(controlUse(causal.get, ko, reply = !(causal.get.path eq arm.path))) ++ sentences(released)
@@ -282,7 +282,7 @@ private[runtime] object ReferencePurposeText:
         supported ++ List(condition ++ activity(value, ko, includeCause = supported.isEmpty,
           includeReply = supported.isEmpty)) ++ sentences(escape ++ check ++ released)
       else sentences(capture ++ escape) ++ guard ++ sentences(shield ++ check) ++ attack ++
-        sentences(file ++ exchange ++ use ++ post ++ released ++ unknown))
+        sentences(file ++ exchange ++ use ++ post ++ released)) ++ sentences(limitation(arm))
       parts.zipWithIndex.flatMap((sentence, index) => (if index == 0 then Nil else List[Part](" ")) ++ sentence)
     val common: List[Part] = if sharedShields.isEmpty then Nil else
       List(MoveRef(ref.path, 0), if ko then "와 " else " and ", MoveRef(played.path, 0),
@@ -300,7 +300,7 @@ private[runtime] object ReferencePurposeText:
             case _ => false)).flatMap(m =>
           (if ko then condition(m).get else CommentaryEnglish.statement(m)) :+ " ")
         (if words.isEmpty then Nil else List[Part](MoveRef(arm.path, 0), " — ") ++ words :+ " ") ++ uses
-      }(prepared => MoveIntent.purpose(prepared, ko) :+ " ")
+      }(prepared => MoveIntent.purpose(prepared, ko) ++ limitation(arm).flatMap(s => List[Part](" ", s)) :+ " ")
       }
     val timing = value.sharedCapture.toList.flatMap { shared =>
       val later = if shared.referenceOffset > shared.playedOffset then ref else played
@@ -869,11 +869,15 @@ private[runtime] object ReferencePurposeText:
             else s"${q.square}를 쓰는 대신 ${name(branch.actor, ko)}의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다."
           else if used then s"${name(branch.actor, ko)} realizes the entry on ${q.square}."
             else s"The line continues with ${name(branch.actor, ko)} instead of using ${q.square}; the plan is not realized in this segment.")
-    val changed = branch.relocated.map { (p, current) => if ko then
-      s"${original(p, ko)}${topic(p)} " + current.fold("교환되어 그 기능의 대상이 사라집니다.")(now =>
-        s"${now.at}로 옮겨 같은 칸을 상대로 한 기능은 달라집니다.")
-      else s"${original(p, ko)} " + current.fold("has been exchanged away.")(now =>
-        s"has moved to ${now.at}, changing the original task.") }
+    val changed = branch.relocated.map { (p, current) =>
+      val compared = value.preparedChoice.exists(_._2.contains(p))
+      if ko then (if compared then "실제 대안이 공격하던 " else "") +
+        s"${original(p, ko)}${topic(p)} " + current.fold("교환되어 그 기능의 대상이 사라집니다.")(now =>
+          s"${now.at}로 이동하여, 비교했던 ${p.at}의 대상은 그 자리에 없습니다.")
+      else s"${original(p, ko)}" + (if compared then ", attacked by the immediate alternative, " else " ") +
+        current.fold("has been exchanged away.")(now =>
+          s"has moved to ${now.at}; the target compared on ${p.at} is no longer there.")
+    }
     val contested = Option.when(branch.controllers.nonEmpty)(if ko then
       s"${names(branch.controllers, ko)}${subject(branch.controllers.last)} ${q.square}를 새로 통제합니다."
       else s"${names(branch.controllers, ko)} now control ${q.square}.").toList ++ branch.occupant.toList.map(p =>

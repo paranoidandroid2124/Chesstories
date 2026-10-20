@@ -80,16 +80,51 @@ private[runtime] object ReferencePurposeReading:
         }
       }.nextOption()
     }
-    def hasPurpose(arm: Arm): Boolean = preparation.exists(_.root eq arm.path) ||
-      functional.exists(_.question.rootMove == arm.path.moves.head) || arm.activity.nonEmpty || purposeKnown(arm, rootUses) ||
-        conditionalPurposes.exists(_.proof.owner.comparison.referenceMove == arm.path.moves.head)
+    def hasFacts(arm: Arm): Boolean = functionalFacts(arm, rootUses)
+    def explanation(arm: Arm): PurposeEvidence =
+      val other = arms.find(_ ne arm).get
+      val prepared = preparation.filter(value => (value.root eq arm.path) && value.investigated)
+      val task = functional.filter(_.question.rootMove == arm.path.moves.head)
+      val conditional = conditionalPurposes.filter(_.proof.owner.comparison.referenceMove == arm.path.moves.head)
+      val escapedOption = conditionalPurposes.filter(value =>
+        value.proof.owner.comparison.alternativeMove == arm.path.moves.head && arm.escaped.nonEmpty &&
+          owner.trackedPieceAfter(value.reference, arm.actor, value.proof.reference.size).contains(None) &&
+          owner.trackedPieceAfter(value.alternative, arm.actor, value.proof.alternative.size).flatten.nonEmpty)
+      val uses = realizedUses(owner, arm, rootUses) ++
+        prepared.toList.flatMap(value => value.branches.flatMap(branch =>
+          branch.realization.map(MoveRef(branch.path, _)))) ++ task.toList.flatMap(_.explanation.uses) ++
+        conditional.map(_.option) ++ escapedOption.map(value => MoveRef(value.alternative, value.proof.alternative.size - 1))
+      val users = purposeUsers(arm) ++ Set(arm.actor) ++ arm.supportedArrival.map(_.original)
+      val changedFunction = arm.functions.exists(left => users(left.original) &&
+        other.functions.exists(right => right.original == left.original &&
+          (left.current.isDefined != right.current.isDefined || left.attacks.toSet != right.attacks.toSet ||
+            left.supports.toSet != right.supports.toSet || left.openFile != right.openFile)))
+      val sharedShieldExchange = arm.shields.exists { (attacker, _) =>
+        arm.reply == attacker && arm.replyCapture.contains(arm.moved) &&
+          List(arm, other).forall(a => a.losses.contains(arm.actor) && a.losses.contains(attacker))
+      }
+      val sameUse = sharedControlUse.nonEmpty || sharedCapture.nonEmpty || sharedPreparation.nonEmpty ||
+        sharedShieldExchange
+      val compared = conditional.nonEmpty || escapedOption.nonEmpty || prepared.nonEmpty || task.exists(_.explanation.compared) ||
+        arm.evasion.nonEmpty || arm.captured.nonEmpty || changedFunction || sameUse ||
+        arm.castlePreparation.exists(p => other.deferredCastle.exists(_.original == p.original)) ||
+        arm.supportedArrival.exists(use => other.actor == use.original && other.moved == use.target)
+      val response = uses.exists(use => use.offset >= 2 && CommentarySequenceText.sameRoot(use.path, arm.path)) ||
+        arm.replyEvades || arm.replyShields.nonEmpty || arm.replyCapture.nonEmpty || arm.escaped.contains(arm.reply) ||
+        arm.evasion.nonEmpty || arm.captured.nonEmpty || arm.supportUse.nonEmpty ||
+        arm.controlUse.nonEmpty || arm.activity.exists(!_.incidentalDuty) ||
+        arm.castlePreparation.exists(_.blocked.nonEmpty) || conditional.nonEmpty || escapedOption.nonEmpty ||
+        prepared.exists(_.replies.nonEmpty) || task.exists(_.explanation.replies.nonEmpty)
+      PurposeEvidence(uses.distinct, if compared then arms.map(a => MoveRef(a.path, 0)) else Nil,
+        if response then List(MoveRef(arm.path, 1)) else Nil)
+    def hasPurpose(arm: Arm): Boolean = explanation(arm).compared
     def withConditionalPurposes(values: List[LegalReplyOption]): Reading =
       require(values.forall(value => FunctionalReplyReading.valid(owner, value) &&
         FunctionalReplyReading.relevant(owner, arms.map(_.path), value)))
       new Reading(owner, supportedPost, reference, played, retainedChoice, sharedCapture,
         contrasts, rootUses, (evidence ++ values.flatMap(_.proof.evidence)).distinct,
         preparation, functional, values)
-    def completePurpose: Boolean = arms.forall(hasPurpose)
+    def completePurpose: Boolean = arms.forall(arm => explanation(arm).answered)
     def preparedDevelopment(arm: Arm): Option[(CastlePreparation, LegalReplyOption)] =
       (for
         preparation <- arm.deferredCastle.toList if preparation.blocked.isEmpty
@@ -239,12 +274,45 @@ private[runtime] object ReferencePurposeReading:
           (f.attacks.nonEmpty || f.supports.nonEmpty || f.openFile.nonEmpty))
       }
 
-  private def purposeKnown(arm: Arm, uses: List[Statement]): Boolean =
+  private def functionalFacts(arm: Arm, uses: List[Statement]): Boolean =
     arm.evasion.nonEmpty || arm.castlePreparation.nonEmpty || arm.controlUse.nonEmpty || arm.captured.nonEmpty || arm.attacks.nonEmpty || arm.escaped.nonEmpty || arm.protections.nonEmpty ||
       arm.shields.nonEmpty || arm.guards.nonEmpty || arm.supportedArrival.nonEmpty ||
       arm.rookFile.nonEmpty || uses.exists {
         case Action(_, _: MoveWorkProjection.Detail.ChangedLines) => false
         case statement => statement.references.contains(MoveRef(arm.path, 0))
+      }
+
+  private def realizedUses(paths: PreparedPaths, arm: Arm, uses: List[Statement]): List[MoveRef] =
+    val direct = arm.evasion.nonEmpty || arm.captured.nonEmpty ||
+      arm.attacks.nonEmpty && (arm.replyEvades || arm.replyShields.nonEmpty) ||
+      arm.shields.nonEmpty && arm.replyCapture.contains(arm.moved) ||
+      arm.escaped.contains(arm.reply) ||
+      arm.protections.exists(_.afterReply) || arm.castlePreparation.exists(_.blocked.nonEmpty)
+    val exchanged = arm.exchange.exists(task => arm.losses.contains(arm.actor) && task.targets.exists(arm.losses.contains))
+    val converted = (2 to arm.through by 2).flatMap { offset =>
+      arm.attacks.find { target =>
+        (1 to offset).forall(count =>
+          (for
+            at <- paths.purposePosition(arm.path, count)
+            actor <- paths.trackedPieceAfter(arm.path, arm.actor, count).flatten
+            victim <- paths.trackedPieceAfter(arm.path, target, count).flatten
+          yield at.controlledBy(actor)(victim.at)).contains(true)) &&
+          paths.purposePosition(arm.path, offset).flatMap(_.view.legalRows).exists(_.exists(row =>
+            row.move == arm.path.moves(offset) &&
+              paths.trackedPieceAfter(arm.path, arm.actor, offset).flatten.contains(row.actor) &&
+              row.capture.nonEmpty && paths.trackedPieceAfter(arm.path, target, offset).flatten == row.capture))
+      }.map(_ => MoveRef(arm.path, offset))
+    }.toList
+    Option.when(direct)(MoveRef(arm.path, 0)).toList ++
+      Option.when(exchanged)(MoveRef(arm.path, arm.through)) ++ converted ++
+      arm.controlUse.map(use => MoveRef(use.path, use.use)) ++
+      arm.supportedArrival.map(use => MoveRef(arm.path, use.offset)) ++
+      arm.activity.filterNot(_.incidentalDuty).map(use => MoveRef(use.path, use.use)) ++
+      uses.flatMap {
+        case route: ClearedRoute if route.move.path eq arm.path => List(route.use)
+        case route: SquareReoccupation if route.move.path eq arm.path => List(route.use)
+        case route: PieceRoute if route.path eq arm.path => List(MoveRef(route.path, route.offsets.last))
+        case _ => Nil
       }
 
   /** A root or first reply changes opposing control, and an actual later move uses it.
@@ -641,7 +709,8 @@ private[runtime] object ReferencePurposeReading:
              arm.activity.exists(_.seed.mechanism.contains(route)) => route.use.offset
       }.minOption
       val late = routeUse.orElse(purposeOffsets.get(arm.path).flatten)
-        .filter(_ > arm.through).filter(offset => routeUse.contains(offset) || !purposeKnown(arm, localUses))
+        .filter(_ > arm.through).filter(offset => routeUse.contains(offset) ||
+          !minimumThrough.contains(arm.path) && realizedUses(paths, arm, localUses).isEmpty)
       late.fold(arm) { offset =>
         val end = close(arm.path, offset)
         arm.copy(through = end, retainedMover = current(arm.path, arm.actor, end + 1))
@@ -821,7 +890,7 @@ private[runtime] object ReferencePurposeReading:
     val replyActivities = responses.filter(value => value.belongsTo(paths) && value.search.coversAllLegalMoves)
       .toList.flatMap(_.branches.flatMap(_.purposeActivity)).filter(_.original.side == side)
     val purposes = arms.map(arm => preparation.exists(_.root eq arm.path) ||
-      functional.exists(_.question.rootMove == arm.path.moves.head) || purposeKnown(arm, uses) ||
+      functional.exists(_.question.rootMove == arm.path.moves.head) || functionalFacts(arm, uses) ||
         replyActivities.exists(use => CommentarySequenceText.sameRoot(use.path, arm.path)))
     val differentFate = originals.filterNot(_.role.name == "king").exists(p =>
       arms.map(a => current(a.path, p, a.through + 1).nonEmpty).distinct.size == 2)

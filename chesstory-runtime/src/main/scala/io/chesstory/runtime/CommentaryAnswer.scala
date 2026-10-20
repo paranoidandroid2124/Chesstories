@@ -81,7 +81,7 @@ private[runtime] object CommentaryAnswer:
   final case class FunctionReply(value: MovePurpose.Reading, branch: MovePurpose.Branch) extends Statement:
     def references = (List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.use), MoveRef(branch.path, branch.through)) ++
       branch.purposeActivity.toList.flatMap(_.references.filterNot(_.offset == 0)) ++
-      branch.activityRoute.map(MoveRef(branch.path, _))).distinct
+      branch.activityRoute.map(MoveRef(branch.path, _)) ++ value.preparedChoice.map((path, _) => MoveRef(path, 0))).distinct
 
   final case class ChoicePurpose(value: PurposeChoice.Reading) extends Statement:
     def references = value.arms.map(arm => MoveRef(arm.path, 0))

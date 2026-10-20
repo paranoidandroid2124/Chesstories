@@ -25,7 +25,7 @@ class PurposeComparisonTest extends munit.FunSuite:
       CommentaryJobPolicy(depth, budgetMs + 1L, request.engineProfile, investigateChoices = true,
         shortJob = true), 1L, request.inputLines, request.proposals).toOption.get
     saved.zipWithIndex.foreach { (item, index) =>
-      assert(state.isInstanceOf[AwaitingEngineWork])
+      assert(state.isInstanceOf[AwaitingEngineWork], s"${(row \ "id").asOpt[String]} complete before report ${index + 1}")
       val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
       assertEquals(work.executionKeySha256, (item \ "issued_work" \ "execution_key_sha256").as[String])
       val raw = (item \ "report").as[JsObject] ++ Json.obj("work_id" -> work.workId)
@@ -53,7 +53,11 @@ class PurposeComparisonTest extends munit.FunSuite:
     val answer = MoveIntent.summary(packet, paths, re2.responseSearches).get
     assert(answer.text.contains("establishes the prepared rook connection"), answer.text)
     val comparison = intent.comparison.get
-    assert(comparison.completePurpose && intent.complete)
+    assert(comparison.completePurpose && intent.complete,
+      comparison.arms.map(a => s"${a.path.moves.take(3)} facts=${comparison.hasFacts(a)} " +
+        s"realized=${comparison.explanation(a).realized} compared=${comparison.explanation(a).compared} " +
+        s"answered=${comparison.explanation(a).answered} attacks=${a.attacks} protections=${a.protections} " +
+        s"replies=${a.replyEvades}/${a.replyCapture} functions=${a.functions}").mkString("\n"))
     assert(comparison.reference.attacks.exists(p => p.at == "f6" && p.role.name == "knight"))
     assert(comparison.rootUses.exists(_.references.contains(RootQuestionSummary.MoveRef(intent.reference, 0))))
     assert(intent.branches.exists(_.path eq intent.root), "the actual assessed root must survive child comparisons")
@@ -79,7 +83,11 @@ class PurposeComparisonTest extends munit.FunSuite:
     val packet = qa4.observationsPacket.get
     val paths = qa4.preparedPaths.get
     val intent = MoveIntent.read(packet, paths, qa4.responseSearches).get
-    assert(intent.complete)
+    assert(intent.complete,
+      intent.comparison.toList.flatMap(c => c.arms.map(a => s"${a.path.moves.take(3)} facts=${c.hasFacts(a)} " +
+        s"realized=${c.explanation(a).realized} compared=${c.explanation(a).compared} " +
+        s"answered=${c.explanation(a).answered} attacks=${a.attacks} protections=${a.protections} " +
+        s"replies=${a.replyEvades}/${a.replyCapture} functions=${a.functions}")).mkString("\n"))
     assert(intent.pair.forall(p => intent.branches.exists(_.path eq p)))
     val comparison = intent.comparison.get
     assert(comparison.completePurpose)
@@ -131,7 +139,10 @@ class PurposeComparisonTest extends munit.FunSuite:
     assert(work.rootRestriction match
       case EngineRootRestriction.Restricted(moves) => moves.contains("d4d5") && !moves.contains("d3b4")
       case _ => false)
-    assert(reading(completed).complete)
+    val result = reading(completed)
+    assert(result.complete, result.comparison.toList.flatMap(c => c.arms.map(a =>
+      s"${a.path.moves.take(3)} through=${a.through} realized=${c.explanation(a).realized} " +
+        s"compared=${c.explanation(a).compared} answered=${c.explanation(a).answered}")).mkString("\n"))
 
   test("concision shares physical prices while preserving both complete screen accounts"):
     val comparisons = (screens \ "cases").as[List[JsObject]].map { row =>
@@ -143,12 +154,30 @@ class PurposeComparisonTest extends munit.FunSuite:
         .find(c => (c \ "selection").as[String] == "selected").get
       val old = (before \ "detail" \ "summary_question" \ "units").as[List[JsObject]]
       val current = (answer.json \ "units").as[List[JsObject]]
+      val intent = MoveIntent.read(packet, paths, state.responseSearches).get
+      val replacedReply = Option.when((row \ "id").as[String] == "re2") {
+        val branch = intent.branches.find(_.course == MoveIntent.Course.OtherReply).get
+        assertEquals(branch.path.moves.take(2), List("e1e2", "f6d5"))
+        assertEquals(branch.realization, Some(6))
+        assert(branch.retained && branch.through == 6)
+        assert(answer.text.contains("inferior to Nxc6") &&
+          answer.text.contains("establishes the prepared rook connection"), answer.text)
+        val covered = current.flatMap(u => (u \ "covered_moves").as[List[JsObject]]).toSet
+        assert(branch.path.certified.get._2.material.get.events.filter(_.plyOffset <= branch.through)
+          .forall(e => covered(RootQuestionSummary.MoveRef(branch.path, e.plyOffset).json)))
+        // Replace the redundant second failure Bb5 with the independent
+        // realized Nd5 branch. Actual roots and both tested losing choices
+        // must retain exactly their previous proof and price boundaries.
+        intent.replies.get.pathsByMove("d7b5").line.ref.id -> branch.path.line.ref.id
+      }
       for field <- List("covered_moves", "required_moves", "proof_moves", "action_moves", "recorded_end_moves") do
-        def refs(units: List[JsObject]) = units.flatMap(u => (u \ field).asOpt[List[JsObject]].getOrElse(Nil)).toSet
-        assertEquals(refs(current), refs(old), (row \ "id").as[String] + ": " + field)
+        def refs(units: List[JsObject], omit: Option[String]) = units
+          .flatMap(u => (u \ field).asOpt[List[JsObject]].getOrElse(Nil))
+          .filterNot(ref => omit.contains((ref \ "line_id").as[String])).toSet
+        assertEquals(refs(current, replacedReply.map(_._2)), refs(old, replacedReply.map(_._1)),
+          (row \ "id").as[String] + ": " + field)
       assert(current.forall(u => !(u \ "english_only").asOpt[Boolean].contains(true)))
       assert(answer.text.contains("share this cost"), answer.text)
-      val intent = MoveIntent.read(packet, paths, state.responseSearches).get
       if (row \ "id").as[String] == "qa4" then
         val sections = MoveIntent.sections(intent)
         val pawns = sections.flatMap(_.statements).collect { case p: CommentaryAnswer.Material if

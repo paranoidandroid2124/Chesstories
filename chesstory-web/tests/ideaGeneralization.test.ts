@@ -15,6 +15,31 @@ function contextFor(r: any) { return { requestId: r.request_id, engineProfile: r
 } as MoveReviewSubject }; }
 const context = contextFor(row.request);
 
+test('a prepared alternative retains its original target and owns the actual evaluated choice', () => {
+  const source = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../judgment-evaluation/fixtures/public-commentary-v6/purpose-evidence-reading.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const selected = source.snapshot.observations.selection.candidates.find((c: any) => c.selection === 'selected');
+  const answer = selected.detail.summary_question;
+  const decoded = decodeMoveReviewSnapshot(source.snapshot, contextFor(source.request));
+  assert.deepEqual(decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question,
+    answer);
+  assert.deepEqual(answer.move_purpose.prepared_choice.targets, [{ side: 'black', role: 'rook', square: 'f4' }]);
+  assert.match(JSON.stringify(answer.units), /실제 대안이 공격하던/);
+  const raw = structuredClone(source.snapshot);
+  const question = raw.observations.selection.candidates.find((c: any) => c.id === selected.id).detail.summary_question;
+  question.move_purpose.prepared_choice.targets[0].square = 'f7';
+  assert.equal(decodeMoveReviewSnapshot(raw, contextFor(source.request))?.observations?.selection, undefined,
+    'the rook after its retreat cannot be substituted for the original target of immediate Rg4');
+  question.move_purpose.prepared_choice = structuredClone(answer.move_purpose.prepared_choice);
+  const peer = source.snapshot.observations.paths.find((p: any) =>
+    p.moves[0] === 'e2g2');
+  assert.ok(peer);
+  question.move_purpose.prepared_choice.line_id = peer.id;
+  assert.equal(decodeMoveReviewSnapshot(raw, contextFor(source.request))?.observations?.selection, undefined,
+    'the prepared alternative cannot borrow a path belonging to the preparation itself');
+});
+
 test('quiet preparation and moving support retain their actual replies and exchange costs', () => {
   const sources = JSON.parse(gunzipSync(readFileSync(new URL(
     '../../judgment-evaluation/fixtures/public-commentary-v6/quiet-resources-reading.json.gz', import.meta.url,

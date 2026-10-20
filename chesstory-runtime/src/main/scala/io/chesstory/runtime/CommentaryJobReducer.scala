@@ -3516,7 +3516,7 @@ object CommentaryJobReducer:
     MoveIntent.read(active.packet, paths, active.responseSearches) match
       case Some(intent) =>
         val remaining = MoveIntent.probes(active.packet, paths, intent.question, active.responseSearches)
-        if intent.complete && MoveIntent.summary(active.packet, paths, active.responseSearches).nonEmpty then
+        if intent.complete && MoveIntent.realize(active.packet, paths, intent).nonEmpty then
           return Some(finishInvestigation(active, baseline, Nil, Nil))
         val issued = remaining.headOption.filter(_ => active.remainingBudgetMs >= 2500).flatMap { (anchor, moves) =>
           issueResponseComparison(active, baseline, Nil, Nil, anchor,
@@ -3525,15 +3525,18 @@ object CommentaryJobReducer:
         if issued.nonEmpty then return issued
         return Some(finishInvestigation(active, baseline, Nil, Nil))
       case None => ()
-    val functional = MovePurpose.question(active.packet, paths, active.responseSearches).map { q =>
+    val functionalReading = MovePurpose.read(active.packet, paths, active.responseSearches,
+      MoveWorkProjection.select(active.packet, paths).local, explanationReceipts(active))
+    val functional = functionalReading.map(_.question)
+      .orElse(MovePurpose.question(active.packet, paths, active.responseSearches)).map { q =>
       val searches = MovePurpose.searches(active.packet, q, active.responseSearches)
-      val answered = searches.exists(search => search.lines.exists(line => q.challenges.contains(line.evaluation.moves.head)) &&
-        search.lines.exists(line => !q.challenges.contains(line.evaluation.moves.head))) ||
-        (q.purposeActivity.nonEmpty || q.kind == "supported_advance" && q.use >= 0) &&
-          MovePurpose.read(active.packet, paths, active.responseSearches, Nil).exists(reading =>
-          reading.search.coversAllLegalMoves && reading.branches.size == 2 &&
-            (q.purposeActivity.nonEmpty && reading.branches.exists(_.realizes) || reading.witnessedSupport.nonEmpty))
-      (q, searches, answered)
+      val answered = functionalReading.exists(r => r.explanation.repliesExplained && r.replyContrast)
+      // Missing explanation is not missing a geometric reply class. Repeat
+      // only a genuinely absent class; otherwise retain a partial account.
+      val returned = searches.flatMap(_.lines.map(_.evaluation.moves.head))
+      val scopeOpen = !searches.exists(_.coversAllLegalMoves) ||
+        !returned.exists(q.challenges.contains) || !returned.exists(move => !q.challenges.contains(move))
+      (q, searches, !answered && scopeOpen)
     }
     val current = TargetResponseInvestigation.discover(active.packet, reference, paths, active.responseSearches)
       .filter(ResponsePurposeReading.required(active.packet, paths, _))
@@ -3544,17 +3547,14 @@ object CommentaryJobReducer:
         s.anchor.prefixMoves == List(current.head.rootMove) &&
         s.anchor.rootOccurrenceId == current.head.rootMoveOccurrenceId) < 2
     val pendingReplyContrast = active.remainingBudgetMs >= 2500 &&
-      (functional.exists((_, searches, answered) => !answered && searches.size < 2) || pendingTargetContrast)
+      (functional.exists((_, searches, needsWork) => needsWork && searches.size < 2) || pendingTargetContrast)
     // A complete account of the actual assessment pair takes precedence over
     // an extra same-destination question. Its returned replies already belong
     // to the two assessed moves; no third root is needed to explain them.
-    val assessedPurpose = ReferencePurposeReading.read(active.packet, paths, assessmentPair).filter(_.completePurpose).flatMap { reading =>
-      val positions = active.packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
-      val notes = MoveWorkProjection.select(active.packet, paths).local
-      ReferencePurposeReading.answer(active.packet, paths, assessmentPair, reading,
-        value => MoveWorkProjection.completeSelectedConditions(active.packet, paths, assessmentPair, positions, notes, value))
-        .flatMap(RootQuestionSummary.realize(paths, assessmentPair, _))
-    }
+    val assessedPurpose = MoveWorkProjection.purposeAnswer(active.packet, paths, assessmentPair, functionalReading,
+      FunctionalReplyReading.read(active.proposalEntries),
+      TargetResponseInvestigation.firstTargets(active.packet, paths, targetResponses, active.responseSearches))
+      .filter(MoveWorkProjection.completePurpose).flatMap(RootQuestionSummary.realize(paths, assessmentPair, _))
     // A shorter comparison does not answer whether the opponent accepts or
     // avoids the offered exchange. Keep that already-discovered question.
     if assessedPurpose.nonEmpty && !pendingReplyContrast then
@@ -3576,8 +3576,8 @@ object CommentaryJobReducer:
           (List(question.referenceMove, question.alternativeMove, reference) ++
             assessmentPair.flatMap(_.moves.headOption)).distinct))
     functional match
-      case Some((q, searches, answered)) =>
-        if answered || searches.size >= 2 || active.remainingBudgetMs < 2500 then
+      case Some((q, searches, needsWork)) =>
+        if !needsWork || searches.size >= 2 || active.remainingBudgetMs < 2500 then
           return Some(finishInvestigation(active, baseline, Nil, Nil))
         val restriction = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
           .fold[EngineRootRestriction] {

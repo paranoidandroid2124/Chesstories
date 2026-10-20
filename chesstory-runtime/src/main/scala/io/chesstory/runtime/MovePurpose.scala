@@ -92,7 +92,9 @@ private[runtime] object MovePurpose:
       val question: Question, val search: Search, val branches: List[Branch],
       val guards: List[LocalCandidate], val pawn: Option[(Piece, Piece)], val entrants: List[Piece],
       val retained: List[Duty] = Nil, val released: List[Guard] = Nil,
-      val choice: Option[PurposeChoice.Reading] = None):
+      val choice: Option[PurposeChoice.Reading] = None,
+      val explanation: PurposeEvidence = PurposeEvidence(),
+      val preparedChoice: Option[(PreparedPath, List[Piece])] = None):
     lazy val neutralization = choice.flatMap(PurposeChoice.neutralization(_, branches, owner))
     def belongsTo(paths: PreparedPaths): Boolean = owner eq paths
     def followsSupport: Boolean = question.kind == "supported_advance" && question.use >= 0 &&
@@ -113,7 +115,21 @@ private[runtime] object MovePurpose:
         owner.trackedPieceAfter(branch.path, duty.actor, branch.through + 1).map(duty.actor -> _))
     def ownershipJson = question.json ++ Json.obj("work_id" -> search.work.workId,
       "execution_key_sha256" -> search.work.executionKeySha256) ++
-      choice.map(value => Json.obj("choice" -> value.json)).getOrElse(Json.obj())
+      choice.map(value => Json.obj("choice" -> value.json)).getOrElse(Json.obj()) ++
+      preparedChoice.map((path, targets) => Json.obj("prepared_choice" -> Json.obj(
+        "line_id" -> path.line.ref.id, "targets" -> targets.map(p => Json.obj(
+          "side" -> (if p.side.white then "white" else "black"), "role" -> p.role.name, "square" -> p.at)))))
+        .getOrElse(Json.obj())
+    def replyContrast: Boolean =
+      def outcome(b: Branch) =
+        val losses = owner.continuationReadings.find(r => (r.path eq b.path) && r.complete).toList
+          .flatMap(_.events).filter(_.plyOffset <= b.through).flatMap(_.originalVictim).toSet
+        (b.realizes, b.pressure.map(p => (p.targets.toSet, p.sameTask)), b.relocated.toSet,
+          b.support, b.activity.map(a => (a.mover, a.targets, a.successor, a.central, a.queensGone)),
+          b.purposeActivity.map(a => (a.original, a.attacks.toSet, a.guards.toSet, a.capture,
+            a.recovery.map(_._2), a.continuation.map((use, targets) => (use.originalUser, targets.toSet)))),
+          losses)
+      branches.size == 2 && outcome(branches.head) != outcome(branches.last)
 
   private def position(paths: PreparedPaths, path: PreparedPath, count: Int): Option[Position] =
     paths.purposePosition(path, count)
@@ -232,8 +248,13 @@ private[runtime] object MovePurpose:
 
   def discover(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
       witnesses: List[PreparedPath] = Nil): Option[Question] =
+    discovered(packet, paths, witnesses).sortBy(q => (questionEvidence(packet, paths, q).priority,
+      if q.use >= 0 then q.use else Int.MaxValue, q.id)).headOption
+
+  private def discovered(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      witnesses: List[PreparedPath]): List[Question] =
     paths.requireOwner(packet)
-    for
+    (for
       played <- packet.assembly.playedTransition
       if !packet.assembly.input.positionHistory.currentPosition.check.yes
       line <- packet.assembly.input.assessmentCandidates.find(_.evaluation.moves.headOption.contains(played.moveUci))
@@ -278,20 +299,13 @@ private[runtime] object MovePurpose:
         row.promotionRole.isEmpty && after.empty(row.to.key) && after.controlledBy(moved)(row.to.key) &&
         !before.controlledBy(original)(row.to.key)).map(row => (-1, row.actor, row.to.key, "supported_advance"))
       history <- packet.assembly.input.positionHistory.extend(List(path.moves.head)).toOption
-      // One question still owns the short job. A witnessed use outranks a
-      // possible destination; an unanswerable first candidate cannot hide it.
       candidates = (support.toList.map(task => (-1, original, task.post, "support_release")) ++
         activity.toList.map(_ => (-1, original, moved.at, "exchange_activity")) ++ entries ++ plan.toList.map(p => (p.use, original,
         if p.potential then p.squares.last else p.path.moves(p.use).slice(2, 4), "piece_pressure")) ++
-        advances ++ supported ++ uses).distinct.sortBy { (use, user, square, kind) =>
-          val preparesAlternative = use >= 0 && kind == "supported_advance" && user != original &&
-            ReferencePurposeReading.assessmentPair(packet, paths).exists(other => other.moves.head != path.moves.head &&
-              other.moves.head.take(2) == user.at && other.moves.head.slice(2, 4) == square)
-          (if preparesAlternative then -1 else if use >= 0 then 0 else if Set("support_release", "exchange_activity")(kind) then 1 else 2,
-            if kind == "piece_pressure" then 0 else if kind == "supported_advance" then 1 else 2,
-            if use >= 0 then use else 0)
+        advances ++ supported ++ uses).distinct.sortBy { (use, user, square, _) =>
+          (if use >= 0 then 0 else 1, if use >= 0 then use else 0, user.at, square)
         }
-      selected <- candidates.iterator.flatMap { (use, user, square, kind) =>
+    yield candidates.flatMap { (use, user, square, kind) =>
         val selectedPlan = plan.filter(_ => kind == "piece_pressure")
         val selectedSupport = support.filter(_ => kind == "support_release")
         val selectedActivity = activity.filter(_ => kind == "exchange_activity")
@@ -309,26 +323,23 @@ private[runtime] object MovePurpose:
           else path
         Option.when(challenges.nonEmpty)(Question(source, original, user, use, square, kind, challenges,
           selectedPlan, selectedSupport, selectedActivity))
-      }.nextOption()
-    yield selected
+      }).getOrElse(Nil).distinctBy(_.id)
 
   /** An independent reply survey can reveal the use absent from the short
     * root PV. A forced plan test cannot vote for the plan it was asked to play. */
   def candidate(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search]): Option[Question] =
+    selectedCandidate(packet, paths, values, Nil, Nil).map((q, reading) => reading.fold(q)(_.question))
+
+  private def candidates(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      values: List[Search]): List[Question] =
     val witnesses = values.filter(search => search.belongsTo(packet) &&
       search.anchor.prefixMoves == List(packet.assembly.input.playedMoveUci) &&
       search.coversAllLegalMoves).flatMap(_.pathsByMove.values)
-    if witnesses.isEmpty then paths.functionalPurpose else
-      val existing = discover(packet, paths, witnesses)
+    if witnesses.isEmpty then discovered(packet, paths, Nil) else
+      val existing = discovered(packet, paths, witnesses)
       val root = ReferencePurposeReading.assessmentPair(packet, paths)
         .find(_.moves.head == packet.assembly.input.playedMoveUci)
       val sources = (root.toList ++ witnesses).distinct
-      // Keep an already witnessed attack, exchange or beneficiary. A newly
-      // enabled activity replaces only an incidental same-piece defensive duty.
-      if existing.exists(q => q.activity.nonEmpty || q.support.nonEmpty ||
-          q.use >= 0 && (q.user != q.actor || q.plan.exists(_.targets.exists(_.side != q.actor.side)))) ||
-          sources.exists(path => ReferencePurposeReading.controlUse(packet, paths, path).nonEmpty) then
-        return existing
       val mechanisms = MoveWorkProjection.select(packet, paths).rootUses(sources)
       // Immediate entry/capture already has its response account. This question
       // carries a beneficiary whose useful role appears only after that entry.
@@ -351,7 +362,7 @@ private[runtime] object MovePurpose:
         yield Question(value.path, actor, value.original, value.use, value.actor.at,
           "enabled_activity", challenges, purposeActivity = Some(value))
       }.toList
-      enabled.sortBy(q => (q.use, q.user.at)).headOption.orElse(existing)
+      (existing ++ enabled).distinctBy(_.id)
 
   def question(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search]): Option[Question] =
     if MoveIntent.discover(packet, paths, values).nonEmpty then None else candidate(packet, paths, values)
@@ -369,14 +380,82 @@ private[runtime] object MovePurpose:
 
   def read(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search],
       notes: List[LocalCandidate], roots: List[CommentaryInvestigation.EngineCandidates] = Nil): Option[Reading] =
-    val selected = question(packet, paths, values)
-    selected.flatMap { q =>
+    if MoveIntent.discover(packet, paths, values).nonEmpty then None
+    else selectedReading(packet, paths, values, notes, roots)
+
+  private def selectedReading(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search],
+      notes: List[LocalCandidate], roots: List[CommentaryInvestigation.EngineCandidates]): Option[Reading] =
+    selectedCandidate(packet, paths, values, notes, roots).flatMap(_._2)
+
+  private def questionEvidence(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, q: Question): PurposeEvidence =
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val compared = directChoice(pair, q) || preparationDiffers(paths, pair, q)
+    val usefulEntry = q.use >= 0 && PurposeActivityReading.discover(packet, paths, q.path, Nil).exists(a =>
+      a.original == q.user && a.entry == q.use && a.use == a.entry && !a.incidentalDuty)
+    val use = Option.when(q.use >= 0 && (directChoice(pair, q) || activePlan(q) ||
+        q.purposeActivity.nonEmpty || usefulEntry))(
+      MoveRef(q.plan.map(_.path).getOrElse(q.path), q.use)).toList
+    PurposeEvidence(use, if compared then pair.map(MoveRef(_, 0)) else Nil)
+
+  // A route ending in another guard is still a fact until that support is
+  // used. The activity reader below can supply its recovery/continuation.
+  private def activePlan(q: Question): Boolean =
+    q.plan.exists(_.targets.exists(_.side != q.actor.side))
+
+  private def directChoice(pair: List[PreparedPath], q: Question): Boolean =
+    pair.exists(path => path.moves.head != q.rootMove &&
+      path.moves.head.take(2) == q.user.at && path.moves.head.slice(2, 4) == q.square)
+
+  private def preparationDiffers(paths: PreparedPaths, pair: List[PreparedPath], q: Question): Boolean =
+    val entry = q.purposeActivity.map(a => a.path.moves(a.entry).slice(2, 4))
+      .orElse(q.plan.flatMap(p => p.route.drop(1).headOption.map(p.path.moves(_).slice(2, 4))))
+      .getOrElse(q.square)
+    if q.kind == "supported_advance" || q.purposeActivity.exists(_.seed.provider.nonEmpty) then
+      PurposeEvidence.conditionDiffers(paths, pair) { (path, at) =>
+        paths.trackedPieceAfter(path, q.actor, 1).flatten.exists(provider => at.controlledBy(provider)(entry))
+      }
+    else PurposeEvidence.entryDiffers(paths, pair, q.user, entry)
+
+  private def selectedCandidate(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search],
+      notes: List[LocalCandidate], roots: List[CommentaryInvestigation.EngineCandidates]): Option[(Question, Option[Reading])] =
+    alternatives(packet, paths, values, notes, roots).headOption.map((q, reading, _) => q -> reading)
+
+  private[runtime] def alternatives(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search],
+      notes: List[LocalCandidate] = Nil, roots: List[CommentaryInvestigation.EngineCandidates] = Nil)
+      : List[(Question, Option[Reading], PurposeEvidence)] =
+    val questions = candidates(packet, paths, values)
+    val activityPaths = values.filter(s => s.belongsTo(packet) && s.coversAllLegalMoves &&
+      questions.exists(q => s.anchor.scopeKey == q.anchor.scopeKey)).flatMap(_.pathsByMove.values).distinct
+    val mechanisms = MoveWorkProjection.select(packet, paths).rootUses(activityPaths)
+    val activities = activityPaths.map(path => path ->
+      PurposeActivityReading.discoverReplies(packet, paths, path, mechanisms)).toMap
+    questions.map { q =>
+      val reading = readCandidate(packet, paths, values, notes, roots, q, mechanisms, activities)
+      (reading.fold(q)(_.question), reading, reading.map(_.explanation).getOrElse(questionEvidence(packet, paths, q)))
+    }.sortBy { (q, _, evidence) =>
+      (evidence.priority, if q.use >= 0 then q.use else Int.MaxValue, q.id)
+    }
+
+  private def readCandidate(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, values: List[Search],
+      notes: List[LocalCandidate], roots: List[CommentaryInvestigation.EngineCandidates], q: Question,
+      activityMechanisms: List[(Section, List[String])],
+      activities: Map[PreparedPath, List[PurposeActivityReading.Reading]]): Option[Reading] =
       val choice = Option.when(q.activity.nonEmpty)(PurposeChoice.read(packet, paths, roots)).flatten
+      // Preparing the actual alternative does not preserve its function.
+      // Keep the original targets so each reply can qualify that comparison.
+      val preparedChoice = ReferencePurposeReading.assessmentPair(packet, paths).find(path =>
+        q.use >= 0 && path.moves.head != q.rootMove && path.moves.head.take(2) == q.user.at &&
+          path.moves.head.slice(2, 4) == q.square).flatMap { path =>
+        for
+          before <- position(paths, path, 0)
+          after <- position(paths, path, 1)
+          mover <- paths.trackedPieceAfter(path, q.user, 1).flatten
+          targets = before.controls.keys.toList.filter(p => p.side != q.user.side && after.contains(p) &&
+            !before.controlledBy(q.user)(p.at) && after.controlledBy(mover)(p.at)).sortBy(_.at)
+          if targets.nonEmpty
+        yield path -> targets
+      }
       val candidates = searches(packet, q, values)
-      val activityPaths = candidates.filter(_.coversAllLegalMoves).flatMap(_.pathsByMove.values).distinct
-      val activityMechanisms = MoveWorkProjection.select(packet, paths).rootUses(activityPaths)
-      val activities = activityPaths.map(path => path ->
-        PurposeActivityReading.discoverReplies(packet, paths, path, activityMechanisms)).toMap
       def activityOf(path: PreparedPath) = q.purposeActivity.flatMap(task =>
         PurposeActivityReading.discover(packet, paths, path, activityMechanisms).find(_.sameTask(task)))
       def activityProgress(path: PreparedPath): List[Int] = q.purposeActivity.toList.flatMap(task =>
@@ -540,9 +619,9 @@ private[runtime] object MovePurpose:
                   case (original, Some(Some(current))) => current == controller && originalControllers(original)
                   case _ => false
                 })
-              relocated = q.plan.toList.flatMap(_.targets.flatMap(target =>
+              relocated = (q.plan.toList.flatMap(_.targets) ++ preparedChoice.toList.flatMap(_._2)).distinct.flatMap(target =>
                 paths.trackedPieceAfter(path, target, use + 1).filter(_.forall(_.at != target.at))
-                  .map(target -> _)))
+                  .map(target -> _))
             yield new Branch(path, use, actor, gained, targets, entries,
               child.occupant(q.square).filter(_.side != q.actor.side), pressureOf(path), relocated, supportState(path, use),
               q.activity.flatMap(task => ExchangeActivity.state(paths, path, q.actor, task, use)), exact.nonEmpty,
@@ -579,7 +658,11 @@ private[runtime] object MovePurpose:
                 }.nextOption()
               }
             }
-            val witnessed = realized.fold(q)(plan => q.copy(use = plan.use, plan = Some(plan)))
+            val supported = Option.when(q.kind == "supported_advance" && q.use < 0 && search.coversAllLegalMoves)(
+              branches.flatten.find(b => b.realizes && paths.trackedPieceAfter(b.path, q.user, b.use).flatten
+                .exists(_.at == b.path.moves(b.use).take(2)))).flatten
+            val witnessed = realized.fold(supported.fold(q)(b => q.copy(path = b.path, use = b.use)))(
+              plan => q.copy(use = plan.use, plan = Some(plan)))
               .copy(replyActivities = replyActivities.getOrElse(Nil))
             val root = position(paths, q.path, 1).get
             val guards = notes.filter(note => note.edge.evidence.id == q.path.ids.head && (note.note.detail match
@@ -613,12 +696,40 @@ private[runtime] object MovePurpose:
                     position(paths, plan.path, offset + 1).exists(_.controlledBy(piece)(target.at)))),
                   plan.squares.find(square => OccurrenceResources.planningKnightControls(square, q.actor.side)(target.at))))
             }
-            new Reading(paths, witnessed, search, branches.flatten, guards, pawn, entrants, retained, released, choice)
+            val observed = branches.flatten
+            val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+            val actualUses = pair.flatMap(path => useOf(path).map(MoveRef(path, _)))
+            val compared = directChoice(pair, q) || preparationDiffers(paths, pair, q) ||
+              actualUses.map(_.path).distinct.size == 2
+            // Arrival is a step, not the useful role. A longer owned activity
+            // supplies its own candidate; do not promote its entry as a rival.
+            def useful(move: MoveRef): Boolean = activePlan(q) || q.purposeActivity.nonEmpty ||
+              q.support.nonEmpty || q.activity.nonEmpty || q.user.role.name == "pawn" || directChoice(pair, q) ||
+              PurposeActivityReading.discover(packet, paths, move.path, activityMechanisms).exists(a =>
+                a.original == q.user && a.entry == move.offset && a.use == a.entry && !a.incidentalDuty)
+            val uses = (actualUses ++ observed.flatMap(b => useOf(b.path).map(MoveRef(b.path, _)))).filter(useful)
+            val answeredReplies = observed.size == 2 && observed.forall(b => b.realizes ||
+              b.purposeActivity.nonEmpty || b.controllers.nonEmpty || b.occupant.nonEmpty ||
+              b.relocated.nonEmpty || b.activity.nonEmpty || b.support.exists(_.sameDuty))
+            val strongest = search.lines.headOption.map(_.evaluation.moves.head)
+            val leading = observed.filter(b => strongest.contains(b.path.moves(1))).flatMap { b =>
+              val useful = b.purposeActivity.filterNot(_.incidentalDuty).filter(a =>
+                a.original == q.user && q.purposeActivity.fold(
+                  if q.plan.nonEmpty then b.pressure.exists(_.use == a.use)
+                  else useOf(b.path).contains(a.entry))(_.sameTask(a)))
+              useful.map(a => MoveRef(a.path, a.use)).toList ++
+                Option.when(b.activity.nonEmpty || b.support.exists(_.activity.nonEmpty))(MoveRef(b.path, b.use))
+            }
+            val explanation = PurposeEvidence(uses.distinct,
+              if compared then pair.map(MoveRef(_, 0)) else Nil,
+              if answeredReplies then observed.map(b => MoveRef(b.path, 1)) else Nil, leading)
+            new Reading(paths, witnessed, search, observed, guards, pawn, entrants, retained, released, choice, explanation,
+              preparedChoice)
           }
         }
       }.toList
-      readings.find(_.witnessedPlan.nonEmpty).orElse(readings.headOption)
-    }
+      readings.sortBy(value => (value.explanation.priority,
+        if value.witnessedPlan.nonEmpty then 0 else 1)).headOption
 
   def answer(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, pair: List[PreparedPath],
       reading: Reading, complete: Answer => Option[Answer]): Option[Answer] =

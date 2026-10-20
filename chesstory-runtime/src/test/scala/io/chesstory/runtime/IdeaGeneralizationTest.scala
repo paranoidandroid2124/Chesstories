@@ -33,6 +33,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       CommentaryJobPolicy(depth, 20001L, request.engineProfile, investigateChoices = true,
         shortJob = true), 1L, request.inputLines, request.proposals).toOption.get
     reports.take(reportCount).zipWithIndex.map { (item, index) =>
+      assert(state.isInstanceOf[AwaitingEngineWork], s"$id completed before saved report ${index + 1}")
       val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
       assertEquals(work.executionKeySha256, (item \ "issued_work" \ "execution_key_sha256").as[String])
       val raw = (item \ "report").as[JsObject] ++ Json.obj("work_id" -> work.workId)
@@ -48,6 +49,24 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     Files.writeString(Path.of(s"../target/research-runs/idea-generalization-resources-20261016/$id-reread.json"),
       Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot)), UTF_8)
     snapshot
+
+  test("functional facts without a realized use cannot complete a purpose explanation"):
+    val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
+      fen = "6k1/5ppp/8/8/8/8/5PPP/R3R1K1 w - - 0 1", playedMoveUci = "a1b1",
+      variations = List(
+        EngineLine(List("a1b1", "g8f8", "b1b2"), 100, None, 11),
+        EngineLine(List("e1d1", "g8f8", "d1d2"), 140, None, 11)))).get
+    val packet = EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assemble(input)).get
+    val paths = ObservedLineProtocol.prepare(packet)
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val reading = ReferencePurposeReading.read(packet, paths, pair,
+      MoveWorkProjection.select(packet, paths).rootUses(pair)).get
+    assert(reading.arms.forall(reading.hasFacts))
+    assert(reading.arms.forall(a => a.rookFile.nonEmpty && !reading.hasPurpose(a)))
+    assert(!reading.completePurpose)
+    val answer = ReferencePurposeReading.answer(packet, paths, pair, reading, Some(_)).get
+    val basic = RootQuestionSummary.realize(paths, pair, answer).get
+    assert(basic.text.contains("open") && basic.text.contains("purpose is not established"), basic.text)
 
   test("resource identity keeps a checking tempo when the alternative moved its capture target"):
     val state = replay("kh1-resource-fresh", 1).last
@@ -165,7 +184,9 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     (packet, ObservedLineProtocol.prepare(packet))
 
   test("a discovered prevented check remains connected to the actual pair's purpose"):
-    val state = replay("ivanchuk-kh1-first-independent").last
+    val state = replay("ivanchuk-kh1-first-independent", 2).last
+    assert(!state.isInstanceOf[AwaitingEngineWork],
+      "the shared purpose reading already owns the actual pair and the conditional reply; a third survey is redundant")
     val packet = state.observationsPacket.get
     val paths = state.preparedPaths.get
     val pair = ReferencePurposeReading.assessmentPair(packet, paths)
@@ -196,7 +217,9 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assertEquals((question \ "question").as[String], "functional_response")
     assert((question \ "units").as[List[JsObject]].forall(u => !(u \ "english_only").asOpt[Boolean].contains(true)))
     val text = (selected \ "detail" \ "summary").as[String]
-    assert(text.contains("Bxc7") && text.contains("queen") && text.contains("Nd4") &&
+    assertEquals(pair.map(_.moves.head).toSet, Set("g1h1", "d1e2"),
+      "retain the actual assessment pair instead of replacing Qe2 with the later hypothetical Nd4 inquiry")
+    assert(text.contains("Bxc7") && text.contains("queen") && text.contains("Qe2") &&
       !text.contains("purpose is not established"), text)
     val option = result.core.flatMap(_.statements).collectFirst { case v: LegalReplyOption => v }.get
     assert(result.core.flatMap(_.covered).filter(_.path eq option.available).map(_.offset).toSet == Set(1, 2),
@@ -385,7 +408,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assertEquals(plan.targets.map(_.at), List("d5"))
     assert(plan.targets.forall(_.side == reading.question.actor.side))
     assertEquals(plan.path.moves(plan.use), "g8f6")
-    assert(!(plan.path eq discovered.plan.get.path), "the same task can have another owned route")
+    assertEquals(discovered.plan, Some(plan), "work allocation and delivery select the same owned witness")
     assertEquals(plan.path.moves(1), "e2c3",
       "Bh3 removes the d5 attack in the Rf1 line; Nc3 still needs the defensive task")
     assert(reading.search.pathsByMove.values.exists(_ eq plan.path))
@@ -397,6 +420,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     val survey = MovePurpose.read(packet, paths, independent, Nil).get
     assert(survey.witnessedPlan.nonEmpty,
       "a complete reply survey can witness the purpose without a geometric challenge among its returned moves")
+    assert(!(survey.witnessedPlan.get.path eq plan.path), "the same task can have another independently owned route")
     val pair = ReferencePurposeReading.assessmentPair(packet, paths)
     val comparison = ReferencePurposeReading.read(packet, paths, pair,
       MoveWorkProjection.select(packet, paths).rootUses(pair), responses = Some(reading)).get

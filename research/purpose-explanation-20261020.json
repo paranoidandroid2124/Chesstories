@@ -55,7 +55,32 @@
       "meaning": "Preservation checkpoint of all 446 inherited modified/untracked files; no new goal success claimed."
     }
   ],
-  "implementation": [],
+  "implementation": [
+    {
+      "stage": 1,
+      "status": "shared_decision_checkpoint_not_goal_completion",
+      "changes": [
+        "PurposeEvidence separates useful realization, actual-pair comparison, qualified reply evidence, and stronger independent reply ownership. The same receipts rank both candidate families.",
+        "Functional contacts alone no longer complete a root purpose. An incidental guard route cannot outrank a realized beneficiary. Actual evaluated paths take precedence over a different surveyed idea when both have evidence.",
+        "One realized reply and another bounded failure can explain a conditional purpose. Re2 retains the negative Rae1/Nxc6 test and selects independent Nd5 realization instead of repeating Bb5 non-realization.",
+        "A shield accepted by capture closes its local exchange; Qa4 no longer borrows distant Qf5 merely to fill a missing purpose. Continuing pawn function remains after its original pawn is exchanged.",
+        "Scheduler and delivery share enriched actual-pair reading. An exhausted bounded inquiry may finish with an explicitly incomplete explanation. Kh1 keeps the actual Qe2 comparison rather than opening a redundant Nd4 root.",
+        "Prepared actual alternatives retain original attacked targets; frontend independently verifies their exact ownership and geometry."
+      ],
+      "validation": {
+        "backend": "43/43 focused saved-report and legal-boundary checks",
+        "frontend": "22/22 ownership checks; TypeScript check passed",
+        "fresh_searches": 0,
+        "fresh_ui": 0,
+        "depth_raised": false
+      },
+      "evidence": "purpose-explanation-20261020/stage1-evidence.json.gz",
+      "limitations": [
+        "These saved-report checks do not establish fresh-screen generalization.",
+        "Purpose delivery remains buried in some basic explanations; next stage changes selection/order without dropping required prices."
+      ]
+    }
+  ],
   "verification": {},
   "cleanup": [
     {
@@ -63,6 +88,13 @@
       "bytes": 18615894.0,
       "receipt": "purpose-explanation-20261020/recycled-duplicates.json.gz",
       "method": "Windows Recycle Bin, exact SHA256 matches against committed retained files; baseline/backups/source libraries excluded."
+    },
+    {
+      "files": 26,
+      "bytes": 356492,
+      "receipt": "purpose-explanation-20261020/stage1-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage1-evidence.json.gz",
+      "method": "Windows Recycle Bin; absolute workspace paths and SHA256 checked before deletion. Includes first failures and final checks in retained pack."
     }
   ],
   "studied_failures": [

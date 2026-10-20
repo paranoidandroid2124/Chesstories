@@ -187,6 +187,28 @@ private[runtime] object MoveWorkProjection:
     paths.requireOwner(packet)
     paths.workSelection
 
+  /** Scheduling and delivery inspect the same enriched account, including
+    * conditional resources and independently returned first replies. */
+  private[runtime] def purposeAnswer(packet: EvidenceBackedJudgmentPacket,
+      paths: ObservedLineProtocol.PreparedPaths, pair: List[ObservedLineProtocol.PreparedPath],
+      functional: Option[MovePurpose.Reading], replyFunctions: List[FunctionalReplyReading.Proof],
+      replyTargets: List[TargetResponseInvestigation.FirstTarget]): Option[CommentaryAnswer.Answer] =
+    val selected = select(packet, paths)
+    val positions = packet.resources.map(view => view.position -> new Position(view)).toMap
+    def complete(value: CommentaryAnswer.Answer) =
+      completeSelectedConditions(packet, paths, pair, positions, selected.local, value)
+    ReferencePurposeReading.read(packet, paths, pair, selected.rootUses(pair), responses = functional)
+      .flatMap(ReferencePurposeReading.answer(packet, paths, pair, _, complete, functional))
+      .map(answer => FunctionalReplyReading.withAnswer(packet, paths, pair, replyFunctions, answer,
+        (value, sections) => protectRootUses(packet, paths, pair, positions, selected.local, value, sections)))
+      .map(answer => ResponsePurposeReading.withAnswer(packet, paths, pair, replyTargets, selected.local,
+        answer, complete, selected.rootUses))
+
+  private[runtime] def completePurpose(answer: CommentaryAnswer.Answer): Boolean =
+    answer.core.flatMap(_.statements).collectFirst {
+      case CommentaryAnswer.ReferencePurpose(value) => value.completePurpose
+    }.contains(true)
+
   /** Only the immutable packet's base selection is shared; answers and work state are composed by the caller. */
   private[runtime] def buildSelection(packet: EvidenceBackedJudgmentPacket,
       paths: ObservedLineProtocol.PreparedPaths): CommentarySelection.Result =
@@ -1615,23 +1637,15 @@ private[runtime] object MoveWorkProjection:
             "summary" -> reading.text, "summary_kind" -> "question_answer", "summary_question" -> reading.json)))
       }
       if index == 0 && (detail \ "type").as[String] == "root_comparison" && ownedPair.size == 2 then
-        val idea = Option.when(ReferencePurposeReading.assessmentPair(packet, paths).toSet == ownedPair.toSet)(())
-          .flatMap(_ => MoveIntent.summary(packet, paths, purposeSearches))
-        if idea.nonEmpty then return deliver(idea.get)
+        val intent = Option.when(ReferencePurposeReading.assessmentPair(packet, paths).toSet == ownedPair.toSet)(())
+          .flatMap(_ => MoveIntent.read(packet, paths, purposeSearches))
+        val idea = intent.flatMap(MoveIntent.realize(packet, paths, _))
+        if intent.exists(_.complete) && idea.nonEmpty then return deliver(idea.get)
         lazy val functionalReading = MovePurpose.read(packet, paths, purposeSearches, local,
           requests.flatMap(_._2.flatMap(_.purposeRoots)).distinct)
-        val referenceReading = ReferencePurposeReading.read(packet, paths, ownedPair, rootUses(ownedPair),
-          responses = functionalReading)
-        def realizeReference(reading: ReferencePurposeReading.Reading) =
-          ReferencePurposeReading.answer(packet, paths, ownedPair, reading,
-            value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), functionalReading)
-            .map(answer => FunctionalReplyReading.withAnswer(packet, paths, ownedPair,
-              requests.flatMap(_._2.flatMap(_.replyFunction)).distinct, answer,
-              (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
-            .map(answer => ResponsePurposeReading.withAnswer(packet, paths, ownedPair, purposeOwners, local, answer,
-              value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), rootUses))
-            .flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
-        val referencePurpose = referenceReading.filter(_.completePurpose).flatMap(realizeReference)
+        val referenceAnswer = purposeAnswer(packet, paths, ownedPair, functionalReading,
+          requests.flatMap(_._2.flatMap(_.replyFunction)).distinct, purposeOwners)
+        val referencePurpose = referenceAnswer.filter(completePurpose).flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
         if referencePurpose.nonEmpty then return deliver(referencePurpose.get)
         val functional = functionalReading.flatMap { reading =>
           MovePurpose.answer(packet, paths, ownedPair, reading,
@@ -1640,7 +1654,8 @@ private[runtime] object MoveWorkProjection:
               json = value.json + ("move_purpose" -> reading.ownershipJson)))
         }
         if functional.nonEmpty then return deliver(functional.get)
-        val partialReference = referenceReading.filterNot(_.completePurpose).flatMap(realizeReference)
+        if idea.nonEmpty then return deliver(idea.get)
+        val partialReference = referenceAnswer.filterNot(completePurpose).flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
         if partialReference.nonEmpty then return deliver(partialReference.get)
       if index == 0 && (detail \ "type").as[String] == "root_comparison" &&
           ownedPair.size == 2 && purposeOwners.size == 1 &&
