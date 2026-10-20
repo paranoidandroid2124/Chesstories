@@ -87,7 +87,8 @@ private[runtime] object MoveIntent:
         // perversely favors a later contact over the plan's actual limitation.
         if surveyed.nonEmpty then survey.toList.flatMap(search =>
           search.lines.map(line => MoveRef(search.pathsByMove(line.evaluation.moves.head), 1))) else Nil,
-        surveyed.filter(_._1 == 0).map(_._2))
+        surveyed.filter(_._1 == 0).map(_._2),
+        PurposeEvidence.correspondingEntries(paths, pair, q.user, q.action.slice(2, 4)))
       // Among equally explained choices, retain the first useful action.
       // Surviving a trade does not make a later contact the central idea.
       (q, evidence, use.orElse(other).orElse(surveyed.headOption.map(_._2.offset)).getOrElse(Int.MaxValue))
@@ -106,7 +107,7 @@ private[runtime] object MoveIntent:
         !(pair ++ survey.pathsByMove.values).exists(path => observedUse(paths, q, path).nonEmpty)))
     explanations(packet, paths, pair, questions, searches).headOption.filterNot { (_, evidence) =>
       MovePurpose.alternatives(packet, paths, searches).headOption.exists { (_, _, other) =>
-        summon[Ordering[(Int, Int, Int, Int, Int)]].lt(other.priority, evidence.priority)
+        other.outranks(evidence)
       }
     }.map(_._1)
 

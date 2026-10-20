@@ -408,7 +408,8 @@ private[runtime] object MovePurpose:
     val use = Option.when(q.use >= 0 && (directChoice(pair, q) || activePlan(q) ||
         q.purposeActivity.nonEmpty || usefulEntry))(
       MoveRef(q.plan.map(_.path).getOrElse(q.path), q.use)).toList
-    PurposeEvidence(use, if compared then pair.map(MoveRef(_, 0)) else Nil)
+    PurposeEvidence(use, if compared then pair.map(MoveRef(_, 0)) else Nil,
+      corresponding = PurposeEvidence.correspondingEntries(paths, pair, q.user, taskEntry(q)))
 
   // A route ending in another guard is still a fact until that support is
   // used. The activity reader below can supply its recovery/continuation.
@@ -419,13 +420,22 @@ private[runtime] object MovePurpose:
     pair.exists(path => path.moves.head != q.rootMove &&
       path.moves.head.take(2) == q.user.at && path.moves.head.slice(2, 4) == q.square)
 
-  private def preparationDiffers(paths: PreparedPaths, pair: List[PreparedPath], q: Question): Boolean =
-    val entry = q.purposeActivity.map(a => a.path.moves(a.entry).slice(2, 4))
+  private def taskEntry(q: Question): String =
+    q.purposeActivity.map(a => a.path.moves(a.entry).slice(2, 4))
       .orElse(q.plan.flatMap(p => p.route.drop(1).headOption.map(p.path.moves(_).slice(2, 4))))
       .getOrElse(q.square)
+
+  private def preparationDiffers(paths: PreparedPaths, pair: List[PreparedPath], q: Question): Boolean =
+    val entry = taskEntry(q)
     if q.kind == "supported_advance" || q.purposeActivity.exists(_.seed.provider.nonEmpty) then
+      val following = q.purposeActivity.map(_.seed.followingSupport).getOrElse(
+        q.use >= 0 && PurposeActivityReading.rootSupport(paths, q.path, q.actor, q.user,
+          q.square, q.use + 1).exists(_.follows))
       PurposeEvidence.conditionDiffers(paths, pair) { (path, at) =>
-        paths.trackedPieceAfter(path, q.actor, 1).flatten.exists(provider => at.controlledBy(provider)(entry))
+        paths.trackedPieceAfter(path, q.actor, 1).flatten.exists(provider =>
+          if following then paths.trackedPieceAfter(path, q.user, 1).flatten.exists(user =>
+            at.controlledBy(provider)(user.at))
+          else at.controlledBy(provider)(entry))
       }
     else PurposeEvidence.entryDiffers(paths, pair, q.user, entry)
 
@@ -717,7 +727,7 @@ private[runtime] object MovePurpose:
             // Arrival is a step, not the useful role. A longer owned activity
             // supplies its own candidate; do not promote its entry as a rival.
             def useful(move: MoveRef): Boolean = activePlan(q) || q.purposeActivity.nonEmpty ||
-              q.support.nonEmpty || q.activity.nonEmpty || q.user.role.name == "pawn" || directChoice(pair, q) ||
+              q.support.nonEmpty || q.activity.nonEmpty || directChoice(pair, q) ||
               PurposeActivityReading.discover(packet, paths, move.path, activityMechanisms).exists(a =>
                 a.original == q.user && a.entry == move.offset && a.use == a.entry && !a.incidentalDuty)
             val uses = (actualUses ++ observed.flatMap(b => useOf(b.path).map(MoveRef(b.path, _)))).filter(useful)
@@ -735,7 +745,8 @@ private[runtime] object MovePurpose:
             }
             val explanation = PurposeEvidence(uses.distinct,
               if compared then pair.map(MoveRef(_, 0)) else Nil,
-              if answeredReplies then observed.map(b => MoveRef(b.path, 1)) else Nil, leading)
+              if answeredReplies then observed.map(b => MoveRef(b.path, 1)) else Nil, leading,
+              PurposeEvidence.correspondingEntries(paths, pair, q.user, taskEntry(q)))
             new Reading(paths, witnessed, search, observed, guards, pawn, entrants, retained, released, choice, explanation,
               preparedChoice)
           }

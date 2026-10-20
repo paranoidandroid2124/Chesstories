@@ -35,7 +35,9 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     reports.take(reportCount).zipWithIndex.map { (item, index) =>
       assert(state.isInstanceOf[AwaitingEngineWork], s"$id completed before saved report ${index + 1}")
       val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
-      assertEquals(work.executionKeySha256, (item \ "issued_work" \ "execution_key_sha256").as[String])
+      assertEquals(work.executionKeySha256, (item \ "issued_work" \ "execution_key_sha256").as[String],
+        s"$id report ${index + 1}: requested ${work.purpose} ${work.rootRestriction}, " +
+          s"recorded ${(item \ "issued_work" \ "purpose").as[String]} ${(item \ "issued_work" \ "root_restriction").get}")
       val raw = (item \ "report").as[JsObject] ++ Json.obj("work_id" -> work.workId)
       val report = PositionCommentaryJobProtocol.parseEngineWorkReport(Json.stringify(raw).getBytes(UTF_8)).toOption.get
       state = CommentaryJobReducer.submitIssuedWorkReport(state, report, index.toLong + 2L).toOption.get
@@ -79,17 +81,24 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assert(text.contains("Bxc7") && text.contains("Nxf3") && text.contains("Nf3+") && text.contains("without a capture") &&
       !text.contains("purpose is not established"), text)
 
-  test("resource support and conditional realization survive an independent reply survey"):
-    val state = replay("qg2-first-independent").last
+  test("resource support and observed pawn entry survive a deadline while the stronger purpose remains unanswered"):
+    val pending = replay("qg2-first-independent").last
+    assert(pending.isInstanceOf[AwaitingEngineWork])
+    val state = CommentaryJobReducer.expireJob(pending, 20002L)
     val packet = state.observationsPacket.get
     val paths = state.preparedPaths.get
-    val reading = MovePurpose.read(packet, paths, state.responseSearches, Nil).get
+    val alternatives = MovePurpose.alternatives(packet, paths, state.responseSearches)
+    assertEquals(alternatives.head._1.user.at, "g3",
+      "the actual supported rook and recapture own the purpose; a pawn's arrival is a fact")
+    val reading = alternatives.flatMap(_._2).find(_.question.user.at == "h2").get
+    assert(!reading.explanation.realized)
     val snapshot = resourceSnapshot("qg2-first-independent", state)
     val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
       .find(c => (c \ "selection").asOpt[String].contains("selected")).get
     val text = (selected \ "detail" \ "summary").as[String]
     assert(reading.branches.exists(_.realizes) && reading.branches.exists(!_.realizes), reading.question.json.toString)
-    assert(text.contains("Rh4") && text.contains("h3") && text.contains("R4f7"), text)
+    assert(reading.branches.map(_.path.moves(1)).toSet == Set("f4h4", "f4f7"))
+    assert(reading.branches.exists(b => b.path.moves(b.use) == "h2h3"))
     val pair = ReferencePurposeReading.assessmentPair(packet, paths)
     val purpose = ReferencePurposeReading.read(packet, paths, pair, responses = Some(reading)).get
     assert(purpose.played.supportUse.nonEmpty && purpose.played.supportedArrival.nonEmpty,
@@ -215,6 +224,24 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assert(words.contains("Both shown lines bring the original h2 pawn to h3") &&
       words.contains("has no support from that same queen") &&
       !words.contains("Newly guards h3"), words)
+
+  test("moving support outranks bare pawn arrival and gets a comparison with the strongest independent reply"):
+    val state = replay("qg2-purpose-retry-screen", 2).last
+    val packet = state.observationsPacket.get
+    val paths = state.preparedPaths.get
+    val values = MovePurpose.alternatives(packet, paths, state.responseSearches)
+    val (question, _, evidence) = values.head
+    assertEquals(question.user.at, "g3")
+    assertEquals(question.square, "g4")
+    assert(evidence.compared && evidence.uses.exists(use => evidence.choices.exists(_.path eq use.path)))
+    assert(values.exists((q, _, e) => q.user.at == "h2" && q.square == "h3" && !e.realized),
+      "the pawn's arrival alone cannot outrank the useful rook support")
+    assert(state.isInstanceOf[AwaitingEngineWork])
+    val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+    assertEquals(work.purpose, EngineWorkPurpose.ResponseComparison)
+    assertEquals(work.searchAnchor.map(_.prefixMoves), Some(List("e2g2")))
+    assertEquals(work.rootRestriction, EngineRootRestriction.Restricted(List("g7g6", "h5h6")))
+    assert(work.requiredDepth <= 18)
 
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
@@ -571,7 +598,13 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     Files.writeString(output, Json.stringify(Json.obj("request" -> request, "snapshot" -> snapshot)))
 
   test("the same pawn sacrifice compares two strong captures by their beneficiary and recovery, not by capture labels"):
-    val state = replay("e5-beneficiary-baseline").last
+    val pending = replay("e5-beneficiary-baseline").last
+    assert(pending.isInstanceOf[AwaitingEngineWork])
+    val inquiry = pending.asInstanceOf[AwaitingEngineWork].issuedWork
+    assertEquals(inquiry.purpose, EngineWorkPurpose.InvestigationComparison)
+    val actual = ReferencePurposeReading.assessmentPair(pending.observationsPacket.get, pending.preparedPaths.get)
+    assertEquals(inquiry.rootRestriction, EngineRootRestriction.Restricted(actual.map(_.moves.head).sorted))
+    val state = CommentaryJobReducer.expireJob(pending, 20002L)
     val packet = state.observationsPacket.get
     val paths = state.preparedPaths.get
     val projection = MoveWorkProjection.select(packet, paths)
@@ -683,7 +716,11 @@ class IdeaGeneralizationTest extends munit.FunSuite:
 
   test("an independent reply survey can supply the supported beneficiary missing from the root PV"):
     val state = replay("h3-root-omits-bishop").last
-    assert(!state.isInstanceOf[AwaitingEngineWork])
+    assert(state.isInstanceOf[AwaitingEngineWork],
+      "a witnessed beneficiary alone does not complete its conditional reply explanation")
+    val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+    assertEquals(work.purpose, EngineWorkPurpose.ResponseComparison)
+    assertEquals(work.searchAnchor.map(_.prefixMoves), Some(List("h2h3")))
     val packet = state.observationsPacket.get
     val paths = state.preparedPaths.get
     val roots = ReferencePurposeReading.assessmentPair(packet, paths)

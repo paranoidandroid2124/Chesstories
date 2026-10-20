@@ -3511,33 +3511,8 @@ object CommentaryJobReducer:
         case Left((retained, failure)) => return Some(stop(retained, failure, Some(baseline)))
     val paths = active.preparedPaths.get
     val assessmentPair = ReferencePurposeReading.assessmentPair(active.packet, paths)
-    // Discovery, work allocation and delivery use the same prepared idea.
-    // Returning two arbitrary reply classes is not a certificate of its purpose.
-    MoveIntent.read(active.packet, paths, active.responseSearches) match
-      case Some(intent) =>
-        val remaining = MoveIntent.probes(active.packet, paths, intent.question, active.responseSearches)
-        if intent.complete && MoveIntent.realize(active.packet, paths, intent).nonEmpty then
-          return Some(finishInvestigation(active, baseline, Nil, Nil))
-        val issued = remaining.headOption.filter(_ => active.remainingBudgetMs >= 2500).flatMap { (anchor, moves) =>
-          issueResponseComparison(active, baseline, Nil, Nil, anchor,
-            EngineRootRestriction.Restricted(moves.sorted), intent.question.id)
-        }
-        if issued.nonEmpty then return issued
-        return Some(finishInvestigation(active, baseline, Nil, Nil))
-      case None => ()
     val functionalReading = MovePurpose.read(active.packet, paths, active.responseSearches,
       MoveWorkProjection.select(active.packet, paths).local, explanationReceipts(active))
-    val functional = functionalReading.map(_.question)
-      .orElse(MovePurpose.question(active.packet, paths, active.responseSearches)).map { q =>
-      val searches = MovePurpose.searches(active.packet, q, active.responseSearches)
-      val answered = functionalReading.exists(r => r.explanation.repliesExplained && r.replyContrast)
-      // Missing explanation is not missing a geometric reply class. Repeat
-      // only a genuinely absent class; otherwise retain a partial account.
-      val returned = searches.flatMap(_.lines.map(_.evaluation.moves.head))
-      val scopeOpen = !searches.exists(_.coversAllLegalMoves) ||
-        !returned.exists(q.challenges.contains) || !returned.exists(move => !q.challenges.contains(move))
-      (q, searches, !answered && scopeOpen)
-    }
     val current = TargetResponseInvestigation.discover(active.packet, reference, paths, active.responseSearches)
       .filter(ResponsePurposeReading.required(active.packet, paths, _))
     val targetResponses = readResponseInquiries(active, current)
@@ -3546,15 +3521,66 @@ object CommentaryJobReducer:
       active.responseSearches.count(s => s.belongsTo(active.packet) &&
         s.anchor.prefixMoves == List(current.head.rootMove) &&
         s.anchor.rootOccurrenceId == current.head.rootMoveOccurrenceId) < 2
+    val assessedAnswer = MoveWorkProjection.purposeAnswer(active.packet, paths, assessmentPair, functionalReading,
+      FunctionalReplyReading.read(active.proposalEntries),
+      TargetResponseInvestigation.firstTargets(active.packet, paths, targetResponses, active.responseSearches))
+    val assessedPurpose = assessedAnswer.filter(MoveWorkProjection.completePurpose)
+      .flatMap(RootQuestionSummary.realize(paths, assessmentPair, _))
+    val actualRoots = assessmentPair.map(_.moves.head).toSet
+    val focusedPair = explanationReceipts(active).exists(receipt =>
+      receipt.work.purpose != EngineWorkPurpose.RootSearch && receipt.work.searchAnchor.isEmpty &&
+        (receipt.work.rootRestriction match
+          case EngineRootRestriction.Restricted(moves) => actualRoots.subsetOf(moves.toSet)
+          case _ => false))
+    // A broad root survey can stop before one actual choice has a useful role.
+    // Finish an already owned reply question first, then spend at most one
+    // bounded comparison on these same roots before retaining a partial account.
+    def remainingPairWork: Option[CommentaryJobState] =
+      if assessmentPair.size != 2 || assessedAnswer.isEmpty || assessedPurpose.nonEmpty || focusedPair ||
+          pendingTargetContrast || active.responseSearches.isEmpty || active.remainingBudgetMs < 4000 then None
+      else
+        val question = explanationReceipts(active).iterator.filter(receipt =>
+          receipt.work.searchAnchor.isEmpty && actualRoots.subsetOf(receipt.lines.map(_.evaluation.moves.head).toSet))
+          .flatMap(receipt => CommentaryInvestigation.discover(active.packet, active.playedMoveUci,
+            Some(receipt), prepared = Some(paths))).find(q =>
+            Set(q.referenceMove, q.alternativeMove) == actualRoots)
+        question.map { q =>
+          val inquiry = CommentaryInquiry(q, state = "awaiting_engine")
+          issueInvestigation(active, Investigating(baseline,
+            inquiry :: active.inquiries.filterNot(_.question.id == q.id), q, targetResponses), actualRoots.toList.sorted)
+        }
+    def finishPurpose: CommentaryJobState =
+      remainingPairWork.getOrElse(finishInvestigation(active, baseline, active.inquiries, targetResponses))
+    // Discovery, work allocation and delivery use the same prepared idea.
+    // Returning two arbitrary reply classes is not a certificate of its purpose.
+    MoveIntent.read(active.packet, paths, active.responseSearches) match
+      case Some(intent) =>
+        val remaining = MoveIntent.probes(active.packet, paths, intent.question, active.responseSearches)
+        if intent.complete && MoveIntent.realize(active.packet, paths, intent).nonEmpty then
+          return Some(finishPurpose)
+        val issued = remaining.headOption.filter(_ => active.remainingBudgetMs >= 2500).flatMap { (anchor, moves) =>
+          issueResponseComparison(active, baseline, active.inquiries, targetResponses, anchor,
+            EngineRootRestriction.Restricted(moves.sorted), intent.question.id)
+        }
+        if issued.nonEmpty then return issued
+        return Some(finishPurpose)
+      case None => ()
+    val functional = functionalReading.map(_.question)
+      .orElse(MovePurpose.question(active.packet, paths, active.responseSearches)).map { q =>
+      val searches = MovePurpose.searches(active.packet, q, active.responseSearches)
+      val answered = functionalReading.exists(r => r.explanation.answered && r.replyContrast)
+      // A returned challenge class is not an explanation. A witnessed task can
+      // still need one bounded comparison with the strongest independent reply.
+      val returned = searches.flatMap(_.lines.map(_.evaluation.moves.head))
+      val scopeOpen = q.use >= 0 || !searches.exists(_.coversAllLegalMoves) ||
+        !returned.exists(q.challenges.contains) || !returned.exists(move => !q.challenges.contains(move))
+      (q, searches, !answered && scopeOpen)
+    }
     val pendingReplyContrast = active.remainingBudgetMs >= 2500 &&
       (functional.exists((_, searches, needsWork) => needsWork && searches.size < 2) || pendingTargetContrast)
     // A complete account of the actual assessment pair takes precedence over
     // an extra same-destination question. Its returned replies already belong
     // to the two assessed moves; no third root is needed to explain them.
-    val assessedPurpose = MoveWorkProjection.purposeAnswer(active.packet, paths, assessmentPair, functionalReading,
-      FunctionalReplyReading.read(active.proposalEntries),
-      TargetResponseInvestigation.firstTargets(active.packet, paths, targetResponses, active.responseSearches))
-      .filter(MoveWorkProjection.completePurpose).flatMap(RootQuestionSummary.realize(paths, assessmentPair, _))
     // A shorter comparison does not answer whether the opponent accepts or
     // avoids the offered exchange. Keep that already-discovered question.
     if assessedPurpose.nonEmpty && !pendingReplyContrast then
@@ -3572,33 +3598,45 @@ object CommentaryJobReducer:
         question, receipt.work, receipt.lines, active.packet, Some(paths)).nonEmpty)
       if !ready && !surveyed && active.remainingBudgetMs >= 4000 then
         val inquiry = CommentaryInquiry(question, state = "awaiting_engine")
-        return Some(issueInvestigation(active, Investigating(baseline, List(inquiry), question),
+        return Some(issueInvestigation(active, Investigating(baseline,
+          inquiry :: active.inquiries.filterNot(_.question.id == question.id), question, targetResponses),
           (List(question.referenceMove, question.alternativeMove, reference) ++
             assessmentPair.flatMap(_.moves.headOption)).distinct))
     functional match
       case Some((q, searches, needsWork)) =>
         if !needsWork || searches.size >= 2 || active.remainingBudgetMs < 2500 then
-          return Some(finishInvestigation(active, baseline, Nil, Nil))
+          return Some(finishPurpose)
         val restriction = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
           .fold[EngineRootRestriction] {
             EngineRootRestriction.Unrestricted
           } { pool =>
             val present = pool.lines.map(_.evaluation.moves.head)
-            val legal = paths.positionView(q.path, 1).flatMap(_.legalRows).get.map(_.move)
-            val missing = if present.exists(q.challenges.contains) then legal.filterNot(q.challenges.contains) else q.challenges
-            EngineRootRestriction.Restricted((missing ++ present.take(1)).distinct.sorted)
+            val source = q.plan.map(_.path).getOrElse(q.path)
+            val classesReturned = present.exists(q.challenges.contains) && present.exists(move => !q.challenges.contains(move))
+            val witnessed = Option.when(q.use >= 0 && (assessmentPair.exists(_ eq source) || classesReturned))(
+              source.moves(1))
+            val contrast = for
+              witness <- witnessed
+              other <- present.find(_ != witness)
+            yield List(witness, other).sorted
+            val moves = contrast.getOrElse {
+              val legal = paths.positionView(q.path, 1).flatMap(_.legalRows).get.map(_.move)
+              val missing = if present.exists(q.challenges.contains) then legal.filterNot(q.challenges.contains) else q.challenges
+              (missing ++ present.take(1)).distinct.sorted
+            }
+            EngineRootRestriction.Restricted(moves)
           }
-        return issueResponseComparison(active, baseline, Nil, Nil, q.anchor, restriction, q.id,
-          requiredTarget = true).orElse(Some(finishInvestigation(active, baseline, Nil, Nil)))
+        return issueResponseComparison(active, baseline, active.inquiries, targetResponses, q.anchor, restriction, q.id,
+          requiredTarget = true).orElse(Some(finishPurpose))
       case None => ()
-    if current.size != 1 then return None
+    if current.size != 1 then return remainingPairWork
     val responses = targetResponses
     val q = current.head
     val searches = active.responseSearches.filter(search => search.belongsTo(active.packet) &&
       search.anchor.prefixMoves == List(q.rootMove) && search.anchor.rootOccurrenceId == q.rootMoveOccurrenceId &&
       search.anchor.positionId == q.childPositionId)
     if TargetResponseInvestigation.firstTargets(active.packet, paths, responses, searches).nonEmpty then
-      return Some(finishInvestigation(active, baseline, Nil, responses))
+      return Some(finishPurpose)
     val pool = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
     val restriction = pool.fold[EngineRootRestriction](EngineRootRestriction.Unrestricted) { full =>
       val missing = List(q.captureMoves, q.declineMoves).filterNot(moves => searches.exists(search =>
@@ -3612,10 +3650,10 @@ object CommentaryJobReducer:
     // At most one pool and one class comparison. Missing proof remains missing;
     // it cannot start a new chain or extend the original deadline.
     if searches.size >= 2 || active.remainingBudgetMs < 2500 then
-      Some(finishInvestigation(active, baseline, Nil, responses))
+      Some(finishPurpose)
     else issueResponseComparison(active, baseline, Nil, responses,
       EngineSearchAnchor(q.rootMove, q.rootMoveOccurrenceId, q.childPositionId), restriction, q.id,
-      requiredTarget = true).orElse(Some(finishInvestigation(active, baseline, Nil, responses)))
+      requiredTarget = true).orElse(Some(finishPurpose))
 
   private def responseAnswer(active: ActiveCommentaryJob, question: TargetResponseInvestigation.Question,
       search: TargetResponseInvestigation.Search): Option[CommentaryResponseAnswer] =

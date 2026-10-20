@@ -13,7 +13,7 @@
     "preserve_previous_failures": true,
     "commits": "Coherent intermediate outcomes, never claim goal completion from tests.",
     "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin.",
-    "development_retry": "One Qg2 retry after the observed common ownership defect is corrected. First failure remains the result at the first freeze; the retry is development evidence, never an independent generalization result. Rfe1 remains unused until the final source freeze."
+    "development_retry": "Two Qg2 development outputs have been preserved as failures. The final verification will use one Qg2 request after the remaining common sufficiency defects are fixed, followed by the first unused Rfe1 request with the same frozen source. The final Qg2 run is development verification, never a heldout result; there will be no further output-driven retuning in this goal."
   },
   "baseline": "target/research-runs/purpose-explanation-20261020/baseline.json",
   "heldout_preregistration": {
@@ -62,6 +62,10 @@
     {
       "sha": "dd14b64cf1",
       "meaning": "Leading selected purpose and actual alternative; first fresh Qg2 below still failed."
+    },
+    {
+      "sha": "cb7a4ccf82",
+      "meaning": "Root delayed activity owns the reply inquiry; same supported entry is compared across actual roots. Subsequent Qg2 retry remains failed."
     }
   ],
   "implementation": [
@@ -120,6 +124,25 @@
         "heldout_used": false
       },
       "evidence": "purpose-explanation-20261020/stage3-evidence.json.gz"
+    },
+    {
+      "stage": 4,
+      "status": "shared_sufficiency_checkpoint_not_goal_completion",
+      "changes": [
+        "Compare a moving supported beneficiary with the same original piece in the actual alternative, using the certified following-support relation rather than only final-square control.",
+        "Remove the pawn-specific arrival exception from explanatory sufficiency.",
+        "When a broad root survey leaves an actual choice unexplained, allocate one bounded focused comparison to those same two roots after the first reply survey.",
+        "A witnessed purpose with insufficient reply explanation can receive one comparison of its observed reply and the strongest independent alternative. Returning both geometric reply classes no longer closes that question.",
+        "Both candidate readers rank corresponding observed actions of the same original beneficiary across the actual roots before an unmatched useful contact; support comparison and selection share that correspondence.",
+        "Finish an existing bounded reply question before the optional actual-pair refresh. Preserve prior reply inquiries, costs and delayed-use receipts while querying another comparison and when the deadline expires."
+      ],
+      "trigger": "Retained Qg2 development retry; unused Rfe1 remains excluded.",
+      "validation": {
+        "focused_checks": "45 distinct backend checks covered; final broad run 43 passed, then 3 changed deadline/selection contracts passed independently with unchanged product source.",
+        "fresh_searches_after_change": 0,
+        "heldout_used": false
+      },
+      "evidence": "purpose-explanation-20261020/stage4-evidence.json.gz"
     }
   ],
   "verification": {
@@ -139,6 +162,21 @@
       "retained_ui": "purpose-explanation-20261020/qg2-first-screen.txt",
       "fixture": "../judgment-evaluation/fixtures/public-commentary-v6/purpose-decision-browser.json.gz",
       "pixel_capture": "Unavailable: IAB capture timed out and OS capture showed wallpaper. AX and real request/response retained; no pixel verification claimed."
+    },
+    "qg2_retry": {
+      "status": "failed_development_retry",
+      "commit": "cb7a4ccf82",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 4.14,
+      "actual_pair": [
+        "e2g2",
+        "a2c3"
+      ],
+      "engine_reports": 2,
+      "max_issued_depth": 11,
+      "failure": "The new root PV used Qg2-g6-Rg4, but simple h3 arrival still outranked its useful moving-rook support. The provider comparison tested the destination alone rather than its continuous support of the moving original piece. The other actual choice Nc3 remained unexplained while the bounded job completed after the survey.",
+      "retained_wire": "purpose-explanation-20261020/qg2-retry-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-retry-screen.txt"
     }
   },
   "cleanup": [
@@ -160,6 +198,12 @@
       "bytes": 11007599,
       "receipt": "purpose-explanation-20261020/stage3-recycled.json.gz",
       "method": "Windows Recycle Bin after exact compression roundtrip or saved log comparison, absolute worktree path and SHA256 checks."
+    },
+    {
+      "files": 10,
+      "bytes": 34024,
+      "receipt": "purpose-explanation-20261020/stage4-recycled.json.gz",
+      "method": "Windows Recycle Bin after retaining exact diagnostic logs and SHA256; absolute workspace paths verified."
     }
   ],
   "studied_failures": [

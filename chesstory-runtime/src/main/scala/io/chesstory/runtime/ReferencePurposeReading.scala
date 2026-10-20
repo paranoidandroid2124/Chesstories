@@ -74,18 +74,16 @@ private[runtime] object ReferencePurposeReading:
       for
         activity <- arm.activity.toList if (activity.path eq arm.path) && !activity.incidentalDuty
         provider <- activity.seed.provider.toList
-        other <- arms.filterNot(_ eq arm)
         destination = activity.path.moves(activity.entry).slice(2, 4)
-        offset <- (2 to other.through by 2).find { n =>
-          other.path.moves(n).slice(2, 4) == destination &&
-            owner.trackedPieceAfter(other.path, activity.original, n).flatten.exists(
-              _.at == other.path.moves(n).take(2))
-        }.toList
-        at <- owner.purposePosition(other.path, offset + 1).toList
+        entries = PurposeEvidence.correspondingEntries(owner, arms.map(_.path), activity.original, destination)
+        if entries.exists(move => (move.path eq arm.path) && move.offset == activity.entry)
+        other <- entries.filter(move => !(move.path eq arm.path) && move.offset >= 2 &&
+          arms.exists(a => (a.path eq move.path) && move.offset <= a.through))
+        at <- owner.purposePosition(other.path, other.offset + 1).toList
           if at.complete(RelationFactKind.GeometricControl)
-        present <- owner.trackedPieceAfter(other.path, provider, offset + 1).flatten.toList
+        present <- owner.trackedPieceAfter(other.path, provider, other.offset + 1).flatten.toList
           if !at.controlledBy(present)(destination)
-      yield SupportContrast(provider, activity.original, MoveRef(arm.path, activity.entry), MoveRef(other.path, offset))
+      yield SupportContrast(provider, activity.original, MoveRef(arm.path, activity.entry), other)
     }
     def replyDefense(arm: Arm): Option[ReplyDefense] = arm.counterplay.flatMap(_.control).flatMap { use =>
       arms.filterNot(_ eq arm).iterator.flatMap { other =>
