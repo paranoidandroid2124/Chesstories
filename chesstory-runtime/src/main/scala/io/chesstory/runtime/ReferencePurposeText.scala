@@ -316,6 +316,18 @@ private[runtime] object ReferencePurposeText:
         (if words.isEmpty then Nil else List[Part](MoveRef(arm.path, 0), " — ") ++ words :+ " ") ++ uses
       }(prepared => MoveIntent.purpose(prepared, ko) ++ limitation(arm).flatMap(s => List[Part](" ", s)) :+ " ")
       }
+    val recapturePrice = value.recaptureGuardContrasts.flatMap { contrast =>
+      val traded = contrast.exchanged.map(p => original(p, ko)).mkString(if ko then "와 " else " and ")
+      List[Part](if ko then s" 두 수순 모두 $traded${obj(contrast.exchanged.last)} 교환하지만, " else
+        s" Both lines exchange $traded, but ",
+        MoveRef(contrast.recapture.path, 0), if ko then " 수순의 " else " uses ",
+        contrast.recapture, if ko then
+          s" 되잡기는 ${original(contrast.provider, ko)}${obj(contrast.provider)} 옮겨 ${name(contrast.target, ko)}에 대한 그 기물의 방어를 없앱니다. "
+        else s" to recapture, moving ${original(contrast.provider, ko)} away from its guard of ${name(contrast.target, ko)}. ",
+        MoveRef(contrast.retained.path, 0), if ko then
+          s" 수순은 앞서의 교환 후에도 이 방어를 비교 지점까지 유지합니다. "
+        else " makes that trade while retaining this guard through its checkpoint. ")
+    }
     val timing = value.sharedCapture.toList.flatMap { shared =>
       val later = if shared.referenceOffset > shared.playedOffset then ref else played
       val offset = math.max(shared.referenceOffset, shared.playedOffset)
@@ -364,7 +376,7 @@ private[runtime] object ReferencePurposeText:
         Option.when(left.remaining.nonEmpty)(if ko then s" 그 칸에는 여전히 ${names(left.remaining, ko)}의 공격이 있습니다."
           else s" The square is still attacked by ${names(left.remaining, ko)}.").toList
     }
-    opening ++ preparation ++ timing ++ reply ++ convergence ++ commonAccess ++ Option.when(sharedPawns.nonEmpty)(
+    opening ++ recapturePrice ++ preparation ++ timing ++ reply ++ convergence ++ commonAccess ++ Option.when(sharedPawns.nonEmpty)(
       (if ko then " 두 비교 지점 모두 " else " At both checkpoints: ") +
         sharedPawns.mkString(" ")).toList
 

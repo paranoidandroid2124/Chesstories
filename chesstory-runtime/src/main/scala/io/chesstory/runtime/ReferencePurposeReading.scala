@@ -23,6 +23,11 @@ private[runtime] object ReferencePurposeReading:
   final case class SupportedArrival(original: Piece, target: Piece, offset: Int)
   final case class SupportContrast(provider: Piece, original: Piece, supported: MoveRef, other: MoveRef):
     def references = List(MoveRef(supported.path, 0), MoveRef(other.path, 0), supported, other)
+  final case class RecaptureGuardContrast(provider: Piece, target: Piece, exchanged: List[Piece],
+      recapture: MoveRef, retained: MoveRef, lostEnd: MoveRef, retainedEnd: MoveRef):
+    def references = List(MoveRef(recapture.path, 0), MoveRef(retained.path, 0),
+      MoveRef(recapture.path, recapture.offset - 1), recapture,
+      MoveRef(retained.path, retained.offset - 1), retained, lostEnd, retainedEnd).distinct
   final case class ControlUse(path: PreparedPath, controller: Piece, change: Int, removed: Boolean,
       target: Option[Piece], originalUser: Piece, user: Piece, use: Int, remaining: List[Piece],
       evidence: List[String]):
@@ -67,6 +72,48 @@ private[runtime] object ReferencePurposeReading:
         price.path.certified.flatMap(_._2.material).exists(_.events.filter(_.plyOffset <= n) == price.cost.events))
         .flatMap(_ => CommentaryMaterialAccount.physicalLosses(owner, price))
     def arms = List(reference, played)
+    // An equal material trade can spend a different piece's existing duty.
+    // Tie that price to the actual recapture, the same two exchanged identities
+    // and continuous support in the other arm. A bare endpoint difference is not enough.
+    lazy val recaptureGuardContrasts: List[RecaptureGuardContrast] =
+      def trades(arm: Arm) = owner.continuationReadings.find(r => (r.path eq arm.path) && r.complete)
+        .toList.flatMap(_.events.filter(e => e.plyOffset <= arm.through && e.originalVictim.nonEmpty)
+          .sliding(2).collect {
+            case List(first, last) if first.plyOffset + 1 == last.plyOffset &&
+                first.originalActor == last.originalVictim => first -> last
+          })
+      def guarding(path: PreparedPath, provider: Piece, target: Piece, count: Int): Option[Boolean] =
+        for
+          at <- owner.purposePosition(path, count).filter(_.complete(RelationFactKind.GeometricControl))
+          current <- owner.trackedPieceAfter(path, provider, count).flatten
+          if owner.trackedPieceAfter(path, target, count).contains(Some(target))
+        yield at.controlledBy(current)(target.at)
+      val rows = for
+        lost <- arms
+        kept <- arms if kept ne lost
+        (first, last) <- trades(lost)
+        provider <- last.originalActor.toList if provider.side == lost.actor.side
+        before <- owner.purposePosition(lost.path, 0).toList
+        target <- before.controls.keys.toList.filter(p => p.side == provider.side && p != provider &&
+          before.controlledBy(provider)(p.at))
+        victims = List(first.originalVictim.get, last.originalVictim.get)
+        (_, keptLast) <- trades(kept).find((a, b) =>
+          Set(a.originalVictim.get, b.originalVictim.get) == victims.toSet).toList
+        if (0 to last.plyOffset).forall(count =>
+          owner.trackedPieceAfter(lost.path, provider, count).contains(Some(provider)) &&
+            guarding(lost.path, provider, target, count).contains(true))
+        if (last.plyOffset + 1 to lost.through + 1).forall(count =>
+          guarding(lost.path, provider, target, count).contains(false))
+        if (0 to kept.through + 1).forall(count =>
+          owner.trackedPieceAfter(kept.path, provider, count).contains(Some(provider)) &&
+            guarding(kept.path, provider, target, count).contains(true))
+        // Surface a loss of the last remaining defender, not every changed contact.
+        if owner.purposePosition(lost.path, lost.through + 1).exists(at =>
+          at.complete(RelationFactKind.GeometricControl) && at.controllers(target.at, provider.side).isEmpty)
+      yield RecaptureGuardContrast(provider, target, victims, MoveRef(lost.path, last.plyOffset),
+        MoveRef(kept.path, keptLast.plyOffset), MoveRef(lost.path, lost.through), MoveRef(kept.path, kept.through))
+      rows.distinctBy(value => (value.provider, value.target, value.recapture.path))
+        .sortBy(value => (value.recapture.offset, value.provider.at, value.target.at)).take(1)
     // Compare an already useful supported action with that same original
     // piece's actual entry in the other assessed line. Absence of an entry is
     // not evidence of missing support, and another defender is not excluded.

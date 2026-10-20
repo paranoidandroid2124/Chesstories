@@ -257,6 +257,28 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       "the returned pair does not itself explain why the strongest reply uses another activity")
     assert(MovePurpose.read(packet, paths, List(reading.search), Nil).isEmpty,
       "a restricted pair cannot certify the independent survey which selected it")
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val root = ReferencePurposeReading.read(packet, paths, pair,
+      MoveWorkProjection.select(packet, paths).rootUses(pair)).get
+    val price = root.recaptureGuardContrasts.head
+    assertEquals(price.provider.at, "f3")
+    assertEquals(price.target.at, "e4")
+    assertEquals(price.exchanged.map(_.at).toSet, Set("g3", "f4"))
+    assertEquals(price.recapture.path.moves(price.recapture.offset), "f3g4")
+    assertEquals(price.retained.path.moves(price.retained.offset), "e1h4")
+    assert(price.references.forall(ReferencePurpose(root).references.contains))
+    // This shorter legal test line still has the queen guarding e4. It is not
+    // a new engine result, and must not borrow the later queen exchange's cost.
+    val shortInput = MoveReviewInputAdmission.admit(RawMoveReviewInput(
+      fen = packet.assembly.input.positionHistory.currentFen, playedMoveUci = "e2g2",
+      variations = List(EngineLine(price.recapture.path.moves.take(price.recapture.offset + 1), 120, None, 11),
+        EngineLine(price.retained.path.moves, 100, None, 11)))).get
+    val shortPacket = EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assemble(shortInput)).get
+    val shortPaths = ObservedLineProtocol.prepare(shortPacket)
+    val shortPair = ReferencePurposeReading.assessmentPair(shortPacket, shortPaths)
+    val shortReading = ReferencePurposeReading.read(shortPacket, shortPaths, shortPair).get
+    assert(shortReading.recaptureGuardContrasts.isEmpty,
+      "losing one guard is not the same functional price while another actual guard remains")
     val row = screenCases.find(r => (r \ "id").as[String] == "qg2-purpose-witnessed-replies").get
     val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
       (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
@@ -264,6 +286,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       .find(c => (c \ "selection").asOpt[String].contains("selected")).get
     assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
       Some("work:2"), "the actual-pair account must retain the reply question it investigated")
+    assert((selected \ "detail" \ "summary").as[String].contains("away from its guard of White's pawn on e4"))
     val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
     Files.createDirectories(folder)
     Files.writeString(folder.resolve("qg2-witnessed-replay.json"),

@@ -44,6 +44,7 @@ private[runtime] object CommentaryAnswer:
     def references = actionReferences ++ value.sharedReplyPressure.toList.flatMap(_ =>
       value.arms.map(arm => MoveRef(arm.path, 1))) ++
       value.supportContrasts.flatMap(_.references) ++
+      value.recaptureGuardContrasts.flatMap(_.references) ++
       Option.when(value.sharedPawnStructure.nonEmpty)(value.arms.map(arm => MoveRef(arm.path, arm.through))).toList.flatten ++
       Option.when(value.sameAftermath)(value.arms.map(arm => MoveRef(arm.path, arm.through))).toList.flatten ++
       value.arms.filter(value.hasContinuedRootContact).map(arm => MoveRef(arm.path, arm.through))

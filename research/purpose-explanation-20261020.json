@@ -195,6 +195,28 @@
       "validation": "46 backend purpose checks, 25 frontend checks and TypeScript passed. All searches are the unchanged saved Qg2 reports; no new screen or engine run.",
       "evidence": "purpose-explanation-20261020/stage8-evidence.json.gz",
       "remaining": "Qg2 R4f7 still lacks an explanation of its different useful activity; a returned reply pair is no substitute for that missing account. First Rfe1 stays failed."
+    },
+    {
+      "stage": 9,
+      "status": "actual_pair_functional_cost_not_core_purpose_completion",
+      "changes": [
+        "For the same two exchanged original pieces in both actual arms, link the recapturing provider's lost pre-existing guard to the peer arm's continuously retained guard.",
+        "Require complete owned capture events and a target with no remaining defender at the lost arm's checkpoint. Do not claim the recapture instantly removes every defender; an intermediate queen may still guard it.",
+        "Retain exact exchange, provider, beneficiary and checkpoint references in both languages. This contrast does not independently complete a purpose."
+      ],
+      "validation": {
+        "backend": "46/46",
+        "frontend": "26/26",
+        "typescript": "passed",
+        "fresh_engine_searches": 0,
+        "fresh_ui": 0
+      },
+      "rejected_work": [
+        "Additional missing-root survey priority had no active branch in saved checks. Earlier Kg2/Rf3 already scheduled their full reply survey; incompatible later saved reports were not injected. Product changes reverted.",
+        "Continuous support across different entry squares did not supply a useful activity in the strongest Qg2 reply. One activity remained; the intended two-activity check failed. Product changes reverted."
+      ],
+      "evidence": "purpose-explanation-20261020/stage9-evidence.json.gz",
+      "development_replay": "purpose-explanation-20261020/qg2-recapture-replay.json.gz"
     }
   ],
   "verification": {
@@ -340,6 +362,12 @@
       "files": 10,
       "bytes": 3552702.0,
       "receipt": "purpose-explanation-20261020/stage8-recycled.json.gz",
+      "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
+    },
+    {
+      "files": 11,
+      "bytes": 3568776.0,
+      "receipt": "purpose-explanation-20261020/stage9-recycled.json.gz",
       "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
     }
   ],
