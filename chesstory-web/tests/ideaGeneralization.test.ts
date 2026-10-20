@@ -165,6 +165,35 @@ test('both negative replies survive deadline delivery without claiming a realize
     undefined, 'the other rook cannot borrow this support and route');
 });
 
+test('a changed current purpose cannot invalidate an earlier independently owned reply pool', () => {
+  const wire = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-returned-activity-wire.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const request = JSON.parse(wire.events.find((e: any) => e.method === 'Network.requestWillBeSent' &&
+    e.params.requestId === '420.259').params.request.postData);
+  const source = JSON.parse(wire.bodies['420.270'].body);
+  const old = JSON.parse(wire.bodies['420.269'].body);
+  assert.equal(old.observations.selection.purpose_question.square, 'h3');
+  assert.equal(source.observations.selection.purpose_question.square, 'g4');
+  const decoded = decodeMoveReviewSnapshot(source, contextFor(request));
+  const answer = decoded?.observations?.selection?.candidates
+    .find(c => c.selection === 'selected')?.detail.summary_question;
+  assert.ok(answer, 'the old search catalogue must not erase the current actual-choice explanation');
+  assert.equal(answer.move_purpose?.work_id, 'work:1');
+  assert.equal(decoded?.observations?.selection?.response_searches?.length, 2,
+    'the earlier recheck remains in the history rather than being discarded');
+  assert.ok(answer.units.every(u => !u.english_only));
+  for (const mutate of [
+    (s: any) => { s.root_searches = s.root_searches.filter((w: any) => w.work_id !== 'work:0'); },
+    (s: any) => { s.response_searches = s.response_searches.filter((w: any) => w.work_id !== 'work:1'); },
+  ]) {
+    const changed = structuredClone(source);
+    mutate(changed.observations.selection);
+    assert.equal(decodeMoveReviewSnapshot(changed, contextFor(request))?.observations?.selection, undefined,
+      'both the earlier completed root witness and independent survey remain necessary');
+  }
+});
+
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
   const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(

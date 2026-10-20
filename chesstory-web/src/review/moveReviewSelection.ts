@@ -631,6 +631,43 @@ interface PurposeReplyContext {
   workId: string; engineProfile: string; requiredDepth: number;
 }
 
+function rootReplyWitnesses(root: { root_move: Uci; root_occurrence_id: string; child_position_id: string },
+  context: PurposeReplyContext): ObservationPath[] {
+  return (context.roots ?? []).filter(work => Number(work.work_id.slice(5)) < Number(context.workId.slice(5)) &&
+    work.state === 'completed' && work.stop_reason === null && work.engine_profile === context.engineProfile &&
+    work.required_depth >= context.requiredDepth && work.root_occurrence_id === root.root_occurrence_id)
+    .flatMap(work => work.candidates.filter(candidate => candidate.move_uci === root.root_move).flatMap(candidate => {
+      const path = context.observations.paths.find(path => path.id === candidate.line_id &&
+        path.moves[0]?.uci === root.root_move && path.occurrenceIds[0] === root.root_occurrence_id &&
+        candidate.occurrence_id === path.occurrenceIds[0] && path.positionIds?.[1] === root.child_position_id);
+      return path ? [path] : [];
+    }));
+}
+
+// A past search remains a valid receipt when the current purpose changes.
+// This admits only the root PV's reply versus the strongest independently
+// surveyed other reply. Explaining a purpose still needs its separate checks.
+function retainedRootReplyPoolMatches(search: CommentaryResponseSearch,
+  observations: MoveReviewObservations, searches: CommentaryResponseSearch[], roots: CommentaryRootSearch[]): boolean {
+  if (search.root_restriction.kind !== 'restricted' || search.root_restriction.moves_uci.length !== 2 ||
+    search.prefix_moves_uci?.length !== 1 || search.candidates.length !== 2 ||
+    !sameIds(search.root_restriction.moves_uci, search.candidates.map(candidate => candidate.move_uci))) return false;
+  const pool = [...searches].reverse().find(prior => Number(prior.work_id.slice(5)) < Number(search.work_id.slice(5)) &&
+    prior.root_restriction.kind === 'unrestricted' && prior.root_move === search.root_move &&
+    prior.root_move_occurrence_id === search.root_move_occurrence_id &&
+    prior.child_position_id === search.child_position_id && prior.prefix_moves_uci?.length === 1 &&
+    prior.engine_profile === search.engine_profile && prior.required_depth >= search.required_depth);
+  if (!pool) return false;
+  const moves = search.root_restriction.moves_uci;
+  return rootReplyWitnesses({root_move:search.root_move, root_occurrence_id:search.root_move_occurrence_id,
+    child_position_id:search.child_position_id}, {observations, searches, roots, workId:search.work_id,
+    engineProfile:search.engine_profile, requiredDepth:search.required_depth}).some(path => {
+      const witness = path.moves[1]?.uci;
+      const other = pool.candidates.find(candidate => candidate.move_uci !== witness)?.move_uci;
+      return !!witness && !!other && sameIds(moves, [witness, other]);
+    });
+}
+
 export function purposeResponseMovesMatch(question: CommentaryPurposeQuestion, moves: readonly Uci[],
   legalMoves: readonly Uci[], context?: PurposeReplyContext): boolean {
   if (moves.length < 2 || !moves.every(move => legalMoves.includes(move))) return false;
@@ -666,19 +703,11 @@ function purposeWitnessMovesMatch(question: CommentaryPurposeQuestion, moves: re
         piece.current?.square === question.use_move.slice(0, 2))?.original : undefined;
     };
     const original = beneficiary(currentSource);
-    for (const work of context.roots ?? []) {
-      if (!earlier(work.work_id) || work.state !== 'completed' || work.stop_reason !== null ||
-        work.engine_profile !== context.engineProfile || work.required_depth < context.requiredDepth ||
-        work.root_occurrence_id !== question.root_occurrence_id) continue;
-      for (const candidate of work.candidates.filter(c => c.move_uci === question.root_move)) {
-        const path = context.observations.paths.find(p => p.id === candidate.line_id &&
-          p.occurrenceIds[0] === question.root_occurrence_id && candidate.occurrence_id === p.occurrenceIds[0] &&
-          p.positionIds?.[1] === question.child_position_id);
-        const user = path && beneficiary(path);
-        if (path && original && user && samePiece(original, user) &&
-          decodePurposeQuestion({ ...question, source_line_id: path.id }, context.observations,
-            question.root_move, 'work_id' in question)) sources.push(path);
-      }
+    for (const path of rootReplyWitnesses(question, context)) {
+      const user = beneficiary(path);
+      if (original && user && samePiece(original, user) &&
+        decodePurposeQuestion({ ...question, source_line_id: path.id }, context.observations,
+          question.root_move, 'work_id' in question)) sources.push(path);
     }
   }
   const present = pool.candidates.map(candidate => candidate.move_uci);
@@ -7406,6 +7435,7 @@ export function decodeCommentarySelection(
           context?.playedMove,
         ) &&
         !proposalContainsResponsePool(proposals ?? [], search, observations) &&
+        !retainedRootReplyPoolMatches(search, observations, responseSearches, rootSearches ?? []) &&
         !(preparationQuestion && search.root_move === preparationQuestion.root_move &&
           search.root_move_occurrence_id === preparationQuestion.root_occurrence_id &&
           preparationResponseMovesMatch(preparationQuestion, observations,

@@ -144,6 +144,14 @@
     {
       "sha": "064b944e55e2dd905ce38b7424d57519f0f6208e",
       "meaning": "Compare shared supported actions without duplicating provider absences"
+    },
+    {
+      "sha": "5c0c64113b",
+      "meaning": "Record the earlier incomplete checkpoint"
+    },
+    {
+      "sha": "850c4c4d7e4dd735e35b84e3acca1eb09748086c",
+      "meaning": "Keep independently owned returned activities distinct from the original purpose"
     }
   ],
   "implementation": [
@@ -389,10 +397,29 @@
         "frontend": "28/28",
         "typescript": "passed",
         "fresh_engine_so_far": 0,
-        "independent_success": false
+        "independent_success": false,
+        "subsequent_live_result": "5.68s, depth11, Qg2/Nc3 basic UI empty; see qg2_returned_activity_recheck. Previous stored-report validations unchanged."
       },
       "evidence": "purpose-explanation-20261020/stage14-evidence.json.gz",
-      "scope": "Common returned-report dataflow and ownership repair; no purpose detector or ranking rule added. First Rfe1 remains frozen. One additional final Qg2 UI request is planned because frontend delivery changed; this is development validation, not an independent result."
+      "scope": "Common returned-report dataflow and ownership repair; no purpose detector or ranking rule added. First Rfe1 remains frozen. Its one additional Qg2 UI request failed and is recorded separately."
+    },
+    {
+      "stage": 15,
+      "status": "past_query_receipt_separated_from_current_purpose",
+      "changes": [
+        "A later root refresh can change the current purpose itself. Validate past restricted reply pools against their earlier completed root witness and independently ranked full survey; do not reinterpret all historical searches as the current question.",
+        "Keep exact root occurrence, child position, engine profile, depth, chronological ordering and strongest opposing reply checks. The selected current explanation still undergoes its separate purpose and physical-source checks.",
+        "Reuse the completed root-witness reader rather than duplicate its receipt matching."
+      ],
+      "validation": {
+        "frontend": "29/29",
+        "typescript": "passed",
+        "unchanged_original_http": "pending and final snapshots accepted after repair; original final was rejected",
+        "negative": "removing either earlier root receipt or independent reply survey still rejected",
+        "new_engine_requests": 0,
+        "independent_success": false
+      },
+      "evidence": "purpose-explanation-20261020/stage15-evidence.json.gz"
     }
   ],
   "verification": {
@@ -522,6 +549,23 @@
       "retained_ui": "purpose-explanation-20261020/qg2-delivery-recheck-screen.txt",
       "freeze": "purpose-explanation-20261020/delivery-recheck-freeze.json",
       "interpretation": "Seventh Qg2 development request, not an independent success. Same two distinct UI positions used in this goal."
+    },
+    "qg2_returned_activity_recheck": {
+      "status": "failed_basic_delivery",
+      "source": "850c4c4d7e4dd735e35b84e3acca1eb09748086c",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 5.68,
+      "max_depth": 11,
+      "actual_pair": [
+        "e2g2",
+        "a2c3"
+      ],
+      "reports": 4,
+      "finding": "Root work:3 changes the purpose from Rh3 to Rg4. The frontend catalogue gate revalidates old restricted work:2 under that new question and discards the whole basic selection. Stage15 accepts the unchanged original response after separating historical search admission from current purpose proof.",
+      "retained_wire": "purpose-explanation-20261020/qg2-returned-activity-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-returned-activity-screen.txt",
+      "capture": "All four original report POST responses retained, including pending work:2 and final work:3. Actual AX text, no pixel screenshot.",
+      "interpretation": "Eighth Qg2 development request; ninth total request across the same two distinct positions. It remains failed; diagnostic decoder success is not a fresh screen or independent pass."
     }
   },
   "cleanup": [
@@ -628,6 +672,13 @@
       "receipt": "purpose-explanation-20261020/stage14-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage14-evidence.json.gz",
       "method": "Windows Recycle Bin after byte-for-byte archive roundtrip, resolved target and ancestor checks, and SHA256 verification."
+    },
+    {
+      "files": 7,
+      "bytes": 19361,
+      "receipt": "purpose-explanation-20261020/stage15-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage15-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact archive roundtrip, resolved task directory/ancestor and SHA256 checks."
     }
   ],
   "studied_failures": [
@@ -646,7 +697,7 @@
     "product_commit": "064b944e55e2dd905ce38b7424d57519f0f6208e",
     "reported_utc": "2026-10-20T19:33:16.385312+00:00",
     "fresh_position_count": 2,
-    "qg2_development_requests": 7,
+    "qg2_development_requests": 8,
     "rfe1_first_requests": 1,
     "max_issued_depth": 11,
     "request_limit_ms": 20000,
@@ -679,6 +730,6 @@
       "temporary_directories": 1,
       "directory_bytes": 34102718
     },
-    "continuation": "Additional owned returned-activity repair in progress; first heldout result and previous real screens retain their recorded verdicts."
+    "continuation": "Stage15 historical catalogue ownership repair checked on unchanged original HTTP; investigation continues within original seven-hour cap."
   }
 }

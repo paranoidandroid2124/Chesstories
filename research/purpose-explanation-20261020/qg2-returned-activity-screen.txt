@@ -1,0 +1,91 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories 기보와 해설
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				82 text 27. Qg2
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) Description: 수 입력, Value: Qg2
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					83 button 27. Qg2
+				74 container
+					75 button (expanded) PGN · FEN 불러오기, Secondary Actions: Collapse
+						76 text PGN · FEN 불러오기
+					77 text entry area (settable) Description: PGN or FEN, Value: 5r1k/1p2b1pp/p2p4/4p2q/4Pr2/P2R1PR1/NPP1Q2P/1K6 w - - 0 27
+					78 button 불러오기
+					79 text 파일 선택
+					80 button 파일 선택
+					81 text 한 경기씩 불러옵니다. 변형·주석은 PGN 저장에 함께 보존됩니다.
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button 해설 · 20초
+				87 text completed · 5.68s
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+						86 text 직전 수 리뷰가 완료되었습니다.
+					88 text 추가 조사에서 함께 확인한 수들을 기준으로 한 평가입니다. 모든 합법수 중 최선이라는 뜻은 아닙니다.
+					89 container 비교한 수 중 가장 높게 평가한 수입니다: Qg2
+						90 text Qg2
+						91 heading 비교한 수 중 가장 높게 평가한 수입니다, Value: 3
+							92 text 비교한 수 중 가장 높게 평가한 수입니다
+					93 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						94 text 평가 수치
+						95 text +
+					96 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						97 text 평가 근거와 관찰 기록
+						98 text +
+		72 container
+			84 text 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
