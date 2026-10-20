@@ -381,6 +381,12 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     val root = ReferencePurposeReading.read(packet, paths, pair,
       MoveWorkProjection.select(packet, paths).rootUses(pair), responses = Some(reading)).get
     assert(!root.completePurpose)
+    assertEquals(root.supportContrasts.size, 1,
+      "two reciprocal provider absences describe one shared supported action")
+    val support = root.supportContrasts.head
+    assertEquals((support.provider :: support.otherProvider.toList).map(_.role.name).toSet, Set("pawn", "queen"))
+    assert(root.arms.forall(a => support.supports(a.path) && root.explanation(a).compared))
+    assert(support.references.forall(ReferencePurpose(root).references.contains))
     val row = screenCases.find(r => (r \ "id").as[String] == "qg2-unrealized-replies-first-screen").get
     val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
       (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
@@ -390,6 +396,12 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       Some("work:2"), "deadline delivery must not erase both negative response witnesses")
     val summary = (selected \ "detail" \ "summary").as[String]
     assertEquals("the plan is not realized in this segment".r.findAllIn(summary).size, 2)
+    assert(summary.contains("using different pieces") && !summary.contains("has no support from that same"))
+    assert(!summary.contains("supports the rook's arrival") && summary.contains("the queen recaptures"),
+      "the shared support is stated once while its actual recapture remains explicit")
+    assert(summary.contains("queen's guard of White's pawn on e4") &&
+      summary.contains("1 pair of rooks is exchanged"),
+      "the common supported function must not erase its different guard duty or exchange price")
     val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
     Files.createDirectories(folder)
     Files.writeString(folder.resolve("qg2-unrealized-replies-replay.json"),

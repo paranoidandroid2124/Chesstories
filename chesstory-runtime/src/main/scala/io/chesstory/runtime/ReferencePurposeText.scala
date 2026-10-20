@@ -259,13 +259,20 @@ private[runtime] object ReferencePurposeText:
       val exchange = arm.exchange.toList.map(_ =>
         if ko then s"${roles(arm.actor.role.name)} 교환을 제안합니다."
         else s"offers a ${arm.actor.role.name} exchange.")
-      val use = arm.supportedArrival.toList.map(arrival =>
+      val use = arm.supportedArrival.toList.flatMap { arrival =>
         val recovery = arm.supportUse.filter(_.target == arrival.target)
-        if ko then
+        val entry = MoveRef(arm.path, arrival.offset)
+        val announced = readingSupport.exists(c => c.original == arrival.original &&
+          (c.supported == entry || c.otherProvider.nonEmpty && c.other == entry))
+        if announced then recovery.toList.map(u =>
+          if ko then s"${name(arrival.target, ko)}${subject(arrival.target)} 잡힌 뒤 ${roles(u.provider.role.name)}${subject(u.provider)} 되잡습니다."
+          else s"After ${name(arrival.target, ko)} is taken, the ${u.provider.role.name} recaptures.")
+        else List(if ko then
           s"제시된 수순에서 ${arrival.target.at}에 진출하는 ${roles(arrival.target.role.name)}${obj(arrival.target)} 지원합니다." +
             recovery.fold("")(u => s" 잡힌 뒤 ${roles(u.provider.role.name)}${subject(u.provider)} 되잡습니다.")
         else s"in the shown line supports the ${arrival.target.role.name}'s arrival on ${arrival.target.at}" +
           recovery.fold(".")(u => s", then recaptures with the ${u.provider.role.name}."))
+      }
       val post = value.supportedPost.toList.filterNot(square => arm.supportedArrival.exists(_.target.at == square) &&
         arm.guards == List(arm.moved)).map(square => if arm.guards.nonEmpty then
         if ko then s"${names(arm.guards, ko)}이 $square 진출을 받칩니다."
@@ -281,7 +288,7 @@ private[runtime] object ReferencePurposeText:
         val condition: List[Part] = if value.path eq arm.path then Nil else
           List(MoveRef(value.path, 1), if ko then " 응수에서는 " else " is the observed reply; ")
         supported ++ List(condition ++ activity(value, ko, includeCause = supported.isEmpty &&
-          !readingSupport.exists(_.supported.path eq arm.path),
+          !readingSupport.exists(_.supports(arm.path)),
           includeReply = supported.isEmpty)) ++ sentences(escape ++ check ++ released)
       else sentences(capture ++ escape) ++ guard ++ sentences(shield ++ check) ++ attack ++
         sentences(file ++ exchange ++ use ++ post ++ released)) ++ sentences(limitation(arm))
@@ -293,7 +300,7 @@ private[runtime] object ReferencePurposeText:
           else s"block the line from ${name(attacker, ko)} to ${name(target, ko)}.").mkString(" ") + " ")
     val supportComparison = readingSupport.flatMap { contrast =>
       val square = contrast.supported.path.moves(contrast.supported.offset).slice(2, 4)
-      List[Part](if ko then
+      contrast.otherProvider.fold(List[Part](if ko then
         s"두 제시 수순 모두 ${original(contrast.original, ko)}${obj(contrast.original)} ${square}로 옮기지만, "
       else s"Both shown lines bring ${original(contrast.original, ko)} to $square, but ",
         MoveRef(contrast.supported.path, 0), if ko then " 수순의 " else " supplies ",
@@ -301,7 +308,18 @@ private[runtime] object ReferencePurposeText:
           else s" with ${contrast.provider.role.name} support. In the ",
         MoveRef(contrast.other.path, 0), if ko then " 수순의 " else " line, ",
         contrast.other, if ko then s"에는 같은 ${roles(contrast.provider.role.name)}의 지원이 없습니다. "
-          else s" has no support from that same ${contrast.provider.role.name}. ")
+          else s" has no support from that same ${contrast.provider.role.name}. ")) { other =>
+        List[Part](if ko then
+          s"두 제시 수순은 ${original(contrast.original, ko)}의 $square 진출을 서로 다른 기물로 지원합니다. "
+        else s"Both shown lines support ${original(contrast.original, ko)} on $square, using different pieces. ",
+          MoveRef(contrast.supported.path, 0), if ko then " 수순에서는 " else " uses ",
+          if ko then s"${roles(contrast.provider.role.name)}${subject(contrast.provider)} "
+            else s"the ${contrast.provider.role.name} to support ",
+          contrast.supported, if ko then "를 지원하고, " else ", while ",
+          MoveRef(contrast.other.path, 0), if ko then " 수순에서는 " else " uses ",
+          if ko then s"${roles(other.role.name)}${subject(other)} " else s"the ${other.role.name} to support ",
+          contrast.other, if ko then "를 지원합니다. " else ". ")
+      }
     }
     val opening: List[Part] = common ++ supportComparison ++ value.arms.flatMap { arm =>
       value.preparation.filter(_.root eq arm.path).fold {

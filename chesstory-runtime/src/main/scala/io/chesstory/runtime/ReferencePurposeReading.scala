@@ -21,8 +21,11 @@ private[runtime] object ReferencePurposeReading:
   final case class SharedCapture(actor: Piece, victim: Piece, referenceOffset: Int, playedOffset: Int)
   final case class FunctionContrast(reference: Function, played: Function)
   final case class SupportedArrival(original: Piece, target: Piece, offset: Int)
-  final case class SupportContrast(provider: Piece, original: Piece, supported: MoveRef, other: MoveRef):
+  final case class SupportContrast(provider: Piece, original: Piece, supported: MoveRef, other: MoveRef,
+      otherProvider: Option[Piece] = None):
     def references = List(MoveRef(supported.path, 0), MoveRef(other.path, 0), supported, other)
+    def supports(path: PreparedPath): Boolean =
+      (supported.path eq path) || otherProvider.nonEmpty && (other.path eq path)
   final case class RecaptureGuardContrast(provider: Piece, target: Piece, exchanged: List[Piece],
       recapture: MoveRef, retained: MoveRef, lostEnd: MoveRef, retainedEnd: MoveRef):
     def references = List(MoveRef(recapture.path, 0), MoveRef(retained.path, 0),
@@ -117,21 +120,30 @@ private[runtime] object ReferencePurposeReading:
     // Compare an already useful supported action with that same original
     // piece's actual entry in the other assessed line. Absence of an entry is
     // not evidence of missing support, and another defender is not excluded.
-    lazy val supportContrasts: List[SupportContrast] = arms.flatMap { arm =>
-      for
-        activity <- arm.activity.toList if (activity.path eq arm.path) && !activity.incidentalDuty
-        provider <- activity.seed.provider.toList
-        destination = activity.path.moves(activity.entry).slice(2, 4)
-        entries = PurposeEvidence.correspondingEntries(owner, arms.map(_.path), activity.original, destination)
-        if entries.exists(move => (move.path eq arm.path) && move.offset == activity.entry)
-        other <- entries.filter(move => !(move.path eq arm.path) && move.offset >= 2 &&
-          arms.exists(a => (a.path eq move.path) && move.offset <= a.through))
-        at <- owner.purposePosition(other.path, other.offset + 1).toList
-          if at.complete(RelationFactKind.GeometricControl)
-        present <- owner.trackedPieceAfter(other.path, provider, other.offset + 1).flatten.toList
-          if !at.controlledBy(present)(destination)
-      yield SupportContrast(provider, activity.original, MoveRef(arm.path, activity.entry), other)
-    }
+    lazy val supportContrasts: List[SupportContrast] =
+      val contrasts = arms.flatMap { arm =>
+        for
+          activity <- arm.activity.toList if (activity.path eq arm.path) && !activity.incidentalDuty
+          provider <- activity.seed.provider.toList
+          destination = activity.path.moves(activity.entry).slice(2, 4)
+          entries = PurposeEvidence.correspondingEntries(owner, arms.map(_.path), activity.original, destination)
+          if entries.exists(move => (move.path eq arm.path) && move.offset == activity.entry)
+          other <- entries.filter(move => !(move.path eq arm.path) && move.offset >= 2 &&
+            arms.exists(a => (a.path eq move.path) && move.offset <= a.through))
+          at <- owner.purposePosition(other.path, other.offset + 1).toList
+            if at.complete(RelationFactKind.GeometricControl)
+          present <- owner.trackedPieceAfter(other.path, provider, other.offset + 1).flatten.toList
+            if !at.controlledBy(present)(destination)
+        yield SupportContrast(provider, activity.original, MoveRef(arm.path, activity.entry), other)
+      }
+      // Two reciprocal absences can describe the same supported action with
+      // different providers. Preserve that limited functional equivalence as
+      // one comparison; the two arms still own their separate costs/outcomes.
+      contrasts match
+        case List(left, right) if left.original == right.original && left.provider != right.provider &&
+            left.supported == right.other && left.other == right.supported =>
+          List(left.copy(otherProvider = Some(right.provider)))
+        case _ => contrasts
     def replyDefense(arm: Arm): Option[ReplyDefense] = arm.counterplay.flatMap(_.control).flatMap { use =>
       arms.filterNot(_ eq arm).iterator.flatMap { other =>
         (1 until other.through by 2).iterator.flatMap { offset =>
@@ -184,7 +196,7 @@ private[runtime] object ReferencePurposeReading:
         sharedShieldExchange
       val compared = conditional.nonEmpty || escapedOption.nonEmpty || prepared.nonEmpty || task.exists(_.explanation.compared) ||
         arm.evasion.nonEmpty || arm.captured.nonEmpty || changedFunction || sameUse ||
-        supportContrasts.exists(_.supported.path eq arm.path) ||
+        supportContrasts.exists(_.supports(arm.path)) ||
         arm.castlePreparation.exists(p => other.deferredCastle.exists(_.original == p.original)) ||
         arm.supportedArrival.exists(use => other.actor == use.original && other.moved == use.target)
       val observedResponse = uses.exists(use => use.offset >= 2 && CommentarySequenceText.sameRoot(use.path, arm.path)) ||

@@ -88,6 +88,26 @@
     {
       "sha": "03424c5571",
       "meaning": "Retain the original owned witness when a later root refresh changes the PV."
+    },
+    {
+      "sha": "cfd726433930d1f0c06896599a1f80d6ed76a45d",
+      "meaning": "Record purpose explanation goal and recycle duplicate research outputs"
+    },
+    {
+      "sha": "20f9e8c85bccc8101a6f7f9597e115876d9ca69d",
+      "meaning": "Use actual choice correspondence and explanatory gaps to allocate investigation"
+    },
+    {
+      "sha": "19284ba9eb6aea854389d0d256ddf26e74e2956a",
+      "meaning": "Deliver independently verified reply activities alongside actual root purposes"
+    },
+    {
+      "sha": "c2c8192b03cc065c02b454cf644125bb8c1c8294",
+      "meaning": "Validate witnessed purpose reply probes consistently at request and delivery"
+    },
+    {
+      "sha": "61d45119bd6dc15532a195013cbc9c07e809af37",
+      "meaning": "Retain unanswered purpose comparisons and valid answers at deadline"
     }
   ],
   "implementation": [
@@ -297,6 +317,25 @@
       ],
       "evidence": "purpose-explanation-20261020/stage12-evidence.json.gz",
       "development_replay": "purpose-explanation-20261020/qg2-unrealized-replies-replay.json.gz"
+    },
+    {
+      "stage": 13,
+      "status": "shared_supported_action_with_distinct_providers",
+      "changes": [
+        "Combine reciprocal provider absences only when both comparisons name the same original beneficiary and exact corresponding action in the two evaluated paths. Both providers remain explicit.",
+        "Use that same combined comparison in purpose admission and display; neither arm loses its explanation when the duplicate row is removed.",
+        "Do not repeat the already described support in the root paragraph. Keep the actual recapture, exchange price, lost guard and both unanswered reply witnesses."
+      ],
+      "scope": "Limited functional equivalence of the witnessed supported action, not equality of the whole plan, evaluation or later result. No new candidate detector, ranking rule or engine request.",
+      "validation": {
+        "affected_backend": "2/2",
+        "re2_qa4_core": "10/10",
+        "frontend": "28/28",
+        "fresh_engine": 0,
+        "fresh_ui": 0,
+        "independent_success": false
+      },
+      "evidence": "purpose-explanation-20261020/stage13-evidence.json.gz"
     }
   ],
   "verification": {
@@ -511,6 +550,20 @@
       "receipt": "purpose-explanation-20261020/stage12-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage12-evidence.json.gz",
       "method": "Windows Recycle Bin after exact file hashes and resolved workspace paths were checked. Diagnostic sources/logs and current-goal replays retained exactly; 24 repeated saved-report outputs are reproducible from committed tests and fixed inputs. One isolated baseline export and its generated classes also recycled; original baseline.zip and baseline.json preserved."
+    },
+    {
+      "files": 6,
+      "bytes": 56114.0,
+      "receipt": "purpose-explanation-20261020/final-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/final-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact archive roundtrip and workspace path/SHA256 checks."
+    },
+    {
+      "files": 11,
+      "bytes": 7293050,
+      "receipt": "purpose-explanation-20261020/stage13-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage13-evidence.json.gz",
+      "method": "Windows Recycle Bin after resolved target/ancestor/retained-path and SHA256 checks. Seven diagnostic files retained byte-for-byte; four regenerated outputs retain their committed fixed inputs and producers."
     }
   ],
   "studied_failures": [
@@ -523,5 +576,34 @@
     "The October 14 record already identified first-candidate priority, purposeKnown accepting contacts and unequal scheduler/renderer inputs. Later relation readers did not replace those admission and stop conditions.",
     "Preserve all candidates until comparing owned actual choices and reply outcomes. A legal destination or a delayed attack alone cannot certify the core explanation.",
     "Early development checks exposed that simply tightening booleans loses valid defensive/quiet continuations and equates arrival with useful activity. These failures remain development failures, not a completed goal."
-  ]
+  ],
+  "last_run": {
+    "outcome": "unachieved",
+    "product_commit": "61d45119bd6dc15532a195013cbc9c07e809af37",
+    "reported_utc": "2026-10-20T19:16:12.092669+00:00",
+    "fresh_position_count": 2,
+    "qg2_development_requests": 7,
+    "rfe1_first_requests": 1,
+    "max_issued_depth": 11,
+    "request_limit_ms": 20000,
+    "independent_successes": 0,
+    "final_code_ui_recheck": false,
+    "limits": [
+      "First unused Rfe1 failed and remains immutable.",
+      "Latest fresh Qg2/h3 screen delivered basic text but omitted the negative reply comparison; final repair checked on unchanged reports only.",
+      "The reciprocal provider repetition was reduced in the common comparison. Alternative-plan value and post-exchange activity remain insufficiently generalized.",
+      "No successful pixel screenshot; browser AX and actual network results retained."
+    ],
+    "app": {
+      "url": "http://127.0.0.1:8787/",
+      "source_commit": "61d45119bd6dc15532a195013cbc9c07e809af37",
+      "restored": "1. e4 PGN, initial position, Korean, engine off, blank inputs"
+    },
+    "preservation": {
+      "inherited_files": 446,
+      "commit": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
+      "archive_verified": true
+    },
+    "evidence": "purpose-explanation-20261020/final-evidence.json.gz"
+  }
 }
