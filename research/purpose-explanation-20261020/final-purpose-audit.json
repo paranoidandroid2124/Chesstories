@@ -154,5 +154,71 @@
     "Diagnostic uses exactly the three final original engine reports with verified issued-work identities. No new engine search or product-source retuning.",
     "This diagnoses the final Qg2 development run, not the untouched Rfe1 holdout."
   ],
-  "next_required_change": "Replace generic root/reply reference sufficiency with an explicit comparison of the same purpose: enabling condition, observed or legally conditioned use, actual alternative outcome, reply-dependent realization and required price. Preserve partial facts without allowing them to certify completed purpose; use that same comparison to rank candidates and to stop discovery. No fixed move, square, or extra wording rule should stand in for this relation."
+  "next_required_change": "Replace generic root/reply reference sufficiency with an explicit comparison of the same purpose: enabling condition, observed or legally conditioned use, actual alternative outcome, reply-dependent realization and required price. Preserve partial facts without allowing them to certify completed purpose; use that same comparison to rank candidates and to stop discovery. No fixed move, square, or extra wording rule should stand in for this relation.",
+  "producer_audit": {
+    "scope": "Read-only follow-up inside the original seven-hour deadline; no new product source, test, engine request or Rfe1 replay.",
+    "nondefault_constructors": 4,
+    "files": 3,
+    "sites": [
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+        "line": 198,
+        "weak_admission": "changedFunction and isolated capture/evasion predicates can fill the two choice references without carrying the explanatory relation that justified them.",
+        "preserve": "Actual shared exchange, support comparison and legal conditional proof objects; their meaning must remain attached rather than reduced to a boolean."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+        "line": 447,
+        "weak_admission": "Question-stage preparation/direct-choice tests are flattened into root references, losing the precise changed preparation condition that could justify the candidate.",
+        "preserve": "The same original beneficiary, its actual use and which preparation condition differs."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+        "line": 791,
+        "weak_admission": "actualUses on two paths can certify compared even without an explicit account of whether the shared action differs in realization or price.",
+        "preserve": "Both observed uses as correspondence evidence; neither delete equal-looking plans nor assert equivalent function from action occurrence alone."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+        "line": 80,
+        "weak_admission": "actual.size == 2 can likewise certify compared. Surveyed use then contributes reply references, but the relation between the actual choices is still reduced to a boolean.",
+        "preserve": "Independently surveyed realization and non-realization, original partner/target identity and costs."
+      }
+    ],
+    "conclusion": "Removing only changedFunction cannot replace the common sufficiency model. All four producers in three files flatten distinct proof meanings to reference presence; the shared consumer ranks and terminates on that weaker representation. Replace these admissions together with a retained comparison witness. This is a static scope finding, not a claim that all four branches fired on the final Qg2 run.",
+    "minimum_migration": "Carry the existing concrete comparison proof through PurposeEvidence, rather than introduce another detector family or duplicate fact store. A comparison may show the same function or different functions, but must state the consequence for the actual choices and replies. Mere correspondence and unresolved facts remain admissible partial output without certifying completion.",
+    "consumer_path": [
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeEvidence.scala",
+        "line": 18,
+        "effect": "compared is the first candidate-priority component; this weak admission directly affects which idea is investigated."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+        "line": 95,
+        "effect": "Sorts idea candidates by that priority; line 110 also suppresses a candidate if another weakly admitted account outranks it."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+        "line": 503,
+        "effect": "Uses the same priority for purpose alternatives; line 824 ranks returned readings with it."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+        "line": 221,
+        "effect": "All arms answered becomes completePurpose."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+        "line": 1648,
+        "effect": "A complete reference answer is delivered before functional, idea and partial reference alternatives."
+      },
+      {
+        "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+        "line": 3600,
+        "effect": "The same complete answer ends investigation when no pending reply contrast remains. This is the route consistent with the final frozen replay that completes with zero discovery scans."
+      }
+    ],
+    "scope_decision": "The next implementation must replace the evidence admitted by the four producers and the common consumer semantics together. Adjusting only text, candidate tie-breakers, changedFunction, or the scheduler would leave another weak-admission route intact. Keep the final frozen wire as the negative criterion; do not create another piece-specific detector to make it pass."
+  }
 }

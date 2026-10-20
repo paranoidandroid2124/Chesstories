@@ -772,7 +772,7 @@
   "last_run": {
     "outcome": "unachieved",
     "product_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
-    "reported_utc": "2026-10-20T20:32:44.279340+00:00",
+    "reported_utc": "2026-10-20T20:36:33.091964+00:00",
     "fresh_position_count": 2,
     "qg2_development_requests": 9,
     "rfe1_first_requests": 1,
@@ -803,7 +803,7 @@
       "final_frozen_product_files_unchanged": 113
     },
     "evidence": "purpose-explanation-20261020/closing-evidence.json.gz",
-    "elapsed_seconds": 24819,
+    "elapsed_seconds": 25048,
     "final_app_startup_confirmed": true,
     "cleanup_totals": {
       "files": 513,
@@ -932,7 +932,8 @@
         "reason": "First unused Rfe1 is unchanged, failed, not trained on or rerun under changed source."
       }
     ],
-    "run_closure": "This bounded run is closed below seven hours with the objective unachieved. No automatic work may extend the original 2026-10-20 20:39:05 UTC deadline. The active goal is not marked complete; another investigation would require a renewed time allocation."
+    "run_closure": "This bounded run is closed below seven hours with the objective unachieved. No automatic work may extend the original 2026-10-20 20:39:05 UTC deadline. The active goal is not marked complete; another investigation would require a renewed time allocation.",
+    "closing_readonly_audit": "Four non-default PurposeEvidence constructors in three files flatten different comparison proofs into root/reference presence. Two additional producers admit mere occurrence of the same use on both actual paths. Thus deleting only changedFunction is insufficient. Detailed scope and preserved proofs are in final-purpose-audit.json; no new product edits or engine runs. The audited consumer chain directly feeds candidate priority, answer delivery precedence and investigation termination; all are mapped to current source lines in the diagnostic."
   },
   "remaining_bottlenecks": [
     {
