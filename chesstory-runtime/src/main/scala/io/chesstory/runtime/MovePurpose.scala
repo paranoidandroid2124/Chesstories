@@ -401,6 +401,34 @@ private[runtime] object MovePurpose:
       other <- present.find(_ != witness)
     yield List(witness, other).sorted
 
+  /** A root refresh changes the current PV, not the provenance of an already
+    * issued reply comparison. Recover only the same physical supported action
+    * from a completed root receipt that predates that comparison. */
+  private def earlierWitnessMoves(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
+      q: Question, pool: Search, search: Search,
+      roots: List[CommentaryInvestigation.EngineCandidates]): List[List[String]] =
+    if q.kind != "supported_advance" || q.use < 2 || q.plan.nonEmpty ||
+        q.purposeActivity.nonEmpty || q.replyActivities.nonEmpty then return Nil
+    def order(id: String) = id.stripPrefix("work:").toIntOption
+    for
+      receipt <- roots
+      work = receipt.work
+      if work.searchAnchor.isEmpty && work.engineProfile == search.work.engineProfile &&
+        work.requiredDepth >= search.work.requiredDepth &&
+        order(work.workId).exists(n => order(search.work.workId).exists(n < _)) &&
+        CommentaryInvestigation.ownsSearch(packet.assembly.input.positionHistory, work, receipt.lines) &&
+        CommentaryInvestigation.candidatesReady(work, receipt.lines)
+      line <- receipt.lines if line.evaluation.moves.headOption.contains(q.rootMove)
+      source <- paths.certifiedPath(packet, line.evaluation.moves).toList
+      if source.ids.head == q.path.ids.head && source.positions(1) == q.path.positions(1)
+      use <- (2 until math.min(source.moves.size, 18) by 2).find(n =>
+        source.moves(n) == q.path.moves(q.use) &&
+          paths.trackedPieceAfter(source, q.user, n).flatten.exists(_.at == source.moves(n).take(2)) &&
+          PurposeActivityReading.rootSupport(paths, source, q.actor, q.user, q.square, n + 1).nonEmpty).toList
+      witness <- source.moves.lift(1).toList
+      other <- pool.lines.map(_.evaluation.moves.head).find(_ != witness).toList
+    yield List(witness, other).sorted
+
   /** Publish the same owned realization as the answer, including when a later
     * response comparison supplies a different route to the discovered task. */
   def observedQuestion(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths,
@@ -624,8 +652,9 @@ private[runtime] object MovePurpose:
             previous.work.rootRestriction == EngineRootRestriction.Unrestricted &&
               previous.work.engineProfile == search.work.engineProfile &&
               previous.work.requiredDepth >= search.work.requiredDepth)
-          moves <- witnessedReplyMoves(packet, paths, q, pool)
-          if search.work.rootRestriction == EngineRootRestriction.Restricted(moves)
+          moves <- (witnessedReplyMoves(packet, paths, q, pool).toList ++
+            earlierWitnessMoves(packet, paths, q, pool, search, roots))
+            .find(moves => search.work.rootRestriction == EngineRootRestriction.Restricted(moves))
           if search.pairAnswer(packet, moves.head, moves.last).nonEmpty
         yield search.lines.filter(line => moves.contains(line.evaluation.moves.head))
           .map(line => search.pathsByMove(line.evaluation.moves.head))

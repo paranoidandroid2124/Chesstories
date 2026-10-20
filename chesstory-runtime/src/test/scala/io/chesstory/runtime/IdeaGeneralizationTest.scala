@@ -20,7 +20,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     fixture("activity-browser") ++ fixture("hypothesis-browser") ++ fixture("priority-browser") ++
     fixture("reply-functions-browser") ++ fixture("counterplay-browser") ++ fixture("obligation-browser") ++
     fixture("preparation-browser") ++ fixture("prevention-browser") ++ fixture("resources-browser") ++
-    fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser")
+    fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser") ++ fixture("root-refresh-browser")
 
   private def replay(id: String, reportCount: Int = Int.MaxValue): List[CommentaryJobState] =
     val row = screenCases.find(r => (r \ "id").as[String] == id).get
@@ -325,6 +325,33 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     Files.writeString(folder.resolve("qg2-witnessed-replay.json"),
       Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
         "note" -> "Development replay of unchanged Qg2 reports; not a new screen or independent validation.")), UTF_8)
+
+  test("a root refresh retains the earlier reply comparison through its original owned witness"):
+    val state = replay("qg2-root-refresh-first-screen").last
+    val packet = state.observationsPacket.get
+    val paths = state.preparedPaths.get
+    val roots = state.rootSearches.flatMap(_.receipt)
+    val local = MoveWorkProjection.select(packet, paths).local
+    val reading = MovePurpose.read(packet, paths, state.responseSearches, local, roots).get
+    assertEquals(reading.search.work.workId, "work:2")
+    assertEquals(reading.question.path.moves(1), "g7g6",
+      "the current assessed PV differs from the earlier Qf7 witness")
+    assertEquals(reading.branches.map(_.path.moves(1)), List("f4f7", "h5f7"))
+    assert(MovePurpose.read(packet, paths, state.responseSearches, local,
+      roots.filterNot(_.work.workId == "work:0")).forall(_.search.work.workId != "work:2"),
+      "the later root receipt cannot retrospectively own the earlier response request")
+    val row = screenCases.find(r => (r \ "id").as[String] == "qg2-root-refresh-first-screen").get
+    val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
+      (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
+    val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
+      .find(c => (c \ "selection").asOpt[String].contains("selected")).get
+    assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
+      Some("work:2"), "the basic comparison must retain the question it investigated")
+    val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
+    Files.createDirectories(folder)
+    Files.writeString(folder.resolve("qg2-root-refresh-replay.json"),
+      Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
+        "note" -> "Development replay of the four original Qg2 reports after receipt ownership repair; not a new UI result.")), UTF_8)
 
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(

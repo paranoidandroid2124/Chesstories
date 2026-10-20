@@ -88,6 +88,46 @@ test('equal exchanges retain the recapturing pieces different duties in the actu
   }
 });
 
+test('an actual root recheck cannot erase the earlier owned witness of its returned reply pair', () => {
+  const wire = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-final-development-wire.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const request = JSON.parse(wire.events.find((e: any) => e.method === 'Network.requestWillBeSent' &&
+    e.params.request.url.endsWith('/position-commentary-jobs')).params.request.postData);
+  const source = JSON.parse(wire.bodies['420.179'].body);
+  const decoded = decodeMoveReviewSnapshot(source, contextFor(request));
+  assert.equal(decoded?.kind, 'completed');
+  const observations = decoded?.observations;
+  const selection = observations?.selection;
+  assert.ok(selection, 'the original empty-screen response must retain its selected explanation');
+  const selected = selection.candidates.find(c => c.selection === 'selected');
+  assert.ok(selected?.detail.summary_question);
+  const question = selection.purpose_question!;
+  const work = selection.response_searches!.find(s => s.work_id === 'work:2')!;
+  const legal = observations!.positions!.find(p => p.id === question.child_position_id)!.legal_moves.moves.map(m => m.uci);
+  const context = { observations: observations!, searches: selection.response_searches!,
+    roots: selection.root_searches, workId: work.work_id, engineProfile: work.engine_profile,
+    requiredDepth: work.required_depth };
+  const newPath = observations!.paths.find(p => p.id === question.source_line_id)!;
+  assert.equal(newPath.moves[1].uci, 'g7g6');
+  assert.ok(purposeResponseMovesMatch(question, ['f4f7', 'h5f7'], legal, context));
+  assert.equal(purposeResponseMovesMatch(question, ['f4f7', 'h5f7'], legal, {
+    ...context, roots: context.roots!.filter(r => r.work_id !== 'work:0'),
+  }), false, 'the later PV cannot retrospectively witness the earlier request');
+  assert.equal(purposeResponseMovesMatch(question, ['h5h6', 'h5f7'], legal, context), false,
+    'the earlier witness must still be paired with the strongest independent other reply');
+  assert.equal(purposeResponseMovesMatch({ ...question, source_line_id: 'foreign-line' },
+    ['f4f7', 'h5f7'], legal, context), false);
+  const replay = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-root-refresh-replay.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const repaired = decodeMoveReviewSnapshot(replay.snapshot, contextFor(replay.request));
+  const answer = repaired?.observations?.selection?.candidates.find(c => c.selection === 'selected')?.detail.summary_question;
+  assert.ok(answer, 'the same original reports must retain the reply account after the backend ownership repair');
+  assert.equal(answer.move_purpose?.work_id, 'work:2');
+  assert.ok(answer.units.every(u => !u.english_only));
+});
+
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
   const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(

@@ -72,6 +72,18 @@
     {
       "sha": "06b6c77354",
       "meaning": "Common conditional sufficiency and final receipt state repair; first unused Rfe1 failed and is retained."
+    },
+    {
+      "sha": "84cc4c2183",
+      "meaning": "Consume the actual witnessed reply pair without requiring different geometric classes."
+    },
+    {
+      "sha": "7d70622e92",
+      "meaning": "Compare the lost versus retained original guard after the same material exchange."
+    },
+    {
+      "sha": "d050988bd4",
+      "meaning": "Reject bare arrival and transient ray contact as sufficient purpose; preserve unanswered reply receipts."
     }
   ],
   "implementation": [
@@ -236,6 +248,24 @@
       },
       "evidence": "purpose-explanation-20261020/stage10-evidence.json.gz",
       "development_replay": "purpose-explanation-20261020/qg2-purpose-admission-replay.json.gz"
+    },
+    {
+      "stage": 11,
+      "status": "common_receipt_repair_after_failed_development_screen",
+      "changes": [
+        "Recover the exact original supported action from an owned earlier completed root receipt. Require the same original beneficiary, support proof, root/child occurrence, profile and depth; keep the strongest independent other reply. The frontend independently reconstructs the evidence."
+      ],
+      "validation": {
+        "backend": "48/48",
+        "frontend": "27/27",
+        "typescript": "passed",
+        "fresh_ui_after_repair": 0,
+        "independent_passes": 0
+      },
+      "scope": "No new purpose detector or candidate priority was introduced in this repair. The final-freeze promise was exceeded by this common ownership repair; the unchanged failed screen is not relabeled as a pass. Rfe1 has not been searched or replayed under changed source.",
+      "ranking_audit": "Saved Qg2 and Re2 reports showed no better evidenced candidate being suppressed. Qg2's missing meaningful candidate coverage remains a limitation; no extra ranking rule was added.",
+      "evidence": "purpose-explanation-20261020/stage11-evidence.json.gz",
+      "development_replay": "purpose-explanation-20261020/qg2-root-refresh-replay.json.gz"
     }
   ],
   "verification": {
@@ -331,6 +361,23 @@
       "diagnostic_replay": "purpose-explanation-20261020/rfe1-first-replay.json.gz",
       "capture_limit": "All original requests/reports were recovered. The final two HTTP response bodies had been evicted from the inspector; the c2 source replay is explicitly diagnostic, not an original response capture.",
       "fresh_reruns": 0
+    },
+    "qg2_final_development_failure": {
+      "source": "d050988bd450eced1a403b532134d5c1a99bfccc",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 7.58,
+      "max_depth": 11,
+      "actual_pair": [
+        "e2g2",
+        "g3g4"
+      ],
+      "reports": 4,
+      "finding": "Root work:3 replaced Qg2-Qf7 by Qg2-g6. Both readers validated the earlier returned R4f7/Qf7 comparison against the new PV, discarded its provenance and left the basic UI empty.",
+      "status": "failed_basic_delivery",
+      "retained_wire": "purpose-explanation-20261020/qg2-final-development-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-final-development-screen.txt",
+      "freeze": "purpose-explanation-20261020/final-development-freeze.json",
+      "capture": "All four original engine reports and final POST response captured. Final GET was unavailable; no reconstructed response is labeled original HTTP."
     }
   },
   "cleanup": [
@@ -394,6 +441,13 @@
       "bytes": 3664109.0,
       "receipt": "purpose-explanation-20261020/stage10-recycled.json.gz",
       "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
+    },
+    {
+      "files": 62,
+      "bytes": 16741413.0,
+      "receipt": "purpose-explanation-20261020/stage11-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage11-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact retained base64/SHA256 roundtrip and resolved task path checks. Prior README section also retained byte-for-byte. Baseline backup and first failure evidence preserved."
     }
   ],
   "studied_failures": [

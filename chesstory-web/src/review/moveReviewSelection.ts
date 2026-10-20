@@ -649,26 +649,56 @@ function purposeWitnessMovesMatch(question: CommentaryPurposeQuestion, moves: re
     search.root_move_occurrence_id === question.root_occurrence_id &&
     search.child_position_id === question.child_position_id && search.prefix_moves_uci?.length === 1 &&
     search.engine_profile === context.engineProfile && search.required_depth >= context.requiredDepth);
-  const source = context.observations.paths.find(path => path.id ===
+  const currentSource = context.observations.paths.find(path => path.id ===
     (question.plan?.line_id ?? question.source_line_id) && path.moves[0]?.uci === question.root_move &&
     path.occurrenceIds[0] === question.root_occurrence_id && path.positionIds?.[1] === question.child_position_id &&
     path.moves.slice(2).some(move => move.uci === question.use_move));
-  if (!pool || !source) return false;
-  const rootWitness = source.evaluations?.some(value => ['root_search', 'focus_comparison'].includes(value.source)) ||
-    context.roots?.some(work => earlier(work.work_id) && work.purpose === 'investigation_comparison' &&
-      work.state === 'completed' && work.stop_reason === null && work.engine_profile === context.engineProfile &&
-      work.required_depth >= context.requiredDepth && work.root_occurrence_id === question.root_occurrence_id &&
-      work.candidates.some(candidate => candidate.line_id === source.id &&
-        candidate.move_uci === question.root_move && candidate.occurrence_id === source.occurrenceIds[0]));
+  if (!pool || !currentSource) return false;
+  const sources = [currentSource];
+  // A later root recheck can replace the PV without changing the supported
+  // physical action. Validate an earlier request against its earlier owned
+  // witness, not the new PV's first reply. Rebuild the support proof and match
+  // the original beneficiary; a matching move string alone is insufficient.
+  if (question.kind === 'supported_advance' && !question.plan && !question.activity_plan &&
+    !question.reply_activities) {
+    const beneficiary = (path: ObservationPath) => {
+      const use = path.moves.findIndex(move => move.uci === question.use_move);
+      return use >= 2 ? trackedPieces(path, use)?.find(piece =>
+        piece.current?.square === question.use_move.slice(0, 2))?.original : undefined;
+    };
+    const original = beneficiary(currentSource);
+    for (const work of context.roots ?? []) {
+      if (!earlier(work.work_id) || work.state !== 'completed' || work.stop_reason !== null ||
+        work.engine_profile !== context.engineProfile || work.required_depth < context.requiredDepth ||
+        work.root_occurrence_id !== question.root_occurrence_id) continue;
+      for (const candidate of work.candidates.filter(c => c.move_uci === question.root_move)) {
+        const path = context.observations.paths.find(p => p.id === candidate.line_id &&
+          p.occurrenceIds[0] === question.root_occurrence_id && candidate.occurrence_id === p.occurrenceIds[0] &&
+          p.positionIds?.[1] === question.child_position_id);
+        const user = path && beneficiary(path);
+        if (path && original && user && samePiece(original, user) &&
+          decodePurposeQuestion({ ...question, source_line_id: path.id }, context.observations,
+            question.root_move, 'work_id' in question)) sources.push(path);
+      }
+    }
+  }
   const present = pool.candidates.map(candidate => candidate.move_uci);
   const classesReturned = present.some(move => question.challenge_moves.includes(move)) &&
     present.some(move => !question.challenge_moves.includes(move));
-  if (!rootWitness && !classesReturned) return false;
   // The witnessed response is compared with the strongest independent other reply.
   // This is a purpose question even when both replies share the same geometric class.
-  const witness = source.moves[1]?.uci;
-  const other = present.find(move => move !== witness);
-  return !!witness && !!other && sameIds([...moves], [witness, other]);
+  return sources.some(source => {
+    const rootWitness = source.evaluations?.some(value => ['root_search', 'focus_comparison'].includes(value.source)) ||
+      context.roots?.some(work => earlier(work.work_id) && work.purpose === 'investigation_comparison' &&
+        work.state === 'completed' && work.stop_reason === null && work.engine_profile === context.engineProfile &&
+        work.required_depth >= context.requiredDepth && work.root_occurrence_id === question.root_occurrence_id &&
+        work.candidates.some(candidate => candidate.line_id === source.id &&
+          candidate.move_uci === question.root_move && candidate.occurrence_id === source.occurrenceIds[0]));
+    if (!rootWitness && !classesReturned) return false;
+    const witness = source.moves[1]?.uci;
+    const other = present.find(move => move !== witness);
+    return !!witness && !!other && sameIds([...moves], [witness, other]);
+  });
 }
 
 export interface CommentaryDiscovery {
