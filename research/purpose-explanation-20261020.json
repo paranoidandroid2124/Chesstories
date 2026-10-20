@@ -54,10 +54,6 @@
   ],
   "commits": [
     {
-      "sha": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
-      "meaning": "Preservation checkpoint of all 446 inherited modified/untracked files; no new goal success claimed."
-    },
-    {
       "sha": "45f9b1be69",
       "meaning": "Shared purpose decision checkpoint; fresh UI not yet validated."
     },
@@ -90,8 +86,24 @@
       "meaning": "Retain the original owned witness when a later root refresh changes the PV."
     },
     {
+      "sha": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
+      "meaning": "Preservation checkpoint of all 446 inherited modified/untracked files; no new goal success claimed."
+    },
+    {
       "sha": "cfd726433930d1f0c06896599a1f80d6ed76a45d",
       "meaning": "Record purpose explanation goal and recycle duplicate research outputs"
+    },
+    {
+      "sha": "45f9b1be696447933b01a438760533ae23dbc43a",
+      "meaning": "Rank and stop purpose investigation by actual comparison evidence"
+    },
+    {
+      "sha": "dd14b64cf1f1b5bda0d58eaa00be417fd5fd6e1a",
+      "meaning": "Lead basic commentary with the selected purpose and actual alternative"
+    },
+    {
+      "sha": "cb7a4ccf828278c2e7cdb24abd5086c796acdffb",
+      "meaning": "Keep delayed root purposes aligned with response investigation"
     },
     {
       "sha": "20f9e8c85bccc8101a6f7f9597e115876d9ca69d",
@@ -106,8 +118,32 @@
       "meaning": "Validate witnessed purpose reply probes consistently at request and delivery"
     },
     {
+      "sha": "06b6c77354eb13f255d5cae4b14ceb6f4dcb9fd2",
+      "meaning": "Keep conditional purpose sufficiency and final receipt state distinct from discovered facts"
+    },
+    {
+      "sha": "84cc4c21836cee319c241d218f5f7f1976ead8e5",
+      "meaning": "Retain the exact witnessed reply comparison in the basic purpose account"
+    },
+    {
+      "sha": "7d70622e9273f0f653a50a20977cfa2924f46e86",
+      "meaning": "Compare the guard duty spent by recaptures of the same traded pieces"
+    },
+    {
+      "sha": "d050988bd450eced1a403b532134d5c1a99bfccc",
+      "meaning": "Keep transient contacts and unanswered replies out of completed purpose accounts"
+    },
+    {
+      "sha": "03424c55711770da37ce3cd349299a9d4dcd60a9",
+      "meaning": "Preserve owned reply evidence through actual root refreshes"
+    },
+    {
       "sha": "61d45119bd6dc15532a195013cbc9c07e809af37",
       "meaning": "Retain unanswered purpose comparisons and valid answers at deadline"
+    },
+    {
+      "sha": "064b944e55e2dd905ce38b7424d57519f0f6208e",
+      "meaning": "Compare shared supported actions without duplicating provider absences"
     }
   ],
   "implementation": [
@@ -579,8 +615,8 @@
   ],
   "last_run": {
     "outcome": "unachieved",
-    "product_commit": "61d45119bd6dc15532a195013cbc9c07e809af37",
-    "reported_utc": "2026-10-20T19:16:12.092669+00:00",
+    "product_commit": "064b944e55e2dd905ce38b7424d57519f0f6208e",
+    "reported_utc": "2026-10-20T19:33:16.385312+00:00",
     "fresh_position_count": 2,
     "qg2_development_requests": 7,
     "rfe1_first_requests": 1,
@@ -596,14 +632,24 @@
     ],
     "app": {
       "url": "http://127.0.0.1:8787/",
-      "source_commit": "61d45119bd6dc15532a195013cbc9c07e809af37",
-      "restored": "1. e4 PGN, initial position, Korean, engine off, blank inputs"
+      "source_commit": "064b944e55e2dd905ce38b7424d57519f0f6208e",
+      "restored": "1. e4 PGN, initial position, Korean, engine off, blank inputs",
+      "runtime_port": 52258,
+      "note": "Current source started and original UI state confirmed; no new commentary request after the last saved-report repair."
     },
     "preservation": {
       "inherited_files": 446,
       "commit": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
       "archive_verified": true
     },
-    "evidence": "purpose-explanation-20261020/final-evidence.json.gz"
+    "evidence": "purpose-explanation-20261020/final-evidence.json.gz",
+    "elapsed_seconds": 21251,
+    "final_app_startup_confirmed": true,
+    "cleanup_totals": {
+      "files": 468,
+      "file_bytes": 141959798,
+      "temporary_directories": 1,
+      "directory_bytes": 34102718
+    }
   }
 }

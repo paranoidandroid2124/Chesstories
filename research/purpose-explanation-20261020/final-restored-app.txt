@@ -12,7 +12,7 @@ Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1
 			11 container 체스판과 기보
 				12 heading 분석 기보, Value: 1
 					13 text 분석 기보
-				82 text 시작 국면
+				14 text 시작 국면
 				15 container
 					16 image
 					17 image
@@ -53,8 +53,8 @@ Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1
 						52 text 기보
 					53 button PGN 저장
 					54 button 1. e4
-				84 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
-					85 text PGN · FEN 불러오기
+				55 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					56 text PGN · FEN 불러오기
 				57 container
 					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
 						59 text 현재 FEN
@@ -71,6 +71,6 @@ Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1
 						70 text 아직 리뷰할 수가 없습니다
 					71 text 수를 두거나 기보에서 수를 선택하세요.
 		72 container
-			83 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+			73 text 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
 
-The focused UI element is 84 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
