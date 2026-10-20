@@ -76,7 +76,9 @@ private[runtime] object CommentaryAnswer:
         (0 until plan.join).map(MoveRef(value.question.path, _))) ++ value.witnessedSupport.toList.flatMap(branch =>
           (0 to branch.through).map(MoveRef(branch.path, _)))
     def references = actionReferences ++
-      (if value.activityContinuity.nonEmpty then value.branches.map(branch => MoveRef(branch.path, branch.through)) else Nil)
+      value.preparedChoice.map((path, _) => MoveRef(path, 0)) ++
+      (if value.activityContinuity.nonEmpty || value.commonPreparedTargets.nonEmpty then
+        value.branches.flatMap(branch => List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.through))) else Nil)
 
   final case class FunctionReply(value: MovePurpose.Reading, branch: MovePurpose.Branch) extends Statement:
     def references = (List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.use), MoveRef(branch.path, branch.through)) ++

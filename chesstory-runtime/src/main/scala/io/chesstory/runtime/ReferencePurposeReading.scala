@@ -1002,9 +1002,13 @@ private[runtime] object ReferencePurposeReading:
       }).map(branch => continuation(branch.path, branch.through, FunctionPurpose(value), priceHere = true)))
     // Each bounded aftermath now owns its selected functional differences.
     // A second inventory/comparison paragraph would repeat the same duties.
+    val (purposeLead, replyDifferences) = alternatives.partition(_.statements.exists {
+      case _: FunctionPurpose => true
+      case _ => false
+    })
     RootQuestionSummary.completePairAnswer(packet, paths, pair,
       if reading.preparation.nonEmpty then "functional_response" else "selected_comparison",
-      lead :: (functionalPlans ++ continuations ++ preparedReplies ++ replyRanking ++ alternatives))
+      functionalPlans ++ purposeLead ++ List(lead) ++ preparedReplies ++ replyRanking ++ replyDifferences ++ continuations)
       .map(value => value.copy(evidence = (value.evidence ++ reading.evidence).distinct))
       .map(value => if reading.preparation.isEmpty then value else value.copy(
         completionSources = Some(value.core.flatMap(_.statements).filterNot {

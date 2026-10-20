@@ -53,6 +53,10 @@
     {
       "sha": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
       "meaning": "Preservation checkpoint of all 446 inherited modified/untracked files; no new goal success claimed."
+    },
+    {
+      "sha": "45f9b1be69",
+      "meaning": "Shared purpose decision checkpoint; fresh UI not yet validated."
     }
   ],
   "implementation": [
@@ -79,6 +83,22 @@
         "These saved-report checks do not establish fresh-screen generalization.",
         "Purpose delivery remains buried in some basic explanations; next stage changes selection/order without dropping required prices."
       ]
+    },
+    {
+      "stage": 2,
+      "status": "delivery_checkpoint_not_goal_completion",
+      "changes": [
+        "Put the selected functional purpose and its actual immediate alternative before factual inventories and checkpoints. Reply differences precede final-state lists.",
+        "Share an original target relocation once only when both owned branches show that same target at their final checkpoints and the original beneficiary no longer attacks it there. Standalone replies retain full text and proof.",
+        "Keep separate costs, delayed realization, actual root references and independent frontend ownership checks."
+      ],
+      "validation": {
+        "backend": "43/43 focused checks",
+        "frontend": "22/22; TypeScript passed",
+        "fresh_searches": 0,
+        "fresh_ui": 0
+      },
+      "evidence": "purpose-explanation-20261020/stage2-evidence.json.gz"
     }
   ],
   "verification": {},

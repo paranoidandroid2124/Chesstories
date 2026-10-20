@@ -97,6 +97,17 @@ private[runtime] object MovePurpose:
       val preparedChoice: Option[(PreparedPath, List[Piece])] = None):
     lazy val neutralization = choice.flatMap(PurposeChoice.neutralization(_, branches, owner))
     def belongsTo(paths: PreparedPaths): Boolean = owner eq paths
+    def commonPreparedTargets: List[(Piece, Option[Piece])] =
+      if question.plan.nonEmpty || question.support.nonEmpty || question.activity.nonEmpty || branches.size != 2 then Nil
+      else branches.head.relocated.filter { change =>
+        preparedChoice.exists(_._2.contains(change._1)) && branches.forall { branch =>
+          branch.relocated.contains(change) &&
+            owner.trackedPieceAfter(branch.path, change._1, branch.through + 1).contains(change._2) &&
+            (change._2.isEmpty || owner.purposePosition(branch.path, branch.through + 1).exists(at =>
+              owner.trackedPieceAfter(branch.path, question.user, branch.through + 1).flatten.exists(user =>
+                !at.controlledBy(user)(change._2.get.at))))
+        }
+      }
     def followsSupport: Boolean = question.kind == "supported_advance" && question.use >= 0 &&
       PurposeActivityReading.rootSupport(owner, question.path, question.actor, question.user,
         question.square, question.use + 1).exists(_.follows)

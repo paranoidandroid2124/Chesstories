@@ -171,6 +171,14 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       .find(c => (c \ "selection").asOpt[String].contains("selected"))
     assert(selected.nonEmpty, basic.map(_.text).getOrElse("no basic account"))
     val text = (selected.get \ "detail" \ "summary").as[String]
+    assert(text.startsWith("Qg2 newly supports"), text)
+    assert(text.contains("The immediate Rg4 attacks") &&
+      "In both replies the original f4 rook".r.findAllIn(text).size == 1 &&
+      !text.contains("attacked by the immediate alternative"), text)
+    assert(reading.commonPreparedTargets.exists((p, current) => p.at == "f4" && current.exists(_.at == "f7")))
+    assert(ReferencePurposeText.functionalReply(reading, reading.branches.head, ko = false)
+      .collect { case s: String => s }.mkString.contains("attacked by the immediate alternative"),
+      "a standalone reply still owns the target change; only the preceding purpose permits shortening")
     assert(text.contains("maintaining that support") && text.contains("R4f7") && text.contains("g6") &&
       text.contains("Rg4") && text.contains("followed later") && text.contains("exchanged") &&
       !text.contains("purpose is not established"), text)

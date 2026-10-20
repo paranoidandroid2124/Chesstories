@@ -25,7 +25,9 @@ test('a prepared alternative retains its original target and owns the actual eva
   assert.deepEqual(decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question,
     answer);
   assert.deepEqual(answer.move_purpose.prepared_choice.targets, [{ side: 'black', role: 'rook', square: 'f4' }]);
-  assert.match(JSON.stringify(answer.units), /실제 대안이 공격하던/);
+  assert.match(JSON.stringify(answer.units[0].ko), /g3의 룩을 새로 지원/);
+  assert.match(JSON.stringify(answer.units[0].ko), /흑 f4 룩을 공격/);
+  assert.equal((JSON.stringify(answer.units.map((u: any) => u.ko)).match(/두 응수 모두 원래 f4의 룩은 f7/g) ?? []).length, 1);
   const raw = structuredClone(source.snapshot);
   const question = raw.observations.selection.candidates.find((c: any) => c.id === selected.id).detail.summary_question;
   question.move_purpose.prepared_choice.targets[0].square = 'f7';

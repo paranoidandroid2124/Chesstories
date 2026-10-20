@@ -861,7 +861,8 @@ private[runtime] object CommentaryEnglish:
             aftermath.get.parts
           case FunctionReply(value, branch) if value.question.activity.isEmpty =>
             ReferencePurposeText.functionalReply(value, branch, ko = false,
-              announced.collect { case ReferencePurpose(reading) => reading })
+              announced.collect { case ReferencePurpose(reading) => reading },
+              announced.collect { case FunctionPurpose(reading) => reading })
           case _: PreparedReply if replies.nonEmpty =>
             consumed ++= replies.get.expressed
             replies.get.parts

@@ -826,7 +826,8 @@ private[runtime] object RootQuestionSummary:
             case value: CommentaryAnswer.ActivityUse => ReferencePurposeText.condition(value).get
             case CommentaryAnswer.FunctionReply(value, branch) if value.question.activity.isEmpty =>
               ReferencePurposeText.functionalReply(value, branch, ko = true,
-                announced.collect { case CommentaryAnswer.ReferencePurpose(reading) => reading })
+                announced.collect { case CommentaryAnswer.ReferencePurpose(reading) => reading },
+                announced.collect { case CommentaryAnswer.FunctionPurpose(reading) => reading })
             case _: CommentaryAnswer.ReferencePosition if aftermath.nonEmpty => aftermath.get.parts
             case _: CommentaryAnswer.PreparedReply if prepared.nonEmpty => prepared.get.parts
             case _: CommentaryAnswer.Material if sharedCosts.nonEmpty => sharedCosts.get.parts
@@ -945,6 +946,7 @@ private[runtime] object RootQuestionSummary:
       announced ++= section.statements.collect {
         case value: CommentaryAnswer.ReferencePurpose => value
         case value: CommentaryAnswer.PreparedIdea => value
+        case value: CommentaryAnswer.FunctionPurpose => value
       }
       result
     }

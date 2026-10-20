@@ -791,14 +791,28 @@ private[runtime] object ReferencePurposeText:
   def functionalPurpose(value: MovePurpose.Reading, ko: Boolean): List[Part] =
     val q = value.question
     if q.plan.isEmpty && q.support.isEmpty && q.activity.isEmpty then
-      return List[Part](MoveRef(q.path, 0), if q.kind == "supported_advance" then
+      val purpose = List[Part](MoveRef(q.path, 0), if q.kind == "supported_advance" then
         if value.followsSupport then
-          if ko then s" 수는 ${q.user.at}의 ${roles(q.user.role.name)}을 새로 지원하며 ${q.square}로 진출한 뒤에도 그 지원을 이어갑니다. 실현 여부는 응수에 따라 달라집니다."
-          else s" newly supports the ${q.user.role.name} on ${q.user.at}, maintaining that support as it advances to ${q.square}. Its realization depends on the reply."
-        else if ko then s" 수는 ${q.square} 통제를 더하여 ${roles(q.user.role.name)}의 진출을 받칩니다. 실현 여부는 응수에 따라 달라집니다."
-        else s" adds control of ${q.square}, supporting the ${q.user.role.name}'s advance. Its realization depends on the reply."
-      else if ko then s" 수는 ${roles(q.user.role.name)}의 ${q.square} 진입 경로를 엽니다. 실현 여부는 응수에 따라 달라집니다."
-        else s" opens a route for the ${q.user.role.name} through ${q.square}. Its realization depends on the reply.")
+          if ko then s" 수는 ${q.user.at}의 ${roles(q.user.role.name)}을 새로 지원하며 ${q.square}로 진출한 뒤에도 그 지원을 이어갑니다."
+          else s" newly supports the ${q.user.role.name} on ${q.user.at}, maintaining that support as it advances to ${q.square}."
+        else if ko then s" 수는 ${q.square} 통제를 더하여 ${roles(q.user.role.name)}의 진출을 받칩니다."
+        else s" adds control of ${q.square}, supporting the ${q.user.role.name}'s advance."
+      else if ko then s" 수는 ${roles(q.user.role.name)}의 ${q.square} 진입 경로를 엽니다."
+        else s" opens a route for the ${q.user.role.name} through ${q.square}.")
+      val alternative = value.preparedChoice.toList.flatMap { (path, targets) =>
+        List[Part](if ko then " 즉시 " else " The immediate ", MoveRef(path, 0),
+          if ko then s"를 두면 ${names(targets, ko)}${obj(targets.last)} 공격합니다."
+          else s" attacks ${names(targets, ko)}.")
+      }
+      val common = value.commonPreparedTargets.map { (original, current) =>
+        if ko then s" 두 응수 모두 원래 ${original.at}의 ${roles(original.role.name)}${topic(original)} " +
+          current.fold("교환되어, 준비 뒤에는 그 공격 대상이 사라집니다.")(p =>
+            s"${p.at}로 옮겨가며, 확인한 구간 끝에는 이 대상에 대한 공격이 남지 않습니다.")
+        else s" In both replies the original ${original.at} ${original.role.name}" +
+          current.fold(" is exchanged away, so that target is gone after the preparation.")(p =>
+            s" moves to ${p.at}; the attack on that target is absent at the observed checkpoints.")
+      }
+      return purpose ++ alternative ++ common
     val plan = value.witnessedPlan.get
     val (own, enemy) = plan.targets.partition(_.side == q.actor.side)
     val tasks = Option.when(own.nonEmpty)(if ko then s"${names(own, ko)}${obj(own.last)} 지킵니다."
@@ -812,7 +826,7 @@ private[runtime] object ReferencePurposeText:
       List[Part]((if ko then "로 재배치되어 " else " and ") + tasks.mkString(" "))
 
   def functionalReply(value: MovePurpose.Reading, branch: MovePurpose.Branch, ko: Boolean,
-      announced: Set[Reading] = Set.empty): List[Part] =
+      announced: Set[Reading] = Set.empty, announcedFunctions: Set[MovePurpose.Reading] = Set.empty): List[Part] =
     val q = value.question
     val progress: List[Part] = if branch.activityRoute.isEmpty then Nil else
       List[Part](MoveRef(branch.path, 1), if ko then " 응수에서는 " else " is followed by ") ++
@@ -869,7 +883,8 @@ private[runtime] object ReferencePurposeText:
             else s"${q.square}를 쓰는 대신 ${name(branch.actor, ko)}의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다."
           else if used then s"${name(branch.actor, ko)} realizes the entry on ${q.square}."
             else s"The line continues with ${name(branch.actor, ko)} instead of using ${q.square}; the plan is not realized in this segment.")
-    val changed = branch.relocated.map { (p, current) =>
+    val changed = branch.relocated.filterNot(change =>
+      announcedFunctions(value) && value.commonPreparedTargets.contains(change)).map { (p, current) =>
       val compared = value.preparedChoice.exists(_._2.contains(p))
       if ko then (if compared then "실제 대안이 공격하던 " else "") +
         s"${original(p, ko)}${topic(p)} " + current.fold("교환되어 그 기능의 대상이 사라집니다.")(now =>
