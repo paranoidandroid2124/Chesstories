@@ -156,6 +156,10 @@
     {
       "sha": "c58e4f3064",
       "meaning": "Keep past reply receipts valid when the current purpose changes"
+    },
+    {
+      "sha": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+      "meaning": "Investigate unanswered actual choices and compare continuous conditional recapture costs; final screen still below explanation criterion."
     }
   ],
   "implementation": [
@@ -602,6 +606,26 @@
       "retained_ui": "purpose-explanation-20261020/qg2-returned-activity-screen.txt",
       "capture": "All four original report POST responses retained, including pending work:2 and final work:3. Actual AX text, no pixel screenshot.",
       "interpretation": "Eighth Qg2 development request; ninth total request across the same two distinct positions. It remains failed; diagnostic decoder success is not a fresh screen or independent pass."
+    },
+    "qg2_bounded_discovery_final": {
+      "status": "basic_delivered_but_core_purpose_partial",
+      "source": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 4.92,
+      "max_depth": 11,
+      "actual_pair": [
+        "e2g2",
+        "d3b3"
+      ],
+      "reports": 3,
+      "finding": "Final basic UI and move-to-board link work. Qg2/Rb3 retains delayed Rg4 support, Rb3-Rxb7 activity, Qh6/g6 reply differences, material exchange and loss of e4 defense, but does not sufficiently unite these facts into the core reason for the actual choice. Support and end-function repetition remains.",
+      "retained_wire": "purpose-explanation-20261020/qg2-bounded-discovery-live-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-bounded-discovery-live-screen.txt",
+      "retained_board": "purpose-explanation-20261020/qg2-bounded-discovery-live-board.txt",
+      "freeze": "purpose-explanation-20261020/bounded-discovery-freeze.json",
+      "capture": "All three original report POST responses and original creation response retained. Actual browser accessibility text; pixel capture not available.",
+      "interpretation": "Ninth Qg2 development request, tenth request across two distinct positions. Not a fresh independent success. No final-code Rfe1 rerun.",
+      "diagnosis": "purpose-explanation-20261020/final-purpose-audit.json"
     }
   },
   "cleanup": [
@@ -725,6 +749,13 @@
         "purpose-explanation-20261020/qg2-bounded-discovery-replay.json.gz"
       ],
       "method": "Windows Recycle Bin after exact archive roundtrip, resolved task directory/ancestor and SHA256 checks."
+    },
+    {
+      "files": 12,
+      "bytes": 3588876,
+      "receipt": "purpose-explanation-20261020/closing-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/closing-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact diagnostic archive roundtrip, resolved output/ancestor checks and SHA256. Eight diagnostics/duplicate receipts retained exactly, four outputs remain reproducible from committed tests and fixed inputs. Original baseline preserved."
     }
   ],
   "studied_failures": [
@@ -740,42 +771,78 @@
   ],
   "last_run": {
     "outcome": "unachieved",
-    "product_commit": "064b944e55e2dd905ce38b7424d57519f0f6208e",
-    "reported_utc": "2026-10-20T19:33:16.385312+00:00",
+    "product_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+    "reported_utc": "2026-10-20T20:28:02.697280+00:00",
     "fresh_position_count": 2,
-    "qg2_development_requests": 8,
+    "qg2_development_requests": 9,
     "rfe1_first_requests": 1,
     "max_issued_depth": 11,
     "request_limit_ms": 20000,
     "independent_successes": 0,
-    "final_code_ui_recheck": false,
+    "final_code_ui_recheck": true,
     "limits": [
-      "First unused Rfe1 failed and remains immutable.",
-      "Latest fresh Qg2/h3 screen delivered basic text but omitted the negative reply comparison; final repair checked on unchanged reports only.",
-      "The reciprocal provider repetition was reduced in the common comparison. Alternative-plan value and post-exchange activity remain insufficiently generalized.",
-      "No successful pixel screenshot; browser AX and actual network results retained."
+      "Final Qg2/Rb3 actual screen is visible at 4.92s, but core-choice explanation is partial; its internal completed-purpose verdict is a false positive against the user criterion.",
+      "First unused Rfe1 failed and remains immutable; no changed-source replay, new search or dedicated rule/test.",
+      "Same-report Qg2/Nc3 conditional recapture discovery is a development improvement, not an independent generalization result.",
+      "No successful pixel screenshot; actual browser accessibility and network evidence retained.",
+      "Frontend core 30/30 and type check passed; targeted final backend cases passed. Four FunctionalReplyReadingTest wording assertions still failed against renderer text identical to the pre-Stage16 source; no new baseline execution is claimed for those four. Earlier separate two baseline failures are documented in Stage12."
     ],
     "app": {
       "url": "http://127.0.0.1:8787/",
-      "source_commit": "064b944e55e2dd905ce38b7424d57519f0f6208e",
-      "restored": "1. e4 PGN, initial position, Korean, engine off, blank inputs",
-      "runtime_port": 52258,
-      "note": "Current source started and original UI state confirmed; no new commentary request after the last saved-report repair."
+      "source_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+      "restored": "1. e4 PGN, initial position, Korean, engine off, blank inputs, collapsed import",
+      "runtime_port": 57859,
+      "node_pid": 55072,
+      "note": "Current source rebuilt and started. One final Qg2 commentary request and Rg4 board link checked; restored original UI state afterwards."
     },
     "preservation": {
       "inherited_files": 446,
       "commit": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
-      "archive_verified": true
+      "archive_verified": true,
+      "first_rfe1_hashes_unchanged": true,
+      "final_frozen_product_files_unchanged": 113
     },
-    "evidence": "purpose-explanation-20261020/final-evidence.json.gz",
-    "elapsed_seconds": 21251,
+    "evidence": "purpose-explanation-20261020/closing-evidence.json.gz",
+    "elapsed_seconds": 24537,
     "final_app_startup_confirmed": true,
     "cleanup_totals": {
-      "files": 468,
-      "file_bytes": 141959798,
+      "files": 513,
+      "file_bytes": 158181293,
       "temporary_directories": 1,
       "directory_bytes": 34102718
     },
-    "continuation": "Stage15 historical catalogue ownership repair checked on unchanged original HTTP; investigation continues within original seven-hour cap."
-  }
+    "continuation": "Closing within the original seven-hour cap. No further product retuning or engine requests after the final frozen screen. Goal is not marked complete.",
+    "record_validation": {
+      "prior_verification_entries_unchanged": 9,
+      "prior_research_sections_unchanged": true,
+      "current_evidence_links_valid": 19,
+      "product_sources_unchanged_after_final_ui": 113,
+      "original_ax_trailing_spaces": "Preserved verbatim. Default git whitespace check flags these capture lines; source and record changes are checked separately."
+    }
+  },
+  "remaining_bottlenecks": [
+    {
+      "priority": 1,
+      "kind": "false_completed_purpose",
+      "evidence": "purpose-explanation-20261020/final-purpose-audit.json",
+      "finding": "Final frozen Qg2/Rb3 screen is partial while reading_complete and selected_answer_complete are true. Both arms satisfy changedFunction and discovery scans are zero.",
+      "cause": "A changed attack/support/open-file list can fill the comparison with two root references. PurposeEvidence then treats realized use plus two roots plus any explained reply as answered, without requiring an explicit relation explaining the significance of that difference to the same core purpose.",
+      "next": "Represent and require the actual purpose comparison itself, including enabling condition, use, actual other-choice consequence, reply dependence and price; share that witness across selection and termination. Preserve incomplete facts without upgrading them."
+    },
+    {
+      "priority": 2,
+      "kind": "conditional_realization_selection",
+      "finding": "The same-report Qg2/Nc3 counterfactual recapture improvement does not establish generalized plan discovery. Final automatic pair Qg2/Rb3 has different demands; cannot import the favorable Nc3 account."
+    },
+    {
+      "priority": 3,
+      "kind": "independent_explanation",
+      "finding": "First unused Rfe1 failed in both delivery and purpose explanation. It remains untouched and is not recategorized as a pass."
+    },
+    {
+      "priority": 4,
+      "kind": "repetition",
+      "finding": "Root support, reply realization and ending function can still repeat despite shared-action deduplication."
+    }
+  ]
 }

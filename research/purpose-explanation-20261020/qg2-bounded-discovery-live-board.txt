@@ -1,0 +1,13 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 15-35, 145-154
++				145 container 32.Rg4 · 수 이후
++				146 container
++					147 text 해설 수순 · 32.Rg4
++					148 button 이전 수
++					149 button (disabled) 다음 수
++					150 button 기보로 돌아가기
++						151 text +
+~						99 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:90c88a81d7968f4881e61a40970dfe5aff911ad087731708f37f1f2c220b315b-question-basic-0-13
++						152 text +
+The focused UI element is 99 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:90c88a81d7968f4881e61a40970dfe5aff911ad087731708f37f1f2c220b315b-question-basic-0-13

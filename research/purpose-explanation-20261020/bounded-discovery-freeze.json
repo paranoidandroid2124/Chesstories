@@ -1,0 +1,459 @@
+{
+  "source_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+  "frozen_utc": "2026-10-20T20:15:56.431014+00:00",
+  "purpose": "One final Qg2 development request after Stage16. No independent pass implied; no Rfe1 run.",
+  "files": [
+    {
+      "path": "chesstory-runtime/build.sbt",
+      "sha256": "f5d55c1d42b4d6f0032fd086e36cc4b8dcd123a638bd75a0ebdad5a19471eeaf"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/AnchoredChoiceAnswer.scala",
+      "sha256": "d89016021715f56b182667f9305ade57b6dc18a43bc954c2a0fed8c02fd5c21d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/AnchoredChoiceReading.scala",
+      "sha256": "d56af4be4be91cfc276c971ee41217a0067c65757f397509e4acb637fb908272"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/BasicPurposeReading.scala",
+      "sha256": "e8dbeb2d616997399c1096f319d018c2ef6af791be404467840a5a024692d3c6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ChesstoryRuntime.scala",
+      "sha256": "69ea31ea91284e99dea6d8f72091fb910f6335aeaa71953ced6009eaddefd4ec"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "sha256": "9a0fbc5ba689eb39601697e1c98d07aadbe90efcb9ba795c1d25320cf39ac48e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryChoiceValue.scala",
+      "sha256": "68dfd62d19f1767dc5e27c098bcd81b54bb626185a36470a7c0affbcf0b40c74"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryComparisonConflict.scala",
+      "sha256": "0864ac022a9048d9559b83307d7c566852f248766ae2fa9a44e0d3208116b9bb"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+      "sha256": "37f50bb17b5a939a9b4e2540ba6dd114d43d7fe52dd9a3235b47bf481f9f1b09"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEngineProfile.scala",
+      "sha256": "de1c6003d630eaa6e3de2b91eb651c235faf4280d655801442b736a66afa644a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "sha256": "65113bc989cdc4449b300d4fa912a3c4129a329f0c783a16c044394f0ef9b7e9"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFact.scala",
+      "sha256": "4631e62e6e5dc084f44e73936d6ede774b2b31a0ebbd0eb56c5c651e7cbfe760"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactAtoms.scala",
+      "sha256": "5f184ed8504e3d2ce3f24384fcc51738d1ee023babfe396e679747e2f9e8a71f"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryFactReader.scala",
+      "sha256": "82a0f1e4d9db7235d3851b123a10b8c111629b255a9c20a4da88e252085cb0d6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryIdea.scala",
+      "sha256": "4c9b02ebb6f57afe4aad725a3d9ba4da65b11612f80fd19dfd5ef17097fc36da"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryInvestigation.scala",
+      "sha256": "447b72135c5e871bcb63b534a43a59dde8258d465140ff32cae34b069e7af44e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "sha256": "3b396d0a775ab70b8336fbb120e23b678fc25f15d6e83da436167e505d0accb2"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobRegistry.scala",
+      "sha256": "50391a64c9a613d53432b5cc045ae1c4a0574cdfed1afff780da8fb51b83920f"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryMaterialAccount.scala",
+      "sha256": "2f3ac03e5bac605f79e0bd0a0c3c60634c8cd52e6ee00b633557f5918640a15d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryNotation.scala",
+      "sha256": "26b76c73d4a5d4b21c9aa6554190e61d6489e16569d9ef128db72bdeb56a3daa"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryProposal.scala",
+      "sha256": "752f7256ff289261050e9cce610205268480c34303de43ea6d562b0d17f63587"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySelection.scala",
+      "sha256": "f279c189d95f46c6cbe8a6bd2eda11ce2864dd11db944df1dcc66fafb514e91a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySequenceText.scala",
+      "sha256": "408667206eed9e8346d94399c4b801d6f23d40bc6395d10f2791b09fee876fe1"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryThreat.scala",
+      "sha256": "192ee3e4cf2e06a305e63963a1e5fb2a17752ba73dc5558188b2bd0b65a73107"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ExchangeActivity.scala",
+      "sha256": "f83c938716df27fb58c5fc88b156f757081aaae04bf3a665d3dea99630ddda3a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ExchangeFunctionReading.scala",
+      "sha256": "f55920f87e09cc3ab211ccebaffcd150b176dfa87c38c06ff168fdbd3b8ec363"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalChoiceReading.scala",
+      "sha256": "fb68b1a31163249bf25e24fc80c5cc06b5c696875385a594306fae1580b5cf8d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalRealizationReading.scala",
+      "sha256": "c009b9bac7a247ecf380ecbc1c7420e39c1c445c530cfcf624f380d63f3be1d2"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalReplyReading.scala",
+      "sha256": "c570712d3f62289f8e56ac84498380786101ce7710cfb5d745743040576e477c"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationComparison.scala",
+      "sha256": "e90ba2661d5554905961974b4328476da44908138f68371a181e38f0679e96b2"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/LineContinuationInvestigation.scala",
+      "sha256": "685e907b5c9007367db80ce5216024b360f6d2169d8b0444507ebb2cc0895a55"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+      "sha256": "0367493a1dd3e0e5d2c60304bd7a6fc1ceede54a4c258018230c33c6bf39cae0"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "sha256": "a3c3fcbc2d656508100a4bcc711d049d65e7431f374d812df2408f23f14f0bc8"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "sha256": "cc2998c7e21b105364e9810cf6ba5872dc05f1dfaeee1ebb3820966a2cb9cd00"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+      "sha256": "0a68149ebb285dca83678624834e414b723c8a273aa72aa5d130708e029b01ab"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PositionCommentaryJobProtocol.scala",
+      "sha256": "9c4297677a15c5005e80556c3a2a85d75f38d7ac3bec1646dc5237742b1c2ef3"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PositionResourceProtocol.scala",
+      "sha256": "23500f31d0f6167aa9b7a4bdf38b03d8edc8af5ad5977f647bcea1e96d6bc630"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PrincipalVariationComparison.scala",
+      "sha256": "05aca472f02fce53a619e2c531977aaf28d9b3d202831342add172553f9a3c2f"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeActivityReading.scala",
+      "sha256": "3ffebab6a4e455c2d014bebcbf7fff56f9a6ff5ab7928c1afcda456d0bb20b7c"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeChoice.scala",
+      "sha256": "d237ef6bec737852112c744544359fc2f65be7c66de536a5123850005d36c06e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeEvidence.scala",
+      "sha256": "650b2e1c1d332626418498481824b0a5abffb63d1fddeab31b2bfb719ba1a63a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "sha256": "af26b262e96e2c81e4dff8f21edd187cb62b9e831eddac20202fadb2a4c35176"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+      "sha256": "931d641b1437613226427d58075948885ba413a3ad1c63d3a6993adb6bf645da"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ResponsePurposeReading.scala",
+      "sha256": "f3cacfefeb66854c2ccff092af00492ab33126c875d541c2f483c1b228afe1a6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "sha256": "0606b5d3d3384e37cb7ec6dbfd4e86f1a9b777b45ee213b87f67da8910160b47"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootSubjectComparison.scala",
+      "sha256": "b0f378b7690aca7b7b9b68f155a1f1620c71650eebd7b5d14ec5b335cfeccf6e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootThreatSummary.scala",
+      "sha256": "0c5eabc42c01d431701040c6a3150cb65bf434cc8bf0199d09682a8e8fbd1eb5"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "sha256": "bae8e9186fab27737aa97080e96ec83045c4a35c9a9821c9e62d5e633bcfea14"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/TargetResponseInvestigation.scala",
+      "sha256": "57afaa2737ab59011c69eaa09078e58d819427befea088cab7a262200ddf30f9"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/EvidenceFactAssembler.scala",
+      "sha256": "e95b2c7567542fa86a7470232938099d412aaa4535c9c38b5927d7f9a266ef33"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/JudgmentProvenanceAllocator.scala",
+      "sha256": "40094dbe9d244cbc3ab08fec3e71c4c8674e7d71d1a2fd63412cf47a1da1c1ad"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/MoveReviewAssembler.scala",
+      "sha256": "e205bc9e1c732380f213612332dfc73180f1a7d18921342f3be3081f7f8a9c99"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/MoveReviewInputAdmission.scala",
+      "sha256": "590a5721f7e99cdbe5167d7e5cd0c850c8c33759c9dfabd312f223513337f9bf"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/NodeLineTransitionAssembler.scala",
+      "sha256": "2f5d4e17a643a00db02cfeef5de78ed3294790e84310c4817503f6ad0fe18a60"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceCommentary.scala",
+      "sha256": "933d22e614728bea8ba0d2e1f8429808adb64b24df2d075d3cc0b67362d6bf6b"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/OccurrenceResources.scala",
+      "sha256": "58592f3d092357d316ef99f84ddeac9b806af4adb94f0eede0e78372a5a80ea5"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/RelativeAssessmentAssembler.scala",
+      "sha256": "8421d7b25fafe21329be4f5bc4ca86798a774d4075b31392789f19fc10896760"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/evaluation/EvalFactNormalizer.scala",
+      "sha256": "1c80508f65427b722efdda54c04bb74fc35db0dce352c8e0fe88132d1a6a4b99"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/line/LineFactNormalizer.scala",
+      "sha256": "f1f5a8843eff0bdb278644711113abda2786622168b489a3802b8cee02a20471"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/material/MaterialValue.scala",
+      "sha256": "0bf1ad15633f3f714c7090d88cf2004a4b254a74f63425edd45430a1dd457fcc"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionAnalyzer.scala",
+      "sha256": "ce851abfc30cb14dd8fe022e92cadaf286c10dee86dc4204f6783b471d639662"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/position/PositionRelationExtractor.scala",
+      "sha256": "e06ea16aca0eba0c0a3920b25159cd97eab779cd9a6ef883c2a30886db711bfd"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/relation/ClosedRelationEvidence.scala",
+      "sha256": "33144caa36142857fa7f3af32cf6516b0d965ffc63eb50f84c8b750c59f99093"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/structure/StructuralDeltaAnalyzer.scala",
+      "sha256": "708501ba53661a693bfd2f5dc68f9cafc2f477cea781cb2b715da5f9f8ddf884"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/transition/TransitionFactNormalizer.scala",
+      "sha256": "435512cd5aeee2d9d465e935a74952f94ad7dfdec40324d27c49a2342288ab4d"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/evaluation/JudgmentThresholds.scala",
+      "sha256": "be318964b6262ae350ec2d0346c671a06f8a6297901958fd18db21d24708eb21"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/evaluation/PerspectiveMath.scala",
+      "sha256": "b874553622470a003a54661926d235d7c2d334dc525d9bb3c8e88d645da33f2b"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/evaluation/VerdictThresholdPolicy.scala",
+      "sha256": "0becb996d8c3babe666e5b2df2769c0130fff27e304d3e4446f365a8a5d5ac7b"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/CandidateComparisonRecordAuthority.scala",
+      "sha256": "83749a0287833a0393d6be6597ecd137a8bc19c05363da41fcbf20535fcfb810"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/CanonicalLineReplay.scala",
+      "sha256": "6893da6eb359a6cd03b5faa655bf4b7c17745c4bbc593c8e2dfb1a8bf2a782b1"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/CanonicalRelationDelta.scala",
+      "sha256": "b7eddbd333a1fc94428b94f3f442ffed05ae293bdf31c1e2269c0914660eb214"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/ClosedRelationTransitionInventory.scala",
+      "sha256": "8fbb60a0b729900b70218f2a646ee4e19080fc80e5c4ca742fee6f19c5208102"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/Evidence.scala",
+      "sha256": "4ce535f21d1f7d6a9466062a0e6924c421ba3f03e59891159c1dd40ec1bc350e"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+      "sha256": "8c2b6ba1afa8409547d4986b48ae8def1d4c9486d26fc647b298ef26a7027747"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceIdentity.scala",
+      "sha256": "6855b80dbb8b6da581e566a2d1439e1e62bf9b9a401bceb7e846ff339fd258c4"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/GraphRoles.scala",
+      "sha256": "be10f914dd4768d64dc072daef94b1c31c722b05f233330c4c03dab20bfb10ad"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/JudgmentAssemblyContext.scala",
+      "sha256": "60806afc46894f509f4f41b79079baeb7719dcbd76200bc8586a9984128182ca"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/JudgmentPacket.scala",
+      "sha256": "8b38d35f2b076f69289433b147b5a58a0f569afea8e601eddc8ddfbd2a78612a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/LineNode.scala",
+      "sha256": "7ce6cbe02912f7821c26b601856c5e9369be202b722ffffcb0167cace6bc9323"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/PositionNode.scala",
+      "sha256": "ce3523b21a6eabff88b6eb52362b7907a1e7848f6b2c5808a065e734f232c58a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/RelativeMoveAssessment.scala",
+      "sha256": "1f182b1b17cbfe0ff2d340248c2cfe79c2e5a0a99f1a89dce580fdefef1a420b"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/TransitionEdge.scala",
+      "sha256": "652a63c93021c1e5321327b3efef6e8ebb12d8829648f02a8b21af974fbedc78"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/TransitionRelationProof.scala",
+      "sha256": "2d717f8827bd6d7e8a00f7075f9e39a1e31f6ee8626569b0761def3d5aeeb791"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/VerticalRelationProof.scala",
+      "sha256": "51757b7ac47c248988351e550a0afb5a71e4c4c91344386e6353e4710dd0e6e6"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/CanonicalPositionHistory.scala",
+      "sha256": "41535bd06733be5884ee8d055a3806d67157f5dbf173c6669804b305330398d5"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/EngineLine.scala",
+      "sha256": "7e51d7d1bffa593f047e01b933f396ebe3658832b992b6f92209714551ad8c2a"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/PositionRuleAssessment.scala",
+      "sha256": "0cd89e6c5543f591dadcd391853d32f25c529b95305052321cb432ee992b8b29"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/line/PrincipalVariationEvidence.scala",
+      "sha256": "e2d6b81da4a78cf3c13e6580b4161891709d1a52302a64c3a68489495e115dc8"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/position/BoardGeometry.scala",
+      "sha256": "956a00b85aa11dc513c93090f868d37aa8d6f0131c2c14105a63bd5b3b279237"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/position/PawnTopology.scala",
+      "sha256": "42f3d1ba28a675fd04e7d4cdfa94e173bf1c15955e1c41dbda9604de19e1bb26"
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/position/PositionOccurrenceState.scala",
+      "sha256": "2e89e5f394735b2a54d30297c21a69d9b306a39c41f5f278aaf7f4462e423083"
+    },
+    {
+      "path": "chesstory-web/package-lock.json",
+      "sha256": "4f9862fee8cd1920e40a8d32d2b4a4ae5e25ba60267a912e33b6397fc14bc7f1"
+    },
+    {
+      "path": "chesstory-web/package.json",
+      "sha256": "2861858db1f0997937536b76650c4d949fbbf466c03de1479eac2484edd6a478"
+    },
+    {
+      "path": "chesstory-web/src/engine/browserEngine.ts",
+      "sha256": "5c4aca54335fd42d453452089f8f15aa13115b3b126ece65efbf71aaa76447f6"
+    },
+    {
+      "path": "chesstory-web/src/engine/protocol.ts",
+      "sha256": "696c737e3041dbb7cee2ed28a8a8ac2a16ecd871b23cf8fbc1db3a2ffb1862e0"
+    },
+    {
+      "path": "chesstory-web/src/engine/types.ts",
+      "sha256": "5c8c8936f4cfa12de8d619562ede809d797b4fb07feb5561295558c059c94dae"
+    },
+    {
+      "path": "chesstory-web/src/engine/worker.js",
+      "sha256": "a9b5d3ef8ab9c842db17a2085bd3a90d023e79cbc378f95df8509c1ab0bae745"
+    },
+    {
+      "path": "chesstory-web/src/game.ts",
+      "sha256": "71d21d5d44c57cb73df41370f79304d3be654de936e5acb55e49e7c1794a8a7a"
+    },
+    {
+      "path": "chesstory-web/src/icons.ts",
+      "sha256": "38fa46db9c0853bf0ea08acfb4c794767c2f62a6a94cb26ddb1ee7ff889481d1"
+    },
+    {
+      "path": "chesstory-web/src/main.ts",
+      "sha256": "4be2fc49e975ef170ced2a8f1bfd3b84e624de4aea4b020368374cb81ec749a4"
+    },
+    {
+      "path": "chesstory-web/src/review/_move-review.scss",
+      "sha256": "eb8f3f1c74eda1204c8899efc0480478d6569029b7a536312375fec1bd7f4262"
+    },
+    {
+      "path": "chesstory-web/src/review/chess.ts",
+      "sha256": "5b7db5dc648c2b799af64e48bad180d04cacfa24f9bda4111f02bcbfe573fe50"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReview.ts",
+      "sha256": "172c99262362ef07d9961ab6a7b9ccf198306682a7ffbc8bc9d322cbc16c59aa"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewCoordinator.ts",
+      "sha256": "1301ace9f485eda069b78d57105d04864ca73282db4a4d08cc7fa6d71b7c9e5d"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewKorean.ts",
+      "sha256": "ef16208d1460cdda3ead79dd4fbdc3780e85d95be641384da3c1aecd5b5fa23a"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewRuntimeSource.ts",
+      "sha256": "f2e5e717f41fcae8ac4cfeb3d702f933104f51c96bcabf258ffefb01b51b33bc"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewSelection.ts",
+      "sha256": "ec60c2e82905177dfe63cabbeb529dd77c15683b56c34d55d8197ae5024fa759"
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewText.ts",
+      "sha256": "b0c39f6ff4e14687cc91d27d66ce8b8029cb353f7b3b64582c28a2fef93daed1"
+    },
+    {
+      "path": "chesstory-web/src/review/types.ts",
+      "sha256": "9757da3edea5c07be779c04dbcdf3705bc06e9c977e37d089e79f0aaf2734030"
+    },
+    {
+      "path": "chesstory-web/src/review/view/moveReview.ts",
+      "sha256": "d55a03d874e4a7068e203e85b11888b300beeff996ea97a6e21a259b75e7f050"
+    },
+    {
+      "path": "chesstory-web/src/style.css",
+      "sha256": "62c6f3231bb513fd7a84510f2d8324b52c0a5aa93e51cd31d7de1508599739de"
+    },
+    {
+      "path": "chesstory-web/src/view/boardPreview.ts",
+      "sha256": "5f42ee9bad0da62194cd02d4747cb6ed5fa0e85dc84a7048a3542cc67ec8d4ab"
+    },
+    {
+      "path": "chesstory-web/src/view/snabbdom.ts",
+      "sha256": "61396cee22b033c5c439a93283bdd8fe316f678654eba4fda1a877aad54d8871"
+    }
+  ]
+}

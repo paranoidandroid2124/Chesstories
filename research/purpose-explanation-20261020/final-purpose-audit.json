@@ -1,0 +1,158 @@
+{
+  "source_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+  "scope": "Diagnostic replay of exactly the three original final-screen reports; no engine search, no source retuning.",
+  "physical_reports": 3,
+  "completed_job": true,
+  "discovery_scans": 0,
+  "reading_complete": true,
+  "selected_answer_complete": true,
+  "functional_answered": true,
+  "functional_reply_contrast": true,
+  "arms": [
+    {
+      "root": "d3b3",
+      "facts": true,
+      "realized": true,
+      "compared": true,
+      "answered": true,
+      "changed_function_predicate": true,
+      "uses": [
+        {
+          "root": "d3b3",
+          "move": "b3b7",
+          "offset": 6
+        }
+      ],
+      "choices": [
+        {
+          "root": "d3b3",
+          "move": "d3b3",
+          "offset": 0
+        },
+        {
+          "root": "e2g2",
+          "move": "e2g2",
+          "offset": 0
+        }
+      ],
+      "replies": [
+        {
+          "root": "d3b3",
+          "move": "e7h4",
+          "offset": 1
+        }
+      ],
+      "captured": null,
+      "evasion": false,
+      "support_contrasts": 0,
+      "functions": [
+        {
+          "original": "d3",
+          "attacks": [
+            "g7"
+          ],
+          "supports": []
+        },
+        {
+          "original": "e2",
+          "attacks": [],
+          "supports": []
+        },
+        {
+          "original": "a2",
+          "attacks": [],
+          "supports": []
+        },
+        {
+          "original": "g3",
+          "attacks": [],
+          "supports": []
+        }
+      ]
+    },
+    {
+      "root": "e2g2",
+      "facts": true,
+      "realized": true,
+      "compared": true,
+      "answered": true,
+      "changed_function_predicate": true,
+      "uses": [
+        {
+          "root": "e2g2",
+          "move": "g3g4",
+          "offset": 10
+        },
+        {
+          "root": "e2g2",
+          "move": "g3g4",
+          "offset": 4
+        }
+      ],
+      "choices": [
+        {
+          "root": "d3b3",
+          "move": "d3b3",
+          "offset": 0
+        },
+        {
+          "root": "e2g2",
+          "move": "e2g2",
+          "offset": 0
+        }
+      ],
+      "replies": [
+        {
+          "root": "e2g2",
+          "move": "f4f7",
+          "offset": 1
+        }
+      ],
+      "captured": null,
+      "evasion": false,
+      "support_contrasts": 0,
+      "functions": [
+        {
+          "original": "d3",
+          "attacks": [
+            "d6"
+          ],
+          "supports": []
+        },
+        {
+          "original": "e2",
+          "attacks": [],
+          "supports": []
+        },
+        {
+          "original": "a2",
+          "attacks": [],
+          "supports": [
+            "e4"
+          ]
+        },
+        {
+          "original": "g3",
+          "attacks": [
+            "g7"
+          ],
+          "supports": [
+            "e4"
+          ]
+        }
+      ]
+    }
+  ],
+  "outcome": "unachieved",
+  "finding": "Both actual choices satisfy changedFunction. ReferencePurposeReading converts a changed attack/support/open-file list into two root references; PurposeEvidence.compared only checks realized use plus two distinct roots, and answered only adds a non-empty reply. This proves traceable function facts but not enough contrastive significance to justify the chosen core purpose. The actual final screen remains partial while both complete predicates are true and discovery scans are zero.",
+  "source_locations": {
+    "comparison": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala:188",
+    "admission": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeEvidence.scala:15"
+  },
+  "limits": [
+    "The changedFunction predicate is a sufficient branch of the current OR condition, not asserted to be its only true branch.",
+    "Diagnostic uses exactly the three final original engine reports with verified issued-work identities. No new engine search or product-source retuning.",
+    "This diagnoses the final Qg2 development run, not the untouched Rfe1 holdout."
+  ],
+  "next_required_change": "Replace generic root/reply reference sufficiency with an explicit comparison of the same purpose: enabling condition, observed or legally conditioned use, actual alternative outcome, reply-dependent realization and required price. Preserve partial facts without allowing them to certify completed purpose; use that same comparison to rank candidates and to stop discovery. No fixed move, square, or extra wording rule should stand in for this relation."
+}
