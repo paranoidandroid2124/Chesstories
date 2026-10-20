@@ -20,7 +20,8 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     fixture("activity-browser") ++ fixture("hypothesis-browser") ++ fixture("priority-browser") ++
     fixture("reply-functions-browser") ++ fixture("counterplay-browser") ++ fixture("obligation-browser") ++
     fixture("preparation-browser") ++ fixture("prevention-browser") ++ fixture("resources-browser") ++
-    fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser") ++ fixture("root-refresh-browser")
+    fixture("quiet-resources-browser") ++ fixture("purpose-decision-browser") ++ fixture("root-refresh-browser") ++
+    fixture("unrealized-replies-browser")
 
   private def replay(id: String, reportCount: Int = Int.MaxValue): List[CommentaryJobState] =
     val row = screenCases.find(r => (r \ "id").as[String] == id).get
@@ -352,6 +353,48 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     Files.writeString(folder.resolve("qg2-root-refresh-replay.json"),
       Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
         "note" -> "Development replay of the four original Qg2 reports after receipt ownership repair; not a new UI result.")), UTF_8)
+
+  test("two replies that do not realize the witnessed idea retain an unanswered receipt"):
+    val pending = replay("qg2-unrealized-replies-first-screen").last
+    assert(pending.isInstanceOf[AwaitingEngineWork],
+      "the old root use must not silently close the failed independent purpose test")
+    val work = pending.asInstanceOf[AwaitingEngineWork].issuedWork
+    assertEquals(work.purpose, EngineWorkPurpose.InvestigationComparison)
+    assertEquals(work.rootRestriction, EngineRootRestriction.Restricted(List("e2g2", "h2h3")))
+    assert(work.requiredDepth <= 18)
+    val state = CommentaryJobReducer.expireJob(pending, 20002L)
+    assert(state.rootSearches.exists(r => r.work == work &&
+      r.stopReason.contains(CommentaryJobStopCondition.DeadlineExceeded)))
+    assert(state.inquiries.exists(q => q.answer.exists(_.workId == "work:0") &&
+      q.state == "answered" && q.stopReason.isEmpty && q.assessmentEffect.contains("unchanged")))
+    val packet = state.observationsPacket.get
+    val paths = state.preparedPaths.get
+    val reading = MovePurpose.read(packet, paths, state.responseSearches, Nil,
+      state.rootSearches.flatMap(_.receipt)).get
+    assertEquals(reading.search.work.workId, "work:2")
+    assertEquals(reading.branches.map(_.path.moves(1)).toSet, Set("h5h6", "h5f7"))
+    assert(reading.branches.forall(!_.realizes))
+    assert(!reading.explanation.answered && !reading.explanation.repliesExplained)
+    assert(MovePurpose.read(packet, paths, List(reading.search), Nil).isEmpty,
+      "negative results still require the original independent survey")
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val root = ReferencePurposeReading.read(packet, paths, pair,
+      MoveWorkProjection.select(packet, paths).rootUses(pair), responses = Some(reading)).get
+    assert(!root.completePurpose)
+    val row = screenCases.find(r => (r \ "id").as[String] == "qg2-unrealized-replies-first-screen").get
+    val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
+      (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
+    val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
+      .find(c => (c \ "selection").asOpt[String].contains("selected")).get
+    assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
+      Some("work:2"), "deadline delivery must not erase both negative response witnesses")
+    val summary = (selected \ "detail" \ "summary").as[String]
+    assertEquals("the plan is not realized in this segment".r.findAllIn(summary).size, 2)
+    val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
+    Files.createDirectories(folder)
+    Files.writeString(folder.resolve("qg2-unrealized-replies-replay.json"),
+      Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot,
+        "note" -> "Development replay of three unchanged original reports, expired before any additional engine work.")), UTF_8)
 
   private def prepare(moves: List[String]) =
     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(

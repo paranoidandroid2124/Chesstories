@@ -1040,7 +1040,7 @@ private[runtime] object ReferencePurposeReading:
       val conditionalDifference = (observed.isEmpty || reading.functional.exists(_ eq value) &&
         value.witnessedSupport.exists(b => !pair.exists(_ eq b.path))) && value.branches.exists(_.realizes) &&
         value.branches.map(task).distinct.size > 1
-      if conditionalDifference || supported.nonEmpty && (supported.size != value.branches.size || observed.isEmpty ||
+      if !value.explanation.repliesExplained || conditionalDifference || supported.nonEmpty && (supported.size != value.branches.size || observed.isEmpty ||
           supported.size == 2 && (!supported.head.sameTask(supported(1)) || supported.head.differentOutcome(supported(1)))) then
         // The same first reply can lead to a different returned continuation.
         // Compare both owned realizations and prices, not the reply name alone.

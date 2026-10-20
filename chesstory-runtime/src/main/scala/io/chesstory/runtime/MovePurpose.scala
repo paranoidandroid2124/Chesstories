@@ -708,11 +708,15 @@ private[runtime] object MovePurpose:
                   reading.original == q.user && reading.entry == use &&
                     path.moves(use).slice(2, 4) == q.square)).flatten), progress.filter(_ <= use))
           }
-          Option.when(branches.forall(_.nonEmpty) && branches.flatten.exists(branch =>
+          // A returned test of an observed idea remains evidence when neither
+          // reply realizes it. Dropping that receipt lets the older root PV
+          // silently certify a purpose that the independent test did not show.
+          val testedWitness = witnessed.nonEmpty && q.use >= 0 && q.activity.isEmpty && q.support.isEmpty
+          Option.when(branches.forall(_.nonEmpty) && (testedWitness || branches.flatten.exists(branch =>
             if q.activity.nonEmpty then branch.activity.nonEmpty
             else if q.support.nonEmpty then branch.support.nonEmpty
             else if q.plan.nonEmpty then branch.pressure.nonEmpty || branch.relocated.nonEmpty || branch.controllers.nonEmpty
-            else branch.realizes || branch.purposeActivity.nonEmpty)) {
+            else branch.realizes || branch.purposeActivity.nonEmpty))) {
             // A later reply comparison may witness the same task on a new PV.
             // Keep its own search receipt; discovery still requires the earlier
             // unrestricted survey, not the restricted test of this task.

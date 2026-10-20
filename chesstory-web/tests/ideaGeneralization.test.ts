@@ -128,6 +128,26 @@ test('an actual root recheck cannot erase the earlier owned witness of its retur
   assert.ok(answer.units.every(u => !u.english_only));
 });
 
+test('both negative replies survive deadline delivery without claiming a realized purpose', () => {
+  const replay = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-unrealized-replies-replay.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const decoded = decodeMoveReviewSnapshot(replay.snapshot, contextFor(replay.request));
+  assert.equal(decoded?.kind, 'completed');
+  const answer = decoded?.observations?.selection?.candidates
+    .find(c => c.selection === 'selected')?.detail.summary_question;
+  assert.ok(answer);
+  assert.equal(answer.move_purpose?.work_id, 'work:2');
+  assert.ok(answer.units.every(u => !u.english_only));
+  assert.equal((JSON.stringify(answer.units).match(/실현은 확인되지 않습니다/g) ?? []).length, 2);
+  const namedReplies = answer.units.flatMap(u => u.ko ?? []).filter(p => typeof p !== 'string')
+    .map(p => {
+      const path = decoded!.observations!.paths.find(path => path.id === p.line_id);
+      return path?.moves[path.occurrenceIds.indexOf(p.occurrence_id)]?.uci;
+    });
+  assert.ok(namedReplies.includes('h5h6') && namedReplies.includes('h5f7'));
+});
+
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
   const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(

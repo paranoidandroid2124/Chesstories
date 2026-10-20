@@ -3891,9 +3891,12 @@ object CommentaryJobReducer:
       val questions = investigation.questions.map { previous =>
         val inquiry = reconsiderInquiry(active, previous)
         if previous.question.id == investigation.selected.id || previous.state == "awaiting_engine" then
+          // An optional recheck can expire while its original evaluated pair
+          // still answers this question. Its stopped physical work remains in
+          // rootSearches; do not invalidate the independently retained answer.
           inquiry.copy(state = if inquiry.answer.nonEmpty then "answered" else "stopped",
-            stopReason = Some(PositionCommentaryJobProtocol.stopConditionCode(condition)),
-            assessmentEffect = previous.assessmentEffect)
+            stopReason = Option.when(inquiry.answer.isEmpty || inquiry.assessmentEffect.contains("needs_refresh"))(
+              PositionCommentaryJobProtocol.stopConditionCode(condition)))
         else inquiry
       }
       finishInvestigation(readPrincipalVariations(active, investigation.selected.referenceMove),

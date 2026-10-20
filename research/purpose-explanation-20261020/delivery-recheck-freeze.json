@@ -1,0 +1,7 @@
+{
+  "source_commit": "03424c55711770da37ce3cd349299a9d4dcd60a9",
+  "utc": "2026-10-20T18:53:54.517457+00:00",
+  "scope": "One Qg2 development screen to check retained reply delivery after common ownership repair. This is not independent validation. Rfe1 remains failed and excluded. No further purpose-detector or ranking change will be made from this output.",
+  "max_depth": 18,
+  "request_ms": 20000
+}

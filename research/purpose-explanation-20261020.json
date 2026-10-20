@@ -84,6 +84,10 @@
     {
       "sha": "d050988bd4",
       "meaning": "Reject bare arrival and transient ray contact as sufficient purpose; preserve unanswered reply receipts."
+    },
+    {
+      "sha": "03424c5571",
+      "meaning": "Retain the original owned witness when a later root refresh changes the PV."
     }
   ],
   "implementation": [
@@ -266,6 +270,33 @@
       "ranking_audit": "Saved Qg2 and Re2 reports showed no better evidenced candidate being suppressed. Qg2's missing meaningful candidate coverage remains a limitation; no extra ranking rule was added.",
       "evidence": "purpose-explanation-20261020/stage11-evidence.json.gz",
       "development_replay": "purpose-explanation-20261020/qg2-root-refresh-replay.json.gz"
+    },
+    {
+      "stage": 12,
+      "status": "negative_response_receipts_preserved_not_goal_completion",
+      "changes": [
+        "Keep the independently owned test of an observed idea when neither returned reply realizes it. Its negative branches are evidence of an unanswered question, not proof of purpose.",
+        "Deliver both unanswered replies in the actual-pair account. The earlier root PV cannot erase this gap; only the existing bounded actual-pair recheck can receive remaining budget.",
+        "If that optional root recheck expires, keep its stopped physical work separately from the original still-valid comparison answer. Do not attach an invalid stopped state to that answer."
+      ],
+      "validation": {
+        "core": "49/49 focused checks passed before the final stop-state correction.",
+        "final_stop_state": "Both directly affected deadline checks passed after the correction.",
+        "frontend": "28/28; includes independent ownership and bilingual negative-response delivery.",
+        "typescript": "passed; no frontend product change in this stage.",
+        "known_existing_failures": "Two older investigation checks still fail. Both also fail on the untouched inherited a2b735cdcd preservation commit: deadline inquiry at line 121 and omitted recapturer investigation. They were not weakened or marked passing.",
+        "fresh_engine_after_repair": 0,
+        "fresh_ui_after_repair": 0,
+        "independent_passes": 0
+      },
+      "scope": "Failure-informed common dataflow/termination repair, checked with unchanged reports. No new purpose detector, ranking rule, deeper search or changed-source Rfe1 replay. First Rfe1 failure remains immutable.",
+      "remaining": [
+        "No successful independent generalization result.",
+        "When tested replies use another plan, the reader can now retain uncertainty but still does not reliably explain the alternative plan's value.",
+        "The Qg2/h3 support contrast is repeated, and useful idea selection still has limited candidate coverage."
+      ],
+      "evidence": "purpose-explanation-20261020/stage12-evidence.json.gz",
+      "development_replay": "purpose-explanation-20261020/qg2-unrealized-replies-replay.json.gz"
     }
   ],
   "verification": {
@@ -378,6 +409,23 @@
       "retained_ui": "purpose-explanation-20261020/qg2-final-development-screen.txt",
       "freeze": "purpose-explanation-20261020/final-development-freeze.json",
       "capture": "All four original engine reports and final POST response captured. Final GET was unavailable; no reconstructed response is labeled original HTTP."
+    },
+    "qg2_delivery_recheck": {
+      "status": "basic_delivered_but_purpose_partial",
+      "source": "03424c5571",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 5.47,
+      "max_depth": 11,
+      "actual_pair": [
+        "e2g2",
+        "h2h3"
+      ],
+      "reports": 3,
+      "finding": "03424c5571 Qg2/h3 UI completed in 5.47s at depth 11. Basic explanation was visible, but neither Qh6 nor Qf7 realized the old Rg4 task and both returned negative witnesses were discarded.",
+      "retained_wire": "purpose-explanation-20261020/qg2-delivery-recheck-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-delivery-recheck-screen.txt",
+      "freeze": "purpose-explanation-20261020/delivery-recheck-freeze.json",
+      "interpretation": "Seventh Qg2 development request, not an independent success. Same two distinct UI positions used in this goal."
     }
   },
   "cleanup": [
@@ -448,6 +496,21 @@
       "receipt": "purpose-explanation-20261020/stage11-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage11-evidence.json.gz",
       "method": "Windows Recycle Bin after exact retained base64/SHA256 roundtrip and resolved task path checks. Prior README section also retained byte-for-byte. Baseline backup and first failure evidence preserved."
+    },
+    {
+      "files": 53,
+      "bytes": 75515307.0,
+      "directories": [
+        {
+          "path": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\research-runs\\purpose-explanation-20261020\\preserved-baseline-check",
+          "files": 2704,
+          "bytes": 34102718.0,
+          "retained": "Git a2b735cdcd3e3462743139e48cecfff7c109ff12 and stage12-evidence.json.gz"
+        }
+      ],
+      "receipt": "purpose-explanation-20261020/stage12-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage12-evidence.json.gz",
+      "method": "Windows Recycle Bin after exact file hashes and resolved workspace paths were checked. Diagnostic sources/logs and current-goal replays retained exactly; 24 repeated saved-report outputs are reproducible from committed tests and fixed inputs. One isolated baseline export and its generated classes also recycled; original baseline.zip and baseline.json preserved."
     }
   ],
   "studied_failures": [
