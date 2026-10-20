@@ -70,6 +70,23 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     val basic = RootQuestionSummary.realize(paths, pair, answer).get
     assert(basic.text.contains("open") && basic.text.contains("purpose is not established"), basic.text)
 
+  test("a supported quiet arrival remains a fact until the support is actually used"):
+    val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
+      fen = "6k1/5ppp/8/8/8/8/5PPP/R3R1K1 w - - 0 1", playedMoveUci = "a1a3",
+      variations = List(
+        EngineLine(List("a1a3", "g8f8", "h2h3"), 100, None, 11),
+        EngineLine(List("e1d1", "g8f8", "d1d2"), 140, None, 11)))).get
+    val packet = EvidenceBackedJudgmentPacket.fromAssembly(MoveReviewAssembler.assemble(input)).get
+    val paths = ObservedLineProtocol.prepare(packet)
+    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
+    val reading = ReferencePurposeReading.read(packet, paths, pair,
+      MoveWorkProjection.select(packet, paths).rootUses(pair)).get
+    assert(reading.played.supportedArrival.nonEmpty && reading.played.supportUse.isEmpty)
+    assert(reading.hasFacts(reading.played))
+    assert(!reading.explanation(reading.played).realized,
+      "h3 reaches a supported square but has no observed activity or use of that support")
+    assert(!reading.completePurpose)
+
   test("resource identity keeps a checking tempo when the alternative moved its capture target"):
     val state = replay("kh1-resource-fresh", 1).last
     val snapshot = resourceSnapshot("kh1-resource-fresh", state)
@@ -258,8 +275,23 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assert(MovePurpose.read(packet, paths, List(reading.search), Nil).isEmpty,
       "a restricted pair cannot certify the independent survey which selected it")
     val pair = ReferencePurposeReading.assessmentPair(packet, paths)
-    val root = ReferencePurposeReading.read(packet, paths, pair,
-      MoveWorkProjection.select(packet, paths).rootUses(pair)).get
+    val discoveredUses = MoveWorkProjection.select(packet, paths).rootUses(pair)
+    val root = ReferencePurposeReading.read(packet, paths, pair, discoveredUses).get
+    val enriched = ReferencePurposeReading.read(packet, paths, pair, discoveredUses,
+      responses = Some(reading)).get
+    assert(!enriched.completePurpose,
+      "an observed root use cannot erase the selected reply comparison's unanswered purpose")
+    val temporaryRay = discoveredUses.flatMap(_._1.statements).collectFirst {
+      case route: ClearedRoute if route.use.path.moves(route.use.offset) == "e2f1" => route
+    }.get
+    assert(!temporaryRay.passage)
+    assert(paths.trackedPieceAfter(temporaryRay.use.path, temporaryRay.originalUser,
+      temporaryRay.use.offset + 2).contains(None))
+    assert(!root.rootUses.contains(temporaryRay),
+      "a distant attack made during a queen recapture is a fact, not the realized clearance purpose")
+    assert(!PurposeActivityReading.entries(packet, paths, temporaryRay.use.path, discoveredUses)
+      .exists(_.mechanism.contains(temporaryRay)),
+      "candidate discovery and the basic purpose must make the same distinction")
     val price = root.recaptureGuardContrasts.head
     assertEquals(price.provider.at, "f3")
     assertEquals(price.target.at, "e4")
@@ -287,6 +319,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
       Some("work:2"), "the actual-pair account must retain the reply question it investigated")
     assert((selected \ "detail" \ "summary").as[String].contains("away from its guard of White's pawn on e4"))
+    assert(!(selected \ "detail" \ "summary").as[String].contains("clears d3"))
     val folder = Path.of("../target/research-runs/purpose-explanation-20261020")
     Files.createDirectories(folder)
     Files.writeString(folder.resolve("qg2-witnessed-replay.json"),

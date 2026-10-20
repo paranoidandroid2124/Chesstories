@@ -25,6 +25,15 @@ private[runtime] final case class PurposeEvidence(
   def references: List[MoveRef] = (uses ++ choices ++ replies ++ leadingReply ++ corresponding).distinct
 
 private[runtime] object PurposeEvidence:
+  /** A ray contact inside a recapture is still an observed fact. If its user
+    * is immediately removed without using that ray, it cannot certify the
+    * clearance's purpose. Actual passage, check and support keep their own use. */
+  def retainsRouteUse(paths: ObservedLineProtocol.PreparedPaths, route: CommentaryAnswer.ClearedRoute): Boolean =
+    val onlyAttack = route.targets.nonEmpty &&
+      route.targets.forall(target => target.side != route.user.side && target.role.name != "king")
+    route.passage || !onlyAttack ||
+      !paths.trackedPieceAfter(route.use.path, route.originalUser, route.use.offset + 2).contains(None)
+
   /** Match the same physical beneficiary's witnessed action across the actual
     * choices. This aligns a comparison; it does not by itself prove a purpose. */
   def correspondingEntries(paths: ObservedLineProtocol.PreparedPaths,

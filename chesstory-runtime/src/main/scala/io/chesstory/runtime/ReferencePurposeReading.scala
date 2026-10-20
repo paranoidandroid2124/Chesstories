@@ -187,12 +187,15 @@ private[runtime] object ReferencePurposeReading:
         supportContrasts.exists(_.supported.path eq arm.path) ||
         arm.castlePreparation.exists(p => other.deferredCastle.exists(_.original == p.original)) ||
         arm.supportedArrival.exists(use => other.actor == use.original && other.moved == use.target)
-      val response = uses.exists(use => use.offset >= 2 && CommentarySequenceText.sameRoot(use.path, arm.path)) ||
+      val observedResponse = uses.exists(use => use.offset >= 2 && CommentarySequenceText.sameRoot(use.path, arm.path)) ||
         arm.replyEvades || arm.replyShields.nonEmpty || arm.replyCapture.nonEmpty || arm.escaped.contains(arm.reply) ||
         arm.evasion.nonEmpty || arm.captured.nonEmpty || arm.supportUse.nonEmpty ||
         arm.controlUse.nonEmpty || arm.activity.exists(!_.incidentalDuty) ||
         arm.castlePreparation.exists(_.blocked.nonEmpty) || conditional.nonEmpty || escapedOption.nonEmpty ||
         prepared.exists(_.replies.nonEmpty) || task.exists(_.explanation.replies.nonEmpty)
+      // The root PV may realize the idea while an independently tested reply
+      // still has no account. Do not let the earlier use erase that known gap.
+      val response = observedResponse && task.forall(_.explanation.answered)
       PurposeEvidence(uses.distinct, if compared then arms.map(a => MoveRef(a.path, 0)) else Nil,
         if response then List(MoveRef(arm.path, 1)) else Nil)
     def hasPurpose(arm: Arm): Boolean = explanation(arm).compared
@@ -384,7 +387,9 @@ private[runtime] object ReferencePurposeReading:
     Option.when(direct)(MoveRef(arm.path, 0)).toList ++
       Option.when(exchanged)(MoveRef(arm.path, arm.through)) ++ converted ++
       arm.controlUse.map(use => MoveRef(use.path, use.use)) ++
-      arm.supportedArrival.map(use => MoveRef(arm.path, use.offset)) ++
+      // Reaching a guarded square is still a fact. The supported piece's
+      // activity below, or the provider's actual recapture, witnesses its use.
+      arm.supportUse.map(use => MoveRef(arm.path, use.recapture.plyOffset)) ++
       arm.activity.filterNot(_.incidentalDuty).map(use => MoveRef(use.path, use.use)) ++
       uses.flatMap {
         case route: ClearedRoute if route.move.path eq arm.path => List(route.use)
@@ -487,10 +492,11 @@ private[runtime] object ReferencePurposeReading:
       preparation: Option[MoveIntent.Reading] = None, responses: Option[MovePurpose.Reading] = None): Option[Reading] =
     paths.requireOwner(packet)
     if preparation.exists(value => !value.belongsTo(paths) || value.pair.toSet != pair.toSet) then return None
+    // Keep the owned reply decision even when its realization is already in
+    // the root pair, or the tested strongest reply does not realize the idea.
+    // Display deduplication must not discard an unanswered purpose receipt.
     val functional = responses.filter(value => value.belongsTo(paths) &&
-      (value.witnessedPlan.nonEmpty || value.witnessedSupport.nonEmpty) &&
-      pair.exists(path => path.moves.head == value.question.rootMove && path.ids.head == value.question.path.ids.head) &&
-      !pair.exists(_ eq value.witnessedPlan.map(_.path).orElse(value.witnessedSupport.map(_.path)).get))
+      pair.exists(path => path.moves.head == value.question.rootMove && path.ids.head == value.question.path.ids.head))
     val primary = packet.primary.map {
       case PlayerFacingPrimary.MoveVerdict(ref) => ref
       case PlayerFacingPrimary.BestChoice(ref) => ref
@@ -624,7 +630,8 @@ private[runtime] object ReferencePurposeReading:
               position(move.path, 1).exists(at => at.contains(attacker) && at.contains(target) &&
                 at.controlledBy(attacker)(target.at)) } => action -> evidence
         case route: ClearedRoute if route.move.offset == 0 && (route.move.path eq route.use.path) &&
-          movedRoots.get(route.move.path).contains(route.before -> route.mover) => route -> evidence
+          movedRoots.get(route.move.path).contains(route.before -> route.mover) &&
+          PurposeEvidence.retainsRouteUse(paths, route) => route -> evidence
         case route: SquareReoccupation if route.move.offset == 0 && (route.move.path eq route.use.path) &&
           movedRoots.get(route.move.path).contains(route.originalActor -> route.actor) => route -> evidence
       } ++ (if uses.isEmpty then Nil else (route.toList ++ uses).map(_ -> evidence))
@@ -1031,7 +1038,7 @@ private[runtime] object ReferencePurposeReading:
       val observed = value.branches.find(_.path.moves(1) == reading.played.path.moves(1))
       val supported = value.branches.flatMap(_.purposeActivity)
       val conditionalDifference = (observed.isEmpty || reading.functional.exists(_ eq value) &&
-        value.witnessedSupport.nonEmpty) && value.branches.exists(_.realizes) &&
+        value.witnessedSupport.exists(b => !pair.exists(_ eq b.path))) && value.branches.exists(_.realizes) &&
         value.branches.map(task).distinct.size > 1
       if conditionalDifference || supported.nonEmpty && (supported.size != value.branches.size || observed.isEmpty ||
           supported.size == 2 && (!supported.head.sameTask(supported(1)) || supported.head.differentOutcome(supported(1)))) then
@@ -1069,14 +1076,15 @@ private[runtime] object ReferencePurposeReading:
       (uses ++ prices.toList).flatMap(_.references).distinct)
     val preparedReplies = reading.preparation.toList.flatMap(MoveIntent.sections)
     val functionalPlans = reading.functional.toList.flatMap(value => value.witnessedPlan.toList.filterNot(plan =>
-      alternatives.flatMap(_.statements).exists {
+      pair.exists(_ eq plan.path) || alternatives.flatMap(_.statements).exists {
         case FunctionReply(_, branch) => branch.purposeActivity.exists(activity =>
           (activity.path eq plan.path) && activity.original == value.question.actor && activity.use == plan.use &&
             plan.targets.forall((activity.attacks ++ activity.guards).contains))
         case _ => false
       }).map(plan =>
       continuation(plan.path, plan.through, FunctionPurpose(value), priceHere = true)) ++
-      value.witnessedSupport.toList.filterNot(_ => alternatives.flatMap(_.statements).exists {
+      value.witnessedSupport.toList.filterNot(branch => pair.exists(_ eq branch.path) ||
+        alternatives.flatMap(_.statements).exists {
         case FunctionPurpose(existing) => existing eq value
         case _ => false
       }).map(branch => continuation(branch.path, branch.through, FunctionPurpose(value), priceHere = true)))

@@ -68,18 +68,24 @@ test('the returned witnessed pair reaches the actual-choice account with bounded
 });
 
 test('equal exchanges retain the recapturing pieces different duties in the actual comparison', () => {
-  const replay = JSON.parse(gunzipSync(readFileSync(new URL(
-    '../../research/purpose-explanation-20261020/qg2-recapture-replay.json.gz', import.meta.url,
-  ))).toString('utf8'));
-  const selected = replay.snapshot.observations.selection.candidates.find((c: any) => c.selection === 'selected');
-  const decoded = decodeMoveReviewSnapshot(replay.snapshot, contextFor(replay.request));
-  const shown = decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question;
-  assert.ok(shown, 'both exchanges and their guard witnesses must survive independent delivery checks');
-  assert.deepEqual(shown, selected.detail.summary_question);
-  assert.ok(selected.detail.summary.includes('away from its guard of White\'s pawn on e4'));
-  assert.ok(selected.detail.summary.includes('the plan is not realized in this segment'),
-    'the exchange price must not certify the unexplained strongest reply');
-  assert.ok(shown.units.some(u => u.ko.some(p => typeof p === 'string' && p.includes('그 기물의 방어를 없앱니다'))));
+  for (const file of ['qg2-recapture-replay', 'qg2-purpose-admission-replay']) {
+    const replay = JSON.parse(gunzipSync(readFileSync(new URL(
+      `../../research/purpose-explanation-20261020/${file}.json.gz`, import.meta.url,
+    ))).toString('utf8'));
+    const selected = replay.snapshot.observations.selection.candidates.find((c: any) => c.selection === 'selected');
+    const decoded = decodeMoveReviewSnapshot(replay.snapshot, contextFor(replay.request));
+    const shown = decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question;
+    assert.ok(shown, 'both exchanges and their guard witnesses must survive independent delivery checks');
+    assert.deepEqual(shown, selected.detail.summary_question);
+    assert.ok(selected.detail.summary.includes('away from its guard of White\'s pawn on e4'));
+    assert.ok(selected.detail.summary.includes('the plan is not realized in this segment'),
+      'the exchange price must not certify the unexplained strongest reply');
+    assert.ok(shown.units.some(u => u.ko.some(p => typeof p === 'string' && p.includes('그 기물의 방어를 없앱니다'))));
+    if (file === 'qg2-purpose-admission-replay') {
+      assert.ok(!selected.detail.summary.includes('clears d3'),
+        'the incidental queen attack during a recapture must not return through the basic delivery');
+    }
+  }
 });
 
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {

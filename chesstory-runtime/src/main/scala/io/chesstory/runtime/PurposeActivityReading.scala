@@ -184,7 +184,8 @@ private[runtime] object PurposeActivityReading:
     val explicit = mechanisms.flatMap { (section, evidence) => section.statements.flatMap {
       case value: SquareReoccupation if value.move == MoveRef(path, 0) && (value.use.path eq path) =>
         Some(Seed(path, value.originalEntry, value.use.offset, Some(value), None, evidence))
-      case value: ClearedRoute if value.move == MoveRef(path, 0) && (value.use.path eq path) =>
+      case value: ClearedRoute if value.move == MoveRef(path, 0) && (value.use.path eq path) &&
+          PurposeEvidence.retainsRouteUse(paths, value) =>
         Some(Seed(path, value.originalUser, value.use.offset, Some(value), None, evidence))
       case value: PieceRoute if (value.path eq path) && value.offsets.headOption.contains(0) && value.offsets.size >= 2 =>
         Some(Seed(path, value.original, value.offsets.last, Some(value), None, evidence))

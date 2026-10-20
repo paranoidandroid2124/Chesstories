@@ -217,6 +217,25 @@
       ],
       "evidence": "purpose-explanation-20261020/stage9-evidence.json.gz",
       "development_replay": "purpose-explanation-20261020/qg2-recapture-replay.json.gz"
+    },
+    {
+      "stage": 10,
+      "status": "shared_admission_and_known_gap_preservation",
+      "changes": [
+        "Keep a transient cleared-ray contact in discovered facts, but exclude it from purpose candidates and the actual-pair purpose when its user is immediately recaptured without using the ray. Actual passage, check and support keep their distinct uses.",
+        "Retain all owned selected reply decisions in the actual-pair reader. Deduplicate only their display, not their explanatory sufficiency. An unanswered strongest reply cannot be erased by an earlier root-PV activity.",
+        "A supported arrival alone is a fact. Require the beneficiary's actual activity or the provider's observed recapture as realization evidence.",
+        "The unchanged Qg2 reports now leave the reply gap open and allow the existing one bounded actual-pair inquiry; they are not marked explained."
+      ],
+      "validation": {
+        "backend": "47/47",
+        "frontend": "26/26",
+        "typescript": "passed",
+        "fresh_engine_searches": 0,
+        "fresh_ui": 0
+      },
+      "evidence": "purpose-explanation-20261020/stage10-evidence.json.gz",
+      "development_replay": "purpose-explanation-20261020/qg2-purpose-admission-replay.json.gz"
     }
   ],
   "verification": {
@@ -368,6 +387,12 @@
       "files": 11,
       "bytes": 3568776.0,
       "receipt": "purpose-explanation-20261020/stage9-recycled.json.gz",
+      "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
+    },
+    {
+      "files": 10,
+      "bytes": 3664109.0,
+      "receipt": "purpose-explanation-20261020/stage10-recycled.json.gz",
       "method": "Windows Recycle Bin after exact retention and decoded SHA256/path verification."
     }
   ],
