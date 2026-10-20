@@ -1,0 +1,76 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					248 text 분석 기보
+				249 text 시작 국면
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button (disabled) 처음
+					38 button (disabled) 이전 수
+					39 button 다음 수
+					40 button 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 1. e4
+				254 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					255 text PGN · FEN 불러오기
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button (disabled) 해설 · 20초
+				250 text 기보에서 수를 고르거나 판 위에 수를 두세요.
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+					251 heading 아직 리뷰할 수가 없습니다, Value: 3
+						252 text 아직 리뷰할 수가 없습니다
+					253 text 수를 두거나 기보에서 수를 선택하세요.
+		72 container
+			119 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 254 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand

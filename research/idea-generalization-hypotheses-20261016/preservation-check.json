@@ -1,0 +1,34 @@
+{
+  "utc": "2026-10-16T00:07:12.608826+00:00",
+  "audits": [
+    {
+      "baseline": "target/research-runs/idea-generalization-20261016/baseline/state.json",
+      "count": 220,
+      "missing": [],
+      "backup_hash_mismatches": [],
+      "changed_historical_research": [],
+      "old_readme_sections_preserved": true
+    },
+    {
+      "baseline": "target/research-runs/idea-generalization-hypotheses-20261016/baseline.json",
+      "count": 291,
+      "missing": [],
+      "backup_hash_mismatches": [],
+      "changed_historical_research": [],
+      "old_readme_sections_preserved": true
+    }
+  ],
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "staged": [],
+  "product_changes_after_last_live_freeze": [],
+  "frozen_product_count": 109,
+  "ui_restored": {
+    "pgn": "1. e4 *",
+    "board": "start position",
+    "engine": "Off",
+    "inputs": "empty",
+    "import": "collapsed",
+    "evidence": "restored-screen.txt"
+  }
+}

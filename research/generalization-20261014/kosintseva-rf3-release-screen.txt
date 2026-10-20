@@ -1,0 +1,165 @@
+- banner:
+  - generic: Chesstories
+  - generic: 기보와 해설
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "분석 기보" [level=1]
+    - generic: 21. Rf3
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수" [disabled]: →
+      - button "마지막" [disabled]: ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "21. Rf3"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 3.71s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "부정확한 수: Rf3"':
+        - generic: "?!"
+        - generic: Rf3
+        - heading "부정확한 수" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=3]
+        - paragraph:
+          - button "c4 · 위치 살펴보기": c4
+          - text: — 흑 d5 폰을 새로 공격합니다.
+          - button "c4 · 위치 살펴보기": c4
+          - text: 수로 c2 칸을 비워 백 d3 퀸의 b1 방향 길을 엽니다.
+          - button "Rf3 · 위치 살펴보기": Rf3
+          - text: — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.
+          - button "c4 · 위치 살펴보기": c4
+          - text: 수순의 비교 시점까지 백의 c2 폰과 흑의 d5 폰을 교환합니다. 퀸 한 쌍을 교환합니다.
+          - button "Rf3 · 위치 살펴보기": Rf3
+          - text: 수순의 비교 시점까지 나이트 한 쌍을 교환합니다. 백의 e5 폰을 내줍니다.
+          - button "c4 · 위치 살펴보기": c4
+          - text: "수순에서:"
+          - button "Nd6 · 위치 살펴보기": Nd6
+          - text: 의 흑 b5 퀸 공격을
+          - button "Qxd3 · 위치 살펴보기": Qxd3
+          - text: 수로 피합니다.
+          - button "Nd6 · 위치 살펴보기": Nd6
+          - text: 수로 c4 칸을 비워 길을 엽니다. 제시된 수순에서
+          - button "Qxd3 · 위치 살펴보기": Qxd3
+          - text: 수로 흑 퀸이 그 길을 지나 d3에 진출합니다.
+        - paragraph:
+          - button "c4 · 위치 살펴보기": c4
+          - text: —
+          - button "dxc4 · 위치 살펴보기": dxc4
+          - text: ": 백 c4 폰을 잡습니다."
+          - button "b6 · 위치 살펴보기": b6
+          - text: 까지의 수순에서는 백 d3 룩은 열린 d 파일에서 활동합니다. 백 d6 나이트를 남깁니다. 원래 e5 폰이 e5에 남습니다.
+        - paragraph:
+          - button "Rf3 · 위치 살펴보기": Rf3
+          - text: —
+          - button "Qc6 · 위치 살펴보기": Qc6
+          - text: ": 백 c2 폰을 새로 공격합니다."
+          - button "Qxd6 · 위치 살펴보기": Qxd6
+          - text: 까지의 수순에서는 백 d1 룩, 백 d3 퀸을 남깁니다. 원래 d5 폰이 d5에 남습니다.
+        - button "대안 수 · c4 · 재생"
+        - button "둔 수 · Rf3 · 재생"
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + +
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status: 기보를 불러왔습니다.
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

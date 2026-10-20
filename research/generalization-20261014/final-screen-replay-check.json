@@ -1,0 +1,98 @@
+{
+  "phase": 30,
+  "new_engine_calls": 0,
+  "actual_latency_not_retested": true,
+  "cases": [
+    {
+      "id": "vaulin-bd7-final29",
+      "reports_consumed": 3,
+      "available": 3,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 1392,
+      "en_final_replay_chars": 1392,
+      "ko_exact_same_text_as_live": true,
+      "ko_live_chars": 733,
+      "ko_final_replay_chars": 733
+    },
+    {
+      "id": "kozakov-f6-release",
+      "reports_consumed": 3,
+      "available": 3,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 1042,
+      "en_final_replay_chars": 1042,
+      "ko_exact_same_text_as_live": false,
+      "ko_live_chars": 546,
+      "ko_final_replay_chars": 542
+    },
+    {
+      "id": "ganguly-b4-release",
+      "reports_consumed": 2,
+      "available": 2,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 932,
+      "en_final_replay_chars": 932,
+      "ko_exact_same_text_as_live": true,
+      "ko_live_chars": 484,
+      "ko_final_replay_chars": 484
+    },
+    {
+      "id": "kosintseva-rf3-release",
+      "reports_consumed": 3,
+      "available": 3,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 940,
+      "en_final_replay_chars": 940,
+      "ko_exact_same_text_as_live": true,
+      "ko_live_chars": 486,
+      "ko_final_replay_chars": 486
+    },
+    {
+      "id": "giri-e5-final27",
+      "reports_consumed": 2,
+      "available": 2,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 1461,
+      "en_final_replay_chars": 1461,
+      "ko_exact_same_text_as_live": true,
+      "ko_live_chars": 750,
+      "ko_final_replay_chars": 750
+    },
+    {
+      "id": "gligoric-kg2-release",
+      "reports_consumed": 2,
+      "available": 2,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 185,
+      "en_final_replay_chars": 185,
+      "ko_exact_same_text_as_live": true,
+      "ko_live_chars": 185,
+      "ko_final_replay_chars": 185
+    },
+    {
+      "id": "ferry-rd6-release",
+      "reports_consumed": 2,
+      "available": 2,
+      "failure": null,
+      "replay_phase": "completed",
+      "en_exact_same_text_as_live": true,
+      "en_live_chars": 724,
+      "en_final_replay_chars": 724,
+      "ko_exact_same_text_as_live": false,
+      "ko_live_chars": 370,
+      "ko_final_replay_chars": 366
+    }
+  ]
+}

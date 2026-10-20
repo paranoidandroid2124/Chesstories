@@ -1437,9 +1437,11 @@ object CommentaryJobReducer:
     private var used = active.localExpansionsUsed
     private val requested = scala.collection.mutable.LinkedHashMap.empty[List[String], CanonicalPositionHistory]
     private val discoveryOnlyRequests = scala.collection.mutable.Map.empty[List[String], Boolean]
+    private val exactRequests = scala.collection.mutable.Set.empty[List[String]]
     private val existingLines = active.packet.assembly.input.legalLines.map(line => line.moves -> line).toMap
     private def unpublished = requested.toList.filter { (moves, _) =>
-      !existingLines.valuesIterator.exists(line => line.moves.startsWith(moves) &&
+      !existingLines.valuesIterator.exists(line =>
+        (if exactRequests(moves) then line.moves == moves else line.moves.startsWith(moves)) &&
         (discoveryOnlyRequests(moves) || !line.discoveryOnly))
     }
     def hasAdditions: Boolean = unpublished.nonEmpty
@@ -1448,7 +1450,8 @@ object CommentaryJobReducer:
     def tracked(entries: List[CommentaryProposal.Entry]): ActiveCommentaryJob =
       active.copy(responseHistories = histories, exploredPrefixes = known.toSet,
         localExpansionsUsed = used, proposalEntries = entries)
-    def ensurePath(moves: List[String], discoveryOnly: Boolean = false): Either[String, CanonicalPositionHistory] =
+    def ensurePath(moves: List[String], discoveryOnly: Boolean = false,
+        exact: Boolean = false): Either[String, CanonicalPositionHistory] =
       var prefix = List.empty[String]
       val cached = Option.when(known(moves))(histories.get(moves.mkString(" ")).flatten).flatten
       var history = cached.getOrElse(active.positionHistory)
@@ -1483,6 +1486,7 @@ object CommentaryJobReducer:
       if accepted.nonEmpty then
         requested.update(accepted, history)
         discoveryOnlyRequests.update(accepted, discoveryOnlyRequests.getOrElse(accepted, true) && discoveryOnly)
+        if exact && accepted == moves then exactRequests += accepted
       failure.toLeft(history)
     def retain(entries: List[CommentaryProposal.Entry]): Either[(ActiveCommentaryJob, CommentaryJobStopCondition), ActiveCommentaryJob] =
       val retained = tracked(entries)
@@ -1556,7 +1560,8 @@ object CommentaryJobReducer:
     var continue = true
     while continue do
       val batch = CommentaryDiscovery.discover(retained.packet, retained.preparedPaths.get,
-        anchors, sources, publishedEntries, probes, pvGuided = active.policy.previewDepth.nonEmpty || active.remainingBudgetMs <= 10000)
+        anchors, sources, publishedEntries, probes,
+        pvGuided = active.policy.shortJob || active.policy.previewDepth.nonEmpty || active.remainingBudgetMs <= 10000)
       val existing = publishedEntries.map(entry => entry.request.id -> entry).toMap
       val additions = batch.additions.filter(entry =>
         existing.get(entry.request.id).forall(_.admission == "generated")).map(_.copy(admission = "generated"))
@@ -1995,11 +2000,13 @@ object CommentaryJobReducer:
         entry.request.id -> value.id
     }.distinct.sorted
 
-  private def awaitingTargetPool(responses: List[CommentaryResponseInquiry], anchor: EngineSearchAnchor)
+  private def awaitingTargetPool(responses: List[CommentaryResponseInquiry], anchor: EngineSearchAnchor,
+      selectedId: Option[String] = None)
       : List[CommentaryResponseInquiry] = responses.map { inquiry =>
     if anchor.plyOffset == 1 && inquiry.question.rootMove == anchor.rootMove &&
         inquiry.question.rootMoveOccurrenceId == anchor.rootOccurrenceId &&
-        inquiry.question.childPositionId == anchor.positionId && inquiry.answer.isEmpty then
+        inquiry.question.childPositionId == anchor.positionId &&
+        (inquiry.answer.isEmpty || selectedId.contains(inquiry.question.id)) then
       inquiry.copy(state = "awaiting_engine", answer = None, stopReason = None)
     else inquiry
   }
@@ -2017,7 +2024,9 @@ object CommentaryJobReducer:
         PositionRuleAssessment.assess(source).isInstanceOf[PositionRuleAssessment.Nonterminal]))
     val shortReplyMs = math.min(FocusElapsedMs.toLong, active.remainingBudgetMs - 1_500).toInt
     child.filter(_ => shortReplyMs >= 1_000).map { source =>
-      val scheduled = awaitingTargetPool(responses, anchor)
+      // A selected recheck remains pending even when its survey supplied an
+      // earlier answer. That receipt stays in responseSearches until completion.
+      val scheduled = awaitingTargetPool(responses, anchor, Some(selectedId))
       val continued = active.copy(responseHistories = active.responseHistories.updated(historyKey, child),
         continuationInquiries = active.continuationInquiries.map(inquiry =>
           if inquiry.question.id == selectedId && inquiry.state == "surveyed" &&
@@ -2378,9 +2387,9 @@ object CommentaryJobReducer:
     val paths = active.preparedPaths.get
     // A short automatic purpose job only consumes its owned reply readings.
     // Do not prepare every unrelated PV explanation before issuing that work.
-    val purposeOnly = active.remainingBudgetMs <= 10000 && active.policy.investigateChoices &&
+    val purposeOnly = (active.policy.shortJob || active.remainingBudgetMs <= 10000) && active.policy.investigateChoices &&
       active.inquiries.isEmpty && active.responseInquiries.isEmpty && active.proposalEntries.isEmpty &&
-      active.continuationInquiries.isEmpty && paths.movePurpose.nonEmpty
+      active.continuationInquiries.isEmpty && (paths.moveIntent.nonEmpty || paths.movePurpose.nonEmpty)
     val retainedIds = active.pvComparisons.map(_.id).toSet
     val references = (reference :: active.inquiries.map(_.question.referenceMove)).distinct
     val readings = if purposeOnly then Nil else PrincipalVariationComparison.readAll(active.packet, references,
@@ -3065,7 +3074,8 @@ object CommentaryJobReducer:
     // In a short automatic job the reviewed move's reply/function account is
     // the first question, not a late beneficiary of all generated questions.
     // Explicit submitted questions keep the existing dependency agenda.
-    if before.remainingBudgetMs <= 10000 && (before.policy.investigateChoices || before.responseInquiries.nonEmpty) &&
+    if (before.policy.shortJob || before.remainingBudgetMs <= 10000) &&
+        (before.policy.investigateChoices || before.responseInquiries.nonEmpty) &&
         !before.proposalEntries.exists(_.admission == "submitted") then
       firstPurposeResponse(before, baseline, reference) match
         case Some(result) => return result
@@ -3487,22 +3497,70 @@ object CommentaryJobReducer:
 
   private def firstPurposeResponse(before: ActiveCommentaryJob, baseline: CompletedCommentaryJobRecord,
       reference: String): Option[CommentaryJobState] =
-    val active = readPrincipalVariations(before, reference)
+    val initial = readPrincipalVariations(before, reference)
+    val exampleNeeds = initial.preparedPaths.toList.flatMap(paths =>
+      MoveIntent.discover(initial.packet, paths, initial.responseSearches).toList.flatMap(_.examples)
+      .filter(moves => paths.certifiedPath(initial.packet, moves).isEmpty))
+    val active = if exampleNeeds.isEmpty then initial else
+      val replay = new LocalReplayBatch(initial)
+      // A plan witness is an exact finite path. Its occurrence as the prefix of
+      // a longer PV does not provide that path's independent material boundary.
+      exampleNeeds.foreach(moves => replay.ensurePath(moves, discoveryOnly = true, exact = true))
+      replay.retain(initial.proposalEntries) match
+        case Right(retained) => readPrincipalVariations(retained, reference)
+        case Left((retained, failure)) => return Some(stop(retained, failure, Some(baseline)))
     val paths = active.preparedPaths.get
     val assessmentPair = ReferencePurposeReading.assessmentPair(active.packet, paths)
+    // Discovery, work allocation and delivery use the same prepared idea.
+    // Returning two arbitrary reply classes is not a certificate of its purpose.
+    MoveIntent.read(active.packet, paths, active.responseSearches) match
+      case Some(intent) =>
+        val remaining = MoveIntent.probes(active.packet, paths, intent.question, active.responseSearches)
+        if intent.complete && MoveIntent.summary(active.packet, paths, active.responseSearches).nonEmpty then
+          return Some(finishInvestigation(active, baseline, Nil, Nil))
+        val issued = remaining.headOption.filter(_ => active.remainingBudgetMs >= 2500).flatMap { (anchor, moves) =>
+          issueResponseComparison(active, baseline, Nil, Nil, anchor,
+            EngineRootRestriction.Restricted(moves.sorted), intent.question.id)
+        }
+        if issued.nonEmpty then return issued
+        return Some(finishInvestigation(active, baseline, Nil, Nil))
+      case None => ()
+    val functional = MovePurpose.question(active.packet, paths, active.responseSearches).map { q =>
+      val searches = MovePurpose.searches(active.packet, q, active.responseSearches)
+      val answered = searches.exists(search => search.lines.exists(line => q.challenges.contains(line.evaluation.moves.head)) &&
+        search.lines.exists(line => !q.challenges.contains(line.evaluation.moves.head))) ||
+        (q.purposeActivity.nonEmpty || q.kind == "supported_advance" && q.use >= 0) &&
+          MovePurpose.read(active.packet, paths, active.responseSearches, Nil).exists(reading =>
+          reading.search.coversAllLegalMoves && reading.branches.size == 2 &&
+            (q.purposeActivity.nonEmpty && reading.branches.exists(_.realizes) || reading.witnessedSupport.nonEmpty))
+      (q, searches, answered)
+    }
+    val current = TargetResponseInvestigation.discover(active.packet, reference, paths, active.responseSearches)
+      .filter(ResponsePurposeReading.required(active.packet, paths, _))
+    val targetResponses = readResponseInquiries(active, current)
+    val pendingTargetContrast = current.size == 1 &&
+      TargetResponseInvestigation.firstTargets(active.packet, paths, targetResponses, active.responseSearches).isEmpty &&
+      active.responseSearches.count(s => s.belongsTo(active.packet) &&
+        s.anchor.prefixMoves == List(current.head.rootMove) &&
+        s.anchor.rootOccurrenceId == current.head.rootMoveOccurrenceId) < 2
+    val pendingReplyContrast = active.remainingBudgetMs >= 2500 &&
+      (functional.exists((_, searches, answered) => !answered && searches.size < 2) || pendingTargetContrast)
     // A complete account of the actual assessment pair takes precedence over
     // an extra same-destination question. Its returned replies already belong
     // to the two assessed moves; no third root is needed to explain them.
-    val assessedPurpose = ReferencePurposeReading.read(active.packet, paths, assessmentPair).flatMap { reading =>
+    val assessedPurpose = ReferencePurposeReading.read(active.packet, paths, assessmentPair).filter(_.completePurpose).flatMap { reading =>
       val positions = active.packet.resources.map(view => view.position -> new MoveWorkProjection.Position(view)).toMap
       val notes = MoveWorkProjection.select(active.packet, paths).local
       ReferencePurposeReading.answer(active.packet, paths, assessmentPair, reading,
         value => MoveWorkProjection.completeSelectedConditions(active.packet, paths, assessmentPair, positions, notes, value))
         .flatMap(RootQuestionSummary.realize(paths, assessmentPair, _))
     }
-    if assessedPurpose.nonEmpty then
-      return Some(finishInvestigation(active, baseline, Nil, Nil))
-    val purposeChoice = PurposeChoice.inquiry(active.packet, paths)
+    // A shorter comparison does not answer whether the opponent accepts or
+    // avoids the offered exchange. Keep that already-discovered question.
+    if assessedPurpose.nonEmpty && !pendingReplyContrast then
+      return Some(finishInvestigation(active, baseline, Nil, targetResponses))
+    val purposeChoice = PurposeChoice.inquiry(active.packet, paths).filter(question =>
+      Set(question.referenceMove, question.alternativeMove) == assessmentPair.map(_.moves.head).toSet)
     if purposeChoice.nonEmpty then
       val question = purposeChoice.get
       val roots = Set(question.referenceMove, question.alternativeMove)
@@ -3517,23 +3575,13 @@ object CommentaryJobReducer:
         return Some(issueInvestigation(active, Investigating(baseline, List(inquiry), question),
           (List(question.referenceMove, question.alternativeMove, reference) ++
             assessmentPair.flatMap(_.moves.headOption)).distinct))
-    paths.movePurpose match
-      case Some(q) =>
-        val searches = MovePurpose.searches(active.packet, q, active.responseSearches)
-        val answered = searches.exists(search => search.lines.exists(line => q.challenges.contains(line.evaluation.moves.head)) &&
-          search.lines.exists(line => !q.challenges.contains(line.evaluation.moves.head)))
+    functional match
+      case Some((q, searches, answered)) =>
         if answered || searches.size >= 2 || active.remainingBudgetMs < 2500 then
           return Some(finishInvestigation(active, baseline, Nil, Nil))
         val restriction = searches.reverse.find(_.work.rootRestriction == EngineRootRestriction.Unrestricted)
           .fold[EngineRootRestriction] {
-            // Start with the root PV's reply and the opposing function class.
-            // This is a conditional contrast, not a survey of best defense.
-            q.path.moves.lift(1).filter(_ => active.policy.shortJob && searches.isEmpty).fold[EngineRootRestriction](
-              EngineRootRestriction.Unrestricted) { reply =>
-              val legal = paths.positionView(q.path, 1).flatMap(_.legalRows).get.map(_.move)
-              val opposite = if q.challenges.contains(reply) then legal.filterNot(q.challenges.contains) else q.challenges
-              EngineRootRestriction.Restricted((reply :: opposite).distinct.sorted)
-            }
+            EngineRootRestriction.Unrestricted
           } { pool =>
             val present = pool.lines.map(_.evaluation.moves.head)
             val legal = paths.positionView(q.path, 1).flatMap(_.legalRows).get.map(_.move)
@@ -3543,10 +3591,8 @@ object CommentaryJobReducer:
         return issueResponseComparison(active, baseline, Nil, Nil, q.anchor, restriction, q.id,
           requiredTarget = true).orElse(Some(finishInvestigation(active, baseline, Nil, Nil)))
       case None => ()
-    val current = TargetResponseInvestigation.discover(active.packet, reference, paths, active.responseSearches)
-      .filter(ResponsePurposeReading.required(active.packet, paths, _))
     if current.size != 1 then return None
-    val responses = readResponseInquiries(active, current)
+    val responses = targetResponses
     val q = current.head
     val searches = active.responseSearches.filter(search => search.belongsTo(active.packet) &&
       search.anchor.prefixMoves == List(q.rootMove) && search.anchor.rootOccurrenceId == q.rootMoveOccurrenceId &&

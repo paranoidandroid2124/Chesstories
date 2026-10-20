@@ -1,0 +1,9 @@
+두 선택의 비교
+
+After Kg2, White's king on g2 adds support to White's pawn on g3, which is under attack from Black's bishop on c7.
+
+After Bc3, White's bishop on c3 keeps targeting Black's knight on f6.
+
+이어지는 변화
+둔 수 · Kg2 · 재생
+대안 수 · Bc3 · 재생

@@ -1,0 +1,7 @@
+{
+  "ui_label": "19.Bg5 · 수 이후",
+  "move_count": 10,
+  "expected_fen": "1r3rk1/1p2qpbp/2p3p1/pP1np1B1/P2nN3/3P2P1/1Q2PPBP/R1R3K1 b - - 1 19",
+  "displayed_board_fen": "1r3rk1/1p2qpbp/2p3p1/pP1np1B1/P2nN3/3P2P1/1Q2PPBP/R1R3K1",
+  "exact_board_match": true
+}

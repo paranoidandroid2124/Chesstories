@@ -18,7 +18,7 @@ private[runtime] object ExchangeActivity:
       contested: List[(String, List[Piece])])
   final case class FileWork(actor: Piece, file: String, opponent: Option[Piece])
   final case class PawnWork(actor: Piece, targets: List[Piece], next: String, guards: List[Piece],
-      continuing: Boolean)
+      continuing: Boolean, original: Piece, offset: Int)
   final case class State(end: Int, mover: Option[Piece], targets: List[(Piece, Option[Piece])],
       successor: Option[Piece], central: List[Piece], retreats: List[Retreat],
       file: Option[FileWork], pawn: Option[PawnWork], queensGone: Boolean)
@@ -32,7 +32,8 @@ private[runtime] object ExchangeActivity:
     deployment.orElse(for
       a <- left.pawn
       b <- right.pawn
-      if a.actor.side == side && a.continuing && b.continuing && a.actor == b.actor && a.targets == b.targets &&
+      if a.actor.side == side && a.continuing && b.continuing && a.original == b.original &&
+        a.actor == b.actor && a.targets == b.targets &&
         a.next == b.next && a.guards.nonEmpty && b.guards.nonEmpty
     yield Continuity.PawnPressure(a.actor.at, a.targets, a.next))
 
@@ -69,6 +70,31 @@ private[runtime] object ExchangeActivity:
       while events.exists(e => e.plyOffset == end + 1 && e.capture.exists(_.recapture)) do end += 1
     end
 
+  /** The same pawn and the same target must persist. A replacement on either
+    * square does not restore the old task. Include the root pawn move too. */
+  def pawnWork(paths: PreparedPaths, path: PreparedPath, use: Int, end: Int): Option[PawnWork] =
+    for
+      before <- paths.purposePosition(path, 0)
+      after <- paths.purposePosition(path, end + 1)
+      work <- (0 to use).reverseIterator.flatMap { offset =>
+        for
+          at <- paths.purposePosition(path, offset + 1)
+          p <- at.occupant(path.moves(offset).slice(2, 4)).filter(_.role.name == "pawn")
+          original <- before.controls.keys.find(original =>
+            paths.trackedPieceAfter(path, original, offset + 1).flatten.contains(p))
+          targets = at.controlledBy(p).toList.sorted.flatMap(at.occupant).filter(t =>
+            t.side != p.side && t.role.name == "pawn")
+          if targets.nonEmpty
+          next = p.at.head.toString + (p.at.last + (if p.side.white then 1 else -1)).toChar
+          stableTargets = targets.forall(target => (0 to end + 1).forall(count =>
+            paths.trackedPieceAfter(path, target, count).flatten.contains(target)))
+        yield PawnWork(p, targets, next,
+          if after.empty(next) then after.controllers(next, p.side).filter(_.role.name != "pawn") else Nil,
+          stableTargets && (offset + 1 to end + 1).forall(count =>
+            paths.trackedPieceAfter(path, original, count).flatten.contains(p)), original, offset)
+      }.nextOption()
+    yield work
+
   def state(paths: PreparedPaths, path: PreparedPath, original: Piece, task: Task, use: Int): Option[State] =
     val end = settled(path, use)
     for
@@ -104,20 +130,7 @@ private[runtime] object ExchangeActivity:
       // Record the pawn action that actually reaches a pawn contact, including
       // an opponent's break. A planned f-pawn push cannot be credited after the
       // opponent has already changed that structure.
-      val pawn = (1 to use).reverseIterator.flatMap { offset =>
-        for
-          at <- paths.purposePosition(path, offset + 1)
-          p <- at.occupant(path.moves(offset).slice(2, 4)).filter(_.role.name == "pawn")
-          targets = at.controlledBy(p).toList.sorted.flatMap(at.occupant).filter(t =>
-            t.side != p.side && t.role.name == "pawn")
-          if targets.nonEmpty
-          next = p.at.head.toString + (p.at.last + (if p.side.white then 1 else -1)).toChar
-          stableTargets = targets.forall(target => (0 to end + 1).forall(count =>
-            paths.trackedPieceAfter(path, target, count).flatten.contains(target)))
-        yield PawnWork(p, targets, next, after.controllers(next, p.side).filter(_.role.name != "pawn"),
-          after.contains(p) && stableTargets &&
-            (offset + 1 to end + 1).forall(count => paths.purposePosition(path, count).exists(_.contains(p))))
-      }.nextOption()
+      val pawn = pawnWork(paths, path, use, end)
       val square = path.moves.head.slice(2, 4)
       State(end, paths.trackedPieceAfter(path, original, end + 1).flatten,
         task.targets.map(p => p -> paths.trackedPieceAfter(path, p, end + 1).flatten),

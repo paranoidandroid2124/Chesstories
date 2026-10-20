@@ -1,0 +1,59 @@
+{
+  "phase": 30,
+  "definition": "Basic summary question units only; move references rendered to legal SAN; paragraphs joined by two newlines. Unicode codepoints including whitespace. No interface labels. Same original engine reports and exact issued search inputs apart from work IDs, execution keys and elapsed budget.",
+  "limitation": "Language fallback and restored missing questions can increase length. Different live PVs are not before/after compression evidence.",
+  "cases": [
+    {
+      "id": "vaulin-bd7",
+      "same_reports": true,
+      "reports_consumed": 3,
+      "before_en_chars": 1303,
+      "before_question": "selected_comparison",
+      "before_ko_chars": 688,
+      "before_english_fallback": false,
+      "after_en_chars": 1417,
+      "after_question": "selected_comparison",
+      "after_ko_chars": 725,
+      "after_english_fallback": false
+    },
+    {
+      "id": "kozakov-f6",
+      "same_reports": true,
+      "reports_consumed": 2,
+      "before_en_chars": 1201,
+      "before_question": "selected_comparison",
+      "before_ko_chars": 1201,
+      "before_english_fallback": true,
+      "after_en_chars": 792,
+      "after_question": "selected_comparison",
+      "after_ko_chars": 423,
+      "after_english_fallback": false
+    },
+    {
+      "id": "ganguly-b4",
+      "same_reports": true,
+      "reports_consumed": 2,
+      "before_en_chars": 1166,
+      "before_question": "selected_comparison",
+      "before_ko_chars": 633,
+      "before_english_fallback": false,
+      "after_en_chars": 1210,
+      "after_question": "selected_comparison",
+      "after_ko_chars": 649,
+      "after_english_fallback": false
+    },
+    {
+      "id": "kosintseva-rf3",
+      "same_reports": true,
+      "reports_consumed": 3,
+      "before_en_chars": 509,
+      "before_question": "observed_route_use",
+      "before_ko_chars": 509,
+      "before_english_fallback": true,
+      "after_en_chars": 940,
+      "after_question": "selected_comparison",
+      "after_ko_chars": 486,
+      "after_english_fallback": false
+    }
+  ]
+}

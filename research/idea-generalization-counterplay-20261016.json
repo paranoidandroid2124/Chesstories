@@ -1,0 +1,105 @@
+{
+  "status": "active_unachieved",
+  "phase": "both-sides-exchange-followup-and-selection",
+  "started_utc": "2026-10-16T01:08:04.360747+00:00",
+  "previous_goal_turn": "progress",
+  "baseline": "target/research-runs/idea-generalization-counterplay-20261016/baseline.json",
+  "constraints": {
+    "max_depth": 18,
+    "request_budget_ms": 20000,
+    "actual_screens": "only development Ahmed-Shaw Bd7 and preregistered unused Grigoryan-Zherebukh Kf8 after common changes, no favorable PV reruns"
+  },
+  "research": {
+    "source": "Aagaard Positional Play cached G Drive 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      120,
+      121,
+      124,
+      125
+    ],
+    "lesson": "Opponent short-term ideas can overturn a useful own action; exchange and counterplay are not equivalent to a net material event. Preserve tactical intermezzo and real delayed activity."
+  },
+  "heldout_preregistration": {
+    "game": "Karen Grigoryan - Yaroslav Zherebukh, Athens 2012",
+    "pdf_page": 120,
+    "fen_before": "1rb3k1/2q3b1/p1npB1p1/8/5P1B/7Q/PP4PP/5R1K b - - 0 29",
+    "played_uci": "g8f8",
+    "diagram_inspected": true,
+    "legal_book_continuation": [
+      "g8f8",
+      "f4f5",
+      "c8e6",
+      "f5g6",
+      "f8g8",
+      "h3e6",
+      "g8h8",
+      "e6f5",
+      "b8b5",
+      "f5h3",
+      "b5h5",
+      "h3g4",
+      "h5h6",
+      "g4e6",
+      "c7b8",
+      "h4g5",
+      "c6d4",
+      "e6f7",
+      "h6h5",
+      "g5f6"
+    ],
+    "expected_concepts": "29...Kf8 intends to meet f5 with Bxe6, but the intermediate fxg6+ opens the f-file with tempo before Qxe6. Actual engine reference and reply decide claims. Do not force the book Bxe6 alternative or book line.",
+    "fixture_matches": [],
+    "selected_before_product_edits_and_engine_output": true,
+    "history": "standalone diagram FEN, no castling, neutral halfmove clock"
+  },
+  "phase_result": "progress_with_independent_failure",
+  "finished_observation_utc": "2026-10-16T01:30:51.253304+00:00",
+  "implementation": [
+    "Shared physical activity reader handles the first responding side and the actual beneficiary after its local exchange.",
+    "Removed/blocked controller identities are tracked from root or first reply. Reply exchange can use its next own turn only.",
+    "Actual alternative-arm defense by the same original removed controller is compared, without hypothetical safety or evaluation causality.",
+    "King recapture after the beneficiary capture remains an actual ending, and all action/cost references reach independent screen validation.",
+    "Material closure and prior own-purpose/delayed-realization reading are preserved."
+  ],
+  "verification": {
+    "runtime": "IdeaGeneralizationTest 21 + PurposeComparisonTest 10 passed; final king-recapture assertion rerun passed 1. The saved IdeaGeneralizationTest.xml contains only that last one, not all 21.",
+    "web": "Final ideaGeneralization test file 14 passed, including exact counterplay delivery and rejection after removing covered moves.",
+    "build": "Normal standalone update compiled final root identity guard and served the app.",
+    "limits": "Only two actual UI positions, one 20000 ms request each; all issued work D11, below D18.",
+    "not_done": "No broad suite, additional engine positions, favorable PV reruns, or overall release-quality claim."
+  },
+  "actual_screens": [
+    {
+      "label": "bd7-counterplay-live",
+      "seconds": 5.58,
+      "verdict": "development partial improvement; screen does not establish opponent-counterplay generalization"
+    },
+    {
+      "label": "kf8-first-independent",
+      "seconds": 7.98,
+      "verdict": "first independent failure; no product tuning or favorable rerun afterward"
+    }
+  ],
+  "remaining_common_bottlenecks": [
+    {
+      "source": "ReferencePurposeReading.scala:323-325",
+      "finding": "Every initial check position is rejected before common purpose/counterplay reading. Kf8 starts in check by the e6 bishop. This gate is the direct reason this independent case cannot use the new structure; missing purpose alone is not the primary diagnosis."
+    },
+    {
+      "source": "PurposeActivityReading.replyPair and its own-side activity candidates",
+      "finding": "Reply selection still seeks own-side beneficiaries. A strong opposing Rxe7 exchange and subsequent f5 may be present in a full survey but omitted when the own e7 knight disappears."
+    },
+    {
+      "finding": "Fallback still repeats capture/check facts; latent quiet idea discovery and relative importance remain incomplete."
+    }
+  ],
+  "next_action": "Continue the same long goal by joining check-evasion obligations and opposing reply activity to the common choice account. Preserve these first failures; do not solve by deleting every guard, merely translating fallback, or length reduction.",
+  "external_blocker": null,
+  "artifacts": {
+    "screen_evidence": "idea-generalization-counterplay-20261016/screen-evidence.json",
+    "same_report": "idea-generalization-counterplay-20261016/same-report-reading.json",
+    "raw_network": "idea-generalization-counterplay-20261016/live-reports.json.gz",
+    "preservation": "idea-generalization-counterplay-20261016/preservation-check.json"
+  },
+  "ui_restored": "Original 1.e4 at start, Engine Off, blank move and import inputs"
+}

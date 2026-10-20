@@ -1,0 +1,382 @@
+{
+  "schema_version": "chesstory.assessment-pair.v1",
+  "status": "complete",
+  "started_utc": "2026-10-13T04:18:06Z",
+  "deadline_utc": "2026-10-13T08:48:06Z",
+  "limits": {
+    "minutes": 270,
+    "depth_max": 18,
+    "request_ms": 10000,
+    "quality_positions": 2
+  },
+  "objective": "Bind the actual assessed pair to substantive purpose, opponent-reply and post-exchange functional contrasts in the basic answer, beyond a special central-post reading.",
+  "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+  "source_pages": [
+    226,
+    227,
+    230,
+    231,
+    292,
+    293,
+    295,
+    361,
+    362
+  ],
+  "cases": [
+    {
+      "id": "existing",
+      "game": "Gelfand-Avrukh, Ramat Aviv 1999, 14...Bd5",
+      "required_pair": [
+        "Rb8",
+        "Bd5"
+      ],
+      "minimum": [
+        "The main explanation must describe Rb8 and Bd5 as the evaluated choices, without substituting Nd5.",
+        "Connect rook/bishop duty around the b-file and central exchanges to the actual reply and surviving pawn/piece activity.",
+        "Close Qxb3/dxc3 and Bxd5/Nxd5/Bxd4/exd4/Nxd5/Qxd5 if selected; do not invent a retained bishop or guaranteed advantage."
+      ],
+      "result": {
+        "fresh_pair": [
+          "c6",
+          "Bd5"
+        ],
+        "fresh_elapsed_ms": 3949,
+        "depth": 12,
+        "reports": 2,
+        "required_fresh_pair_observed": false,
+        "fresh_screen": "assessment-pair-20261013/existing.png",
+        "fresh_reading": "c6는 d5 진출을 지원하고 b7 쪽 공격선을 막는다. 실제 Nge4 이후의 나이트 교환 및 Bc2 배치와, Bd5/Nge4의 차단 이후 Nxd5/cxd5가 남긴 나이트의 지원·폰 배치를 기본 해설에서 비교했다.",
+        "saved_pair_check": "원래 저장된 Rb8/Bd5의 완전한 Bxd5/Nxd5/Bxd4/exd4/Nxd5/Qxd5 교환을 핵심 검사에서 읽었다. Rb8에서도 Bb3는 Qxb3 뒤 남지 않으며, Nb6→d5는 c3 통과폰을 지원한다. Bd5에서는 그 나이트가 없어지고 e5 폰이 d4에 남는다.",
+        "replay_screen": "assessment-pair-20261013/rb8-replay.png",
+        "replay_reading": "보존된 첫 실제 엔진 보고를 현재 제품 경로로 재생했다. Rb8의 b7 방어와 Bxd4/exd4/Qxb3/dxc3/Ne4/Nd5, Bd5/Nge4의 차단 및 Re8/Rb8 배치를 설명한다. 이 보고의 Bd5 수순에는 즉시 비숍 교환이 없으므로 다른 보고의 Qxd5 결론을 옮기지 않았다.",
+        "replay_method": "브라우저의 첫 engine-work-reports 요청에서 outcome만 보존 보고의 원문으로 교체했다. 현재 발급 work_id 및 실행 키, 실제 Java 생성기, 응답 판독기, 제품 화면을 사용했다. 주입은 요청 완료 뒤 해제했고, 화면의 소요 시간 대신 재생임을 명시했다. 해설 본문은 수정하지 않았다.",
+        "replay_is_performance_evidence": false
+      },
+      "acceptance_result": {
+        "criterion": "현재 엔진의 자동 평가쌍으로 판정한다는 사용자 확인을 적용한다.",
+        "pair": [
+          "c6",
+          "Bd5"
+        ],
+        "elapsed_ms": 4529,
+        "depth": 12,
+        "request_ms": 10000,
+        "replay": false,
+        "screen": "assessment-pair-20261013/iab-explanation.jpg",
+        "literal_rb8_fresh_pair_observed": false
+      }
+    },
+    {
+      "id": "new",
+      "game": "Cohn-Rubinstein, St Petersburg 1909, 19...Bxf3",
+      "fen": "3r4/pp2kppp/4p3/8/1PB1n1b1/P3PN2/5PPP/R3K3 b - - 2 19",
+      "played": "g4f3",
+      "pgn": "[White \"Erich Cohn\"]\n[Black \"Akiba Rubinstein\"]\n[Event \"St Petersburg\"]\n[Date \"1909.??.??\"]\n\n1.d4 d5 2.Nf3 c5 3.c4 dxc4 4.dxc5 Qxd1+ 5.Kxd1 Nc6 6.e3 Bg4 7.Bxc4 e6 8.a3 Bxc5 9.b4 Bd6 10.Bb2 Nf6 11.Nbd2 Ke7 12.Ke2 Be5 13.Bxe5 Nxe5 14.Rhc1 Rac8 15.Bb3 Rhd8 16.Nc4 Nxc4 17.Rxc4 Rxc4 18.Bxc4 Ne4 19.Ke1 Bxf3 *",
+      "selection": "Chosen from book page 230 before engine output. No matching name/position case found in the retained research index.",
+      "minimum": [
+        "Use the actual returned assessment reference, even if it differs from the book.",
+        "Explain why exchanging bishop for knight changes the pawn structure and subsequent piece tasks, or explain the actual different response if the engine returns one.",
+        "Compare that commitment with the actual other root and its reply; pawn doubling alone is not proof of a win, and the later historical won pawn ending must not be imported into the short PV."
+      ],
+      "result": {
+        "fresh_pair": [
+          "Rc8",
+          "Bxf3"
+        ],
+        "fresh_elapsed_ms": 5259,
+        "depth": 12,
+        "reports": 2,
+        "fresh_screen": "assessment-pair-20261013/new.png",
+        "fresh_reading": "Rc8가 Bc4를 공격하여 Bd3로 물러나게 하고, Bf5/Bxf5/Nxf5로 비숍끼리 교환한 뒤 c8 룩이 열린 c파일에 남는다. Bxf3/gxf3는 나이트와 비숍을 바꾸어 백 f2/f3 겹친 폰을 만들고, ...g5/...f5가 진행되는 동안 흑 룩은 d8에 남는다. 두 수순을 같은 7 ply까지 읽었다. 작은 평가 차이를 강제 우열로 바꾸지 않는다.",
+        "same_exchange_variant": "앞선 실제 Nd6/Bxf3 보고에서는 Bg4와 Nf3의 동일 교환이 지연되었다. 그 경우도 정확히 같은 물리적 기물로 확인하며 한쪽만 더 이른 배치에서 비교하지 않는다.",
+        "board_link": "기능 비교 문단의 Nxf5를 눌러 실제 Rc8 수순의 22...Nxf5 배치를 메인 판에서 확인하고 기보로 복귀했다.",
+        "board_screen": "assessment-pair-20261013/new-linked-board.png"
+      }
+    }
+  ],
+  "completion": "Both actual basic screens must explain both assessed roots, their actual replies and surviving function/cost difference within the short budget. Tests or additional sentences alone do not count. If unmet, report incomplete.",
+  "prior_failures": [
+    "startup-update-20261013.json",
+    "evaluation-reference-20261013.json",
+    "choice-neutralization-20261012.json",
+    "repeated-work-review-20261011.json",
+    "basic-purpose-20261005/result.json"
+  ],
+  "preservation": "13 pre-existing dirty files copied with SHA-256 and original bytes to target/research-runs/assessment-pair-20261013/before-changes.zip; prior text is not rewritten.",
+  "checkpoint_utc": "2026-10-13T05:52:07+00:00",
+  "base_commit": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "branch": "codex/functional-choice-value",
+  "workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+  "study": [
+    {
+      "pages": [
+        226,
+        227,
+        361,
+        362
+      ],
+      "lesson": "교환의 가치는 기물 개수만이 아니라 이후 폰 구조와 남은 기물의 일에 있다. 같은 원래 기물과 표적을 추적해 즉시 공격, 상대의 대응, 남는 역할을 구별한다."
+    },
+    {
+      "pages": [
+        230,
+        231
+      ],
+      "lesson": "Cohn–Rubinstein의 Bxf3는 구조를 고정하는 선택이다. 이후 Rc8/Nc4와 왕 활동을 읽어야 한다. 책에서 나중에 나온 승리한 폰 엔딩을 19...Bxf3의 강제 승리로 가져오지 않는다. 24.f4는 방어 가능하다."
+    },
+    {
+      "pages": [
+        292,
+        293
+      ],
+      "lesson": "c6의 d5 지원과 b7 방어, Bd5/Nge4의 공격선 차단, Nd5/Bxd4의 다른 교환을 구별한다. 독서판 exd6 표기는 이 국면에서 불법이며 실제 기보의 exd4를 사용한다."
+    },
+    {
+      "pages": [
+        295
+      ],
+      "lesson": "책의 16...Rb8은 요청한 14...Rb8과 다른 국면이다. 책의 수 평가를 직접 복사하지 않고 실제 반환된 합법 수순의 기능만 설명한다."
+    }
+  ],
+  "root_causes": [
+    "이전의 Rb8/Bd5가 Bd5/Nd5로 바뀐 실패는 새 유형이 아니다. 실제 평가쌍을 소유하는 판독이 좁은 중앙 거점 조건에서 탈락하면 보충 질문이 본문을 대신했다.",
+    "같은 칸, 첫 잡기 여부, 우리 기물의 생존 여부만으로 교환 후 기능 차이를 판단할 수 없다. 동일한 비숍이 없어져도 다른 상대 기물과 교환하고 다른 폰 구조 및 룩 활동을 남긴다.",
+    "서로 다른 길이의 수순을 너무 이른 끝점끼리 비교하면 한쪽의 활동을 과장한다. 가능한 공통 진행 지점과 닫힌 교환을 사용해야 한다.",
+    "PV가 잡기로 끝났다는 이유로 검증된 마지막 배치까지 버리면 한 수만 설명하는 예전 경로로 돌아간다. 마지막 배치는 읽되 이후 응수가 없음을 표시해야 한다."
+  ],
+  "implementation": [
+    "ReferencePurposeReading이 실제 CandidateComparisonEvidence의 두 수와 준비된 수순 소속을 유지한다. 착수의 포획·공격 회피·방어·차단·새 공격을 기존 관계 근거에서 읽는다.",
+    "물리적 원래 기물을 추적하여 지연된 동일 교환과 다른 상대 기물과의 교환을 구별하고, 연속 잡기의 끝과 가능한 공통 진행 시점에서 생존·지원·열린 파일·변형된 폰을 비교한다.",
+    "ReferenceContrast가 같은 원래 기물의 양쪽 기능을 직접 연결한다. 교환 비용과 모든 선택된 잡기·체크의 증명 의무를 유지하며, 이후 응수가 없는 PV 끝에는 RecordedEnd를 남긴다.",
+    "같은 판독 내용을 한국어와 영어로 렌더링하고 정확한 착수 연결을 맞춘다. 한국어가 영어 문단으로 떨어졌던 선택된 조건 및 재료 계정 연결을 수정했다.",
+    "MovePurpose 및 추가 PurposeChoice 탐색이 실제 평가쌍과 다른 두 원점 또는 한 수만의 설명으로 비교를 대신하지 못하도록 제한했다. FEN, 게임 이름, SAN 문자열에 따른 사례별 분기는 없다."
+  ],
+  "development_observations": [
+    {
+      "id": "new-before",
+      "elapsed_ms": 2080,
+      "result": "Bxf3만 설명하고 Nd6/Bxf3 이름만 마지막에 추가하던 기존 실패"
+    },
+    {
+      "id": "existing-1",
+      "elapsed_ms": 3387,
+      "pair": [
+        "c6",
+        "Bd5"
+      ],
+      "result": "초기 공통 판독 화면. 요청 PGN에서 이후 15.Nge4가 빠져 있었으므로 원래 입력으로 복구"
+    },
+    {
+      "id": "existing-2",
+      "elapsed_ms": 3804,
+      "pair": [
+        "c6",
+        "Bd5"
+      ],
+      "result": "원래 PGN과 첫 응수 차단 설명 확인"
+    },
+    {
+      "id": "new-1",
+      "elapsed_ms": 4571,
+      "pair": [
+        "Nd6",
+        "Bxf3"
+      ],
+      "result": "지연된 동일 교환·열린 파일 확인. 이후 검토에서 양쪽 비교 시점을 맞추도록 수정"
+    },
+    {
+      "id": "existing-3",
+      "elapsed_ms": 3211,
+      "pair": [
+        "c6",
+        "Bd5"
+      ],
+      "result": "PV가 Nxd5에서 끝나면 한 수의 영어 설명으로 돌아가는 실패. short_endpoint 원문 보존 및 수정"
+    },
+    {
+      "id": "existing-4",
+      "elapsed_ms": 3964,
+      "pair": [
+        "c6",
+        "Bd5"
+      ],
+      "result": "마지막 배치를 허용하고 기록 경계를 명시한 뒤 실제 쌍을 한국어로 전달"
+    },
+    {
+      "id": "existing-5",
+      "elapsed_ms": 3949,
+      "pair": [
+        "c6",
+        "Bd5"
+      ],
+      "result": "같은 원래 기물의 기능 차이를 직접 대조한 최종 기존 국면 화면"
+    },
+    {
+      "id": "new-2",
+      "elapsed_ms": 3614,
+      "pair": [
+        "Nd6",
+        "Bxf3"
+      ],
+      "result": "새 PV가 Bxf3 대신 Bxf5/Nxf5를 선택하자 좁은 동일 교환·생존 조건 때문에 다시 탈락. different_exchange 원문 보존, 폰 구조와 실제 기능 대비를 허용하도록 수정"
+    },
+    {
+      "id": "new-3",
+      "elapsed_ms": 5259,
+      "pair": [
+        "Rc8",
+        "Bxf3"
+      ],
+      "result": "마지막 수정 뒤 다른 원점과 다른 상대 기물과의 교환에도 실제 쌍·폰 구조·룩 기능 대비 유지"
+    },
+    {
+      "id": "existing-replay",
+      "pair": [
+        "Rb8",
+        "Bd5"
+      ],
+      "performance_evidence": false,
+      "result": "보존한 실제 첫 엔진 보고로 제품 생성·화면 전달 확인; 새 탐색 통과로 세지 않음"
+    }
+  ],
+  "checks": {
+    "focused_tests": "AssessmentPairReadingTest의 두 사례 검사 통과. 원래 기물·소속·선택된 교환 비용·언어별 수순 연결·PV 끝 및 실제 다른 교환 변형을 포함한다. 테스트 성공을 목표 달성으로 세지 않는다.",
+    "last_focused_test_utc": "2026-10-13T05:38:30Z",
+    "runtime_compile": true,
+    "git_diff_check": true,
+    "depth_policy_changed": false,
+    "observed_search_depths": [
+      12
+    ],
+    "not_run": [
+      "전체 회귀",
+      "세 번째 품질 국면",
+      "탐색 깊이 증가",
+      "반복 성능 분포",
+      "새 컴퓨터 설치"
+    ],
+    "prior_failures_preserved": "10월 10일 runtime 75개·UI 124개 실패와 기존 연구의 미달성 판정을 해결되었다고 바꾸지 않았다."
+  },
+  "completion_decision": {
+    "met": true,
+    "reason": "자동으로 선택된 실제 기준 수를 따른다는 사용자 확인 아래, 같은 기존 국면의 c6/Bd5와 새 Cohn–Rubinstein 국면의 Rc8/Bxf3가 각각 실제 기본 화면에서 양쪽 목적·반환된 응수·교환 비용·남는 기능 차이를 설명했다. 각각 4.529초와 5.259초, 깊이 12이다. 실제 평가쌍 소속과 물리적 기물 추적을 고친 공통 구현 및 화면 판독을 근거로 판단하며, 테스트 통과나 문장 수만으로 완료 판정하지 않는다.",
+    "historical_rb8_status": "저장된 실제 엔진 보고의 현재 생성기·화면 재생 및 완전 교환 핵심 검사로 이전 질문 대체 실패를 확인했다. Rb8/Bd5를 새 탐색에서 얻었다고 주장하지 않으며 재생 시간은 성능 근거에서 제외한다.",
+    "remaining": [
+      "현재 선택된 짧은 수순의 활동 차이가 평가 점수 전체의 원인임을 증명하지 않는다.",
+      "모든 장기 목적·기능 동일성·전체 응수에 대한 보편적 해설력이나 출시 준비 완료를 주장하지 않는다.",
+      "범위 밖 질문의 대체 해설 경로와 전체 회귀는 미검증이다."
+    ],
+    "goal_marked_complete": true,
+    "goal_completed_utc": "2026-10-13T06:18:34Z",
+    "goal_elapsed_seconds": 7196
+  },
+  "evidence": {
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/assessment-pair-browser.json.gz",
+    "fixture_sha256": "d03f6feb1f78652f69cc91cc13012aa7fdc3b48542305f5d8a8779089b13fa0f",
+    "preregistration": "assessment-pair-20261013/preregistered.json",
+    "development_raw": "target/research-runs/assessment-pair-20261013",
+    "artifacts": {
+      "existing.png": "f265fa61874a9e17cc6d876f5fdca288d1f750bb5047c4c0d7eb7733589790ce",
+      "new.png": "fb52ee93ba9f46e789b7f76cf70ddbb53e38736d1a258ba97cb1fdff838f52ed",
+      "new-linked-board.png": "226a925e25a5757d2839b9d3f1d4a0c1a8da970d67d43a961c323240ca0de6fb",
+      "rb8-replay.png": "ccde00c61a8dc3b14665ba9a1b4f41af40bae7a8477e3ba008e5611aaf8804e0",
+      "existing.yml": "c71e5ab4814419943766bc5ef48b539ac2ee38ec368b35c06b4f608d94a03432",
+      "new.yml": "b6b2e2a2869f744a7ae8bac9f452ab4777276c91852a5dd70d9a75b0e677c3d0",
+      "rb8-replay.yml": "ebad1340a224b18d793d5f417d5915ecaa96fff97ad264d2bcb8b100a4995b62",
+      "new-linked-board.yml": "527d459d53a14754d48d74e1c3feee959321f999bd8394b4379887a207a069d6",
+      "iab-existing.jpg": "a8c92377fe0055925f472ed25017d95951550332aa333c28dbe3cb505e5f4ef4",
+      "iab-explanation.jpg": "9e5e7b509fe9586a6452c0391f999148af9a65dc9fa647e32662e440a8a15830",
+      "iab-existing-ax.txt": "558c24e292ab0d4d4ae3996d5b744d5c09b3744658ae25830916e69347217e56"
+    }
+  },
+  "preservation_result": {
+    "preexisting_files": 13,
+    "all_original_hashes_matched_before_index_addition": true,
+    "index_change": "research/README.md에 이번 절만 삽입. 기존 전체 바이트는 삭제·재작성하지 않음.",
+    "commit_created": false,
+    "staged": false,
+    "final_original_hashes_matched": 13
+  },
+  "continuations": [
+    {
+      "at_utc": "2026-10-13T06:09:40+00:00",
+      "classification": "progress",
+      "code_changed": false,
+      "inspection": "같은 실제 경로·브랜치·현재 앱 실행을 재확인. 원래 Rb8/Bd5와 새 요청의 initial FEN, 전체 이동 이력, current FEN, 입력 수순, 엔진 프로필, 발급 root_search 객체(실행 키·깊이·노드·시간·MultiPV 포함)가 동일함을 대조했다. 결과 순위 변동은 관찰 사실이며 특정 코드 변경이 그 원인이라고 단정하지 않는다.",
+      "fresh_iab_result": {
+        "pair": [
+          "c6",
+          "Bd5"
+        ],
+        "elapsed_ms": 4529,
+        "depth": 12,
+        "reports": 1,
+        "replay": false,
+        "screen": "assessment-pair-20261013/iab-existing.jpg",
+        "explanation_screen": "assessment-pair-20261013/iab-explanation.jpg",
+        "reading": "c6의 d5 지원·b7 공격선 차단, bxc6/bxc6 뒤 지원 폰의 원래 신원 변화, c3 통과폰과 Nd5 지원을 보존한다. Bd5/Nge4 뒤의 나이트·비숍 교환과 남은 폰 지원을 같은 원래 나이트의 기능 차이로 비교한다."
+      },
+      "browser_preservation": "기존 1.e4 기보를 UI로 저장하고 검증 뒤 원래 기보·시작 국면·접힌 입력창·빈 입력창으로 복구했다. Network 관찰을 해제했다.",
+      "open_decision": "Rb8 직접 지정 비교 기능을 추가할지, 자동 탐색이 Rb8을 선택해야 한다는 조건을 유지할지 사용자에게 질문했다. 답이 오기 전 비교 기준·엔진 설정은 바꾸지 않는다.",
+      "completion_met": false,
+      "resolved_by": "scope_clarification"
+    }
+  ],
+  "decision_history": [
+    {
+      "at_utc": "2026-10-13T05:52:07+00:00",
+      "status": "incomplete",
+      "completion_decision": {
+        "met": false,
+        "reason": "공통 구조 구현과 새 국면의 실제 화면은 개선되었지만, 요구한 Rb8/Bd5의 새 탐색·10여 초 화면 조건은 재현하지 못했다. 같은 기존 국면의 새 탐색은 c6/Bd5였다. 보고 재생과 단위 검사를 그 조건의 충족으로 바꾸지 않는다.",
+        "remaining": [
+          "현재 선택된 짧은 수순의 활동 차이가 평가 점수 전체의 원인임을 증명하지 않는다.",
+          "모든 장기 목적·기능 동일성·전체 응수에 대한 보편적 해설력이나 출시 준비 완료를 주장하지 않는다.",
+          "범위 밖 질문의 대체 해설 경로와 전체 회귀는 미검증이다."
+        ],
+        "goal_marked_complete": false
+      },
+      "reason_preserved": "사용자 기준 확인 이전의 판정이며, 요구한 문자 그대로의 Rb8/Bd5 새 탐색은 끝내 관찰하지 못했다는 사실을 보존한다."
+    }
+  ],
+  "scope_clarification": {
+    "at_utc": "2026-10-13T06:18:16.606568+00:00",
+    "user_statement": "자동 탐색이 Rb8을 기준 수로 선택해야 하지만, 만약 stockfish 19에서 다른 수가 더 낫다고 생각한다면 그게 맞는거지 뭐",
+    "interpretation": "비교 수를 강제로 지정하지 않고 현재 엔진이 자동으로 선택한 더 나은 기준 수를 따른다. 따라서 같은 기존 국면에서 실제 반환한 c6/Bd5를 이번 화면 판정의 평가쌍으로 허용한다. 목적·응수·교환 후 기능 차이, 두 국면, 실제 화면, 10초 요청과 깊이 상한 조건은 유지한다.",
+    "runtime_engine": "Stockfish 18",
+    "engine_version_note": "사용자 표현의 Stockfish 19와 달리 현재 앱은 Stockfish 18이다. 이를 사용자에게 알렸으며 엔진 교체나 수 강제 선택은 하지 않았다.",
+    "preregistration_unchanged": true,
+    "preregistration_sha256": "0b3a4e0caacfa7d4949cb53fc6cb0a55312f6d0dd7aecf3d23f926b168c8cac9",
+    "manual_comparison_added": false,
+    "engine_policy_changed": false
+  },
+  "final_audit": {
+    "at_utc": "2026-10-13T06:18:16.606568+00:00",
+    "elapsed_minutes": 120.18,
+    "within_270_minutes": true,
+    "prior_failure_review_and_source_study": true,
+    "actual_pair_preserved_in_basic_answer": true,
+    "two_quality_positions_only": true,
+    "fresh_screen_cases": [
+      "c6/Bd5: 4529ms, D12, actual in-app browser",
+      "Rc8/Bxf3: 5259ms, D12, actual standalone browser"
+    ],
+    "substantive_changes": [
+      "실제 평가쌍과 다른 질문으로의 대체를 제한",
+      "교환 전후 같은 원래 기물 및 폰의 신원을 연결",
+      "지연된 같은 교환과 다른 상대 기물과의 교환을 구별",
+      "양쪽의 비교 진행 시점과 남은 지원·열린 파일 활동을 연결",
+      "잡기로 끝나는 기록도 마지막 합법 배치와 기록 한계를 함께 전달"
+    ],
+    "board_link_verified": "새 국면 기능 비교의 Nxf5를 메인 판에서 확인하고 복귀",
+    "focused_checks": "AssessmentPairReadingTest 2/2 및 관련 컴파일. 마지막 코드 변경 이후 통과한 검사를 문서 수정만으로 재실행하지 않았다.",
+    "preexisting_files_hash_matched": 13,
+    "source_or_engine_changed_after_last_screen": false,
+    "known_limits": [
+      "현재 선택된 짧은 수순의 활동 차이가 평가 점수 전체의 원인임을 증명하지 않는다.",
+      "모든 장기 목적·기능 동일성·전체 응수에 대한 보편적 해설력이나 출시 준비 완료를 주장하지 않는다.",
+      "범위 밖 질문의 대체 해설 경로와 전체 회귀는 미검증이다."
+    ]
+  },
+  "completed_utc": "2026-10-13T06:18:16.606568+00:00"
+}

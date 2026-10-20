@@ -1,0 +1,273 @@
+{
+  "status": "active_unachieved",
+  "phase": "prevented-resources-and-owned-continuations",
+  "started_utc": "2026-10-16T02:48:48.464885+00:00",
+  "previous_goal_turn": "progress",
+  "baseline": "target/research-runs/idea-generalization-prevention-20261016/baseline.json",
+  "constraints": {
+    "max_depth": 18,
+    "request_budget_ms": 20000,
+    "actual_screens": "Only development Kh1 and preregistered unused Anand Qg2, one first request each after product freeze. Reuse saved d6 reports for continuation work."
+  },
+  "research": {
+    "source": "Aagaard Positional Play, cached G Drive file 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      129,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139
+    ],
+    "lesson": "Prophylaxis combines own useful continuation with the opponents resource it removes; physical king movement is not by itself a purpose. Quiet queen support can constrain rook counterplay and pawn breaks without a new direct attack."
+  },
+  "heldout_preregistration": {
+    "game": "Anand - Morozevich, World Championship Mexico City 2007",
+    "pdf_diagram_page": 129,
+    "pdf_solution_pages": [
+      137,
+      138
+    ],
+    "fen_before": "5r1k/1p2b1pp/p2p4/4p2q/4Pr2/P2R1PR1/NPP1Q2P/1K6 w - - 0 27",
+    "played_uci": "e2g2",
+    "book_continuation_uci": [
+      "e2g2",
+      "f4h4",
+      "h2h3",
+      "h5h6",
+      "d3b3",
+      "b7b5",
+      "a2b4"
+    ],
+    "diagram_inspected": true,
+    "position_valid": true,
+    "history": "Standalone diagram with both kings away from original squares and no castling rights; neutral halfmove clock.",
+    "expected_concepts": "Qg2 consolidates against Rh4/h3 pressure and the d5 break, preserving the time for Rb3 and knight improvement. Actual engine pair/PVs remain authoritative; book line is not forced.",
+    "selected_before_product_edits_and_engine_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "implementation": [
+    "Root-owned conditional purposes are selected independently; unrelated conditions cannot veto the missing purpose. Existing actual-pair purposes remain.",
+    "The early purpose-return path now consults the same conditional reader. Korean/English delivery share the supported content.",
+    "Relative-pin front-piece departure can reveal an originally blocked countercapture. Actual original-piece identity and check/no-check legality are reread; no move/FEN branches.",
+    "The selected conditional example keeps its own complete capture costs, separate from actual PV exchanges.",
+    "Reply explanation may use a longer owned report at the same exact child/profile and sufficient completed depth. Ranking remains anchored to the unrestricted survey; the later path is not spliced into the earlier PV."
+  ],
+  "verification": {
+    "actual_ui": [
+      {
+        "label": "kh1",
+        "first_run_only": true,
+        "request_ms": 20000,
+        "displayed_seconds": 11.98,
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "issued_work": [
+          {
+            "work_id": "work:0",
+            "purpose": "root_search",
+            "limits": {
+              "depth": 11,
+              "nodes": 5000000,
+              "movetime_ms": 5000,
+              "multi_pv": 2
+            },
+            "prefix": [],
+            "restriction": {
+              "kind": "unrestricted"
+            }
+          },
+          {
+            "work_id": "work:1",
+            "purpose": "response_comparison",
+            "limits": {
+              "depth": 11,
+              "nodes": 2000000,
+              "movetime_ms": 2500,
+              "multi_pv": 3
+            },
+            "prefix": [
+              "f3d4",
+              "c7c8",
+              "c2c3",
+              "e5c6"
+            ],
+            "restriction": {
+              "kind": "restricted",
+              "moves_uci": [
+                "f4d6",
+                "d4b3",
+                "d4c2"
+              ]
+            }
+          },
+          {
+            "work_id": "work:2",
+            "purpose": "response_comparison",
+            "limits": {
+              "depth": 11,
+              "nodes": 2000000,
+              "movetime_ms": 2500,
+              "multi_pv": 3
+            },
+            "prefix": [
+              "g1h1",
+              "e7c6",
+              "b5c6",
+              "b7c6",
+              "d1e2",
+              "f7f6",
+              "b1a1",
+              "c7b7"
+            ],
+            "restriction": {
+              "kind": "unrestricted"
+            }
+          }
+        ],
+        "basic_reading": [
+          {
+            "question": "selected_comparison",
+            "paragraphs_ko": [
+              "Nd4 — 원래 f3의 나이트를 옮겨 흑 e5 나이트의 공격을 피합니다. 흑 e6 폰을 새로 공격합니다. Kh1 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  Nd4 수순의 비교 시점까지 백의 f3 나이트와 흑의 e5 나이트를 교환합니다. Kh1 수순의 비교 시점까지 백의 b5 비숍과 흑의 e7 나이트를 교환합니다. Nd4 수순에서: N5c6 뒤 백 b5 비숍이 흑 c6 나이트를 새로 공격합니다. Nxd4 수로 나이트가 백 b5 비숍의 공격을 피합니다.",
+              "Nd4 — Qc8 뒤, cxd4까지의 수순에서는 백 b1 룩, 백 b5 비숍을 남깁니다. 원래 c2 폰이 d4에 남습니다. 흑 b7 폰은 고립폰입니다.",
+              "Kh1 — N7c6 뒤, Ra1까지의 수순에서는 백 a1 룩은 열린 a 파일에서 활동합니다. 백 f3 나이트를 남깁니다. c2·c5에 더블폰이 남습니다. 원래 b7 폰이 c6에 남습니다."
+            ]
+          }
+        ],
+        "complete_network_capture": true,
+        "verdict": "development fresh-search failure",
+        "actual_pair": [
+          "Kh1",
+          "Nd4"
+        ],
+        "observed": "The fresh PV no longer supplies the Re1 comparison. Kh1 purpose is again unknown, while the actual distinct knight/bishop exchanges and endpoints remain.",
+        "board_link": "Ra1",
+        "screen": "kh1-commentary.png",
+        "board": "kh1-board.png"
+      },
+      {
+        "label": "qg2",
+        "first_run_only": true,
+        "request_ms": 20000,
+        "displayed_seconds": 2.11,
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "issued_work": [
+          {
+            "work_id": "work:0",
+            "purpose": "root_search",
+            "limits": {
+              "depth": 11,
+              "nodes": 5000000,
+              "movetime_ms": 5000,
+              "multi_pv": 2
+            },
+            "prefix": [],
+            "restriction": {
+              "kind": "unrestricted"
+            }
+          },
+          {
+            "work_id": "work:1",
+            "purpose": "focus_comparison",
+            "limits": {
+              "depth": 11,
+              "nodes": 2000000,
+              "movetime_ms": 2500,
+              "multi_pv": 2
+            },
+            "prefix": [],
+            "restriction": {
+              "kind": "restricted",
+              "moves_uci": [
+                "a2c3",
+                "e2g2"
+              ]
+            }
+          },
+          {
+            "work_id": "work:2",
+            "purpose": "response_comparison",
+            "limits": {
+              "depth": 11,
+              "nodes": 20000000,
+              "movetime_ms": 5000,
+              "multi_pv": 3
+            },
+            "prefix": [
+              "e2g2"
+            ],
+            "restriction": {
+              "kind": "unrestricted"
+            }
+          }
+        ],
+        "basic_reading": [
+          {
+            "question": "selected_comparison",
+            "paragraphs_ko": [
+              "Nc3 — 백 c3 나이트가 흑 f4 룩에게 공격받는 백 e4 폰을 지킵니다. Qg2 — Qg2–Qxg4로 퀸이 활동에 나서 흑 g7 폰, 흑 h4 비숍을 공격합니다. 이 수순에서는 Be1로 공격받은 비숍이 물러납니다. 백 e4 폰에 대한 퀸의 방어를 놓습니다.  아래 비교 시점까지 두 수순 모두 룩 한 쌍을 교환합니다. Nc3에서는 그 밖에 백의 h2 폰을 내줍니다.",
+              "Nc3 — Rh4: 백 h2 폰을 새로 공격합니다. Qh4까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+              "Qg2 — Qf7: 백 a2 나이트를 새로 공격합니다. Be1까지의 수순에서는 백 g4 퀸은 백 e4 폰을 지킵니다."
+            ]
+          }
+        ],
+        "complete_network_capture": true,
+        "verdict": "first independent partial failure",
+        "actual_pair": [
+          "Nc3",
+          "Qg2"
+        ],
+        "observed": "The first unused Qg2 output preserves Nc3 pawn defense, Qg2/Qxg4, bishop retreat, rook exchanges, Nc3 h2 pawn loss and the restored e4 defense; it does not explain the preparation/recapture relationship or the strongest reply versus Rh4/h3.",
+        "board_link": "Qxg4",
+        "screen": "qg2-commentary.png",
+        "board": "qg2-board.png"
+      }
+    ],
+    "server_checks": {
+      "idea_generalization": 27,
+      "purpose_comparison": 10,
+      "result": "37 passed, exec session 83454 exit 0; after preserving existing complete purposes, the prevented-check case passed again.",
+      "xml_limit": "The later single-case run overwrote the 27-case XML before it was copied. Only the actual single-case XML and the 10-case purpose XML are curated; do not count the former as 27 tests."
+    },
+    "web_delivery_checks": "19 passed, including removal of the conditional capture receipt and foreign child rejection.",
+    "typecheck": "tsc --noEmit passed.",
+    "normal_app_update": "scripts/start.mjs updated runtime, reused current assets; port 8787."
+  },
+  "revised_diagnosis": {
+    "kh1": "Exact report replay proves C-reply-function already discovered the Nxf3 check/no-check distinction and Qe2/Bg5 legal options. FunctionalReplyReading grouped unrelated conditions across both roots and returned the old answer whenever more than one condition existed. The first screen alone understated existing discovery; the main defect is connecting certified conditional purpose to the actual comparison.",
+    "limits": "An available non-recapture is not a sound recommendation. Its unrecovered material and the named third comparison root must remain explicit; the book c4 idea is not inferred.",
+    "d6": "The first survey was too short, but that is not the full cause. Its longer restricted b3 witness Qd7/Qb7 has no new immediate attack or contested direct defense by the queen. PurposeActivityReading therefore still selects the temporary pawn contact. Ownership connection is repaired; quiet coordination discovery remains unresolved."
+  },
+  "actual_screens": "Two first requests after source freeze: Kh1 11.98s and unused Qg2 2.11s, all issued work D11. No rerun or product change after either output.",
+  "new_failure_findings": [
+    {
+      "case": "Kh1",
+      "finding": "The fresh root pair is Kh1/Nd4. inspectFunction.sameResource requires the same original capture victim. Nxf3 after Kh1 captures the f3 knight; Nf3+ after Nd4 does not, so the checking-tempo comparison is excluded. The single remaining C-reply-function proposal concerns Nd4/g5, not Kh1 prevention.",
+      "scope": "This corrects the provisional explanation that the checking reply merely was absent from a PV. Discovery enumerates legal checks, but its identity gate conflates the checking resource with its capture victim. The capture difference must remain explicit if this relation is generalized."
+    },
+    {
+      "case": "Qg2",
+      "finding": "The actual root PV is Qg2 Qf7 Nc3 Bh4 Rg4 Rxg4 Qxg4 Be1 Nd5 h6; the alternative is Nc3 Rh4 h3 Rxh3 Rxh3 Qxh3 f4 Qh4. The basic output names late queen attacks but does not connect the root queen placement to the rook lift and recapture.",
+      "survey": [
+        "Qg2 R4f7 Nb4 Qh6 Nd5 Qe6 Qd2 Bh4",
+        "Qg2 Qh6 Nc3 R4f7 Nd5 Bh4 Rg4 Bd8 Qe2 g6 Rg3 Bh4",
+        "Qg2 Rh4 h3 Qf7 Nb4 h6 a4 Kh7 Nd5 Bg5 Rc3 b5"
+      ],
+      "scope": "An h3 supported-advance question exists, but h3 is absent against the strongest R4f7 reply. This is another branch-dependent purpose/selection limit, not evidence that the engine should reproduce the book."
+    },
+    {
+      "case": "d6 saved report",
+      "finding": "The longer b3 witness contains Qd7/Qb7 but neither move creates a new attack or a contested direct defense. The common activity detector rejects quiet coordination and still chooses temporary dxe5 contact. Longer-PV ownership alone is insufficient."
+    }
+  ],
+  "next_action": "Continue the active goal with resource identity across different capture consequences, and conditional root opportunities whose use depends on the opponent reply. Preserve both new first failures; use a newly preregistered case before future product edits. Do not broaden depth or force the book line.",
+  "external_blocker": null,
+  "ui_restored": "Original 1.e4 at start, Engine Off, blank input; diagnostic buffers restored.",
+  "artifacts": {
+    "screen_evidence": "idea-generalization-prevention-20261016/screen-evidence.json",
+    "saved_reports": "idea-generalization-prevention-20261016/saved-report-readings.json",
+    "network": "idea-generalization-prevention-20261016/live-reports.json.gz",
+    "preservation": "idea-generalization-prevention-20261016/preservation-check.json"
+  }
+}

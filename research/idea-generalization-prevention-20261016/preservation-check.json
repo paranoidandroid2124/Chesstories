@@ -1,0 +1,20 @@
+{
+  "checked_utc": "2026-10-16T03:27:32.087285+00:00",
+  "phase_baseline": {
+    "files": 401,
+    "missing_current": [],
+    "backup_mismatch": []
+  },
+  "original_baseline": {
+    "files": 220,
+    "missing_current": [],
+    "backup_mismatch": []
+  },
+  "old_research_changed_except_readme": [],
+  "old_readme_sections_retained_in_order": true,
+  "frozen_product_files": 109,
+  "product_changes_after_freeze": [],
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "index_changed_files": []
+}

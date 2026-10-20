@@ -1,0 +1,221 @@
+{
+  "goal": "기본 해설의 핵심 선택과 문단 간 중복 제거",
+  "status": "achieved_within_the_two_position_scope",
+  "started_utc": "2026-10-13T09:41:15.413908+00:00",
+  "recorded_utc": "2026-10-13T11:04:56.831051+00:00",
+  "original_deadline_utc": "2026-10-13T13:45:48Z",
+  "new_time_budget_created": false,
+  "workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "acceptance": {
+    "same_report_unnecessary_inventory_and_duplicates_removed": true,
+    "actual_new_engine_requests_in_both_existing_positions": true,
+    "purpose_reply_aftermath_and_all_selected_costs_read_on_screen": true,
+    "exact_move_links_checked_on_main_board": [
+      "17...Qxd5",
+      "8...g6"
+    ],
+    "completion_based_on_text_length_or_tests_alone": false
+  },
+  "common_changes": [
+    "ReferencePurposeReading selects original actors, actual root-purpose users and physical/function differences; removes a separate repeated contrast paragraph.",
+    "ReferencePurposeText gives the purpose, cost and each bounded aftermath one place; combines check/reply/recorded-end receipts in both languages.",
+    "Quiet root uses inside the existing ten-ply reading window can extend the purpose checkpoint; no new engine search or changed depth.",
+    "Attack/evasion composition permits only paid intervening captures with continuous identities and no quiet intermezzo, promotion or check."
+  ],
+  "prior_failure_criteria_kept": [
+    "selectionv3 중요한 목적을 쉬운 질문으로 대체",
+    "selectionv5 필수 가격 4개 소실",
+    "NB1 조건 완성이 48에서63개 진술로 팽창",
+    "직전 국소 교환 요약 후에도 문단 간 반복과 전체 나열 잔존"
+  ],
+  "development_failures_and_repairs": [
+    {
+      "failure": "Over-filtering hid the rook user's actual g7 target.",
+      "repair": "Keep functions of the physical piece that uses the root clearance or support."
+    },
+    {
+      "failure": "A White knight on d5 was called supported by a Black c6 pawn.",
+      "repair": "Distinguish allied support from attacks on an opposing occupant; keep the actual reply support separately."
+    },
+    {
+      "failure": "Late quiet h4/Ng5 use was outside the first-capture checkpoint and returned long English fallback prose.",
+      "repair": "Read to the actual witnessed root use within ten plies; preserve Qa5+/Bd2 intermezzo, costs and finite endpoint."
+    },
+    {
+      "failure": "The rook-route variant led with cost before showing its purpose.",
+      "repair": "Root mechanisms are part of the shared purpose paragraph before prices, with their original proof ownership."
+    },
+    {
+      "failure": "Qd3 was repeated as an idle remaining queen; unchanged support of an empty d5 was repeated.",
+      "repair": "Omit bare repeated location/support only when there is no new occupant, task, difference or support change."
+    },
+    {
+      "failure": "Viewport/partial IAB captures were blank or failed.",
+      "repair": "Full-document CDP captures through the same CUA tab succeeded; only inspected full captures are used as evidence."
+    }
+  ],
+  "same_input_comparison": {
+    "existing": {
+      "before_characters": 1415,
+      "after_characters": 767,
+      "reduction_percent": 45.8,
+      "before_paragraphs": 4,
+      "after_paragraphs": 3,
+      "receipts": {
+        "covered_moves": {
+          "before": 10,
+          "after": 10,
+          "exact_set_equal": true
+        },
+        "required_moves": {
+          "before": 23,
+          "after": 23,
+          "exact_set_equal": true
+        },
+        "proof_moves": {
+          "before": 23,
+          "after": 23,
+          "exact_set_equal": true
+        },
+        "recorded_end_moves": {
+          "before": 2,
+          "after": 2,
+          "exact_set_equal": true
+        }
+      }
+    },
+    "new": {
+      "before_characters": 690,
+      "after_characters": 359,
+      "reduction_percent": 48.0,
+      "before_paragraphs": 4,
+      "after_paragraphs": 3,
+      "receipts": {
+        "covered_moves": {
+          "before": 5,
+          "after": 5,
+          "exact_set_equal": true
+        },
+        "required_moves": {
+          "before": 20,
+          "after": 20,
+          "exact_set_equal": true
+        },
+        "proof_moves": {
+          "before": 20,
+          "after": 20,
+          "exact_set_equal": true
+        },
+        "recorded_end_moves": {
+          "before": 1,
+          "after": 1,
+          "exact_set_equal": true
+        }
+      }
+    }
+  },
+  "fresh_ui": {
+    "existing": {
+      "seconds": 4.99,
+      "depths": [
+        12
+      ],
+      "request_button_seconds": 10,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "reports": 2,
+      "forced_reference_or_pv": false,
+      "basic_paragraphs": 3
+    },
+    "new": {
+      "seconds": 2.74,
+      "depths": [
+        12
+      ],
+      "request_button_seconds": 10,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "reports": 3,
+      "forced_reference_or_pv": false,
+      "basic_paragraphs": 3
+    }
+  },
+  "fresh_ui_semantic_reading": {
+    "existing": [
+      "Common g2-b7 line block once",
+      "c6 supports actual Nd5 arrival",
+      "c6/Nge4 retains bishop and knight",
+      "Bd5/Bxd5 accepts extra physical exchanges",
+      "Attack/evasion conditions preserved",
+      "Qxd5 leaves queen guarding b7/d4 and attacking b5/g5; no pawn support"
+    ],
+    "new": [
+      "h4 clears h2 for Rh3 and later rook pressure on g7",
+      "The h-pawn cost is explicit",
+      "Bxh7+ trades the bishop for h7 pawn and clears d3 for Qd3+",
+      "Kxh7 and g6 interposition remain once as check/reply pairs",
+      "Surviving d3 bishop versus d3 queen function differs"
+    ]
+  },
+  "checks": {
+    "core_selection": 6,
+    "quiescent_commentary": 3,
+    "composition_guards": 15,
+    "unique_total": 24,
+    "final_product_recheck": 9,
+    "test_artifact_directory_recheck": 6,
+    "full_regression_run": false,
+    "additional_quality_positions": 0,
+    "development_live_requests": {
+      "existing": 3,
+      "new": 6
+    },
+    "two_positions_used_for_development_not_unseen_generalization": true,
+    "git_diff_check": "passed; existing CRLF-to-LF notices only"
+  },
+  "limits": [
+    "Observed root use is bounded to the existing ten-ply window; returned PV ends are not asserted to be quiescent.",
+    "No claim of all strategic purposes, functional equivalence, full evaluation causality, or release completion.",
+    "Other summary-question/fallback paths and all historical regression suites remain outside this check."
+  ],
+  "preservation": {
+    "initial_files": 53,
+    "byte_identical": 47,
+    "changed_existing_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "research/README.md",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySequenceText.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala"
+    ],
+    "missing_files": 0,
+    "original_archive_files_verified": 53,
+    "original_archive": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\research-runs\\core-selection-20261013\\before-changes.zip",
+    "original_archive_sha256": "b40dc9a4dd4290e68eb32641f9e87dfef74248e78ebb0ff26450edaf64949a46",
+    "readme_previous_bytes_exact_after_removing_new_section": true,
+    "staged_files": [],
+    "commits_created": 0
+  },
+  "ui_restored": "1. e4 *, initial position, Korean/light, engine Off, empty import input",
+  "app": {
+    "url": "http://127.0.0.1:8787/",
+    "left_running_with_final_product_sources": true
+  },
+  "artifact_sha256": {
+    "baseline.json": "fd56b5404390ae4a08ae6f9dfbb9cba325cce985f87437cc8aed1c0fdd53ff5e",
+    "development-failures.json.gz": "a44dd895e15bbfd5979f43f5782093815f2d652d129ebba2d15ca6fc859c08fe",
+    "existing-final.png": "0196195200101458f97569700e7f6363150c20b2623a61d89cd2d025da098f35",
+    "existing-link.png": "e51e281e64c9b788fdaa0129af45354f50132e6c33d0838fd13c7e5a6a8c31ad",
+    "existing-linked-screen.txt": "01bce8ed614221c43dfcfde5937bd8fa66f340c3d124502a38595c37d7a1dd30",
+    "existing-screen.json.gz": "1414529bc7546660b89b3c94926f37db98005174ee8c2431983ee3e314cd5777",
+    "existing-screen.txt": "33bd989c70e571eb7136de5aad83acd6d884f91798d94e2531d897b533f0a62b",
+    "new-final.png": "0ffbb5b4e3321022ead918b982f56922dab7a4f86b6c1dc3cd1b7ebfed7c83f4",
+    "new-link.png": "2faa5028259e8271143ea07b3e8aa06b10968e945552fa5846ef7eec95ea9861",
+    "new-linked-screen.txt": "d6b76a89e1ea886c40237e65e43bfd2d2a9d9cee35c8641aa8c76f3eb6a062b6",
+    "new-screen.json.gz": "8f0b43fff7bf1a9a1473854f56c7789b1e76269d26ed0dc752e31d4604a6c366",
+    "new-screen.txt": "be04af6b3e34fcfade9deb0201804f7f86da9ab24621682acb4e8bb851dfd0d7",
+    "preregistered.json": "83cd1203b155c355e01ba772af3150efa063ca9cd901f19fc0a1a98a27d19b04",
+    "same-input-comparison.json.gz": "7dfc6ebdd6bcbb571d2990b48c94738f143cc03b3c965dc25414485a901d992d"
+  }
+}

@@ -1,0 +1,144 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories 기보와 해설
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				14 text 20… Nxd4
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 20… Nxd4
+				55 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					56 text PGN · FEN 불러오기
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button 해설 · 20초
+				76 text completed · 5.24s
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+						75 text 직전 수 리뷰가 완료되었습니다.
+					77 container 이번 분석에서 가장 높게 평가한 수입니다: Nxd4
+						78 text Nxd4
+						79 heading 이번 분석에서 가장 높게 평가한 수입니다, Value: 3
+							80 text 이번 분석에서 가장 높게 평가한 수입니다
+					81 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						82 text 평가 수치
+						146 text +
+					84 container
+						85 heading 두 선택의 비교, Value: 3
+							86 text 두 선택의 비교
+						87 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-0-0
+						88 text  —  비숍 교환을 제안합니다. 두 선택 모두 원래 d4의 나이트를 교환해 e6에 대한 그 기물의 통제를 없앱니다. 
+						89 pop up button (collapsed) Description: Ne6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-0-5
+						90 text 와 
+						91 pop up button (collapsed) Description: Ne6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-0-7
+						92 text 에서 남은 원래 c5의 나이트가 그 칸을 실제로 사용합니다.  아래 비교 시점까지 두 수순 모두 나이트 한 쌍·비숍 한 쌍을 교환합니다.
+						93 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-1-0
+						94 text  — 
+						95 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-1-2
+						96 text : 교환을 받아들입니다. 
+						97 pop up button (collapsed) Description: Ne6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-1-4
+						98 text 까지 기록되어 있습니다.
+						99 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-2-0
+						100 text  — 
+						101 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-2-2
+						102 text : 되잡기로 교환에 응합니다. 
+						103 pop up button (collapsed) Description: Bxd4+ · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-2-4
+						104 text 에는 
+						105 pop up button (collapsed) Description: Qxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-2-6
+						106 text 로 체크한 비숍을 잡습니다 .
+						107 pop up button (collapsed) Description: Ne6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-2-10
+						108 text 까지 기록되어 있습니다.  이 뒤의 응수는 기록되어 있지 않습니다. After 
+						109 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-1
+						110 text , 
+						111 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-3
+						112 text  is the stronger tested reply than 
+						113 pop up button (collapsed) Description: Bf1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-5
+						114 text . In the provided 
+						115 pop up button (collapsed) Description: Bxd4+ · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-7
+						116 text  line: 
+						117 pop up button (collapsed) Description: Bxd4+ · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-9
+						118 text  gives check to the White king on g1 with Black's bishop on d4; 
+						119 pop up button (collapsed) Description: Qxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-11
+						120 text  captures the checking bishop on d4. The recorded continuation is 
+						121 pop up button (collapsed) Description: Bxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-13
+						122 pop up button (collapsed) Description: Bxd4+ · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-15
+						123 pop up button (collapsed) Description: Qxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-17
+						124 text . In the 
+						125 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-19
+						126 text  line, both sides exchange one knight and one bishop. After 
+						127 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-21
+						128 text , White's queen on d2 now targets Black's knight on d4. After 
+						129 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-23
+						130 text , White's bishop on e3 now targets Black's knight on d4. The recorded continuation is 
+						131 pop up button (collapsed) Description: Bf1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-25
+						132 pop up button (collapsed) Description: Nc6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-27
+						133 text . 
+						134 pop up button (collapsed) Description: Nc6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-29
+						135 text  moves the knight out of the attacks from White's queen on d2 and White's bishop on e3. After 
+						136 pop up button (collapsed) Description: Nc6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-31
+						137 text , Black's bishop on g7 does not support Black's knight on c6. After 
+						138 pop up button (collapsed) Description: Nc6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-3-33
+						139 text , Black's pawn on b7 supports Black's knight on c6.
+						140 pop up button (collapsed) Description: Nxd4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:evidence:candidate-comparison:9d5972d9f168797024ac9b8fda142d1bf2017a00f0b76469e35d4d2dcb5809ad-question-basic-4-0
+						141 text  captures the white knight on d4.
+						142 button 둔 수 · Nxd4 · 재생
+						143 button 대안 수 · Bxd4 · 재생
+					144 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						145 text 평가 근거와 관찰 기록
+						147 text +
+		72 container
+			73 text 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

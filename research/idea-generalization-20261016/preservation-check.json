@@ -1,0 +1,32 @@
+{
+  "utc": "2026-10-15T22:03:40.813779+00:00",
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "starting_file_count": 220,
+  "missing": [],
+  "original_backup_hash_mismatches": [],
+  "modified_since_start": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ResponsePurposeReading.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+    "chesstory-web/src/review/moveReview.ts",
+    "chesstory-web/src/review/moveReviewSelection.ts",
+    "research/README.md",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySequenceText.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala"
+  ],
+  "earlier_research_modified": [],
+  "previous_readme_text_preserved": true,
+  "source_changed_after_independent_freeze": [],
+  "staged": [],
+  "whitespace_check_exit_code": 0,
+  "whitespace_check_output": ""
+}

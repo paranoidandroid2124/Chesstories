@@ -1,0 +1,169 @@
+[
+  {
+    "label": "kh1",
+    "first_run_only": true,
+    "request_ms": 20000,
+    "displayed_seconds": 11.98,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:1",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "f3d4",
+          "c7c8",
+          "c2c3",
+          "e5c6"
+        ],
+        "restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f4d6",
+            "d4b3",
+            "d4c2"
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "g1h1",
+          "e7c6",
+          "b5c6",
+          "b7c6",
+          "d1e2",
+          "f7f6",
+          "b1a1",
+          "c7b7"
+        ],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      }
+    ],
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Nd4 — 원래 f3의 나이트를 옮겨 흑 e5 나이트의 공격을 피합니다. 흑 e6 폰을 새로 공격합니다. Kh1 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  Nd4 수순의 비교 시점까지 백의 f3 나이트와 흑의 e5 나이트를 교환합니다. Kh1 수순의 비교 시점까지 백의 b5 비숍과 흑의 e7 나이트를 교환합니다. Nd4 수순에서: N5c6 뒤 백 b5 비숍이 흑 c6 나이트를 새로 공격합니다. Nxd4 수로 나이트가 백 b5 비숍의 공격을 피합니다.",
+          "Nd4 — Qc8 뒤, cxd4까지의 수순에서는 백 b1 룩, 백 b5 비숍을 남깁니다. 원래 c2 폰이 d4에 남습니다. 흑 b7 폰은 고립폰입니다.",
+          "Kh1 — N7c6 뒤, Ra1까지의 수순에서는 백 a1 룩은 열린 a 파일에서 활동합니다. 백 f3 나이트를 남깁니다. c2·c5에 더블폰이 남습니다. 원래 b7 폰이 c6에 남습니다."
+        ]
+      }
+    ],
+    "complete_network_capture": true,
+    "verdict": "development fresh-search failure",
+    "actual_pair": [
+      "Kh1",
+      "Nd4"
+    ],
+    "observed": "The fresh PV no longer supplies the Re1 comparison. Kh1 purpose is again unknown, while the actual distinct knight/bishop exchanges and endpoints remain.",
+    "board_link": "Ra1",
+    "screen": "kh1-commentary.png",
+    "board": "kh1-board.png"
+  },
+  {
+    "label": "qg2",
+    "first_run_only": true,
+    "request_ms": 20000,
+    "displayed_seconds": 2.11,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "a2c3",
+            "e2g2"
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "e2g2"
+        ],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      }
+    ],
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Nc3 — 백 c3 나이트가 흑 f4 룩에게 공격받는 백 e4 폰을 지킵니다. Qg2 — Qg2–Qxg4로 퀸이 활동에 나서 흑 g7 폰, 흑 h4 비숍을 공격합니다. 이 수순에서는 Be1로 공격받은 비숍이 물러납니다. 백 e4 폰에 대한 퀸의 방어를 놓습니다.  아래 비교 시점까지 두 수순 모두 룩 한 쌍을 교환합니다. Nc3에서는 그 밖에 백의 h2 폰을 내줍니다.",
+          "Nc3 — Rh4: 백 h2 폰을 새로 공격합니다. Qh4까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+          "Qg2 — Qf7: 백 a2 나이트를 새로 공격합니다. Be1까지의 수순에서는 백 g4 퀸은 백 e4 폰을 지킵니다."
+        ]
+      }
+    ],
+    "complete_network_capture": true,
+    "verdict": "first independent partial failure",
+    "actual_pair": [
+      "Nc3",
+      "Qg2"
+    ],
+    "observed": "The first unused Qg2 output preserves Nc3 pawn defense, Qg2/Qxg4, bishop retreat, rook exchanges, Nc3 h2 pawn loss and the restored e4 defense; it does not explain the preparation/recapture relationship or the strongest reply versus Rh4/h3.",
+    "board_link": "Qxg4",
+    "screen": "qg2-commentary.png",
+    "board": "qg2-board.png"
+  }
+]

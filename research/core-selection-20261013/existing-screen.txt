@@ -1,0 +1,192 @@
+- banner:
+  - generic: Chesstories
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "Boris Gelfand – Boris Avrukh" [level=1]
+    - generic: 14… Bd5
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수": →
+      - button "마지막": ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "1. c4"
+    - button "1… Nf6"
+    - button "2. Nc3"
+    - button "2… d5"
+    - button "3. cxd5"
+    - button "3… Nxd5"
+    - button "4. g3"
+    - button "4… g6"
+    - button "5. Bg2"
+    - button "5… Nb6"
+    - button "6. Nf3"
+    - button "6… Bg7"
+    - button "7. O-O"
+    - button "7… O-O"
+    - button "8. d3"
+    - button "8… Nc6"
+    - button "9. Be3"
+    - button "9… e5"
+    - button "10. b4"
+    - button "10… Nd4"
+    - button "11. a4"
+    - button "11… Be6"
+    - button "12. Ng5"
+    - button "12… Bb3"
+    - button "13. Qb1"
+    - button "13… a5"
+    - button "14. b5"
+    - button "14… Bd5"
+    - button "15. Nge4"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 4.99s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "부정확한 수: Bd5"':
+        - generic: "?!"
+        - generic: Bd5
+        - heading "부정확한 수" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=3]
+        - paragraph:
+          - button "c6 · 위치 살펴보기": c6
+          - text: 와
+          - button "Bd5 · 위치 살펴보기": Bd5
+          - text: 모두 백 g2 비숍에서 흑 b7 폰 쪽으로 이어지는 공격선을 막습니다.
+          - button "c6 · 위치 살펴보기": c6
+          - text: — 백 b5 폰을 새로 공격합니다. 제시된 수순에서 d5에 진출하는 나이트를 지원합니다.
+          - button "Bd5 · 위치 살펴보기": Bd5
+          - text: — 원래 b3의 비숍을 옮겨 백 b1 퀸의 공격을 피합니다. 백 g2 비숍을 새로 공격합니다. d5 칸은 폰의 지원을 받지 못합니다. 아래 비교 시점까지 두 수순 모두 나이트 한 쌍을 교환합니다.
+          - button "Bd5 · 위치 살펴보기": Bd5
+          - text: 에서는 그 밖에 백의 비숍 둘과 흑의 b3 비숍·d4 나이트를 교환합니다.
+          - button "Bd5 · 위치 살펴보기": Bd5
+          - text: "수순에서:"
+          - button "Nxd5 · 위치 살펴보기": Nxd5
+          - text: 의 백 e3 비숍 공격을
+          - button "Bxd4 · 위치 살펴보기": Bxd4
+          - text: 수로 피합니다.
+          - button "exd4 · 위치 살펴보기": exd4
+          - text: 의 백 c3 나이트 공격을
+          - button "Nxd5 · 위치 살펴보기": Nxd5
+          - text: 수로 피합니다.
+        - paragraph:
+          - button "c6 · 위치 살펴보기": c6
+          - text: —
+          - button "Nge4 · 위치 살펴보기": Nge4
+          - text: 뒤,
+          - button "Be6 · 위치 살펴보기": Be6
+          - text: 까지의 수순에서는 흑 e6 비숍을 남깁니다. 흑 d4 나이트를 남깁니다.
+        - paragraph:
+          - button "Bd5 · 위치 살펴보기": Bd5
+          - text: —
+          - button "Bxd5 · 위치 살펴보기": Bxd5
+          - text: ": 흑 d5 비숍을 잡습니다."
+          - button "Qxd5 · 위치 살펴보기": Qxd5
+          - text: 까지의 수순에서는 흑 d5 퀸은 폰의 지원이 없습니다. 흑 d5 퀸은 흑 b7 폰, 흑 d4 폰을 지킵니다; 백 b5 폰, 백 g5 나이트를 공격합니다. 원래 e5 폰이 d4에 남습니다.
+        - button "대안 수 · c6 · 재생"
+        - button "둔 수 · Bd5 · 재생"
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

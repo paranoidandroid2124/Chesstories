@@ -1,0 +1,61 @@
+{
+  "status": "active_unachieved",
+  "phase": "quiet-opposing-resources-and-preparation-duties",
+  "baseline": "target\\research-runs\\idea-generalization-quiet-resources-20261016\\baseline.json",
+  "previous_goal_turn": "progress",
+  "constraints": {
+    "max_depth": 18,
+    "request_ms": 20000,
+    "actual_screens": "Saved prior screen reports for development; reserve only one first unused Leko Rfe1 screen when the common implementation is ready. No automatic two-screen cycle."
+  },
+  "study": {
+    "source": "G Drive cached Aagaard Positional Play, file 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      142,
+      143,
+      144,
+      145
+    ],
+    "lesson": "Development, removing the opponent's simplification and preserving own options are linked. A repeated post can have a preparatory function; its final contact alone cannot prove why the first move mattered."
+  },
+  "heldout_preregistration": {
+    "game": "Leko - Korchnoi, Wijk aan Zee 2000",
+    "fen_before": "r4rk1/pp3ppp/4pn2/2bqN1B1/8/8/PPP1QPPP/R4RK1 w - - 0 14",
+    "played_uci": "f1e1",
+    "diagram_pdf_page": 143,
+    "diagram_and_solution_inspected": true,
+    "legal_book_line": [
+      "f1e1",
+      "f6d7",
+      "e5f3",
+      "f7f6",
+      "a1d1",
+      "d5c6",
+      "e2e6",
+      "c6e6",
+      "e1e6",
+      "f6g5",
+      "d1d7",
+      "g5g4",
+      "e6e5"
+    ],
+    "position_valid": true,
+    "transcription_note": "Initial OCR-derived Rae1 was rejected by legal replay of Rad1; PDF144 visually confirms Rfe1. Corrected before product edits or any engine output.",
+    "expected_concepts": "Rfe1 combines development with changing the cost of the opponent's Qe4 simplification. Actual engine comparison and returned replies remain authoritative; do not force Nd7 or the book continuation.",
+    "selected_before_product_edits_and_engine_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "implementation": [
+    "Quiet opponent arrivals are compared by the same original enemy mover, actual first replies and the changed control owned by each root; an unmoved ally may exploit the root-cleared line.",
+    "Castling preparation requires retained rights, original home king/rook, the last occupied corridor square vacated, and an unattacked king route. The actual reply may close that route; the same development later can retain it under an owned legal countercapture option.",
+    "One shared physical-support reader tracks either continuous new destination control or continuous new support of the same moving beneficiary. Both basic comparison and reply discovery use it.",
+    "Supported realization of the actual evaluated alternative can outrank an unrelated later return attack. A separate strongest opposing activity remains admissible even when this selected own entry is absent.",
+    "An independently witnessed supported purpose carries its exact source, prices and reply branches into the basic comparison, and does not issue another geometric challenge search merely because neither reported reply has that label.",
+    "The screen independently rereads the same moving beneficiary and supporter. Delayed uses are explicitly described as later in the returned line."
+  ],
+  "verification": {
+    "freeze": "target\\research-runs\\idea-generalization-quiet-resources-20261016\\frozen-before-live.json",
+    "development_scope": "Exact saved report prefixes and execution keys: h4 first two reports; Qg2 all two reports. No new engine search. Original first failures retained."
+  },
+  "external_blocker": null
+}

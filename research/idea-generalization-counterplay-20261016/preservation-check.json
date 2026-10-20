@@ -1,0 +1,29 @@
+{
+  "utc": "2026-10-16T01:31:54.827444+00:00",
+  "original": {
+    "count": 220,
+    "missing_current": [],
+    "missing_or_changed_backup": []
+  },
+  "phase": {
+    "count": 346,
+    "missing_current": [],
+    "missing_or_changed_backup": []
+  },
+  "phase_changed_files": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+    "research/README.md",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeActivityReading.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/IdeaGeneralizationTest.scala",
+    "chesstory-web/tests/ideaGeneralization.test.ts"
+  ],
+  "old_research_changed": [],
+  "previous_readme_lines_preserved": true,
+  "post_freeze_product_changes": [],
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "staged_files": []
+}

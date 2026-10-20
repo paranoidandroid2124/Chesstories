@@ -59,6 +59,18 @@ private[runtime] object MoveWorkProjection:
     lazy val rays: List[(String, RelationWitnessDetail.RayBarrier)] = facts.collect {
       case (id, detail: RelationWitnessDetail.RayBarrier) => id -> detail
     }
+    /** A relative pin is an observed alignment, not a claim that the front
+      * piece has no legal move. Both consumers use the same board witness. */
+    def relativeAlignments(actor: Piece): List[(String, Piece, Piece)] =
+      if !complete(RelationFactKind.RayBarrier) || !contains(actor) then Nil
+      else for
+        (id, ray) <- rays
+        if actor == RelationColoredPieceWitness(ray.attackerSquare, ray.attackerRole, ray.side)
+        front <- ray.occupants.headOption.toList
+        rear <- ray.occupants.drop(1).headOption.toList
+        if front.side == rear.side && front.side != actor.side && front.role.name != "king" &&
+          rear.role.name != "king" && values(rear.role.name) > values(front.role.name)
+      yield (id, front, rear)
     /** A positive obstruction witness from this exact position. Remaining
       * controllers alone do not certify occupancy of this ray. */
     def blockedRay(actor: Piece, target: Piece): Option[(String, List[Piece])] =
@@ -196,8 +208,8 @@ private[runtime] object MoveWorkProjection:
       case _ => None
     }).groupMap(_._1)(_._2).view.mapValues(_.toSet).toMap
     val local = localCandidates(packet, positions, observations, replySquares)
-    CommentarySelection.fromPacket(packet, local, paths,
-      comparisonEffects(packet, local, positions, edges, paths, observations, destinations))
+    val readers = comparisonEffects(packet, local, positions, edges, paths, observations, destinations)
+    CommentarySelection.fromPacket(packet, local, paths, readers.compose, readers.rootUses)
 
   final case class Projection(highlights: List[JsObject], selection: JsObject)
 
@@ -263,10 +275,14 @@ private[runtime] object MoveWorkProjection:
   /** Presentation only: inspect the two paths already owned by a comparison.
     * The investigation reader's relation, priority and engine authority stay unchanged.
     */
+  private case class ComparisonReaders(
+      compose: (List[(JsObject, List[Context])], Set[JsObject]) => List[JsObject],
+      rootUses: List[ObservedLineProtocol.PreparedPath] => List[(CommentaryAnswer.Section, List[String])])
+
   private def comparisonEffects(packet: EvidenceBackedJudgmentPacket, local: List[LocalCandidate],
       positions: Map[PositionNodeRef, Position], edges: Map[String, MoveTransitionEdge],
       paths: ObservedLineProtocol.PreparedPaths, observations: Map[String, List[MoveObservation]],
-      destinations: Map[String, String]): (List[(JsObject, List[Context])], Set[JsObject]) => List[JsObject] =
+      destinations: Map[String, String]): ComparisonReaders =
     def sans(path: ObservedLineProtocol.PreparedPath): List[String] = paths.notation.line(path.moves)
     def render(section: CommentaryAnswer.Section): String = CommentaryEnglish.section(section).map {
       case text: String => text
@@ -571,6 +587,31 @@ private[runtime] object MoveWorkProjection:
                 p.empty(prior.at) && corridor.forall(square => p.occupant(square).forall(piece =>
                   tracked(userIdentity, count).contains(piece)))))
             }
+             // A route can require more than its first clearance. Track only
+             // the original blockers: none may return, and no replacement may
+             // enter the corridor. This is a witnessed dependency, not a claim
+             // that the later activity is forced or that every PV move helps it.
+             prepared = if index != 0 || offset >= 18 then Nil else uses.filter(_._4.isEmpty).flatMap { use =>
+               val corridor = (use._3 :+ user.at).distinct
+               val initial = position(index).get
+               val blockers = corridor.flatMap(initial.occupant).filterNot(_ == beforeUser).distinct
+               val identities = blockers.flatMap(originalAt(_, index))
+               def remains(piece: Piece, count: Int) = tracked(piece, count).exists(p => corridor.contains(p.at))
+               val steps = (index until offset).filter(n => identities.exists(piece =>
+                 remains(piece, n) && tracked(piece, n) != tracked(piece, n + 1))).toList
+               val certified = blockers.contains(prior) && blockers.forall(_.side == mover.side) &&
+                 identities.size == blockers.size && steps.headOption.contains(index) && steps.size > 1 &&
+                 (index to offset).forall(count => tracked(userIdentity, count).contains(beforeUser) &&
+                   position(count).exists(p => p.complete(RelationFactKind.GeometricControl) &&
+                     corridor.flatMap(p.occupant).forall(piece => piece == beforeUser ||
+                       identities.exists(identity => tracked(identity, count).contains(piece))))) &&
+                 (index + 1 to offset).forall(count => position(count).exists(_.empty(prior.at))) &&
+                 identities.forall { identity =>
+                   val left = (index + 1 to offset).find(count => !remains(identity, count))
+                   left.exists(count => (count to offset).forall(n => !remains(identity, n)))
+                 }
+               Option.when(certified)(use -> steps)
+             }
             fresh = continuous.filter { (_, _, _, target) =>
               usedCorridors.add((userIdentity, target.flatMap(originalAt(_, offset + 1)), target.map(_.roleName)))
             }
@@ -582,25 +623,40 @@ private[runtime] object MoveWorkProjection:
               case MoveObservationMeaning.CertifiedRelation(_: RelationWitnessDetail.CreatedCheckResponseInventory) => true
               case _ => false)
             used = if fresh.nonEmpty then fresh else if actions.nonEmpty || checks then continuous else Nil
-            if used.nonEmpty
+             chosen <- if used.nonEmpty then List(used -> List.empty[Int]) else
+               prepared.take(1).filter(_ => usedCorridors.add((userIdentity, None, None)))
+                 .map((use, steps) => List(use) -> steps)
           yield
             val development = notes(index).collectFirst {
               case note if note.note.detail.isInstanceOf[Detail.Development] =>
                 note.note.detail
             }
             val meaning = Section(List(ClearedRoute(MoveRef(path, index), prior, mover, userIdentity,
-              MoveRef(path, offset), user, used.flatMap(_._4).distinct, used.exists(_._4.isEmpty), development)))
+               MoveRef(path, offset), user, chosen._1.flatMap(_._4).distinct, chosen._1.exists(_._4.isEmpty), development,
+               chosen._2.map(MoveRef(path, _)))))
             functionEffect("clearance_use", meaning, mover, anchoredUser, prior.at, offset + 1,
-              used.flatMap(use => sourceRefs(use._1, use._2)) ++ actions.flatMap(noteEvidence)).copy(actions = actions)
-          // The mover's first subsequent move has an observed role. This is a
-          // route in this line, not a claim that the route was forced or its original purpose.
+               chosen._1.flatMap(use => sourceRefs(use._1, use._2)) ++ actions.flatMap(noteEvidence) ++
+                 chosen._2.flatMap(n => path.ids.lift(n))).copy(actions = actions)
+          // Follow the same piece through quiet intermediate posts to its first
+          // useful move. An intervening exchange ends this physical route.
           val routes = for
             (_, mover, _) <- currentMove.toList
             rootMover <- original(mover).toList
-            offset <- (index + 1 until path.moves.size).find(at =>
+            route = (index + 1 until math.min(path.moves.size, 18)).filter(at =>
               movement(at).exists((_, next, _) => tracked(rootMover, at + 1).contains(next))).toList
+            selectedUse = Option.when(index == 0)(paths.functionalPurpose).flatten
+              .filter(q => q.actor == rootMover && q.path.moves.head == path.moves.head)
+              .flatMap(_.plan).filter(p => !p.potential && (p.path eq path)).map(_.use).filter(route.contains)
+            offset <- selectedUse.orElse(route.find(at => movement(at).exists { (_, next, _) =>
+              notes(at).exists(_.note.detail match
+                case Detail.Attack(actor, _, true) => actor == next
+                case Detail.Support(actor, _, opposition, true) => actor == next && opposition.nonEmpty
+                case _ => false)
+            })).toList
             (_, user, _) <- movement(offset).toList
-            if user.role == mover.role && (index + 1 to offset).forall(count => tracked(rootMover, count).contains(mover))
+            if user.role == mover.role && (index + 1 to offset + 1).forall(count => tracked(rootMover, count).nonEmpty)
+            if (index + 1 to offset + 1).forall(count =>
+              tracked(rootMover, count).forall(_.at != path.moves(index).take(2)))
             note <- notes(offset).filter(_.note.detail match
               case Detail.Attack(actor, _, true) => actor == user
               case Detail.Support(actor, _, opposition, true) => actor == user && opposition.nonEmpty
@@ -625,7 +681,7 @@ private[runtime] object MoveWorkProjection:
               case Detail.Evades(target, _) => target == user
               case _ => false)
             val actions = note :: evasion
-            functionEffect("piece_route", Section(List(PieceRoute(path, rootMover, List(index, offset)))),
+            functionEffect("piece_route", Section(List(PieceRoute(path, rootMover, index :: route.takeWhile(_ <= offset)))),
               mover, anchoredTarget, user.at, offset + 1, earlierSources ++ actions.flatMap(noteEvidence))
                 .copy(actions = actions, lostSupport = lostSupport)
           val functions = handoffs ++ supportUses ++ retainedSupport ++
@@ -887,15 +943,7 @@ private[runtime] object MoveWorkProjection:
             val pins = for
               prior <- mover(path, index).toList
               actor <- track(path, prior, index, index + 1).toList
-              if after.complete(RelationFactKind.RayBarrier)
-              (id, ray) <- after.rays
-              if actor == RelationColoredPieceWitness(ray.attackerSquare, ray.attackerRole, ray.side)
-              front <- ray.occupants.headOption.toList
-              rear <- ray.occupants.drop(1).headOption.toList
-              if front.side == rear.side && front.side != actor.side && front.role.name != "king" && rear.role.name != "king" &&
-                values(rear.role.name) > values(front.role.name)
-              target = RelationColoredPieceWitness(front.square, front.role, front.side)
-              back = RelationColoredPieceWitness(rear.square, rear.role, rear.side)
+              (id, target, back) <- after.relativeAlignments(actor)
             yield
               def relation(count: Int): Option[String] = for
                 a <- track(path, actor, index + 1, count)
@@ -1448,6 +1496,27 @@ private[runtime] object MoveWorkProjection:
               case _ => Nil
           }
       })
+    def rootUses(pair: List[ObservedLineProtocol.PreparedPath]): List[(CommentaryAnswer.Section, List[String])] =
+      pair.flatMap { path =>
+        val root = RootQuestionSummary.MoveRef(path, 0)
+        val mover = positions(path.positions.head).occupant(path.moves.head.take(2)).get
+        local.filter(_.edge.evidence.id == path.ids.head).flatMap { note =>
+          val opening = note.note.detail match
+            case ray: Detail.OpenedRay if mover.role.name == "pawn" => Some(ray)
+            case Detail.ChangedLines(_, opened, _) =>
+              val exposure = opened.filter((actor, target) => actor.side != mover.side && target.side == mover.side)
+              Option.when(exposure.nonEmpty)(Detail.ChangedLines(Nil, exposure, Nil))
+            case _ => None
+          opening.map(detail => CommentaryAnswer.Section(List(CommentaryAnswer.Action(root, detail))) -> note.evidence)
+        }
+      } ++ pair.flatMap(path => currentEffects(path, 0)).flatMap(effect =>
+        effect.meaning.map { meaning =>
+          val actions = if effect.scope == "piece_route" then effect.actions.flatMap(note =>
+            pair.find(_.ids.contains(note.edge.evidence.id)).map(path => CommentaryAnswer.Action(
+              RootQuestionSummary.MoveRef(path, path.ids.indexOf(note.edge.evidence.id)), note.note.detail))) else Nil
+          meaning.copy(statements = meaning.statements ++ actions) -> effect.evidence
+        })
+
     def compose(requests: List[(JsObject, List[Context])], explained: Set[JsObject]): List[JsObject] =
       val (candidate, _) = requests.head
       val detail = (candidate \ "detail").as[JsObject]
@@ -1539,50 +1608,51 @@ private[runtime] object MoveWorkProjection:
       // that account before constructing unrelated long-line explanations.
       val purposeOwners = requests.flatMap(_._2.flatMap(_.firstTarget)).distinctBy(_.id)
       val purposeSearches = requests.flatMap(_._2.flatMap(_.purposeSearches)).distinct
+      def deliver(reading: RootQuestionSummary.Result) = requests.zipWithIndex.map { case ((value, _), owner) =>
+        if owner != 0 then value else value ++ Json.obj(
+          "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ reading.evidence).distinct,
+          "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
+            "summary" -> reading.text, "summary_kind" -> "question_answer", "summary_question" -> reading.json)))
+      }
       if index == 0 && (detail \ "type").as[String] == "root_comparison" && ownedPair.size == 2 then
-        val referencePurpose = ReferencePurposeReading.read(packet, paths, ownedPair).flatMap { reading =>
+        val idea = Option.when(ReferencePurposeReading.assessmentPair(packet, paths).toSet == ownedPair.toSet)(())
+          .flatMap(_ => MoveIntent.summary(packet, paths, purposeSearches))
+        if idea.nonEmpty then return deliver(idea.get)
+        lazy val functionalReading = MovePurpose.read(packet, paths, purposeSearches, local,
+          requests.flatMap(_._2.flatMap(_.purposeRoots)).distinct)
+        val referenceReading = ReferencePurposeReading.read(packet, paths, ownedPair, rootUses(ownedPair),
+          responses = functionalReading)
+        def realizeReference(reading: ReferencePurposeReading.Reading) =
           ReferencePurposeReading.answer(packet, paths, ownedPair, reading,
-            value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
+            value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), functionalReading)
+            .map(answer => FunctionalReplyReading.withAnswer(packet, paths, ownedPair,
+              requests.flatMap(_._2.flatMap(_.replyFunction)).distinct, answer,
+              (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
+            .map(answer => ResponsePurposeReading.withAnswer(packet, paths, ownedPair, purposeOwners, local, answer,
+              value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), rootUses))
             .flatMap(RootQuestionSummary.realize(paths, ownedPair, _))
-        }
-        if referencePurpose.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
-          if owner != 0 then value else value ++ Json.obj(
-            "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ referencePurpose.get.evidence).distinct,
-            "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
-              "summary" -> referencePurpose.get.text, "summary_kind" -> "question_answer",
-              "summary_question" -> referencePurpose.get.json)))
-        }
-        val functional = MovePurpose.read(packet, paths, purposeSearches, local,
-          requests.flatMap(_._2.flatMap(_.purposeRoots)).distinct).flatMap { reading =>
+        val referencePurpose = referenceReading.filter(_.completePurpose).flatMap(realizeReference)
+        if referencePurpose.nonEmpty then return deliver(referencePurpose.get)
+        val functional = functionalReading.flatMap { reading =>
           MovePurpose.answer(packet, paths, ownedPair, reading,
             value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
             .flatMap(RootQuestionSummary.realize(paths, ownedPair, _)).map(value => value.copy(
               json = value.json + ("move_purpose" -> reading.ownershipJson)))
         }
-        if functional.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
-          if owner != 0 then value else value ++ Json.obj(
-            "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ functional.get.evidence).distinct,
-            "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
-              "summary" -> functional.get.text, "summary_kind" -> "question_answer",
-              "summary_question" -> functional.get.json)))
-        }
+        if functional.nonEmpty then return deliver(functional.get)
+        val partialReference = referenceReading.filterNot(_.completePurpose).flatMap(realizeReference)
+        if partialReference.nonEmpty then return deliver(partialReference.get)
       if index == 0 && (detail \ "type").as[String] == "root_comparison" &&
           ownedPair.size == 2 && purposeOwners.size == 1 &&
           !packet.assembly.input.positionHistory.currentPosition.check.yes then
         val seed = CommentaryAnswer.Answer("selected_comparison", List(CommentaryAnswer.Section(
           List(CommentaryAnswer.Continuation(ownedPair.map(RootQuestionSummary.MoveRef(_, 0)))))), Nil, Nil)
         val purpose = ResponsePurposeReading.withAnswer(packet, paths, ownedPair, purposeOwners, local, seed,
-          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value))
+          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), rootUses)
         if purpose.question != seed.question then
           val reading = RootQuestionSummary.realize(paths, ownedPair, purpose).map(value => value.copy(
             json = value.json + ("first_target_response" -> purposeOwners.head.ownershipJson)))
-          if reading.nonEmpty then return requests.zipWithIndex.map { case ((value, _), owner) =>
-            if owner != 0 then value else value ++ Json.obj(
-              "evidence_ids" -> ((value \ "evidence_ids").as[List[String]] ++ reading.get.evidence).distinct,
-              "detail" -> (((value \ "detail").as[JsObject] - "summary_unavailable") ++ Json.obj(
-                "summary" -> reading.get.text, "summary_kind" -> "question_answer",
-                "summary_question" -> reading.get.json)))
-          }
+          if reading.nonEmpty then return deliver(reading.get)
       val questionFocus = requests.flatMap { (recipient, context) =>
         val questionRefs = (recipient \ "detail" \ "question_refs").asOpt[List[JsObject]].getOrElse(Nil)
         context.flatMap(_.question).filter { focus =>
@@ -3094,7 +3164,7 @@ private[runtime] object MoveWorkProjection:
           requests.flatMap(_._2.flatMap(_.anchoredFamily)).distinct, answer,
           (value, sections) => protectRootUses(packet, paths, ownedPair, positions, local, value, sections)))
         .map(answer => ResponsePurposeReading.withAnswer(packet, paths, ownedPair, firstTargets, local, answer,
-          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value)))
+          value => completeSelectedConditions(packet, paths, ownedPair, positions, local, value), rootUses))
         .flatMap(answer => completeSelectedConditions(packet, paths, ownedPair, positions, local, answer))
         .map(answer => BasicPurposeReading.simplify(packet, paths, ownedPair, positions, local, answer))
         .map(answer => RootSubjectComparison.withMaterialContrast(answer, ownedPair, packet.assembly.playedTransition.map(_.moveUci)))
@@ -3122,7 +3192,7 @@ private[runtime] object MoveWorkProjection:
               } ++
               Option.when(effects.nonEmpty)(Json.obj("effects" -> effects.map(_.json(publicSource)))).getOrElse(Json.obj())))
       }
-    compose
+    ComparisonReaders(compose, rootUses)
 
   /** Independent physical uses keep separate ownership. Only an actual shared
     * non-root capture can join their price episodes; a common PV, endpoint,
@@ -3443,7 +3513,8 @@ private[runtime] object MoveWorkProjection:
       // A complete comparison states the decision and the tested reply together.
       // Keep that lead intact; supplementary rules of a later reply follow it.
       val at = before + (selected.statements(before) match
-        case _: ReserveEntry | _: DirectReserveEntry | _: ReserveHold | _: ReserveTempo | _: ReserveBreak | _: ReplyConstraint => 1
+        case _: ReserveEntry | _: DirectReserveEntry | _: ReserveHold | _: ReserveTempo | _: ReserveBreak | _: ReplyConstraint |
+            _: ReferencePurpose | _: ReferencePosition => 1
         case _ => 0)
       val statements = (selected.statements.take(at) ++ condition.statements ++ selected.statements.drop(at)).distinct
       sections.updated(owner, selected.copy(statements = statements,
@@ -4050,12 +4121,27 @@ private[runtime] object MoveWorkProjection:
       case value: CheckSequence => value.events.collect { case check: CheckingMove => check.move }
       case value => conditionUses(value).map(_._2)
     val selected = answer.core.flatMap(_.statements)
+    val describedActivities = selected.flatMap {
+      case ReferencePurpose(value) => value.arms.flatMap(_.activity)
+      case ActivityUse(value, _) => List(value)
+      case FunctionReply(_, branch) => branch.purposeActivity.toList
+      case _ => Nil
+    }
     val selectedChecks = selected.flatMap {
       case value: CheckSequence => value.events
       case value: CheckEvent => List(value)
       case _ => Nil
     }.toSet
     val used = answer.completionSources.getOrElse(selected).flatMap(uses).distinct
+    val comparedPaths = selected.collect { case ReferencePurpose(value) => value.arms.map(_.path) }.flatten.toSet
+    val comparedReplies = selected.collect { case choice: FirstReplyChoice if
+      comparedPaths.exists(CommentarySequenceText.sameRoot(_, choice.root.path)) =>
+        List(choice.preferred, choice.alternative)
+    }.flatten.toSet
+    val meaningUses = answer.completionSources.getOrElse(selected).filterNot {
+      case _: Material | _: MaterialEvents => true
+      case _ => false
+    }.flatMap(_.actionReferences).toSet
     arms.flatMap { arm =>
       val path = arm.path
       val describedResponses = selected.collect { case response: TargetResponse => response }
@@ -4076,10 +4162,12 @@ private[runtime] object MoveWorkProjection:
         arm.proofs ++= sources.flatMap(_.evidence)
         val described = statements.collect { case action: Action if (action.move.path eq path) &&
           describedResponses.contains(action) => action }
-        val fresh = statements.filterNot(statement => selected.contains(statement) || described.contains(statement)).distinct
+        val expressed = statements.filter(statement => describedActivities.exists(_.expresses(statement)))
+        val fresh = statements.filterNot(statement => selected.contains(statement) || described.contains(statement) ||
+          expressed.contains(statement)).distinct
         // The response already says this content. Its exact occurrences still
         // receive newly admitted proof/focus metadata in the owning section.
-        val references = (fresh.flatMap(_.references) ++ described.flatMap(_.references)).distinct
+        val references = (fresh.flatMap(_.references) ++ described.flatMap(_.references) ++ expressed.flatMap(_.references)).distinct
         Section(fresh, references, sources.flatMap(note =>
           path.ids.indexOf(note.edge.evidence.id) match
             case offset if offset >= 0 && references.contains(arm.ref(offset)) => Some(Focus(arm.ref(offset), note))
@@ -4103,7 +4191,7 @@ private[runtime] object MoveWorkProjection:
             case Detail.Evades(target, attacker) => target == afterUser && original(attacker, offset).exists(actor =>
               arm.control(offset, actor, user).contains(true) && arm.control(offset + 1, actor, user).contains(false))
             case _ => false)
-          val responses = evasions.map { evasion =>
+          val responses = evasions.flatMap { evasion =>
             val Detail.Evades(_, attacker) = evasion.note.detail: @unchecked
             val actor = original(attacker, offset).get
             val incoming = (0 until offset).filter(n =>
@@ -4114,7 +4202,12 @@ private[runtime] object MoveWorkProjection:
               target <- arm.at(user, n + 1).toList
             yield Action(arm.ref(n), Detail.Attack(a, target, true)) }
             val attackNotes = incoming.toList.flatMap(n => at(n).filter(note => attack.exists(_.detail == note.note.detail)))
-            section(attack :+ Action(use, evasion.note.detail), evasion :: attackNotes)
+            // A priced recapture need not retell an unrelated pre-existing
+            // attack. A selected use or newly created attack still owns its escape.
+            val replyIntroduction = comparedReplies(use) && offset == 1
+            Option.when(!comparedPaths(path) && !replyIntroduction ||
+              meaningUses(use) && !replyIntroduction || incoming.nonEmpty)(
+              section(attack :+ Action(use, evasion.note.detail), evasion :: attackNotes)).toList
           }
           val vacancies = (0 until offset).flatMap { departure =>
             for

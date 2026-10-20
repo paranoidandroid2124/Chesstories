@@ -1,0 +1,398 @@
+{
+  "schema_version": "chesstory.quiescent-commentary-implementation.v1",
+  "status": "completed_with_scoped_acceptance",
+  "started_utc": "2026-10-13T06:45:48Z",
+  "deadline_utc": "2026-10-13T13:45:48Z",
+  "time_budget_minutes": 420,
+  "goal": "조건·대가·전환점을 보존하는 국소 교환/체크 요약과 실제 평가쌍의 공통 결과·기능 차이 전달",
+  "baseline": "target/research-runs/quiescent-implementation-20261013/baseline.json",
+  "prior_changed_files": 37,
+  "research": "research/quiescent-commentary-20261013.json",
+  "constraints": {
+    "max_search_depth": 18,
+    "screen_request_seconds": 10,
+    "fresh_quality_positions": 2,
+    "automatic_reference_move": true,
+    "commit": false,
+    "full_regression": false
+  },
+  "preregistered_cases": [
+    {
+      "id": "existing",
+      "name": "Gelfand–Avrukh 1999, 14...Bd5",
+      "fen": "r2q1rk1/1pp2pbp/1n4p1/pP2p1N1/P2n4/1bNPB1P1/4PPBP/RQ3RK1 b - - 0 14",
+      "played": "b3d5",
+      "pgn": "target/research-runs/assessment-pair-20261013/existing.pgn",
+      "expectations": [
+        "자동 기준 수와 Bd5의 목적·응수 비교 유지",
+        "교환 비용과 Nge4 차단 및 남는 폰/지원 기능을 기본 해설에서 읽을 수 있음",
+        "반복 잡기/소멸/총합 나열 감소; 공통 사실과 서로 다른 물리적 교환을 구별"
+      ]
+    },
+    {
+      "id": "new",
+      "name": "French opening, 7.Bxh7+; engine unseen",
+      "fen": "rnbq1rk1/pppnbppp/4p3/3pP3/3P4/2NB1N2/PPP2PPP/R1BQK2R w KQ - 5 7",
+      "played": "d3h7",
+      "pgn": "target/research-runs/quiescent-implementation-20261013/new.pgn",
+      "origin": "합법적인 오프닝 수순으로 만든 사전 선택 국면; 승리나 최선수를 전제하지 않는다.",
+      "expectations": [
+        "희생의 비용과 체크에 따른 필수 응수를 보존",
+        "사잇수/회수 또는 끝나지 않은 기록을 숨기지 않음",
+        "자동 선택된 실제 비교와 합치하는 기본 해설; 평가 수치 전체 인과로 확대하지 않음"
+      ]
+    }
+  ],
+  "acceptance": [
+    "실제 기본 화면 두 사례와 의미 판독",
+    "필수 기물 비용/소속 독립 검증 유지",
+    "대표 교환은 개별 capture 서술이 아니라 교환 결과로 표현",
+    "체크 요약은 검증된 연속 공방에만 적용하고 핵심 전환점 보존",
+    "본문 수 클릭이 정확한 국면으로 이동",
+    "길이 감소 또는 단위 검사만으로 완료하지 않음"
+  ],
+  "out_of_scope": [
+    "새 탐색/LLM 서비스",
+    "전략적 기능 동치 일반해결",
+    "전체 평가 점수 인과",
+    "후속 질문 탐색 생략",
+    "출시 전체 완료"
+  ],
+  "results": [
+    {
+      "id": "existing",
+      "ui_elapsed_seconds": 1.79,
+      "ui_request_seconds": 10,
+      "remaining_budget_ms_sent": 9674,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "issued_depths": [
+        12,
+        12
+      ],
+      "work_purposes": [
+        "root_search",
+        "focus_comparison"
+      ],
+      "actual_pair_pvs": [
+        {
+          "moves_uci": [
+            "c7c6",
+            "f1c1",
+            "a8c8",
+            "b5c6",
+            "b7c6",
+            "a1a3",
+            "b3d5",
+            "c3d5",
+            "b6d5",
+            "g2d5",
+            "c6d5",
+            "e3d4",
+            "e5d4"
+          ],
+          "san": "c6 Rc1 Rc8 bxc6 bxc6 Ra3 Bd5 Nxd5 Nxd5 Bxd5 cxd5 Bxd4 exd4",
+          "depth": 12,
+          "white_score": {
+            "kind": "cp",
+            "value": 19
+          }
+        },
+        {
+          "moves_uci": [
+            "b3d5",
+            "g5e4",
+            "c7c6",
+            "f1c1",
+            "a8b8",
+            "b1b2",
+            "d8e7",
+            "c3d5",
+            "b6d5",
+            "e3g5"
+          ],
+          "san": "Bd5 Nge4 c6 Rc1 Rb8 Qb2 Qe7 Nxd5 Nxd5 Bg5",
+          "depth": 12,
+          "white_score": {
+            "kind": "cp",
+            "value": 51
+          }
+        }
+      ],
+      "question": "selected_comparison",
+      "basic_units": 4,
+      "english_only_units": 0,
+      "covered_capture_receipts": 10,
+      "proof_moves_by_unit": [
+        23,
+        3,
+        3,
+        4
+      ],
+      "recorded_end_markers": 2,
+      "screen_record": "research/quiescent-implementation-20261013/existing-screen.txt",
+      "raw_response": "research/quiescent-implementation-20261013/existing-screen.json.gz",
+      "board_verification": {
+        "ui_label": "19.Bg5 · 수 이후",
+        "move_count": 10,
+        "expected_fen": "1r3rk1/1p2qpbp/2p3p1/pP1np1B1/P2nN3/3P2P1/1Q2PPBP/R1R3K1 b - - 1 19",
+        "displayed_board_fen": "1r3rk1/1p2qpbp/2p3p1/pP1np1B1/P2nN3/3P2P1/1Q2PPBP/R1R3K1",
+        "exact_board_match": true
+      },
+      "screenshot": "research/quiescent-implementation-20261013/existing-final.png",
+      "summary_screenshot": "research/quiescent-implementation-20261013/existing-summary.png"
+    },
+    {
+      "id": "new",
+      "ui_elapsed_seconds": 3.85,
+      "ui_request_seconds": 10,
+      "remaining_budget_ms_sent": 9679,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "issued_depths": [
+        12,
+        12,
+        12
+      ],
+      "work_purposes": [
+        "root_search",
+        "focus_comparison",
+        "response_comparison"
+      ],
+      "actual_pair_pvs": [
+        {
+          "moves_uci": [
+            "h2h4",
+            "f7f5",
+            "c3e2",
+            "d7b6",
+            "e2f4",
+            "c7c5",
+            "f3g5",
+            "e7g5",
+            "h4g5",
+            "d8g5"
+          ],
+          "san": "h4 f5 Ne2 Nb6 Nf4 c5 Ng5 Bxg5 hxg5 Qxg5",
+          "depth": 12,
+          "white_score": {
+            "kind": "cp",
+            "value": 185
+          }
+        },
+        {
+          "moves_uci": [
+            "d3h7",
+            "g8h7",
+            "d1d3",
+            "g7g6",
+            "c1d2",
+            "f8h8",
+            "h2h4",
+            "h7g7",
+            "h4h5",
+            "c7c5",
+            "e1c1",
+            "b8c6",
+            "h5g6",
+            "f7g6",
+            "c3e2",
+            "c5d4",
+            "e2d4",
+            "c6d4",
+            "d3d4"
+          ],
+          "san": "Bxh7+ Kxh7 Qd3+ g6 Bd2 Rh8 h4 Kg7 h5 c5 O-O-O Nc6 hxg6 fxg6 Ne2 cxd4 Nexd4 Nxd4 Qxd4",
+          "depth": 12,
+          "white_score": {
+            "kind": "cp",
+            "value": -14
+          }
+        }
+      ],
+      "question": "selected_comparison",
+      "basic_units": 4,
+      "english_only_units": 0,
+      "covered_capture_receipts": 5,
+      "proof_moves_by_unit": [
+        20,
+        3,
+        5,
+        4
+      ],
+      "recorded_end_markers": 1,
+      "screen_record": "research/quiescent-implementation-20261013/new-screen.txt",
+      "raw_response": "research/quiescent-implementation-20261013/new-screen.json.gz",
+      "board_verification": {
+        "ui_label": "8.Qd3+ · 수 이후",
+        "move_count": 3,
+        "expected_fen": "rnbq1r2/pppnbppk/4p3/3pP3/3P4/2NQ1N2/PPP2PPP/R1B1K2R b KQ - 1 8",
+        "displayed_board_fen": "rnbq1r2/pppnbppk/4p3/3pP3/3P4/2NQ1N2/PPP2PPP/R1B1K2R",
+        "exact_board_match": true
+      }
+    }
+  ],
+  "implementation": [
+    "같은 기물의 연속 잡기·되잡기를 하나의 교환으로 표현하며 전체 물리적 기물·필수 비용·증거 참조는 유지한다.",
+    "종류와 수가 같으면 비숍/나이트 등의 교환으로 요약한다. 다른 종류·추가 손실은 각각 표시한다.",
+    "동일한 기물의 연속 조용한 체크와 킹 이동 응수만 체크 횟수·킹의 최종 위치로 묶는다. 잡기·가로막기·다른 체크 기물·열린 체크·미완성 응수는 생략하지 않는다.",
+    "실제 평가쌍에서 같은 원래 기물의 소멸만 공통 결과로 묶고 서로 다른 비용과 살아남은 기물의 역할을 남긴다.",
+    "같은 원래 기물 사이의 바로 다음 공격·피하기를 연결하고, 새로 열린 다른 기물의 공격은 따로 남긴다.",
+    "폰의 개별 배치·방어자는 유지하며 같은 파일의 겹침/고립 설명은 모은다.",
+    "기존 길 비우기·재점유 근거를 평가쌍의 목적에 재사용한다. 실제 지원받는 기물의 도착을 판독해 지원자가 직접 되잡지 않아도 목적이 사라지지 않게 한다.",
+    "체크 응수까지 해당 기록 안에서 닫고, 기록 끝은 기록 끝으로 표시한다. 신규 탐색·더 깊은 탐색·선택 질문의 가격 면제는 없다."
+  ],
+  "actual_meaning_review": {
+    "existing": "자동 c6/Bd5. 공통 백 Nc3/흑 Bb3 교환은 한 번 표시하고 c6의 추가 폰·경기물 교환은 별도 유지. c6는 d5 지원과 Bg2-b7 차단을 만들지만 최종 c6 수순의 d4/d5 고립 더블폰에서는 d5 폰 지원이 사라짐. Bd5의 Nge4가 Bg2 공격선을 막으며 뒤에 ...c6로 d5 지원이 생김. c8 열린 파일 룩과 b8의 b7 방어 룩, d8/d5 방어 퀸과 e7의 b7/e5 방어 퀸을 구별. 두 PV의 길이가 달라 속도 우위로 확대하지 않음.",
+    "new": "자동 h4/Bxh7+. h4는 실제 Ng5 진출을 지원하고 Bxg5 hxg5 뒤 Qxg5로 지원 폰도 사라진 비용까지 포함. Bxh7+는 비숍과 h7 폰을 맞바꾸며 비운 d3에 퀸이 들어가 Qd3+; g6 차단은 명시. h4 쪽 비숍 잔존과 Bxh7+ 쪽 나이트 잔존을 구별. Qxg5에서 PV가 끝난 것을 공방 해결로 해석하지 않음.",
+    "new_position_not_held_out": "같은 새 국면을 개발 중 사용했으므로 독립 미관찰 성능 평가로 부르지 않는다.",
+    "source_variation": "처음 새 수순은 h4 f5 Ng5 Bxg5 hxg5였으나 새 요청에서 Rh3-Rg3 진입, g4-g5-g6 전진, Ne2-Nf4-Ng5와 Qxg5 말단으로 변했다. 수순/기준 수를 고정하거나 고르지 않았다."
+  },
+  "development_failures": [
+    {
+      "failure": "필수 비용을 선두로 옮기는 첫 구현에서 비용 진술을 제거한 답을 거절하지 못함",
+      "resolution": "원래 비용 참조를 lead.required에 고정. 독립 가격 누락 거절 검사를 통과하도록 복구."
+    },
+    {
+      "failure": "SquareReoccupation의 한국어 경로가 없어 새 해설이 영어로 돌아감",
+      "resolution": "같은 근거·수 참조를 갖는 한국어 길 비우기/재점유 표현을 연결."
+    },
+    {
+      "failure": "교환 요약 앞에 원점 머리말이 중복되어 표시 참조가 0,0,3이 됨",
+      "resolution": "원점이 이미 본문에 있으면 머리말을 추가하지 않음."
+    },
+    {
+      "failure": "새 실제 수순에서 h4의 목적이 룩 진입으로 바뀌자 first_target_response의 긴 잡기 나열로 회귀",
+      "resolution": "기존 물리적 길 비우기 사용 근거를 실제 평가쌍 판독에 재사용."
+    },
+    {
+      "failure": "새 실제 수순의 지원 폰 전진에서는 지원자가 직접 되잡지 않아 목적을 놓침",
+      "resolution": "움직이지 않은 지원자가 새로 지키는 칸에 같은 원래 아군 기물이 실제 도착한 것을 검증. 보장된 안전/강제 수순으로 주장하지 않음."
+    },
+    {
+      "failure": "기존 실제 c6-Rc8 수순의 아군 지원을 겨눈다고 표현, 사라진 폰 지원을 여전히 없다고 표현",
+      "resolution": "상대 공격과 아군 방어를 구별하고 지원 소멸 전후를 구별."
+    },
+    {
+      "failure": "부분 되잡기 묶음의 끝을 국소 교환 전체의 끝으로 보일 수 있음",
+      "resolution": "기록에 바로 붙은 되잡기가 더 있으면 그 부분 요약을 거절."
+    }
+  ],
+  "screen_runs": {
+    "existing": {
+      "attempts": 3,
+      "ui_seconds": [
+        3.36,
+        3.11,
+        1.79
+      ]
+    },
+    "new": {
+      "attempts": 5,
+      "ui_seconds": [
+        2.23,
+        3.57,
+        4.03,
+        2.61,
+        3.85
+      ]
+    },
+    "unique_fresh_positions": 2,
+    "intermediate_raw_records": "target/research-runs/quiescent-implementation-20261013/"
+  },
+  "verification": {
+    "core_tests_unique_passed": 20,
+    "last_changed_rendering_checks_passed": 18,
+    "suites": [
+      "QuiescentCommentaryTest (3)",
+      "CommentaryEnglishCompositionTest (15)",
+      "AssessmentPairReadingTest (2)"
+    ],
+    "full_suite_run": false,
+    "frontend_changed": false,
+    "diff_check": "passed",
+    "board_links": "실제 본문 클릭 후 Qd3+ 및 Bg5의 메인 보드 DOM 기물 배치를 python-chess 재생의 전체 배치와 대조: 두 경우 정확히 일치.",
+    "screenshot_status": "초기 CUA 픽셀 캡처 오류/시간 초과를 기록. 마지막 기존 실제 화면에서는 복구되어 전체 PNG와 해설 영역 PNG를 저장하고 시각적으로 확인. 새 국면은 실제 본문·팝업·메인 판 DOM/응답 기록과 정확한 기물 배치 대조로 확인했으며 새 국면의 픽셀 이미지는 없음.",
+    "original_browser_state_restored": true,
+    "temporary_network_observation_disabled": true
+  },
+  "remaining_limits": [
+    "PV의 공개 끝이나 비교 시점을 quiescence search의 안정된 leaf로 판정하지 않는다.",
+    "순수 체크 왕복 요약은 작은 기존 검사에서 검증했으며 새 실제 희생 국면은 축약하면 안 되는 체크/차단을 보존하는 경계 사례이다.",
+    "같은 첫 수가 별도 응수 보고에 반복되는 모든 기존 fallback 본문의 공통 앞부분까지 일반 통합한 것은 아니다.",
+    "지원/길 비우기는 현재 기록 안의 실제 사용이다. 장기 목적 일반 발견, 모든 응수에 대한 보장, 전략적 기능 동치, 평가 수치 전체의 인과는 미해결.",
+    "새 국면은 개발 자료가 됐고 두 국면의 화면 시간은 일반적인 지연 분포가 아니다.",
+    "전체 과거 회귀·여러 화면 크기의 레이아웃 검증·출시 전체 완료는 이번 범위가 아니다."
+  ],
+  "preservation": {
+    "original_files": 37,
+    "byte_identical": 31,
+    "changed": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "research/README.md"
+    ],
+    "missing": [],
+    "old_research_readme_bytes_preserved": true,
+    "baseline_zip_sha256": "24d4b1261923590d189e1c0e1d1f0c81899fda6c2bd59ced75bc9721f70015df",
+    "staged_changes": [],
+    "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+    "branch": "codex/functional-choice-value"
+  },
+  "artifacts": [
+    {
+      "path": "research/quiescent-implementation-20261013/existing-board-dom.json",
+      "bytes": 3988,
+      "sha256": "d7ef527fcde5e08c102598307a1296362ff4122ec13c2492895fbbae25aa3730"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/existing-board.json",
+      "bytes": 269,
+      "sha256": "257025d2aab0060dbe4aef84b1bded51f4e8a4830551f64e97ae320b20fdee5d"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/existing-final.png",
+      "bytes": 269140,
+      "sha256": "0e321cc8205242c925e2522f3fae7fe1fddae27a1fea1d4fcbc5cc10f06d2bed"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/existing-screen.json.gz",
+      "bytes": 606669,
+      "sha256": "57467c88b48ed08cd1006df4ef503d731e06feeb4fdb15e9df3843375be926a8"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/existing-screen.txt",
+      "bytes": 8802,
+      "sha256": "c608e8fc9a53df702f981318244ca9eb7ad10e54e17fe564b93d2526461497e5"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/existing-summary.png",
+      "bytes": 167808,
+      "sha256": "204991097274d4056a8491811164e4816e227d87412618bf6a31be32d6620c17"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/new-board-dom.json",
+      "bytes": 4121,
+      "sha256": "61e75191670f78ac7223321bd4632282a7231bb8787f0aa923b54beb5a9a21d4"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/new-board.json",
+      "bytes": 260,
+      "sha256": "51c46ebf0bc06c7d2116cd490039593cf9e0a5a72438dc58f695bfb5e853d87e"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/new-screen.json.gz",
+      "bytes": 940162,
+      "sha256": "fc82ee095a6d434c36a03aa6821738e312ff04cef9e9b934fb70737d9ba05b9f"
+    },
+    {
+      "path": "research/quiescent-implementation-20261013/new-screen.txt",
+      "bytes": 6899,
+      "sha256": "f54b80989fc77436c23c50c544a1c1b54eab04a88be48819061cd5620db9ed08"
+    }
+  ],
+  "completed_utc": "2026-10-13T08:52:11.754588+00:00",
+  "elapsed_minutes": 126.4,
+  "within_time_budget": true
+}

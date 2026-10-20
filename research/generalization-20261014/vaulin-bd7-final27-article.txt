@@ -1,0 +1,21 @@
+두 선택의 비교
+Bd7 ↔ Re8
+
+Re8 moves the rook away from the later capture. In the legal variation Re8 Rf2 Ng4 Bxd5 cxd5, that rook cannot be captured by the same rook. After Bd7 Rf2 Ng4 Bxd5 cxd5, that same central capture is legal, but White can take the rook with Rxf8+. This is a conditional difference; the central capture need not be chosen.
+
+The recorded continuation is Bd7.
+
+The recorded continuation is Re8.
+
+이어지는 변화
+
+두 수의 엔진 평가는 비슷합니다. 작은 점수 차이만으로 어느 수가 더 강하다고 단정하지 않습니다.
+
+비교의 상세 기록
+두 수순 살펴보기
+둔 수 · Bd7
+백 기준 -0.21 · 깊이 12
+비교 수순 보기 · Bd7
+대안 수 · Re8
+백 기준 -0.18 · 깊이 12
+비교 수순 보기 · Re8

@@ -1,0 +1,299 @@
+[
+  {
+    "question": "selected_comparison",
+    "paragraphs": [
+      "c5 — 백 d4 폰을 새로 공격합니다. 흑 d5 비숍에 대한 폰의 방어를 놓습니다. c5 수로 c6 칸을 비워 흑 d5 비숍의 a8 방향 길을 엽니다. Rc7 — Rc7–Rd7로 룩이 활동에 나서 공격받는 흑 d5 비숍을 지킵니다.  c5 수순의 비교 시점까지 폰 한 쌍을 교환합니다. 백의 c3 나이트와 흑의 d5 비숍을 교환합니다. Rc7 수순에서: Bf4의 흑 c7 룩 공격을 Rd7 수로 피합니다.",
+      "c5 — dxc5: 흑 c5 폰을 잡습니다. Nxd5까지의 수순에서는 흑 c8 룩은 열린 c 파일에서 활동합니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+      "Rc7 — Bf4: 흑 c7 룩을 새로 공격합니다. Rb7까지의 수순에서는 흑 b7 룩, 흑 d5 비숍을 남깁니다. 백 d4 폰은 고립폰입니다.",
+      "Rc7 수순에서: Nxd5 응수에는 Nxd5 뒤 d7를 쓰는 대신 흑 d5 나이트의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다. 원래 d5의 비숍은 교환되어 그 기능의 대상이 사라집니다. 제시된 Rc7 수순에서 백은 나이트 한 개를 내주고 비숍 한 개를 얻습니다."
+    ],
+    "english_only": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "label": "rc7-priority-live",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-c2ac0a16-4ff2-4aa2-bb4d-94fd15c7d768",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "e2e4",
+        "c7c5",
+        "d2d4",
+        "c5d4",
+        "c2c3",
+        "g8f6",
+        "e4e5",
+        "f6d5",
+        "g1f3",
+        "d7d6",
+        "f1c4",
+        "d5b6",
+        "c4b3",
+        "d6e5",
+        "f3e5",
+        "e7e6",
+        "e1g1",
+        "b8c6",
+        "e5c6",
+        "b7c6",
+        "c3d4",
+        "f8e7",
+        "b1c3",
+        "e8g8",
+        "d1f3",
+        "c8a6",
+        "f1d1",
+        "a8c8",
+        "b3c2",
+        "a6c4",
+        "b2b3",
+        "c4d5",
+        "f3h3",
+        "g7g6",
+        "c1h6",
+        "f8e8",
+        "d1d3"
+      ],
+      "current_fen": "2rqr1k1/p3bp1p/1np1p1pB/3b4/3P4/1PNR3Q/P1B2PPP/R5K1 b - - 3 19",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "c8c7",
+        "resulting_fen": "3qr1k1/p1r1bp1p/1np1p1pB/3b4/3P4/1PNR3Q/P1B2PPP/R5K1 w - - 4 20"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19731,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "c8c7"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11,
+      11,
+      11
+    ],
+    "work_purposes": [
+      "root_search",
+      "focus_comparison",
+      "response_comparison",
+      "response_comparison"
+    ],
+    "elapsed_ui_seconds": 5.63,
+    "result": "below_goal_target",
+    "first_output_preserved": true,
+    "searches": [
+      {
+        "work_id": "work:2",
+        "scope": {
+          "kind": "unrestricted"
+        },
+        "paths": [
+          [
+            "c8c7",
+            "h6f4",
+            "c7b7",
+            "a1e1",
+            "e7f6",
+            "h3e3",
+            "f6g7",
+            "e3d2",
+            "d8e7",
+            "c2d1",
+            "b6d7"
+          ],
+          [
+            "c8c7",
+            "a1d1",
+            "e7g5",
+            "d3g3",
+            "g5f6",
+            "h6f4",
+            "c7b7",
+            "d1d3"
+          ],
+          [
+            "c8c7",
+            "a1e1",
+            "e7g5",
+            "d3g3",
+            "g5f6",
+            "g3g4"
+          ]
+        ]
+      },
+      {
+        "work_id": "work:3",
+        "scope": {
+          "kind": "restricted",
+          "moves_uci": [
+            "c3d5",
+            "h3e6",
+            "h3f3",
+            "h3f5",
+            "h3h5",
+            "h6f4"
+          ]
+        },
+        "paths": [
+          [
+            "c8c7",
+            "h6f4",
+            "c7c8",
+            "h3e3",
+            "e7f6",
+            "h2h3",
+            "d8e7",
+            "e3g3",
+            "e8d8",
+            "a1d1",
+            "d8d7",
+            "f4e5",
+            "d7d8",
+            "e5f6",
+            "e7f6",
+            "h3h4"
+          ],
+          [
+            "c8c7",
+            "c3d5",
+            "b6d5",
+            "h6d2",
+            "c7d7",
+            "h3f3",
+            "e7f6",
+            "a1b1"
+          ],
+          [
+            "c8c7",
+            "h3h5",
+            "c6c5",
+            "d4c5",
+            "c7c5",
+            "b3b4",
+            "e7f6",
+            "b4c5",
+            "g6h5",
+            "c5b6",
+            "d8b6",
+            "a1b1"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "question": "selected_comparison",
+    "paragraphs": [
+      "Nc5 — 백 e4 폰을 새로 공격합니다. 제시된 수순에서 a4에 진출하는 폰을 지원합니다. Bf6 — Bf6–Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다.  Bf6 수순의 비교 시점까지 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+      "Bf6 뒤 조사한 Nf1 응수에서는 같은 기물이 Bg5로 재배치되어 백 e3 비숍을 공격합니다.",
+      "Nc5 — Nf3: 흑 e5 폰을 새로 공격합니다. Qd2까지의 수순에서는 흑 c5 나이트는 흑 b7 폰을 지킵니다. 흑 g7 비숍을 남깁니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+      "Bf6 — Nb3: 흑 a5 폰을 새로 공격합니다. Qxe3까지의 수순에서는 c5·c7에 더블폰이 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+    ],
+    "english_only": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "label": "bf6-first-independent",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-269f3015-ef22-453c-ba52-f53470863c9c",
+      "variant": "standard",
+      "initial_fen": "r1bq1rk1/1pp2pbn/n2p2p1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R b KQ - 0 12",
+      "move_prefix_uci": [],
+      "current_fen": "r1bq1rk1/1pp2pbn/n2p2p1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R b KQ - 0 12",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "g7f6",
+        "resulting_fen": "r1bq1rk1/1pp2p1n/n2p1bp1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R w KQ - 1 13"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19746,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "g7f6"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "work_purposes": [
+      "root_search",
+      "response_comparison"
+    ],
+    "elapsed_ui_seconds": 2.14,
+    "result": "below_goal_target",
+    "first_output_preserved": true,
+    "searches": [
+      {
+        "work_id": "work:1",
+        "scope": {
+          "kind": "unrestricted"
+        },
+        "paths": [
+          [
+            "g7f6",
+            "d1c1",
+            "c8d7",
+            "e1d1",
+            "a6c5",
+            "d1c2",
+            "h7g5",
+            "c1g1",
+            "g8g7",
+            "f2f3",
+            "f8h8",
+            "h1h8",
+            "g7h8"
+          ],
+          [
+            "g7f6",
+            "d2f3",
+            "c8g4",
+            "f3h2",
+            "g4d7",
+            "d1d2",
+            "f6g5",
+            "h2f3",
+            "g5e3",
+            "d2e3",
+            "d8f6",
+            "h1h4",
+            "g6g5",
+            "h4h5",
+            "f6f4",
+            "e3f4",
+            "g5f4",
+            "e1c1"
+          ],
+          [
+            "g7f6",
+            "d2f1",
+            "f6g5",
+            "d1d2",
+            "d8f6",
+            "e1c1",
+            "a6c5",
+            "c1b1",
+            "c8d7"
+          ]
+        ]
+      }
+    ]
+  }
+]

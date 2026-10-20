@@ -1,0 +1,152 @@
+[
+  {
+    "id": "bf6-development",
+    "elapsed_seconds_displayed": 5.56,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-2e37b9f8-9957-4935-9ca5-0aeb65bb5c20",
+      "variant": "standard",
+      "initial_fen": "r1bq1rk1/1pp2pbn/n2p2p1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R b KQ - 0 12",
+      "move_prefix_uci": [],
+      "current_fen": "r1bq1rk1/1pp2pbn/n2p2p1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R b KQ - 0 12",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "g7f6",
+        "resulting_fen": "r1bq1rk1/1pp2p1n/n2p1bp1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R w KQ - 1 13"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19743,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "g7f6"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "verdict": "development improvement; delayed Ng5 under Qc1 and bishop trade/pawn cost under Nf3 reach basic text; still verbose",
+    "basic_paragraphs": [
+      "Bd7 — Bd7–Bxg4로 비숍이 활동에 나서 백 f3 나이트를 공격합니다. 이어 Bxf3로 백 f3 나이트를 잡습니다. Bxf3에서 원래 d2의 나이트를 교환하여 g5 칸 통제 기능을 없앱니다. 제시된 수순의 Ng5에서 남은 원래 h7의 나이트가 그 칸을 실제로 사용합니다. 그 칸에는 여전히 백 e3 비숍의 공격이 있습니다. 흑 g5 나이트가 백 e4 폰, 백 f3 비숍을 공격합니다. Bf6 — Bf6–Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다.  Bd7 수순의 비교 시점까지 백의 g4 폰·d2 나이트와 흑의 c8 비숍을 교환합니다. Bf6 수순의 비교 시점까지 백의 e3 비숍·h1 룩과 흑의 h7 나이트·g7 비숍을 교환합니다.",
+      "Bd7 — Nf3: 흑 e5 폰을 새로 공격합니다. Be2까지의 수순에서는 흑 g7 비숍, 흑 g5 나이트를 남깁니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+      "Bf6 — Nf1 뒤, Kxh7까지의 수순에서는 흑 d7 비숍을 남깁니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+      "Bf6 수순에서: Qc1 응수에서는 g5 칸을 새로 지원하여 원래 h7의 나이트의 진출을 받칩니다. Ng5로 나이트가 활동에 나서 백 e4 폰을 공격합니다.",
+      "Bf6 수순에서: Nf3의 흑 g5 비숍 공격을 Bxe3 수로 피합니다. Nf3 응수에서는 Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다. 이어 Bxe3로 백 e3 비숍을 잡습니다. 제시된 Bf6 수순에서 양쪽이 비숍 한 개씩 교환합니다. 백은 폰 한 개를 더 내줍니다."
+    ],
+    "purpose_question": {
+      "id": "move-purpose:343f65f13d13a8131250c11095c79e9108f5d99747d469baaa5e580b64f3572b",
+      "root_move": "g7f6",
+      "root_occurrence_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:evidence:transition:c5cc1df65854fce32d8181bc03c5d32338366686adedfe045d174bf4261e73e6",
+      "child_position_id": "120c2d9f06998e4b8536cac7deac8a9c0b81926584da25c44853a4123fb10027",
+      "source_line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:67d3718dcb461345697192612997822bc6086151688e0f0715d57c7d56699a2e",
+      "use_move": "f6g5",
+      "kind": "piece_pressure",
+      "square": "g5",
+      "challenge_moves": [
+        "d2f3",
+        "e3a7",
+        "e3b6",
+        "e3c5",
+        "e3d4",
+        "e3f4",
+        "e3g5",
+        "e3h6",
+        "f2f4",
+        "g4g5",
+        "h1h5"
+      ],
+      "plan": {
+        "line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:ff546498b4dd4cc5235e27a261e2d2fc8fb2680d5f9259a72fe933af65512a01",
+        "start": 0,
+        "use": 6,
+        "join": 1,
+        "route": [
+          0,
+          6
+        ],
+        "targets": [
+          {
+            "side": "white",
+            "role": "bishop",
+            "square": "e3"
+          }
+        ]
+      },
+      "reply_activities": [
+        {
+          "line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:8e3c23a24bf59d010cdb5c63aa55bed0f2a5aef6719c0f05c3fa6b2debe055e8",
+          "entry": 6,
+          "route": [
+            6
+          ],
+          "cause": "new_support",
+          "user": {
+            "side": "black",
+            "role": "knight",
+            "square": "h7"
+          }
+        },
+        {
+          "line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:ff546498b4dd4cc5235e27a261e2d2fc8fb2680d5f9259a72fe933af65512a01",
+          "entry": 6,
+          "route": [
+            0,
+            6
+          ],
+          "cause": "relocation",
+          "user": {
+            "side": "black",
+            "role": "bishop",
+            "square": "g7"
+          }
+        }
+      ]
+    },
+    "products_unchanged_since_freeze": true
+  },
+  {
+    "id": "ahmed-bd7-independent",
+    "elapsed_seconds_displayed": 2.26,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-3f98a701-3d6f-4d9f-927e-8d0246318c49",
+      "variant": "standard",
+      "initial_fen": "1r5r/p3npk1/2bq2p1/2pp4/3n1PP1/PpNP2B1/1P1Q2B1/4RRK1 b - - 0 29",
+      "move_prefix_uci": [],
+      "current_fen": "1r5r/p3npk1/2bq2p1/2pp4/3n1PP1/PpNP2B1/1P1Q2B1/4RRK1 b - - 0 29",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "c6d7",
+        "resulting_fen": "1r5r/p2bnpk1/3q2p1/2pp4/3n1PP1/PpNP2B1/1P1Q2B1/4RRK1 w - - 1 30"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19743,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "c6d7"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "verdict": "first independent failure: stops at Rxe7-Qxe7 and omits f5 despite it being in the actual PV",
+    "basic_paragraphs": [
+      "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — 백 g4 폰을 새로 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  f5 수순의 비교 시점까지 백의 g4 폰을 내줍니다. Bd7 수순의 비교 시점까지 백의 e1 룩과 흑의 e7 나이트를 교환합니다. f5 수순에서: Re5의 흑 f5 폰 공격을 fxg4 수로 피합니다.",
+      "f5 — Re5: 흑 d5 폰을 새로 공격합니다. fxg4까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. g4·g6에 고립된 더블폰이 남습니다. g4 폰은 통과폰입니다. g4 폰에는 현재 방어자가 없습니다.",
+      "Bd7 — Rxe7: 흑 e7 나이트를 잡습니다. Qxe7까지의 수순에서는 흑 d7 비숍을 남깁니다."
+    ],
+    "purpose_question": null,
+    "products_unchanged_since_freeze": true
+  }
+]

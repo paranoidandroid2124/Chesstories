@@ -1,0 +1,133 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	1 container app
+		2 container
+			3 text Chesstories 기보와 해설
+			4 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				5 menu
+					6 (selected) 한국어
+					7 English
+			8 button 어둡게
+		9 container
+			10 container 체스판과 기보
+				11 heading Boris Gelfand – Tomasz Markowski, Value: 1
+					81 text Boris Gelfand – Tomasz Markowski
+				130 text 22. e5
+				14 container
+					15 image
+					16 image
+					17 image
+					18 image
+					19 text 1
+					20 text 2
+					21 text 3
+					22 text 4
+					23 text 5
+					24 text 6
+					25 text 7
+					26 text 8
+					27 text A
+					28 text B
+					29 text C
+					30 text D
+					31 text E
+					32 text F
+					33 text G
+					34 text H
+				35 container 기보 이동
+					36 button 처음
+					37 button 이전 수
+					38 button (disabled) 다음 수
+					39 button (disabled) 마지막
+					40 button 방향 전환
+				41 container
+					42 text field (settable) 수 입력
+					43 button 두기
+				44 container
+					45 heading Engine reference, Value: 2
+						46 text Engine reference
+					47 checkbox Engine / Off, Value: 0
+					48 text Off · Stockfish 18 · 2 threads
+				49 container
+					50 heading 기보, Value: 2
+						51 text 기보
+					52 button PGN 저장
+					53 button 1. d4
+					83 button 1… d6
+					84 button 2. Nf3
+					85 button 2… Nf6
+					86 button 3. c4
+					87 button 3… g6
+					88 button 4. Nc3
+					89 button 4… Bg7
+					90 button 5. e4
+					91 button 5… O-O
+					92 button 6. Be2
+					93 button 6… Na6
+					94 button 7. O-O
+					95 button 7… e5
+					96 button 8. Re1
+					97 button 8… c6
+					98 button 9. Bf1
+					99 button 9… exd4
+					100 button 10. Nxd4
+					101 button 10… Ng4
+					102 button 11. h3
+					103 button 11… Qb6
+					104 button 12. hxg4
+					105 button 12… Qxd4
+					106 button 13. Qf3
+					107 button 13… Qe5
+					108 button 14. g5
+					109 button 14… Qe7
+					110 button 15. Qg3
+					111 button 15… Nc5
+					112 button 16. Bf4
+					113 button 16… Be5
+					114 button 17. Rad1
+					115 button 17… f6
+					116 button 18. gxf6
+					117 button 18… Rxf6
+					118 button 19. Bxe5
+					119 button 19… Qxe5
+					120 button 20. b4
+					121 button 20… Qxg3
+					122 button 21. fxg3
+					123 button 21… Nd7
+					124 button 22. e5
+				73 container
+					74 button (expanded) PGN · FEN 불러오기, Secondary Actions: Collapse
+						75 text PGN · FEN 불러오기
+					76 text entry area (settable) Description: PGN or FEN, Value: [Event "Polanica Zdroj 1998"]
+[White "Boris Gelfand"]
+[Black "Tomasz Markowski"]
+
+1. d4 d6 2. Nf3 Nf6 3. c4 g6 4. Nc3 Bg7 5. e4 O-O 6. Be2 Na6 7. O-O e5 8. Re1 c6 9. Bf1 exd4 10. Nxd4 Ng4 11. h3 Qb6 12. hxg4 Qxd4 13. Qf3 Qe5 14. g5 Qe7 15. Qg3 Nc5 16. Bf4 Be5 17. Rad1 f6 18. gxf6 Rxf6 19. Bxe5 Qxe5 20. b4 Qxg3 21. fxg3 Nd7 22. e5 *
+					77 button 불러오기
+					78 text 파일 선택
+					79 button 파일 선택
+					80 text 한 경기씩 불러옵니다. 변형·주석은 PGN 저장에 함께 보존됩니다.
+				56 container
+					57 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						58 text 현재 FEN
+			59 container 해설
+				60 heading 이 수의 의미, Value: 2
+					61 text 이 수의 의미
+				62 button 해설 · 20초
+				131 text fault · 1.64s
+				64 container 직전 수 리뷰
+					65 container
+						66 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							67 text 직전 수 리뷰
+					132 heading 직전 수 리뷰를 불러오지 못했습니다., Value: 3
+						133 text 직전 수 리뷰를 불러오지 못했습니다.
+					134 button (collapsed) 이전에 확보한 평가 +, Secondary Actions: Expand
+						135 text 이전에 확보한 평가
+						139 text +
+					137 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						138 text 평가 근거와 관찰 기록
+						140 text +
+		71 container
+			129 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

@@ -44,7 +44,10 @@ private[runtime] object ObservedLineProtocol:
       val eligible: Set[String], val resourceIds: Set[String], val paths: List[PreparedPath]
   ):
     lazy val notation = new CommentaryNotation(owner)
-    private[runtime] lazy val movePurpose = MovePurpose.discover(owner, this)
+    private[runtime] lazy val moveIdeas = MoveIntent.candidates(owner, this)
+    private[runtime] lazy val functionalPurpose = MovePurpose.discover(owner, this)
+    private[runtime] lazy val moveIntent = MoveIntent.discover(owner, this)
+    private[runtime] lazy val movePurpose = if moveIntent.nonEmpty then None else functionalPurpose
     private val purposePositions = scala.collection.mutable.Map.empty[(String, Int), Option[MoveWorkProjection.Position]]
     private[runtime] def purposePosition(path: PreparedPath, count: Int): Option[MoveWorkProjection.Position] =
       if !paths.exists(_ eq path) then None else purposePositions.synchronized {

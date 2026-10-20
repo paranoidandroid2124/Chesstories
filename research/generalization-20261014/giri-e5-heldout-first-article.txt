@@ -1,0 +1,15 @@
+두 선택의 비교
+
+After e5, Black's pawn on e5 now targets White's pawn on d4. After e5, Black's pawn on e5 is under attack from White's pawn on d4 and has no defender.
+
+After e5, d5 is the stronger tested reply than dxe5.
+
+In the e5 line: The recorded continuation is d5 f5. After d5, Black's pawn on c6 now targets White's pawn on d5.
+
+In the e5 line: dxe5 moves the pawn out of the attack from Black's queen on d8. The recorded continuation is dxe5 Qe7. dxe5 captures the black pawn on e5. After Qe7, Black's queen on e7 now targets White's pawn on c5 and White's pawn on e5.
+
+The compared root choices are e5 and Qe7.
+
+이어지는 변화
+둔 수 · e5 · 재생
+대안 수 · Qe7 · 재생

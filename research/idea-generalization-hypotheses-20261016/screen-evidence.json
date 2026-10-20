@@ -1,0 +1,90 @@
+{
+  "utc": "2026-10-16T00:05:50.998340+00:00",
+  "scope": "Two positions only. One failed and one corrected development h3 request; one first unused Rc7 request. No products edited after final freeze.",
+  "runs": [
+    {
+      "id": "h3-hypothesis-live",
+      "status": "failed",
+      "screen_completed_seconds": 4.64,
+      "request_budget_ms": 19745,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "issued_depths": [
+        11,
+        11
+      ],
+      "physical_works": 2,
+      "assessment_pair": [
+        {
+          "reference_move": "h2h3",
+          "played_move": "d1d2",
+          "kind": "best_vs_second"
+        }
+      ],
+      "basic_paragraphs": [
+        "In the h3 line, Rhd8 attacks the d1-rook. Rxd8 moves that rook out of the attack. In the h3 line, Rxd8 attacks the c8-rook. Rxd8 moves that rook out of the attack.",
+        "In the h3 continuation through Rxd8, both sides exchange one pawn and one rook. Rxd8 … Rxd8: 1 pair of rooks is exchanged. Black's rook recaptures on d8.",
+        "In the provided Rd2 line, the same rook next moves with Rxd8 to d8. In the Rd2 line, Rcd8 attacks the d2-rook. Rxd8 moves that rook out of the attack. In the Rd2 line, Rxd8 attacks the h8-rook. Rxd8 moves that rook out of the attack.",
+        "In the Rd2 continuation through Rxd8, both sides exchange one pawn and one rook. Rxd8 … Rxd8: 1 pair of rooks is exchanged. Black's rook recaptures on d8."
+      ],
+      "network_archive": "live-reports.json.gz",
+      "screen": "h3-hypothesis-live-screen.png"
+    },
+    {
+      "id": "h3-final-live",
+      "status": "development_partial_improvement",
+      "screen_completed_seconds": 4.71,
+      "request_budget_ms": 19744,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "issued_depths": [
+        11,
+        11
+      ],
+      "physical_works": 2,
+      "assessment_pair": [
+        {
+          "reference_move": "h2h3",
+          "played_move": "b1b2",
+          "kind": "best_vs_second"
+        }
+      ],
+      "basic_paragraphs": [
+        "Rb2 — Rb2–Rxb4로 룩이 활동에 나서 흑 b7 폰을 공격합니다. h3 — b6 응수에서는 g4 칸을 새로 지원하여 원래 e2의 비숍의 진출을 받칩니다. Bg4로 비숍이 활동에 나서 흑 e6 비숍을 공격합니다. 이어 Bxe6로 흑 e6 비숍을 잡습니다.  아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다.",
+        "Rb2 — Kf8 뒤, Rxb4까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+        "h3 — Ke7 뒤, Rxb4까지 기록되어 있습니다.",
+        "h3 수순에서: b6 응수에서는 Bg4로 비숍이 활동에 나서 흑 e6 비숍을 공격합니다. 이어 Bxe6로 흑 e6 비숍을 잡습니다. 제시된 h3 수순에서 양쪽이 비숍 한 개씩 교환합니다.",
+        "h3 수순에서: Ke7 응수에는 b4 뒤 g4를 쓰는 대신 백 b4 폰의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다. 이어지는 교환·체크는 Rxb4까지 확인했습니다. 제시된 h3 수순의 Rxb4까지는 양쪽이 폰 한 개씩 교환합니다."
+      ],
+      "network_archive": "live-reports.json.gz",
+      "screen": "h3-final-live-screen.png"
+    },
+    {
+      "id": "rc7-first-independent",
+      "status": "heldout_partial_failure",
+      "screen_completed_seconds": 2.95,
+      "request_budget_ms": 19740,
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "issued_depths": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "physical_works": 4,
+      "assessment_pair": [
+        {
+          "reference_move": "c6c5",
+          "played_move": "c8c7",
+          "kind": "played_vs_best"
+        }
+      ],
+      "basic_paragraphs": [
+        "c5 — 백 d4 폰을 새로 공격합니다. 흑 d5 비숍에 대한 폰의 방어를 놓습니다. c5 수로 c6 칸을 비워 길을 엽니다. 제시된 수순에서 Bb7 수로 흑 비숍이 그 길을 지나 b7에 진출합니다. Rc7 — Rc7–Rd7로 룩이 활동에 나서 공격받는 흑 d5 비숍을 지킵니다. Rc7 수로 c8 칸을 비우고, 이후 Nc8 수로 그 칸을 차지합니다.  c5 수순의 비교 시점까지 폰 한 쌍을 교환합니다. c5 수순에서: dxc5 뒤 백 d3 룩이 흑 d5 비숍을 새로 공격합니다. Bb7 수로 비숍이 백 d3 룩·백 c3 나이트의 공격을 피합니다.",
+        "Rc7 뒤 조사한 Bf4 응수에서는 같은 기물이 Rd7로 재배치되어 흑 d5 비숍을 지킵니다.",
+        "c5 — dxc5: 흑 c5 폰을 잡습니다. Bb7까지의 수순에서는 흑 c8 룩은 열린 c 파일에서 활동합니다. 흑 b7 비숍은 백 g2 폰을 공격합니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+        "Rc7 — Qe3 뒤, Nd6까지의 수순에서는 흑 d7 룩을 남깁니다. 백 d4 폰은 고립폰입니다."
+      ],
+      "network_archive": "live-reports.json.gz",
+      "screen": "rc7-first-independent-screen.png"
+    }
+  ]
+}

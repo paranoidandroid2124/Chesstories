@@ -68,6 +68,11 @@ private[runtime] object RootQuestionSummary:
       detailUnits: List[Unit] = Nil): Option[Result] =
     val mentioned = units.flatMap(_.refs)
     val allUnits = units ++ detailUnits
+    val functionOwners = allUnits.flatMap(_.expressed).collect {
+      case CommentaryAnswer.FunctionPurpose(value) if value.belongsTo(paths) => value
+      case CommentaryAnswer.FunctionReply(value, _) if value.belongsTo(paths) => value
+      case CommentaryAnswer.ReferenceExchangeReply(_, value, _) if value.belongsTo(paths) => value
+    }.distinct
     def referencesFor(layer: List[Unit], extra: List[MoveRef] = Nil): List[MoveRef] =
       layer.flatMap(u => u.proofReferences ++ u.ko.collect { case move: MoveRef => move } ++
         u.covered ++ u.required ++ u.recordedEnds ++ u.focus.map(_.move)) ++ extra
@@ -122,7 +127,7 @@ private[runtime] object RootQuestionSummary:
           }
         }}
       }
-    Option.when(pair.size == 2 && units.nonEmpty && units.size <= 8 &&
+    Option.when(pair.size == 2 && units.nonEmpty && units.size <= 8 && functionOwners.size <= 1 &&
       boundedWitnesses(units) && boundedWitnesses(detailUnits, detail) &&
       pair.forall(path => mentioned.contains(MoveRef(path, 0))) && references.forall(valid) &&
       visibleAccount(units, pair.map(MoveRef(_, 0))) && visibleAccount(detailUnits, detail) &&
@@ -151,6 +156,7 @@ private[runtime] object RootQuestionSummary:
       }.mkString).mkString(" ")
       Result(text, Json.obj("schema_version" -> 2, "question" -> question, "units" -> units.map(_.json),
         "detail_moves" -> detail.distinct.map(_.json)) ++
+        functionOwners.headOption.map(value => Json.obj("move_purpose" -> value.ownershipJson)).getOrElse(Json.obj()) ++
         Option.when(retainedChoice.size == 1)(Json.obj("retained_choice_line_id" ->
           retainedChoice.head.line.ref.id)).getOrElse(Json.obj()) ++
         Option.when(detailUnits.nonEmpty)(Json.obj("detail_units" -> detailUnits.map(_.json))).getOrElse(Json.obj()) ++
@@ -224,20 +230,32 @@ private[runtime] object RootQuestionSummary:
       core -> detail
     }
     val alreadyCovered = lead.flatMap(_.covered).toSet
-    // A newly required preceding capture belongs before its selected recapture,
-    // rather than in a later delivery unit. Use the existing certified trade.
+    // A selected capture owns its connected exchange in the same paragraph.
+    // This follows certified immediate trades in either direction, never a
+    // quiet intervening move or an unrelated later capture.
+    def connectedCaptures(path: PreparedPath, material: LineMaterialSummary, seeds: List[Int]): Set[Int] =
+      val trades = immediateTrades(material, path.moves)
+      val connected = mutable.Set.empty[Int]
+      var pending = seeds
+      while pending.nonEmpty do
+        val adjacent = pending.flatMap(offset => trades.getOrElse(offset, Nil))
+          .filterNot(offset => connected(offset) || alreadyCovered(MoveRef(path, offset))).distinct
+        connected ++= adjacent
+        pending = adjacent
+      connected.toSet
     val completedLead = lead.map(section => section.copy(statements = section.statements.map {
+      case value: Material =>
+        value.path.certified.flatMap(_._2.material).fold(value) { material =>
+          val connected = connectedCaptures(value.path, material, value.cost.events.map(_.plyOffset))
+          val events = (value.cost.events.map(_.plyOffset) ++ material.events
+            .filter(event => connected(event.plyOffset)).map(_.plyOffset)).distinct.sorted
+          CommentaryMaterialAccount.calculate(material, events, (value.cost.offsets ++ connected).distinct.sorted, value.path.moves.size)
+            .fold(value)(cost => value.copy(cost = cost))
+        }
       case value: MaterialEvents =>
         value.path.certified.flatMap(_._2.material).fold(value) { material =>
-          val trades = immediateTrades(material, value.path.moves)
-          val preceding = mutable.Set.empty[Int]
-          var pending = value.events.map(_.plyOffset)
-          while pending.nonEmpty do
-            val earlier = pending.flatMap(offset => trades.getOrElse(offset, Nil).filter(_ < offset))
-              .filterNot(offset => preceding(offset) || alreadyCovered(MoveRef(value.path, offset))).distinct
-            preceding ++= earlier
-            pending = earlier
-          value.copy(events = (value.events ++ material.events.filter(event => preceding(event.plyOffset)))
+          val connected = connectedCaptures(value.path, material, value.events.map(_.plyOffset))
+          value.copy(events = (value.events ++ material.events.filter(event => connected(event.plyOffset)))
             .distinct.sortBy(_.plyOffset))
         }
       case statement => statement
@@ -642,12 +660,36 @@ private[runtime] object RootQuestionSummary:
 
   private def realizeComplete(paths: PreparedPaths, pair: List[PreparedPath], answer: CommentaryAnswer.Answer): Option[Result] =
     def validContent(statement: CommentaryAnswer.Statement): Boolean = statement match
-      case CommentaryAnswer.ReferencePurpose(value) => value.belongsTo(paths) && value.arms.map(_.path).toSet == pair.toSet
+      case CommentaryAnswer.PreparedIdea(value) => value.belongsTo(paths) && value.pair.toSet == pair.toSet
+      case CommentaryAnswer.PreparedReply(value) => value.owner.belongsTo(paths) && value.owner.pair.toSet == pair.toSet &&
+        (pair.exists(_ eq value.path) ||
+          (value.owner.choices.toList ++ value.owner.replies.toList).exists(_.pathsByMove.values.exists(_ eq value.path)))
+      case CommentaryAnswer.ReferencePurpose(value) => value.belongsTo(paths) && value.arms.map(_.path).toSet == pair.toSet &&
+        value.conditionalPurposes.forall(option => FunctionalReplyReading.valid(paths, option) &&
+          FunctionalReplyReading.relevant(paths, pair, option) && answer.core.exists(_.statements.contains(option)))
+      case CommentaryAnswer.ActivityUse(value, shared) => value.belongsTo(paths) &&
+        pair.exists(path => CommentarySequenceText.sameRoot(path, value.path)) && shared.forall(other =>
+          other.belongsTo(paths) && value.sameActivity(other) && answer.core.flatMap(_.statements).exists {
+            case CommentaryAnswer.ActivityUse(previous, _) => previous eq other
+            case _ => false
+          })
       case CommentaryAnswer.ReferencePosition(value, arm) => value.belongsTo(paths) && value.arms.contains(arm) &&
+        value.arms.map(_.path).toSet == pair.toSet && arm.counterplay.forall(counter =>
+          counter.activity.belongsTo(paths) && (counter.activity.path eq arm.path) &&
+            counter.control.forall(_.path eq arm.path))
+      case CommentaryAnswer.ReferenceContrast(value) => value.belongsTo(paths) && value.contrasts.nonEmpty &&
         value.arms.map(_.path).toSet == pair.toSet
+      case CommentaryAnswer.ReferenceExchangeReply(comparison, value, branch) => comparison.belongsTo(paths) &&
+        comparison.arms.map(_.path).toSet == pair.toSet && value.belongsTo(paths) && value.branches.contains(branch) &&
+        value.question.activity.nonEmpty && branch.activity.nonEmpty &&
+        value.question.rootMove == comparison.played.path.moves.head &&
+        value.question.path.positions.head == comparison.played.path.positions.head &&
+        branch.path.moves(1) != comparison.played.path.moves(1) &&
+        branch.activity.exists(_.mover.nonEmpty != comparison.played.retainedMover.nonEmpty)
       case CommentaryAnswer.FunctionPurpose(value) => value.belongsTo(paths)
       case CommentaryAnswer.FunctionReply(value, branch) => value.belongsTo(paths) && value.branches.contains(branch)
-      case CommentaryAnswer.ChoicePurpose(value) => value.belongsTo(paths)
+      case CommentaryAnswer.ChoicePurpose(value) => value.belongsTo(paths) &&
+        (answer.question != "move_purpose" || value.arms.map(_.path.moves.head).toSet == pair.map(_.moves.head).toSet)
       case CommentaryAnswer.ChoiceReply(value, arm) => value.belongsTo(paths) && value.arms.contains(arm)
       case CommentaryAnswer.ChoiceNeutralization(value) => value.owner.belongsTo(paths) &&
         PurposeChoice.neutralization(value.owner, List(value.reply), paths).contains(value)
@@ -731,7 +773,83 @@ private[runtime] object RootQuestionSummary:
         case _ => false
       }
       case _ => false
-    def korean(section: CommentaryAnswer.Section): List[String | MoveRef] = section.statements match
+    def referenceSection(section: CommentaryAnswer.Section): Boolean =
+      section.statements.exists {
+        case _: CommentaryAnswer.ReferencePurpose | _: CommentaryAnswer.ReferencePosition |
+            _: CommentaryAnswer.ReferenceContrast | _: CommentaryAnswer.ReferenceExchangeReply |
+            _: CommentaryAnswer.FirstReplyChoice | _: CommentaryAnswer.PreparedIdea | _: CommentaryAnswer.PreparedReply |
+            _: CommentaryAnswer.FunctionReply | _: CommentaryAnswer.FunctionPurpose | _: CommentaryAnswer.ActivityUse |
+            _: CommentaryAnswer.LegalReplyOption => true
+        case _ => false
+      } && section.statements.forall {
+        case _: CommentaryAnswer.ReferencePurpose | _: CommentaryAnswer.ReferencePosition |
+            _: CommentaryAnswer.ReferenceContrast | _: CommentaryAnswer.ReferenceExchangeReply | _: CommentaryAnswer.Continuation |
+            _: CommentaryAnswer.Material | _: CommentaryAnswer.RecordedEnd | _: CommentaryAnswer.CheckSequence => true
+        case value => ReferencePurposeText.condition(value).nonEmpty
+      }
+    def korean(section: CommentaryAnswer.Section, announced: Set[CommentaryAnswer.Statement]): List[String | MoveRef] = section.statements match
+      case (value: CommentaryAnswer.LegalReplyOption) :: Nil => ReferencePurposeText.legalOption(value, ko = true)
+      case _ if referenceSection(section) =>
+        var preceding: Option[PreparedPath] = None
+        val grouped = ReferencePurposeText.groupedPurpose(section, ko = true)
+        val aftermath = ReferencePurposeText.groupedPosition(section, ko = true,
+          announced.collect { case CommentaryAnswer.ReferencePurpose(reading) => reading })
+        val prepared = MoveIntent.groupedReplies(section, ko = true, announced.flatMap {
+          case CommentaryAnswer.ReferencePurpose(reading) => reading.preparation
+          case CommentaryAnswer.PreparedIdea(reading) => Some(reading)
+          case _ => None
+        })
+        val sharedCosts = ReferencePurposeText.groupedCosts(section, ko = true)
+        val pursuits = section.statements.collect { case action: CommentaryAnswer.Action => action }.flatMap(action =>
+          CommentarySequenceText.pursuit(section.statements, action, ko = true).map(action -> _)).toMap
+        val relations = section.statements.collect { case action: CommentaryAnswer.Action => action }.flatMap(action =>
+          CommentarySequenceText.relations(section.statements, action, ko = true).filter(group =>
+            !group.expressed.collect { case peer: CommentaryAnswer.Action => peer }.exists(pursuits.contains))
+            .map(action -> _)).toMap
+        val evasions = section.statements.collect { case action: CommentaryAnswer.Action => action }.flatMap(action =>
+          CommentarySequenceText.evasions(section.statements, action, ko = true).filter(group =>
+            !group.expressed.exists(peer => pursuits.values.exists(_.expressed.contains(peer))))
+            .map(action -> _)).toMap
+        val replies = (pursuits.values ++ relations.values ++ evasions.values).flatMap(_.expressed.drop(1)).toSet
+        val joined = prepared.toList ++ sharedCosts.toList
+        section.statements.zipWithIndex.filterNot((statement, _) => replies(statement) ||
+          joined.exists(group => group.expressed.drop(1).contains(statement)) ||
+          grouped.exists(g => g.expressed.contains(statement) && !statement.isInstanceOf[CommentaryAnswer.ReferencePurpose]) ||
+          aftermath.exists(g => g.expressed.contains(statement) && !statement.isInstanceOf[CommentaryAnswer.ReferencePosition]))
+          .flatMap { (statement, index) =>
+          val words: List[String | MoveRef] = statement match
+            case action: CommentaryAnswer.Action if pursuits.contains(action) => pursuits(action).parts
+            case action: CommentaryAnswer.Action if relations.contains(action) => relations(action).parts
+            case action: CommentaryAnswer.Action if evasions.contains(action) => evasions(action).parts
+            case _: CommentaryAnswer.ReferencePurpose if grouped.nonEmpty => grouped.get.parts
+            case CommentaryAnswer.ReferencePurpose(value) => ReferencePurposeText.purpose(value, ko = true)
+            case value: CommentaryAnswer.ActivityUse => ReferencePurposeText.condition(value).get
+            case CommentaryAnswer.FunctionReply(value, branch) if value.question.activity.isEmpty =>
+              ReferencePurposeText.functionalReply(value, branch, ko = true,
+                announced.collect { case CommentaryAnswer.ReferencePurpose(reading) => reading })
+            case _: CommentaryAnswer.ReferencePosition if aftermath.nonEmpty => aftermath.get.parts
+            case _: CommentaryAnswer.PreparedReply if prepared.nonEmpty => prepared.get.parts
+            case _: CommentaryAnswer.Material if sharedCosts.nonEmpty => sharedCosts.get.parts
+            case value: CommentaryAnswer.Material if prepared.exists(_.expressed.contains(value)) => Nil
+            case CommentaryAnswer.ReferencePosition(value, arm) => ReferencePurposeText.position(value, arm, ko = true)
+            case CommentaryAnswer.ReferenceContrast(value) => ReferencePurposeText.contrast(value, ko = true)
+            case value: CommentaryAnswer.ReferenceExchangeReply => ReferencePurposeText.exchangeReply(value, ko = true)
+            case value: CommentaryAnswer.CheckSequence => CommentarySequenceText.checkSequence(value, ko = true)
+            case CommentaryAnswer.Continuation(moves) =>
+              List("제시된 수순은 ") ++ moves.zipWithIndex.flatMap((move, i) =>
+                (if i == 0 then Nil else List(if moves(i - 1).offset + 1 == move.offset then " " else " … ")) :+ move) ++ List("입니다.")
+            case value: CommentaryAnswer.Material => renderMaterialKorean(value, brief = true)
+            case value if ReferencePurposeText.condition(value).nonEmpty => ReferencePurposeText.condition(value).get
+            case CommentaryAnswer.RecordedEnd(move) =>
+              List("기록된 수순은 ", move, " 이후에 끝나며, 그다음 응수는 기록되어 있지 않습니다.")
+            case _ => Nil
+          val refs = words.collect { case ref: MoveRef => ref }
+          val owner = CommentarySequenceText.rootOwner(refs)
+          val header = owner.filter(path => !preceding.exists(CommentarySequenceText.sameRoot(_, path)) && !refs.exists(_.offset == 0))
+            .toList.flatMap(path => List(MoveRef(path, 0), " 수순에서: "))
+          preceding = owner
+          (if index == 0 then Nil else List(" ")) ++ header ++ words
+        }
       case (value: CommentaryAnswer.TargetResponse) :: tail if targetResponseSection(section) =>
         val lead: List[String | MoveRef] = if value.start == 0 then List(MoveRef(value.path, 0))
           else if value.start == 2 then List(MoveRef(value.path, 0), " ", MoveRef(value.path, 1), " 이후 ", MoveRef(value.path, 2))
@@ -767,14 +885,14 @@ private[runtime] object RootQuestionSummary:
             case _ => Nil
           }
       case _ => CommentaryEnglish.section(section)
-    def unit(section: CommentaryAnswer.Section): Option[Unit] =
-      val rendered = CommentaryEnglish.renderedSection(section)
+    def unit(section: CommentaryAnswer.Section, announced: Set[CommentaryAnswer.Statement]): Option[Unit] =
+      val rendered = CommentaryEnglish.renderedSection(section, announced)
       val en = rendered.parts
-      val translated = korean(section)
+      val translated = korean(section, announced)
       val refs = en.collect { case ref: MoveRef => ref }
       val translatedRefs = translated.collect { case ref: MoveRef => ref }
       val required = (section.required ++ section.references).distinct
-      val englishOnly = !targetResponseSection(section) || refs != translatedRefs
+      val englishOnly = !(targetResponseSection(section) || referenceSection(section)) || refs != translatedRefs
       val ko = if englishOnly then en else translated
       val owned = rendered.expressed.flatMap(_.references).distinct
       val covered = rendered.expressed.flatMap(_.covered).distinct
@@ -784,21 +902,21 @@ private[runtime] object RootQuestionSummary:
           required, section.focus, englishOnly, recordedEnds, rendered.expressed))
     // Split only the delivery container, between whole selected statements.
     // Its field bound cannot drop a statement or select another chess answer.
-    def unitsFor(section: CommentaryAnswer.Section): List[Option[Unit]] =
+    def unitsFor(section: CommentaryAnswer.Section, announced: Set[CommentaryAnswer.Statement] = Set.empty): List[Option[Unit]] =
       def subset(statements: List[CommentaryAnswer.Statement]) =
         val refs = statements.flatMap(_.references).toSet
         CommentaryAnswer.Section(statements, section.required.filter(refs), section.focus.filter(f => refs(f.move)))
-      unit(section) match
+      unit(section, announced) match
         case None => List(None)
         case Some(value) if value.en.size <= 80 && value.ko.size <= 80 => List(Some(value))
         case _ =>
           section.statements.foldLeft(List.empty[List[CommentaryAnswer.Statement]]) { (groups, next) =>
             val current = groups.lastOption.getOrElse(Nil)
             val merged = current :+ next
-            if current.nonEmpty && unit(subset(merged)).exists(u => u.en.size > 80 || u.ko.size > 80) then
+            if current.nonEmpty && unit(subset(merged), announced).exists(u => u.en.size > 80 || u.ko.size > 80) then
               groups :+ List(next)
             else groups.dropRight(1) :+ merged
-          }.map(statements => unit(subset(statements)))
+          }.map(statements => unit(subset(statements), announced))
     // Check the original obligations before splitting a delivery container;
     // filtering per-container references must not erase a missing quiet reply.
     val coreContent = answer.core.flatMap( section => CommentaryEnglish.renderedSection(section).expressed)
@@ -810,19 +928,30 @@ private[runtime] object RootQuestionSummary:
     // At delivery, the same complete statement only needs one owner; sharing
     // that statement does not join the episodes or discard another obligation.
     val spoken = mutable.Set.empty[CommentaryAnswer.Statement]
-    val deliveryCore = answer.core.flatMap { section =>
+    val selectedCore = answer.core.flatMap { section =>
       val statements = section.statements.filter(spoken.add)
       val refs = statements.flatMap(_.references).toSet
       Option.when(statements.nonEmpty)(section.copy(statements = statements,
         required = section.required.filter(refs), focus = section.focus.filter(f => refs(f.move))))
     }
+    val deliveryCore = ReferencePurposeText.coalesce(selectedCore)
     val deliveryContent = deliveryCore.flatMap(section => CommentaryEnglish.renderedSection(section).expressed)
     if !answer.required.forall(deliveryContent.flatMap(_.references).contains) then return None
-    val units = deliveryCore.flatMap(unitsFor)
+    // Only a preceding, owned purpose licenses a short reference to its
+    // realization. Standalone/detail replies retain the full functional text.
+    var announced = Set.empty[CommentaryAnswer.Statement]
+    val units = deliveryCore.flatMap { section =>
+      val result = unitsFor(section, announced)
+      announced ++= section.statements.collect {
+        case value: CommentaryAnswer.ReferencePurpose => value
+        case value: CommentaryAnswer.PreparedIdea => value
+      }
+      result
+    }
     // Repeated completion may retain the same whole price account again.
     // Share only an exactly identical section, including its required moves
     // and focus. Different physical witnesses or price contexts stay separate.
-    val detailUnits = answer.details.distinct.flatMap(unitsFor)
+    val detailUnits = answer.details.distinct.flatMap(section => unitsFor(section))
     // A physical episode owns its price before delivery. Several complete
     // episodes can share a bounded display container without sharing that
     // ownership or omitting content. Keep their order and incompatible focus
@@ -851,7 +980,7 @@ private[runtime] object RootQuestionSummary:
         answer.evidence ++ (answer.core ++ answer.details).flatMap(_.focus.flatMap(_.note.evidence)),
         detailUnits = packed(detailUnits.flatten)))
 
-  private def renderMaterialKorean(value: CommentaryAnswer.Material): List[String | MoveRef] =
+  private def renderMaterialKorean(value: CommentaryAnswer.Material, brief: Boolean = false): List[String | MoveRef] =
     val cost = value.cost
     val numbers = Map(1 -> "한", 2 -> "두", 3 -> "세", 4 -> "네", 5 -> "다섯", 6 -> "여섯", 7 -> "일곱", 8 -> "여덟")
     def counted(xs: List[(EvidencePieceRole, Int)]) = xs.map((role, n) =>
@@ -864,10 +993,15 @@ private[runtime] object RootQuestionSummary:
     else if cost.blackAdditionalLosses.nonEmpty then
       Some(s"흑은 ${counted(cost.blackAdditionalLosses)}를 ${if common.nonEmpty then "더 " else ""}내줍니다")
     else None
-    val moves: List[String | MoveRef] = value.references.zipWithIndex.flatMap { (ref, index) =>
+    val selected = if brief then List(MoveRef(value.path, 0)) else value.references
+    val moves: List[String | MoveRef] = selected.zipWithIndex.flatMap { (ref, index) =>
       (if index == 0 then Nil else List(if value.references(index - 1).offset + 1 == ref.offset then " " else " … ")) :+ ref
     }
-    List("제시된 ") ++ moves ++ List(s" 수순에서 ${(common.toList ++ extra).mkString(". ")}.")
+    val end = cost.offsets.max
+    val later = brief && value.path.certified.flatMap(_._2.material).exists(_.events.exists(_.plyOffset > end))
+    List("제시된 ") ++ moves ++
+      (if later then List(" 수순의 ", MoveRef(value.path, end), "까지는 ") else List(" 수순에서 ")) ++
+      List(s"${(common.toList ++ extra).mkString(". ")}.")
 
   class Arm(packet: EvidenceBackedJudgmentPacket, paths: PreparedPaths, val path: PreparedPath,
       positions: Map[PositionNodeRef, Position], val reading: Reading):

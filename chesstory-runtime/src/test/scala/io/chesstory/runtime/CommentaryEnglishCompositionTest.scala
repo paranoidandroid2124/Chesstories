@@ -158,7 +158,7 @@ class CommentaryEnglishCompositionTest extends munit.FunSuite:
     assert(standalone.contains(use.provider.possessiveName) && standalone.contains(target.possessiveName), standalone)
     assert(!standalone.startsWith("That support"), standalone)
 
-  test("capture chains abbreviate only the identified preceding capturer and retain every recapture reference"):
+  test("capture chains name the physical exchange once and retain every capture proof"):
     val (packet, paths, pair) = prepare("2r1r2k/p2n1qp1/1p3pRp/3P4/2P5/P2Q4/1B4PP/5RK1 w - - 5 31",
       List("b2f6 d7f6 f1f6 g7f6", "d3d1"))
     val path = pair.head
@@ -168,13 +168,15 @@ class CommentaryEnglishCompositionTest extends munit.FunSuite:
     val recaptures = ledger.captures.filter(_.recapture).map(_.plyOffset).toSet
     val exchange = PieceExchange(path, events, recaptures)
     val selected = Section(List(exchange))
-    val parts = section(selected)
-    assertReferences(parts, selected)
-    val text = words(parts, paths)
-    assert(text.contains("recaptures that bishop") && text.contains("recaptures that knight") &&
-      text.contains("recaptures that rook"), text)
-    assertEquals(exchange.covered.toSet, parts.collect { case ref: MoveRef => ref }.toSet)
-    events.foreach(event => assert(text.contains(originalDescription(event.originalActor.get)), text))
+    val rendered = renderedSection(selected)
+    val text = words(rendered.parts, paths)
+    assert(text.contains("are exchanged") && text.contains("recaptures on f6"), text)
+    assertEquals(rendered.parts.collect { case ref: MoveRef => ref.offset }, List(0, 3))
+    assertEquals(exchange.covered.toSet, rendered.expressed.flatMap(_.covered).toSet)
+    assertEquals(exchange.references.toSet, rendered.expressed.flatMap(_.references).toSet)
+    events.foreach(event =>
+      val original = event.originalActor.get
+      assert(text.contains(s"original ${original.square.key} ${original.role.name}"), text))
     // Same role, different original piece: it must be introduced explicitly.
     val changedIdentity = events(1).copy(originalVictim = Some(piece("white", "bishop", "c1")))
     val independent = words(statement(PieceExchange(path, List(events.head, changedIdentity), recaptures)), paths)
@@ -268,8 +270,8 @@ class CommentaryEnglishCompositionTest extends munit.FunSuite:
     assertReferences(whole, Section(List(route)))
     val use = clearedRouteUse(route)
     assertEquals(use.collect { case ref: MoveRef => ref }, List(route.use))
-    assertEquals(words(use, paths), "Bxe4 passes through the vacated d3 square in this line.")
-    assert(words(whole, paths).contains("clears d3; later Bxe4 passes through that square"), words(whole, paths))
+    assertEquals(words(use, paths), "Bxe4: Black's bishop on e4 passes through the vacated d3 square in this line.")
+    assert(words(whole, paths).contains("clears d3; later Bxe4: Black's bishop on e4 passes through that square"), words(whole, paths))
 
   private def checkingRecapture(fen: String, line: String, alternative: String) =
     val (packet, paths, pair) = prepare(fen, List(line, alternative))

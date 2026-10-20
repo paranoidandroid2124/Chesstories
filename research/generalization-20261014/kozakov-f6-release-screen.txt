@@ -1,0 +1,170 @@
+- banner:
+  - generic: Chesstories
+  - generic: 기보와 해설
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "분석 기보" [level=1]
+    - generic: 17… f6
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수" [disabled]: →
+      - button "마지막" [disabled]: ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "17… f6"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 5.44s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "충분히 둘 만한 수: f6"':
+        - generic: f6
+        - heading "충분히 둘 만한 수" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=3]
+        - paragraph:
+          - button "Rac8 · 위치 살펴보기": Rac8
+          - text: — 룩을 열린 c 파일에 배치합니다. 제시된 수순에서 원래 a8의 룩이
+          - button "Rac8 · 위치 살펴보기": Rac8
+          - text: …
+          - button "Rc2 · 위치 살펴보기": Rc2
+          - text: 로 재배치됩니다. 이후
+          - button "Rc2 · 위치 살펴보기": Rc2
+          - text: 수로 흑 c2 룩이 백 d2 퀸을 새로 공격합니다.
+          - button "f6 · 위치 살펴보기": f6
+          - text: — 백 e5 폰을 새로 공격합니다.
+          - button "f6 · 위치 살펴보기": f6
+          - text: 수로 f7 칸을 비워 길을 엽니다. 제시된 수순에서
+          - button "Bg6 · 위치 살펴보기": Bg6
+          - text: 수로 흑 비숍이 그 길을 지나 g6에 진출합니다. 아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다.
+          - button "f6 · 위치 살펴보기": f6
+          - text: 에서는 그 밖에 백의 f3 나이트와 흑의 e7 비숍을 교환합니다.
+          - button "Rac8 · 위치 살펴보기": Rac8
+          - text: "수순에서:"
+          - button "Nd6 · 위치 살펴보기": Nd6
+          - text: 의 흑 c8 룩 공격을
+          - button "Rc2 · 위치 살펴보기": Rc2
+          - text: 수로 피합니다.
+          - button "fxe5 · 위치 살펴보기": fxe5
+          - text: 뒤 흑 f8 룩이 백 f4 폰을 공격하지만,
+          - button "fxe5 · 위치 살펴보기": fxe5
+          - text: 수로 피합니다.
+        - paragraph:
+          - button "Rac8 · 위치 살펴보기": Rac8
+          - text: —
+          - button "g4 · 위치 살펴보기": g4
+          - text: 뒤,
+          - button "Rc2 · 위치 살펴보기": Rc2
+          - text: 까지의 수순에서는 흑 c2 룩은 열린 c 파일에서 활동합니다. 흑 e7 비숍을 남깁니다. 원래 f4 폰이 e5에 남습니다.
+        - paragraph:
+          - button "f6 · 위치 살펴보기": f6
+          - text: —
+          - button "Qd2 · 위치 살펴보기": Qd2
+          - text: ": 흑 b4 나이트를 새로 공격합니다."
+          - button "dxe5 · 위치 살펴보기": dxe5
+          - text: 까지의 수순에서는 흑 a8 룩을 남깁니다. 원래 d4 폰이 e5에 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.
+        - button "대안 수 · Rac8 · 재생"
+        - button "둔 수 · f6 · 재생"
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + + + + +
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

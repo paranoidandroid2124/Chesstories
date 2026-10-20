@@ -1,0 +1,12 @@
+{
+  "line_id": "move-review:b5b94d498f677a925f90bc6784c80f9e8c0aedcfdcdc1840914f5e43c1f683df:52:d3d6:line:2d83d2556e354b7ee077f326934a0e1104a148a0eade5695292b5577dbd1f66f",
+  "occurrence_id": "move-review:b5b94d498f677a925f90bc6784c80f9e8c0aedcfdcdc1840914f5e43c1f683df:52:d3d6:evidence:transition:ccd085825ea9979d4cf21c04b4fcd5bc68985ad478ffd3212150406d360b2338",
+  "offset": 8,
+  "uci": "a3b3",
+  "fen": "8/5pkp/p3p3/1p2P1p1/6P1/1R2P1K1/PP2r2P/8 b - - 4 31",
+  "piece_count": 16,
+  "dom_matches_exact_path": true,
+  "white_rook_supports_b2": true,
+  "white_rook_attacks_b5": true,
+  "black_rook_attacks_b2": true
+}

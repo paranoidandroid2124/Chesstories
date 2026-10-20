@@ -1,0 +1,245 @@
+{
+  "status": "completed_bounded_goal",
+  "objective": "Preserve both assessed root purposes and late observed realizations, and select the core idea by its relevance to the actual choice rather than the first matching motif.",
+  "started_utc": "2026-10-14T19:03:35Z",
+  "branch": "codex/functional-choice-value",
+  "preservation": {
+    "baseline": "target/research-runs/purpose-comparison-20261015/baseline",
+    "existing_dirty_files": 181,
+    "policy": "Keep prior source changes and historical verdicts; no staging, reset or commit. Compare edited files to this turn's baseline, not only HEAD.",
+    "final": {
+      "baseline_file_count": 181,
+      "byte_identical_count": 172,
+      "intentionally_edited_existing_files": [
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+        "chesstory-web/src/review/moveReview.ts",
+        "research/README.md",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+        "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala"
+      ],
+      "missing_files": [],
+      "previous_research_readme_body": "byte_identical",
+      "staged_files": 0,
+      "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+      "branch": "codex/functional-choice-value",
+      "original_bytes": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories\\target\\research-runs\\purpose-comparison-20261015\\baseline\\files"
+    }
+  },
+  "previous_failures": [
+    "research/repeated-work-review-20261011.json",
+    "research/generalization-20261014.json",
+    "research/core-idea-20261014.json"
+  ],
+  "audit_findings": [
+    "Prepared-idea delivery displaces the two-root account while its reference arm can contain only a PV.",
+    "The exchange closure endpoint discards a later witnessed realization in the same reported PV (Re2 ...Nd5 ...Rxe5 ...Rae1).",
+    "First matching or lexically ordered preparation and work completion do not establish relevance to the root comparison."
+  ],
+  "constraints": {
+    "maximum_search_depth": 18,
+    "screen_request_ms": 10000,
+    "quality_positions": 2,
+    "validation": "Existing Re2 and one preregistered new position only. Focused semantic checks and boundary checks for changed contracts; no broad regression or extra quality positions. Tests or added text alone cannot complete this goal."
+  },
+  "reference": {
+    "title": "Jacob Aagaard, Grandmaster Preparation: Positional Play",
+    "local_pdf": "target/research-runs/generalization-20261014/positional-play.pdf",
+    "drive_id": "1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      12,
+      111,
+      112,
+      122,
+      123
+    ],
+    "lesson": "The important idea depends on the opponent's resources and the useful remaining pieces; an incidental relation or a legal example alone is not its priority."
+  },
+  "cases": [
+    {
+      "id": "re2",
+      "kind": "existing",
+      "game": "Aagaard - I. Almasi, Budapest 1996",
+      "fen": "3rr1k1/pp1bbppp/1q2pn2/8/3N1B2/1BP2Q2/PP3PPP/R3R1K1 w - - 0 17",
+      "move": "e1e2",
+      "criteria": "Both actual assessed roots retain a useful purpose account; explain rook coordination and reply-dependent order/cost. If the same reported line contains late Rae1 after the bishop exchange, preserve that realization and its complete cost. Do not force Be5 as the reference."
+    },
+    {
+      "id": "qa4",
+      "kind": "new_preregistered",
+      "selected_before_product_output": true,
+      "game": "Eljanov - Kamsky, Kallithea 2008",
+      "fen": "rnr3k1/p3qp2/bpppp2b/7p/2PP2pP/1QNNP1P1/PP3PB1/2RR2K1 w - - 2 17",
+      "move": "b3a4",
+      "diagram": "target/research-runs/purpose-comparison-20261015/book-p123.png",
+      "hypothesis": "Qa4 supports the change toward d4-d5 and pressure on the light squares while the h6 bishop is away; Nf4 is a different useful plan in the book. The actual engine reference, responses and costs remain authoritative.",
+      "criteria": "Explain the original queen move's useful idea and the actual other root's purpose, connect observed continuation and costs, and do not promote incidental attacks/supports or a book sentence into the causal comparison. Missing evidence must remain a limitation."
+    }
+  ],
+  "implementation": [
+    "One combined ReferencePurposeReading retains the actual two-root account plus MoveIntent preparation and reply branches. The root mechanism reader is shared by scheduling and delivery.",
+    "Close each observed first realization and its exchange, rather than stopping before a late realization or expanding to the whole PV. Keep actual root paths when a child PV has the same first three moves but a different ending.",
+    "Rank useful physical relationships seen in either assessed root or an independent all-legal reply survey. If neither root provides a useful witness, survey replies before testing a tentative action; reselect the question from its evidence. A legal contact alone is not admitted as the core idea.",
+    "Retain exact short witness paths even when their moves already prefix a longer reported PV. They remain discovery-only and do not acquire engine evaluation authority.",
+    "Recognize the same physical preparation in both roots; distinguish transposition into the same arrangement from different costs. Use existing pawn-work tracking to explain a different original pawn taking over after an exchange.",
+    "Reject actions lacking either a cleared route or newly created root pressure before their local replay; this preserves the previous admission conditions.",
+    "The 10-second app target depth is now 11 (was 12), leaving room for the pair, reply survey and action comparison. Maximum analysis depth remains 18.",
+    "For purposes grounded in an actual root, the first useful observed relationship precedes survival in priority. An exchanged original user does not demote the earlier plan below a later incidental contact."
+  ],
+  "checks": [
+    {
+      "name": "actual_screens",
+      "status": "passed",
+      "positions": 2,
+      "times_ms": {
+        "re2": 5110,
+        "qa4": 8550
+      },
+      "requested_depth": 11,
+      "maximum_allowed_depth": 18,
+      "forced_reference_or_pv": false
+    },
+    {
+      "name": "browser_delivery_and_rejection",
+      "status": "passed",
+      "count": 2,
+      "evidence": "purposeComparison.test.ts replays every pending/final response from both final screens; combined answer is retained, foreign occurrence and removed capture coverage are rejected."
+    },
+    {
+      "name": "focused_semantics",
+      "status": "passed",
+      "count": 6,
+      "evidence": "Exact original Re2 late witness; both-root Qa4/shared realization; earlier exchanged plan vs later surviving contact; survey-first re-selection; owner rejection. No new engine searches.",
+      "elapsed_seconds": 23,
+      "execution": "sbt testOnly *PurposeComparisonTest; JAVA_TOOL_OPTIONS ActiveProcessorCount=4, restored after invocation"
+    },
+    {
+      "name": "focused_semantics_initial_run",
+      "status": "test_harness_timeout",
+      "evidence": "Five checks passed; the first cold saved-report replay exceeded the default 30-second test timeout (49.165s). Its assertions completed, but this run is not counted as passing. Re-running with the same ActiveProcessorCount=4 used by the app; product budget unchanged."
+    },
+    {
+      "name": "format",
+      "status": "passed",
+      "evidence": "git diff --check; existing line-ending notices only."
+    }
+  ],
+  "runs": [
+    {
+      "id": "re2-first",
+      "elapsed_ms": 5620,
+      "verdict": "failed",
+      "reason": "Server produced a combined answer but its selected_comparison routing caused the browser to reject the preparation witnesses. Changed to the existing functional_response contract; decoder checks were not relaxed."
+    },
+    {
+      "id": "qa4-first",
+      "elapsed_ms": 3490,
+      "verdict": "failed",
+      "reason": "A prefix of a longer PV was not retained as an exact witness. Candidate d5 existed but could not be admitted, so only static contacts were displayed."
+    },
+    {
+      "id": "qa4-second",
+      "elapsed_ms": 4680,
+      "verdict": "failed",
+      "reason": "Nf4 was the actual continuation and the reference contained late d5. Candidate selection ignored reference-only realization and chose Nb4."
+    },
+    {
+      "id": "qa4-third",
+      "elapsed_ms": 5000,
+      "verdict": "intermediate_improvement",
+      "reason": "Both root purposes and late common d5 appeared. Shared arrangement and post-exchange pawn replacement still needed explicit discrimination."
+    },
+    {
+      "id": "qa4-fourth",
+      "elapsed_ms": 5240,
+      "verdict": "failed",
+      "reason": "Neither actual root PV contained d5. Root-only selection again preferred incidental Nb4 despite the later survey showing d5. Fixed survey-first selection and unsupported-core rejection."
+    },
+    {
+      "id": "qa4-fifth",
+      "elapsed_ms": 6670,
+      "verdict": "screen_pass_at_D12",
+      "reason": "Actual pending question changed Nb4 to d5 after the independent reply survey, then tested d5 versus Nf4. Screen explains both root purposes, reply-dependent timing, pawn exchanges and original c4 pawn takeover at d5. Main board link checked."
+    },
+    {
+      "id": "re2-second",
+      "elapsed_ms": 9990,
+      "verdict": "failed",
+      "reason": "D12 reply survey lease expired after root/focus work; fallback omitted rook preparation."
+    },
+    {
+      "id": "re2-third",
+      "elapsed_ms": 10060,
+      "verdict": "failed",
+      "reason": "All D12 reports completed, but the app abstained at its deadline before delivering the combined account. Not counted as success."
+    },
+    {
+      "id": "re2-fourth",
+      "elapsed_ms": 2520,
+      "verdict": "failed",
+      "reason": "D11 work was rejected at the browser boundary because its allowed short-job shapes still started at D12. Aligned that minimum to D11; exact work, anchor, depth cap and cost checks remain."
+    },
+    {
+      "id": "re2-fifth",
+      "elapsed_ms": 9120,
+      "verdict": "screen_pass_at_D11_before_last_ranking_fix",
+      "reason": "Be5 protects d4 and attacks f6; Re2 opens e1 for rook coordination. Bb5 needs Nxb5 first; immediate Rae1 loses the exchange; Nd5 instead needs Bg3. Current reported lines did not show late Rae1; old exact reported line remains the late-witness check. Rae1 board link inspected."
+    },
+    {
+      "id": "qa4-sixth",
+      "elapsed_ms": 4930,
+      "verdict": "failed",
+      "reason": "Both d5 and later Nb4 were in the actual root PV, but survival ranked above when the useful relation first occurred. It promoted the later contact after the d-pawn exchange. First useful observed action now precedes survival as a tie-breaker; costs retain the exchange."
+    },
+    {
+      "id": "qa4-final",
+      "elapsed_ms": 8550,
+      "requested_depth": 11,
+      "verdict": "screen_pass_final_source",
+      "reason": "Actual pair Qa4/Nf4. Qa4 prepares d5 and joint c6 pressure; Nf4 blocks the bishop ray and attacks e6/h5. Bb7 allows delayed Nf4 or close-evaluated d5; cxd5 replaces the original d4 pawn with c4 pawn on d5, attacking e6. A different black d5 reply needs cxd5 first. Both queen/knight purpose and trade consequences appear in basic Korean. cxd5 main-board link inspected. This run was the first request after server restart."
+    },
+    {
+      "id": "re2-final",
+      "elapsed_ms": 5110,
+      "requested_depth": 11,
+      "verdict": "screen_pass_final_source",
+      "reason": "Actual pair Be5/Re2. Be5 guards d4 and attacks f6; Re2 frees e1 for rook coordination. Bc6 attacks the queen and needs Nxc6 first; immediate Rae1 is worse and has explicit queen/rook loss. Other reply Bb5 needs Nxb5. Current PV has no late Rae1, so none was invented. Rae1 main-board link inspected. Late original bishop-exchange line is separately replayed without changing its work receipts."
+    }
+  ],
+  "verdict": {
+    "goal": "achieved_in_requested_scope",
+    "overall_generalization": "partial",
+    "release_ready": false,
+    "basis": "Final common source explains both actual roots and response costs in two actual timed screens; exact prior reported continuations preserve late realization, and failed root/survey variants exercise core re-selection. Sentence addition or test success alone is not the completion basis."
+  },
+  "limitations": [
+    "Only the existing Re2 and one preregistered Qa4 position are quality cases; iterations are not independent heldout successes.",
+    "Candidate generation remains bounded to represented preparations. This does not solve all strategic purpose discovery or human importance ranking.",
+    "Finite PVs can omit the idea. Absence is not evidence that the plan is impossible; unsupported candidates cannot be promoted to core assertions.",
+    "No claim of decomposing the engine score, universal ten-second stability, broad regression coverage, or release readiness.",
+    "The final D11 Re2 screen does not contain the old late Rae1 continuation. Preservation of that late realization is demonstrated with its exact earlier reported line, not represented as newly observed in the last timed run.",
+    "D12 repeatedly failed the ten-second runtime budget for Re2. D11 is a product policy tradeoff, not evidence that D12 became fast. Root reference and PV may change; both actual choices are kept.",
+    "The combined basic account is still long in some branches, with repeated root/endpoint phrases and some repeated shared costs. This task does not establish complete concision or release quality."
+  ],
+  "artifacts": {
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/purpose-comparison-browser.json.gz",
+    "screens": [
+      "research/purpose-comparison-20261015/re2-final.png",
+      "research/purpose-comparison-20261015/qa4-final.png"
+    ],
+    "raw_runs": "target/research-runs/purpose-comparison-20261015",
+    "fixture_sha256": "45fc534c4dc047b10193360c10beecd05f84043b33ce15b93ad18b785f90bd3e"
+  },
+  "restored_ui": {
+    "game": "1. e4 *",
+    "position": "initial",
+    "engine": "off",
+    "language": "ko-KR",
+    "theme": "light",
+    "import_input": "empty"
+  },
+  "finished_utc": "2026-10-14T20:11:17.546223+00:00"
+}

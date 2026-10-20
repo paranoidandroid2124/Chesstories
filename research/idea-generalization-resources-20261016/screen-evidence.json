@@ -1,0 +1,86 @@
+[
+  {
+    "label": "qg2",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-a4d48ea1-c489-4123-bc08-0878eb88af18",
+      "variant": "standard",
+      "initial_fen": "5r1k/1p2b1pp/p2p4/4p2q/4Pr2/P2R1PR1/NPP1Q2P/1K6 w - - 0 27",
+      "move_prefix_uci": [],
+      "current_fen": "5r1k/1p2b1pp/p2p4/4p2q/4Pr2/P2R1PR1/NPP1Q2P/1K6 w - - 0 27",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e2g2",
+        "resulting_fen": "5r1k/1p2b1pp/p2p4/4p2q/4Pr2/P2R1PR1/NPP3QP/1K6 b - - 1 27"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19740,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "e2g2"
+          ]
+        }
+      ]
+    },
+    "issued_depths": [
+      11,
+      11
+    ],
+    "work_count": 2,
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Rg4 — 백 g4 룩이 흑 h5 퀸에서 백 f3 폰 쪽으로 이어지는 공격선을 막습니다. 룩을 반열린 g 파일에 배치합니다. 룩 교환을 제안합니다. 백 f3 폰에 대한 룩의 방어를 놓습니다. Qg2 — 백 e4 폰에 대한 퀸의 방어를 놓습니다.  Rg4 수순의 비교 시점까지 룩 한 쌍을 교환합니다. Rg4 수순에서: Rxg4 뒤 흑 f8 룩이 백 f3 폰을 공격하지만, fxg4 수로 피합니다.",
+          "Qg2 뒤 조사한 Qh6 응수에서는 같은 기물이 Qf1 … Qg2로 재배치되어 흑 g7 폰을 공격합니다.",
+          "Rg4 — Rxg4: 교환을 받아들입니다. fxg4까지의 수순에서는 백 e2 퀸은 백 e4 폰, 백 g4 폰을 지킵니다. 원래 f3 폰이 g4에 남습니다.",
+          "Qg2 — R4f7 뒤, Nb4까지의 수순에서는 백 g2 퀸은 백 f3 폰을 지킵니다. 백 g3 룩은 백 f3 폰을 지킵니다."
+        ]
+      }
+    ]
+  },
+  {
+    "label": "h4",
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-2de4c53e-0045-489f-a618-d140d99575e0",
+      "variant": "standard",
+      "initial_fen": "2bq1rk1/4bppp/1Pp2n2/2Pp4/1p6/1N3PP1/2Q2P1P/B3KB1R w K - 0 17",
+      "move_prefix_uci": [],
+      "current_fen": "2bq1rk1/4bppp/1Pp2n2/2Pp4/1p6/1N3PP1/2Q2P1P/B3KB1R w K - 0 17",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "h2h4",
+        "resulting_fen": "2bq1rk1/4bppp/1Pp2n2/2Pp4/1p5P/1N3PP1/2Q2P2/B3KB1R b K - 0 17"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19743,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "h2h4"
+          ]
+        }
+      ]
+    },
+    "issued_depths": [
+      11,
+      11,
+      11
+    ],
+    "work_count": 3,
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Be2 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다. h4 수로 h2 칸을 비워 백 h1 룩의 h3 방향 길을 엽니다.  Be2 수순의 비교 시점까지 백의 f1 비숍과 흑의 c8 비숍을 교환합니다. h4 수순의 비교 시점까지 나이트 한 쌍을 교환합니다. 백의 폰 둘과 흑의 e7 비숍을 교환합니다.",
+          "Be2 — Bh3 뒤, Nd7까지의 수순에서는 백 b3 나이트를 남깁니다.",
+          "h4 — Nd7: 백 b6 폰, 백 c5 폰을 새로 공격합니다. Bxc5까지의 수순에서는 백 e2 비숍을 남깁니다. 이 뒤의 응수는 기록되어 있지 않습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,174 @@
+- banner:
+  - generic: Chesstories
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "White – Black" [level=1]
+    - generic: 7. Bxh7+
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수" [disabled]: →
+      - button "마지막" [disabled]: ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "1. e4"
+    - button "1… e6"
+    - button "2. d4"
+    - button "2… d5"
+    - button "3. Nc3"
+    - button "3… Nf6"
+    - button "4. e5"
+    - button "4… Nfd7"
+    - button "5. Nf3"
+    - button "5… Be7"
+    - button "6. Bd3"
+    - button "6… O-O"
+    - button "7. Bxh7+"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 2.74s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "큰 실수: Bxh7+"':
+        - generic: "??"
+        - generic: Bxh7+
+        - heading "큰 실수" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=3]
+        - paragraph:
+          - button "h4 · 위치 살펴보기": h4
+          - text: 수로 h2 칸을 비워 길을 엽니다. 제시된 수순에서
+          - button "Rh3 · 위치 살펴보기": Rh3
+          - text: 수로 룩이 그 길을 지나 h3에 진출합니다.
+          - button "Bxh7+ · 위치 살펴보기": Bxh7+
+          - text: 수로 d3 칸을 비우고, 이후
+          - button "Qd3+ · 위치 살펴보기": Qd3+
+          - text: 수로 그 칸을 차지합니다.
+          - button "h4 · 위치 살펴보기": h4
+          - text: 수순의 비교 시점까지 백의 h2 폰을 내줍니다.
+          - button "Bxh7+ · 위치 살펴보기": Bxh7+
+          - text: 수순의 비교 시점까지 백의 d3 비숍과 흑의 h7 폰을 교환합니다.
+        - paragraph:
+          - button "h4 · 위치 살펴보기": h4
+          - text: —
+          - button "h6 · 위치 살펴보기": h6
+          - text: 뒤,
+          - button "Bxh4 · 위치 살펴보기": Bxh4
+          - text: 까지의 수순에서는 백 d3 비숍을 남깁니다. 백 g3 룩은 흑 g7 폰을 공격합니다.
+        - paragraph:
+          - button "Bxh7+ · 위치 살펴보기": Bxh7+
+          - text: 에는
+          - button "Kxh7 · 위치 살펴보기": Kxh7
+          - text: 로 체크한 비숍을 잡습니다; 이어
+          - button "Qd3+ · 위치 살펴보기": Qd3+
+          - text: 에는
+          - button "g6 · 위치 살펴보기": g6
+          - text: 로 폰을 끼워 체크를 막습니다.
+          - button "Kg7 · 위치 살펴보기": Kg7
+          - text: 까지의 수순에서는 백 d3 퀸은 흑 g6 폰을 공격합니다.
+        - button "대안 수 · h4 · 재생"
+        - button "둔 수 · Bxh7+ · 재생"
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + + + + + + + + + +
+      - option "체크·잡기·승진 장면" [disabled]
+      - option "7.Bxh7+" [selected]
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status: 기보를 불러왔습니다.
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

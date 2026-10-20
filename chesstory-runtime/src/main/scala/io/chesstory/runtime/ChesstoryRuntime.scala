@@ -22,7 +22,10 @@ object ChesstoryRuntime:
   private val PositionCommentaryJobsPath = "/v1/position-commentary-jobs"
   private val JobId = "^[A-Za-z0-9_-]{32}$".r
   private val RootSearchDepth = 16
-  private val ShortJobSearchDepth = 12
+  // Leave room for the root pair, an independent reply survey and the selected
+  // idea's action comparison inside the standalone app's bounded request.
+  private val ShortJobSearchDepth = 11
+  private val ShortJobBudgetMillis = 20_000
   private val JobDeadlineMillis = 3L * 60L * 1000L
   private val MaximumRetainedJobs = 2048
   private val TerminalJobRetentionMillis = 2L * 60L * 1000L
@@ -163,17 +166,17 @@ object ChesstoryRuntime:
             case Right(jobRequest) =>
               val nowEpochMs = System.currentTimeMillis()
               val policy = CommentaryJobPolicy(
-                if jobRequest.remainingBudgetMs.exists(_ <= 10000) then ShortJobSearchDepth else RootSearchDepth,
+                if jobRequest.remainingBudgetMs.exists(_ <= ShortJobBudgetMillis) then ShortJobSearchDepth else RootSearchDepth,
                 requestReceivedEpochMs + math.min(JobDeadlineMillis, jobRequest.remainingBudgetMs.fold(JobDeadlineMillis)(_.toLong)),
                 jobRequest.engineProfile,
                 investigateChoices = true,
                 // A short job cannot afford a second root/focus pair when the
                 // preview chooses another reference. Spend its one root pass
                 // at one matched depth, leaving room for the move's purpose.
-                previewDepth = Option.when(jobRequest.remainingBudgetMs.forall(_ > 10000))(8),
+                previewDepth = Option.when(jobRequest.remainingBudgetMs.forall(_ > ShortJobBudgetMillis))(8),
                 // Two root candidates suffice for the rating comparison;
                 // reserve the short job's assembly budget for reply differences.
-                shortJob = jobRequest.remainingBudgetMs.exists(_ <= 10000)
+                shortJob = jobRequest.remainingBudgetMs.exists(_ <= ShortJobBudgetMillis)
               )
               commentaryJobs.createJob(
                 jobRequest.requestId,

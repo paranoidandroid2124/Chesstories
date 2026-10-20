@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuite hostname="DESKTOP-EP85OFH" name="io.chesstory.runtime.MoveIntentTest" tests="7" errors="0" failures="5" skipped="0" time="3.336" timestamp="2026-10-16T09:58:15">
+          <properties>
+      <property name="java.specification.version" value="21"/><property name="sun.cpu.isalist" value="amd64"/><property name="sun.jnu.encoding" value="UTF-8"/><property name="sun.arch.data.model" value="64"/><property name="java.vendor.url" value="https://adoptium.net/"/><property name="jline.terminal" value="none"/><property name="sun.boot.library.path" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin"/><property name="sun.java.command" value="C:/Program Files (x86)/sbt/bin/sbt-launch.jar testOnly io.chesstory.runtime.IdeaGeneralizationTest io.chesstory.runtime.PurposeComparisonTest io.chesstory.runtime.MoveIntentTest"/><property name="jdk.debug" value="release"/><property name="java.specification.vendor" value="Oracle Corporation"/><property name="java.version.date" value="2025-10-21"/><property name="java.home" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot"/><property name="file.separator" value="\"/><property name="java.vm.compressedOopsMode" value="Zero based"/><property name="line.separator" value="
+"/><property name="java.vm.specification.vendor" value="Oracle Corporation"/><property name="java.specification.name" value="Java Platform API Specification"/><property name="user.script" value=""/><property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/><property name="java.runtime.version" value="21.0.9+10-LTS"/><property name="user.name" value="quantum24"/><property name="log4j.ignoreTCL" value="true"/><property name="file.encoding" value="UTF-8"/><property name="jnidispatch.path" value="C:\Users\2B4C~1\AppData\Local\Temp\jna--1180074339\jna6969004368231303641.dll"/><property name="java.vendor.version" value="Temurin-21.0.9+10"/><property name="jna.loaded" value="true"/><property name="java.io.tmpdir" value="C:\Users\2B4C~1\AppData\Local\Temp\"/><property name="java.version" value="21.0.9"/><property name="java.vm.specification.name" value="Java Virtual Machine Specification"/><property name="sun.os.patch.level" value=""/><property name="native.encoding" value="UTF-8"/><property name="java.library.path" value="C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell;C:\Users\양자\.codex\tmp\arg0\codex-arg0eHRgwa;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\libheif\libheif\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\jxrlib\jxrlib\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\override;C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin;C:\Program Files\Eclipse Adoptium\jdk-11.0.29.7-hotspot\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Bandizip\;C:\Program Files\dotnet\;C:\Anaconda;C:\Anaconda\Library;C:\Anaconda\Scripts;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\bin;C:\Program Files (x86)\scala\bin;C:\Program Files (x86)\sbt\bin;C:\Program Files\scala-cli-x86_64-pc-win32\;C:\Program Files\GitHub CLI\;C:\Users\양자\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\양자\AppData\Local\Programs\Python\Python313\;C:\Users\양자\AppData\Local\Programs\Python\Launcher\;C:\Users\양자\bin;C:\Users\양자\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell;C:\Users\양자\AppData\Local\Microsoft\WindowsApps;C:\Users\양자\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\양자\.dotnet\tools;C:\Users\양자\AppData\Roaming\npm;C:\Users\양자\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc;C:\Users\양자\AppData\Local\Programs\MiKTeX\miktex\bin\x64\;C:\Users\양자\AppData\Local\Programs\Antigravity\bin;C:\Users\양자\AppData\Local\Microsoft\WinGet\Packages\BurntSushi.ripgrep.MSVC_Microsoft.Winget.Source_8wekyb3d8bbwe\ripgrep-15.1.0-x86_64-pc-windows-msvc;C:\Tools\strawberry-perl-portable\perl\bin;C:\Users\양자\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.2-full_build\bin;C:\Users\양자\AppData\Local\Microsoft\WinGet\Packages\Stockfish.Stockfish_Microsoft.Winget.Source_8wekyb3d8bbwe\stockfish;C:\Program Files\GNU Octave\Octave-11.3.0\mingw64\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\fallback;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;C:\Users\양자\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd;C:\Users\양자\AppData\Local\OpenAI\Codex\bin\77fbd4d52e601e0a;C:\Users\양자\AppData\Local\OpenAI\Codex\bin\9614f1d9b40d9c4f;."/><property name="stderr.encoding" value="UTF-8"/><property name="java.vendor" value="Eclipse Adoptium"/><property name="sun.io.unicode.encoding" value="UnicodeLittle"/><property name="java.class.path" value="C:/Program Files (x86)/sbt/bin/sbt-launch.jar"/><property name="java.vm.vendor" value="Eclipse Adoptium"/><property name="user.variant" value=""/><property name="jline.shutdownhook" value="false"/><property name="user.timezone" value="Asia/Seoul"/><property name="java.vm.specification.version" value="21"/><property name="os.name" value="Windows 11"/><property name="sun.java.launcher" value="SUN_STANDARD"/><property name="user.country" value="KR"/><property name="sun.cpu.endian" value="little"/><property name="user.home" value="C:\Users\양자"/><property name="user.language" value="ko"/><property name="sbt.ipcsocket.tmpdir" value="C:\Users\2B4C~1\AppData\Local\Temp\.sbt59c7a605\ipcsocket"/><property name="swoval.tmpdir" value="C:\Users\2B4C~1\AppData\Local\Temp\.sbt59c7a605\swoval"/><property name="jline.esc.timeout" value="0"/><property name="stdout.encoding" value="UTF-8"/><property name="path.separator" value=";"/><property name="os.version" value="10.0"/><property name="jna.nosys" value="true"/><property name="java.runtime.name" value="OpenJDK Runtime Environment"/><property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/><property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/><property name="user.dir" value="C:\Users\양자\.codex\worktrees\functional-choice-value\Chesstories\chesstory-runtime"/><property name="os.arch" value="amd64"/><property name="java.vm.info" value="mixed mode, sharing"/><property name="java.vm.version" value="21.0.9+10-LTS"/><property name="java.class.version" value="65.0"/>
+    </properties>
+          <testcase classname="io.chesstory.runtime.MoveIntentTest" name="root preparation selects a useful action with an owned causal bridge in all three cases" time="0.532">
+                      <failure message="src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8" type="munit.ComparisonFailException">munit.ComparisonFailException: src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+	at munit.FunSuite.assertEquals(FunSuite.scala:13)
+	at io.chesstory.runtime.MoveIntentTest.replay$$anonfun$1(MoveIntentTest.scala:30)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.List.foreach(List.scala:334)
+	at io.chesstory.runtime.MoveIntentTest.replay(MoveIntentTest.scala:27)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1$$anonfun$1(MoveIntentTest.scala:39)
+	at scala.collection.immutable.List.map(List.scala:247)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.states(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.data(MoveIntentTest.scala:41)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$1$$anonfun$1(MoveIntentTest.scala:51)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.Map$Map3.foreach(Map.scala:466)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$1(MoveIntentTest.scala:50)
+</failure>
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="a legal conditional checking example is not promoted to a best-defense or evaluation claim" time="0.254">
+                      <failure message="src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8" type="munit.ComparisonFailException">munit.ComparisonFailException: src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+	at munit.FunSuite.assertEquals(FunSuite.scala:13)
+	at io.chesstory.runtime.MoveIntentTest.replay$$anonfun$1(MoveIntentTest.scala:30)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.List.foreach(List.scala:334)
+	at io.chesstory.runtime.MoveIntentTest.replay(MoveIntentTest.scala:27)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1$$anonfun$1(MoveIntentTest.scala:39)
+	at scala.collection.immutable.List.map(List.scala:247)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.states(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.data(MoveIntentTest.scala:41)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$2(MoveIntentTest.scala:70)
+</failure>
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="prepared content cannot be transferred to another packet reader" time="0.24">
+                      <failure message="src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8" type="munit.ComparisonFailException">munit.ComparisonFailException: src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+	at munit.FunSuite.assertEquals(FunSuite.scala:13)
+	at io.chesstory.runtime.MoveIntentTest.replay$$anonfun$1(MoveIntentTest.scala:30)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.List.foreach(List.scala:334)
+	at io.chesstory.runtime.MoveIntentTest.replay(MoveIntentTest.scala:27)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1$$anonfun$1(MoveIntentTest.scala:39)
+	at scala.collection.immutable.List.map(List.scala:247)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.states(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.data(MoveIntentTest.scala:41)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$3(MoveIntentTest.scala:83)
+</failure>
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="identical rook placement is not identical pressure when an own bishop blocks the file" time="0.563">
+                      
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="without admitted preparation examples the old unknown-purpose boundary remains" time="0.344">
+                      
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="a sparse played PV does not force a weak later move into the first-reply comparison" time="0.803">
+                      <failure message="src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8" type="munit.ComparisonFailException">munit.ComparisonFailException: src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+=&gt; Diff (- expected, + obtained)
+-fc99c3c149d64f87f47d87b7862973b98f79e7aa09c2c4a025f5e310d62b7a0c
++81887ef0235404a6069853250bd74aaaef05f33ebd3ccc7cabc22649241690b8
+	at munit.FunSuite.assertEquals(FunSuite.scala:13)
+	at io.chesstory.runtime.MoveIntentTest.replay$$anonfun$1(MoveIntentTest.scala:30)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.List.foreach(List.scala:334)
+	at io.chesstory.runtime.MoveIntentTest.replay(MoveIntentTest.scala:27)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1$$anonfun$1(MoveIntentTest.scala:39)
+	at scala.collection.immutable.List.map(List.scala:247)
+	at io.chesstory.runtime.MoveIntentTest.states$lzyINIT1(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.states(MoveIntentTest.scala:39)
+	at io.chesstory.runtime.MoveIntentTest.data(MoveIntentTest.scala:41)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$6(MoveIntentTest.scala:125)
+</failure>
+                    </testcase><testcase classname="io.chesstory.runtime.MoveIntentTest" name="naming an already explained capturing alternative does not create a duplicate price paragraph" time="0.6">
+                      <failure message="src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+d75d14ae00f062e1f4deb755f9c245b5d5cf04106be1e49909fb9b62a540d4d5
+=&gt; Diff (- expected, + obtained)
+-3b4eea4eb0722694ac894777d62d05cd657987de0bb597e221f0ae8d960ce9e9
++d75d14ae00f062e1f4deb755f9c245b5d5cf04106be1e49909fb9b62a540d4d5" type="munit.ComparisonFailException">munit.ComparisonFailException: src\test\scala\io\chesstory\runtime\MoveIntentTest.scala:30
+29:      val work = state.asInstanceOf[AwaitingEngineWork].issuedWork
+30:      assertEquals(work.executionKeySha256, (item \ &quot;issued_work&quot; \ &quot;execution_key_sha256&quot;).as[String])
+31:      val raw = (item \ &quot;report&quot;).as[JsObject] ++ Json.obj(&quot;work_id&quot; -&gt; work.workId)
+values are not the same
+=&gt; Obtained
+d75d14ae00f062e1f4deb755f9c245b5d5cf04106be1e49909fb9b62a540d4d5
+=&gt; Diff (- expected, + obtained)
+-3b4eea4eb0722694ac894777d62d05cd657987de0bb597e221f0ae8d960ce9e9
++d75d14ae00f062e1f4deb755f9c245b5d5cf04106be1e49909fb9b62a540d4d5
+	at munit.FunSuite.assertEquals(FunSuite.scala:13)
+	at io.chesstory.runtime.MoveIntentTest.replay$$anonfun$1(MoveIntentTest.scala:30)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+	at scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+	at scala.collection.immutable.List.foreach(List.scala:334)
+	at io.chesstory.runtime.MoveIntentTest.replay(MoveIntentTest.scala:27)
+	at io.chesstory.runtime.MoveIntentTest.$init$$$anonfun$7(MoveIntentTest.scala:134)
+</failure>
+                    </testcase>
+          <system-out><![CDATA[]]></system-out>
+          <system-err><![CDATA[]]></system-err>
+        </testsuite>

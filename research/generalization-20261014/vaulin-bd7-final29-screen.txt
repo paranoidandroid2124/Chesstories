@@ -1,0 +1,182 @@
+- banner:
+  - generic: Chesstories
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "분석 기보" [level=1]
+    - generic: 17… Bd7
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수" [disabled]: →
+      - button "마지막" [disabled]: ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "17… Bd7"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 8.74s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "이번 분석에서 가장 높게 평가한 수입니다: Bd7"':
+        - generic: Bd7
+        - heading "이번 분석에서 가장 높게 평가한 수입니다" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=4]
+        - generic: Bd7 ↔ Re8
+        - paragraph:
+          - button "Re8 · 위치 살펴보기": Re8
+          - text: — 흑 f6 나이트에 대한 룩의 방어를 놓습니다. 제시된 수순에서 원래 f8의 룩이
+          - button "Re8 · 위치 살펴보기": Re8
+          - text: …
+          - button "Rxe5 · 위치 살펴보기": Rxe5
+          - text: 로 재배치됩니다.
+          - button "Rxe5 · 위치 살펴보기": Rxe5
+          - text: 뒤 흑 e5 룩이 백 c4 폰에게 공격받는 흑 d5 폰을 지킵니다.
+          - button "Rxe5 · 위치 살펴보기": Rxe5
+          - text: 뒤 흑 e5 룩이 백 e3 폰을 새로 공격합니다. 제시된 수순에서 원래 c8의 비숍이
+          - button "Bd7 · 위치 살펴보기": Bd7
+          - text: …
+          - button "Bxg4 · 위치 살펴보기": Bxg4
+          - text: 로 재배치됩니다.
+          - button "Bxg4 · 위치 살펴보기": Bxg4
+          - text: 뒤 흑 g4 비숍이 백 f3 비숍을 새로 공격합니다.
+          - button "Re8 · 위치 살펴보기": Re8
+          - text: 수순의 비교 시점까지 백의 d4 폰과 흑의 e6 폰을 교환합니다. 퀸 한 쌍을 교환합니다.
+          - button "Bd7 · 위치 살펴보기": Bd7
+          - text: 수순의 비교 시점까지 룩 한 쌍을 교환합니다. 나이트 한 쌍을 교환합니다. 백의 폰 둘과 흑의 폰 둘을 교환합니다.
+          - button "Bd7 · 위치 살펴보기": Bd7
+          - text: "수순에서:"
+          - button "Ng4 · 위치 살펴보기": Ng4
+          - text: 수로 f6 칸을 비워 길을 엽니다. 제시된 수순에서
+          - button "Rxf3 · 위치 살펴보기": Rxf3
+          - text: 수로 흑 룩이 그 길을 지나 f3에 진출합니다.
+        - paragraph:
+          - button "Re8 · 위치 살펴보기": Re8
+          - text: —
+          - button "Raf1 · 위치 살펴보기": Raf1
+          - text: 뒤,
+          - button "Nc5 · 위치 살펴보기": Nc5
+          - text: 까지의 수순에서는 흑 d7 비숍은 흑 c6 폰을 지킵니다. 흑 e7 룩은 백 e3 폰을 공격합니다. 흑 f6 나이트를 남깁니다. 원래 c4 폰이 c4에 남습니다. 원래 h2 폰이 h2에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.
+        - paragraph:
+          - button "Bd7 · 위치 살펴보기": Bd7
+          - text: —
+          - button "Ne1 · 위치 살펴보기": Ne1
+          - text: 뒤,
+          - button "cxd5 · 위치 살펴보기": cxd5
+          - text: 까지의 수순에서는 흑 g5 퀸은 흑 d5 폰을 지킵니다. 흑 g4 비숍을 남깁니다. 원래 d4 폰이 d4에 남습니다. 흑 d5 폰은 고립폰입니다. 이 뒤의 응수는 기록되어 있지 않습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.
+        - generic "이어지는 변화 +"
+        - paragraph: 두 수의 엔진 평가는 비슷합니다. 작은 점수 차이만으로 어느 수가 더 강하다고 단정하지 않습니다.
+        - generic "비교의 상세 기록 +"
+        - text: + + +
+        - heading "두 수순 살펴보기" [level=5]
+        - strong: 둔 수 · Bd7
+        - generic: 백 기준 -0.09 · 깊이 12
+        - button "비교 수순 보기 · Bd7"
+        - strong: 대안 수 · Re8
+        - generic: 백 기준 -0.08 · 깊이 12
+        - button "비교 수순 보기 · Re8"
+      - generic "다른 비교와 후속 질문 (2) +"
+      - text: + +
+      - paragraph: 제시된 수순에서 확인한 변화입니다. 모든 응수에 강제되거나 평가 차이의 원인이라는 뜻은 아닙니다.
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

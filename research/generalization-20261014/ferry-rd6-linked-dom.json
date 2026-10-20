@@ -1,0 +1,72 @@
+[
+  {
+    "height": 560,
+    "pieces": [
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(350px, 70px);"
+      },
+      {
+        "kind": "black king",
+        "style": "transform: translate(420px, 70px);"
+      },
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(490px, 70px);"
+      },
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(0px, 140px);"
+      },
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(280px, 140px);"
+      },
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(70px, 210px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(280px, 210px);"
+      },
+      {
+        "kind": "black pawn",
+        "style": "transform: translate(420px, 210px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(420px, 280px);"
+      },
+      {
+        "kind": "white rook",
+        "style": "transform: translate(70px, 350px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(280px, 350px);"
+      },
+      {
+        "kind": "white king",
+        "style": "transform: translate(420px, 350px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(0px, 420px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(70px, 420px);"
+      },
+      {
+        "kind": "black rook",
+        "style": "transform: translate(280px, 420px);"
+      },
+      {
+        "kind": "white pawn",
+        "style": "transform: translate(490px, 420px);"
+      }
+    ],
+    "width": 560
+  }
+]

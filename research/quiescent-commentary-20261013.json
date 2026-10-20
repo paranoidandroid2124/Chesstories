@@ -1,0 +1,329 @@
+{
+  "schema_version": "chesstory.quiescent-commentary-research.v1",
+  "date": "2026-10-13",
+  "recorded_utc": "2026-10-13T06:41:10.997759+00:00",
+  "status": "research_complete_implementation_not_started",
+  "request": "Quiescence search에서 착안한 국소 수순 요약의 건전성과 다른 설명에 대한 확장 가능성을 연구한다.",
+  "scope": {
+    "product_sources_changed": false,
+    "new_engine_queries": 0,
+    "new_ui_runs": 0,
+    "new_test_runs": 0,
+    "saved_quality_positions_reexamined": 2,
+    "new_quality_positions": 0,
+    "preexisting_changed_files": 36,
+    "depth_policy_changed": false,
+    "independent_reader_experiment": false,
+    "new_goal_created": false
+  },
+  "decision": {
+    "recommendation": "조건부 채택. 같은 설명 질문에 속하는 국소 수순의 조건·대가·결과를 보존하며 중간의 중복 설명을 묶는다.",
+    "not_supported": "연속된 잡기/체크를 무조건 지우고 마지막 배치 또는 순 기물 점수만 남기는 규칙은 건전하지 않다.",
+    "reason": "엔진 내부의 quiescence search 종료와 공개된 유한 PV의 끝은 다르다. 최종 배치가 같아 보여도 중간 전술·수순 순서·권리·반복 이력이 설명의 이유일 수 있다.",
+    "strongest_extension": "실제 평가쌍의 공통 교환·공통 배치를 한 번만 설명하고 서로 다른 목적·응수·최종 기능을 대조한다.",
+    "evidence_limit": "문헌과 현재 코드·보존된 실제 출력은 설계 방향을 지지한다. 이 프로젝트의 일반적 해설 정확도·독자 이해도 향상을 실증한 것은 아니다."
+  },
+  "sources": [
+    {
+      "id": "stockfish18",
+      "title": "Stockfish 18 search.cpp, qsearch",
+      "url": "https://github.com/official-stockfish/Stockfish/blob/sf_18/src/search.cpp#L1344",
+      "primary": true,
+      "read": "qsearch entry, stand pat, check evasions, pruning and terminal handling",
+      "supports": "깊이 끝의 일시적 전술 상태를 그대로 평가하지 않도록 잡기와 체크 응수를 더 탐색한다. 체크 중에는 일반적인 stand pat 처리를 사용하지 않는다.",
+      "application": "평가를 믿을 수 있는 단위로 정리한다는 원리를 해설에 적용한다.",
+      "does_not_prove": "공개 PV가 완전한 강제 수순이라는 것, 그 끝에 모든 전술이 해소되었다는 것, 모든 체크를 계속 확장해야 한다는 것."
+    },
+    {
+      "id": "clement2007",
+      "title": "Clement, Durfee, Barrett — Abstract Reasoning for Planning and Coordination, JAIR 28 (2007)",
+      "url": "https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/clement07a-html/",
+      "detail_url": "https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/clement07a-html/3_2Summary_Conditions.html",
+      "primary": true,
+      "read": "abstract, section 3.2 summary preconditions/inconditions/postconditions and must/may distinction",
+      "supports": "여러 행동을 묶을 때 시작 조건·도중 조건·결과와 행동 간 의존성을 요약해야 잘못된 추상화를 피할 수 있다.",
+      "application": "체스 교환의 최종 기물 수지 외에도 그 결과를 가능하게 한 사잇수·수비 제거·체크 대응을 보존한다.",
+      "does_not_prove": "이 논문의 형식적 건전성 정리가 Chesstories 코드에 그대로 적용되지는 않는다."
+    },
+    {
+      "id": "miller2020",
+      "title": "Tim Miller — Contrastive Explanation: A Structural-Model Approach",
+      "url": "https://arxiv.org/abs/1811.03163",
+      "pdf_url": "https://arxiv.org/pdf/1811.03163",
+      "primary": true,
+      "read": "difference condition, counterfactual and bi-factual explanations, conclusion",
+      "supports": "왜 A인가라는 질문이 B와의 비교라면 두 이력을 모두 나열하기보다 질문과 관련된 차이를 설명해야 한다.",
+      "application": "같은 평가쌍의 공통 사실을 한 번만 제시하고 차이를 대조한다.",
+      "does_not_prove": "두 PV의 서로 다른 사실 자체가 엔진 평가 점수 차이의 인과 원인이라는 것. 논문은 구조적 인과 모델을 전제로 하며 현재 해설은 그 모델을 갖추지 않았다."
+    },
+    {
+      "id": "kim2025",
+      "title": "Kim et al. — Bridging the Gap between Expert and Language Models: Concept-guided Chess Commentary Generation and Evaluation, NAACL 2025",
+      "url": "https://aclanthology.org/2025.naacl-long.481/",
+      "pdf_url": "https://aclanthology.org/2025.naacl-long.481.pdf",
+      "primary": true,
+      "read": "sections 1–3 and limitations; concept prioritization and commentary evaluation dimensions",
+      "supports": "체스 해설에서도 개념의 우선순위와 관련성·완전성·명료성을 함께 평가하는 접근이 제시된다.",
+      "application": "문장 수나 글자 수가 줄어든 것만으로 품질 성공을 판정하지 않는다.",
+      "does_not_prove": "논문의 LLM 생성/평가 결과가 현재 규칙 기반 해설의 품질을 보장하지 않는다. 새 LLM·모델 훈련을 도입할 근거로 사용하지 않는다."
+    }
+  ],
+  "prior_failures": [
+    {
+      "source": "research/answer-selection-20261004/development-decisions.json",
+      "case": "selectionv3",
+      "finding": "잡기 가능성만으로 새 질문을 우선하여 중요한 기존 지원 비교를 밀어냈다.",
+      "constraint": "요약하기 쉬운 교환이 실제 평가 질문보다 먼저 선택되면 안 된다."
+    },
+    {
+      "source": "research/answer-selection-20261004/development-decisions.json",
+      "case": "selectionv5",
+      "finding": "연속 회수 구간만 허용하는 전역 축소가 기존 네 교환·길 열기·응수 사례의 필요한 대가를 지웠다.",
+      "constraint": "표시를 줄이려고 전체 가격 계정이나 연결된 다른 칸의 손실을 축소하지 않는다."
+    },
+    {
+      "source": "research/meaning-conditions-20261008/nb1-selection-overgrowth-audit.json",
+      "case": "NB1",
+      "finding": "선택된 48개 진술이 필수 조건 보충 뒤 63개가 되어 전달 길이 제한에 걸렸다. 독립 설명 묶음을 합친 뒤 전체 보호하면 한 미완료 대가가 주변 이력을 모두 되살렸다.",
+      "constraint": "각 설명의 소속을 보존한다. 요약 과정의 결과가 새 질문의 씨앗이 되어 반복 확장하지 않아야 한다."
+    },
+    {
+      "source": "research/functional-judgment-20261009/h05-prefix-consolidation-research-override-audit.json",
+      "case": "H05 prefix",
+      "finding": "동일 prefix의 moves/ids/positions를 확인하고 화면 표현만 합친 선행 작업이 이미 있다.",
+      "constraint": "공통 앞부분 표시 재사용을 새 의미 일반화 성과로 세지 않는다."
+    },
+    {
+      "source": "research/repeated-work-review-20261011.json",
+      "case": "반복 작업 감사",
+      "finding": "상세로 보존했다는 사실은 기본 본문에서 중요한 질문을 생략해도 된다는 증명이 아니다.",
+      "constraint": "원래 수의 목적·응수별 차이·필요한 대가를 기본 본문에서 복원할 수 있어야 한다."
+    }
+  ],
+  "current_code": [
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "line": 88,
+      "finding": "연속 잡기 끝을 이미 읽지만, 이는 물리적으로 인접한 capture의 범위이다. 의미 단위의 종료나 모든 체크 응수의 요약을 보장하지 않는다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "line": 181,
+      "finding": "Material은 이미 양쪽 교환 수량을 묶는다. 모든 capture가 반드시 독립 문장이어야 하는 설계는 아니다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "line": 229,
+      "finding": "PieceExchange는 원래 기물 신원을 유지하면서 capture/recapture를 하나씩 서술하므로 요약 후보이다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "line": 3394,
+      "finding": "선택된 실제 수의 비용·체크·회피 조건을 완성하며 completionSources를 고정한다. 이 보호를 없애는 대신 묶인 설명이 기존 의무를 계속 소유해야 한다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "line": 634,
+      "finding": "증거의 모든 수를 말할 필요는 없다는 설계가 이미 명시되어 있다. 증거와 표시 분리를 새로 발명할 필요가 없다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "line": 809,
+      "finding": "렌더러가 표현한 진술의 references/covered가 원래 required/covered를 보존하는지 검사한다. 문자열을 지운 뒤 expressed만 그대로 두면 형식 검사 통과와 의미 보존이 어긋날 수 있다."
+    },
+    {
+      "path": "chesstory-web/src/review/moveReviewSelection.ts",
+      "line": 1809,
+      "finding": "proof_moves/action_moves/covered_moves와 언어별 수 연결을 따로 검증한다. 기존 계약을 활용할 수 있으며 각 잡기를 본문에서 별도 이름으로 표시할 필요는 없다."
+    },
+    {
+      "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+      "line": 63,
+      "finding": "첫 응수의 잡기, 기물 소멸, 폰 구조의 정의, 지키는 기물 부재를 연달아 설명한다. 교환 나열 외에도 같은 결과와 주변 상태의 반복이 길이를 만든다."
+    }
+  ],
+  "soundness_requirements": [
+    {
+      "rule": "동일한 실제 수순과 평가쌍",
+      "detail": "시작/끝과 소속을 고정하고 원래 기물 신원을 추적한다. 다른 보고·다른 응수의 비용이나 결과를 합치지 않는다."
+    },
+    {
+      "rule": "순 점수 외에 교환 내용을 보존",
+      "detail": "같은 나이트끼리의 교환, 비숍과 나이트의 교환, 폰 구조 변화를 구별한다. 기물 수지 0을 동등한 국면으로 바꾸지 않는다."
+    },
+    {
+      "rule": "관련된 모든 대가와 역할을 보존",
+      "detail": "같은 설명에 연결된 다른 칸의 잡기·조용한 이동 뒤 손실·사용한 수비자의 소멸을 유지한다. 서로 무관한 이득과 손실을 한 trade로 상쇄하지 않는다."
+    },
+    {
+      "rule": "필수 중간 전환점 보존",
+      "detail": "사잇수, 체크로 얻은 템포, 수비 제거, 희생과 회수의 이유, 승진과 앙파상 등 요약 결론을 가능하게 하는 변화를 필요한 만큼 남긴다. 일시적인 공격이라도 실제로 상대 선택을 바꿨다면 삭제하지 않는다."
+    },
+    {
+      "rule": "국소 종료와 기록 종료 구별",
+      "detail": "PV가 끝나거나 다음 수가 조용하다는 이유로 모든 전술이 정리됐다고 말하지 않는다. 기존 근거로 닫히지 않으면 그 구간의 기존 설명 또는 기록 한계를 유지한다. 요약 때문에 자동으로 탐색을 늘리지 않는다."
+    },
+    {
+      "rule": "수순의 차이를 강제성이나 평가 인과로 확대하지 않음",
+      "detail": "관측된 응수·국소 결과를 설명한다. PV 하나로 모든 합법 응수의 강제 결과를 주장하지 않는다. 같은 길이만으로 기능 비교 시점이 동등하다고 보지 않는다."
+    },
+    {
+      "rule": "축약과 검증의 분리",
+      "detail": "요약문이 실제로 그 교환·조건을 표현해야 한다. 내부 covered 표시만 채우는 것으로 충분하지 않다. 독립 검증기는 원자료의 합법성·계정·소속을 계속 확인한다."
+    },
+    {
+      "rule": "반복 처리의 안정성",
+      "detail": "한 번 설명한 비용과 결과를 보충 단계가 다시 개별 사건으로 풀거나 새 주제로 증식시키지 않는다. 같은 입력을 재정리해도 의미와 선택 범위가 유지되어야 한다."
+    }
+  ],
+  "observations": [
+    {
+      "case": "existing",
+      "basic_korean_characters_including_SAN": 1366,
+      "visible_move_mentions": 43,
+      "distinct_visible_moves": 22,
+      "measurement_scope": "기존 실제 응답의 기본 summary_question 4개 unit만 렌더링. 제목·상세·화면 부가 문단 제외. 새 실행/성능/축약율 측정이 아님.",
+      "paths": [
+        {
+          "line_id": "move-review:790880dd1933bd2980cf8e2ad4a765fdb47855c4998668d674ae2ab19c457cc9:27:b3d5:line:29e506438569086e353ff631a4563467ef250b6a368a14220fb5c9debb165649",
+          "san": "c6 Rc1 Rc8 bxc6 bxc6 Bxd4 exd4 Qxb3 dxc3 Ne4 Nd5",
+          "captures": 6
+        },
+        {
+          "line_id": "move-review:790880dd1933bd2980cf8e2ad4a765fdb47855c4998668d674ae2ab19c457cc9:27:b3d5:line:7f7820cec560f78bfb2198ffe57e878a319a1262162ea076d605d6a242931b3f",
+          "san": "Bd5 Nge4 Qe7 Rc1 Rfd8 Nxd5 Nxd5 Bxd4 exd4 Qb3 b6",
+          "captures": 4
+        }
+      ]
+    },
+    {
+      "case": "new",
+      "basic_korean_characters_including_SAN": 667,
+      "visible_move_mentions": 30,
+      "distinct_visible_moves": 14,
+      "measurement_scope": "기존 실제 응답의 기본 summary_question 4개 unit만 렌더링. 제목·상세·화면 부가 문단 제외. 새 실행/성능/축약율 측정이 아님.",
+      "paths": [
+        {
+          "line_id": "move-review:b885d6109728730f60cda926749dbc876adaaf93b5ecbde33ad5435b6db839f5:37:g4f3:line:580ab33b85aaaa8cf1846731aa200b89e5a192105ba9cd4a7ddbebc5ff8576b2",
+          "san": "Rc8 Bd3 Nd6 Ng5 Bf5 Bxf5 Nxf5",
+          "captures": 2
+        },
+        {
+          "line_id": "move-review:b885d6109728730f60cda926749dbc876adaaf93b5ecbde33ad5435b6db839f5:37:g4f3:line:e896cdd62fc4aab123895cc01ec3cc323df062f416809e834c24537015f84176",
+          "san": "Bxf3 gxf3 Nd6 Bd3 g5 Rc1 f5",
+          "captures": 2
+        }
+      ]
+    }
+  ],
+  "concrete_opportunities": [
+    {
+      "case": "새 Rc8/Bxf3",
+      "current": "Bxf3가 나이트를 잡음 → g2 폰을 공격함 → gxf3가 비숍을 잡음 → 비숍이 없어짐 → f2/f3 겹친 폰 → 나이트를 내주고 비숍을 얻음.",
+      "finding": "이 실제 수순에서 g2 공격은 즉시 gxf3로 사라지고, 교환 의미를 설명하는 독립 기능으로 사용되지 않는다. 교환 내용과 폰 구조를 한 문장으로 함께 전달할 여지가 있다.",
+      "research_draft": "Bxf3는 비숍을 나이트와 교환해, gxf3 뒤 백에게 f2·f3 겹친 폰을 남깁니다. Rc8에 Bd3로 물러나는 수순에서는 비숍끼리 교환한 뒤 흑 룩이 열린 c파일에 남습니다.",
+      "qualification": "원래 작은 평가 차이를 강제 우열로 바꾸지 않는다. 이 문안은 검토용이며 제품에서 생성·검증된 압축 출력이 아니다."
+    },
+    {
+      "case": "기존 c6/Bd5",
+      "current": "c3/c6 폰 각각에 같은 파일 겹침·옆 파일 지원 부재를 반복하고, 두 수순과 끝 배치에서 같은 나이트 위치를 다시 표시한다.",
+      "finding": "공통 교환은 한 번 설명하고 c6 지원, c3 통과폰과 d4 폰, 같은 Nd5의 지원 대상 차이에 집중할 수 있다.",
+      "protected": "c6 수순의 추가 폰 교환, Bd5/Nge4 차단, 원래 e5/b7/c7 폰의 다른 운명, 실제 선택된 수순의 교환 대가를 삭제하면 안 된다."
+    }
+  ],
+  "extensions": [
+    {
+      "area": "연속 교환",
+      "priority": "우선",
+      "compress": "같은 설명에 속하는 포획·되잡기·순 기물 수지를 하나의 교환과 결과로 묶는다.",
+      "retain": "무엇과 무엇을 바꿨는지, 필요한 사잇수, 구조 변화와 관련 손실."
+    },
+    {
+      "area": "체크와 그 응수",
+      "priority": "조건부 우선",
+      "compress": "이미 검증된 체크-응수 묶음의 반복을 하나의 결과로 요약한다.",
+      "retain": "조용한 체크 회피도 같은 공방에 포함. 메이트·반복·회수·왕 위치 변화와 핵심 전환점. 일반적인 안전 상태 판정으로 확대하지 않는다."
+    },
+    {
+      "area": "두 평가쌍의 공통 사실과 차이",
+      "priority": "우선 확장",
+      "compress": "공통 교환·공통 잔존을 한 번만 말하고, 교환 시점과 남는 기능의 차이를 대조한다.",
+      "retain": "실제 평가쌍, 양쪽 각각의 비용·응수 소속, 같은 기능이라는 판단의 범위. 서로 다른 물리적 교환을 순 점수로만 같다고 하지 않는다."
+    },
+    {
+      "area": "일시적인 공격과 회피",
+      "priority": "그다음",
+      "compress": "같은 표적을 공격하고 도망가는 반복을 압박의 결과로 묶는다.",
+      "retain": "상대가 템포를 쓰게 된 이유, 사잇수, 추격 중 잃은 폰. 단지 끝에 공격이 사라졌다는 이유로 중요도를 낮추지 않는다."
+    },
+    {
+      "area": "폰 구조와 지원 설명",
+      "priority": "그다음",
+      "compress": "겹침·고립·방어자 목록과 정의를 매 폰마다 반복하지 않고 이번 선택에서 바뀐 구조와 기능을 설명한다.",
+      "retain": "현재 보호/무방비와 실제 잡힘 가능성을 구별하고, 원래 폰의 신원·진출 지원·선택 비용을 유지한다."
+    },
+    {
+      "area": "기물 재배치와 방어 인계",
+      "priority": "후속",
+      "compress": "여러 조용한 이동을 목적지와 최종 역할로 묶고 방어 담당자 인계를 한 번 설명한다.",
+      "retain": "경유지의 길 열기·템포·중간 방어 공백. 끝점만으로 장기 목적을 창작하지 않는다."
+    },
+    {
+      "area": "분기 수순의 동일한 앞부분",
+      "priority": "기존 구현 재사용",
+      "compress": "같은 moves/occurrences/positions 앞부분을 한 번만 표시하고 분기점부터 설명한다.",
+      "retain": "각 분기의 정확한 소속과 개별 비용. 겉으로 같은 SAN이나 FEN 배치만으로 합치지 않는다."
+    },
+    {
+      "area": "왕 순환·대기 수·반복 국면",
+      "priority": "보류",
+      "compress": "정확한 이력과 선택 차이가 검증된 때만 순환 결과로 묶는다.",
+      "retain": "누구 차례인지, 캐슬링·앙파상 권리, 반복 이력과 50수 규칙, 소진한 대기 수. 기물 배치가 같다는 것만으로 동치라고 할 수 없다."
+    },
+    {
+      "area": "후속 질문 생성·탐색 배분",
+      "priority": "표현 단계 검증 뒤 검토",
+      "compress": "이미 요약된 내부 사건을 다시 독립 질문으로 만들지 않는 데 확장할 가능성이 있다.",
+      "retain": "표현 생략을 탐색 생략의 증명으로 사용하지 않는다. 예상 속도 향상은 아직 측정하지 않았다."
+    }
+  ],
+  "implementation_proposal": {
+    "first_scope": "검증된 연속 교환과 체크-응수 묶음의 중복 표현을 줄이고, 실제 평가쌍에서 공통 결과를 한 번만 말한다. 핵심 전환점과 최종 기능 차이는 기본 본문에 남긴다.",
+    "reuse": [
+      "CommentaryAnswer.Material / PieceExchange / CheckSequence",
+      "기존 물리적 기물 추적과 기물 계정",
+      "proof_moves / action_moves / covered_moves",
+      "기존 Section 소속·completionSources 고정·수순 펼치기와 판 연결"
+    ],
+    "placement": "기존 의미 판독과 필요한 비용·조건 완성을 유지한 뒤, 형식화된 진술을 묶어 렌더링한다. 단순 문자열 삭제나 새로운 전역 가격 구간 축소로 구현하지 않는다. 최종 반환 검사는 계속 수행한다.",
+    "integration_points": [
+      "CommentaryEnglish의 묶음 렌더링",
+      "RootQuestionSummary의 동일 한국어 의미 및 수 연결",
+      "필요하면 기존 Statement의 좁은 확장",
+      "독립 화면 판독기의 기존 계약 유지 여부 핵심 확인"
+    ],
+    "avoid": [
+      "새 quiescence 엔진",
+      "탐색 깊이 증가",
+      "새 LLM/요약 서비스",
+      "전체 코드 구조 교체",
+      "모든 장기 목적과 기능 동치까지 한 번에 해결",
+      "상세에 숨기기만 하고 핵심 질문을 바꾸기"
+    ],
+    "minimal_acceptance": [
+      "기존 사례 하나와 별도 새 국면 하나의 실제 기본 화면, 10초 요청·깊이 18 이내",
+      "원래 수의 목적·상대 응수·남는 차이·필요한 대가를 기본 본문만으로 읽을 수 있음",
+      "동일 교환이 개별 잡기·비숍 소멸·균형 설명으로 중복 재등장하지 않음",
+      "사잇수·승진·미완료 기록 또는 연결된 다른 칸의 손실에서는 필요한 전환점/기록 한계를 보존",
+      "원자료에서 재계산한 비용·소속과 출력 요약의 의미가 일치하고 수를 눌렀을 때 정확한 배치로 이동",
+      "길이 감소나 단위 검사 통과만으로 완료 처리하지 않음"
+    ]
+  },
+  "evidence": {
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/assessment-pair-browser.json.gz",
+    "fixture_sha256": "d03f6feb1f78652f69cc91cc13012aa7fdc3b48542305f5d8a8779089b13fa0f",
+    "observational_audit": "target/research-runs/quiescent-commentary-20261013/observed-two-case-audit.json",
+    "observational_audit_sha256": "5d9d4644a9d26d164b3eaa00621c566c9636450f796fb69e28b9eeed40addd92",
+    "baseline": "target/research-runs/quiescent-commentary-20261013/baseline.json"
+  }
+}

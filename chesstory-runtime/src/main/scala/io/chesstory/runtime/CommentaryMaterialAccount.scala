@@ -14,6 +14,17 @@ private[runtime] object CommentaryMaterialAccount:
 
   private val roles = List("pawn", "knight", "bishop", "rook", "queen").map(EvidencePieceRole(_))
 
+  def physicalLosses(paths: ObservedLineProtocol.PreparedPaths, price: CommentaryAnswer.Material):
+      Option[List[MoveWorkProjection.Piece]] =
+    paths.continuationReadings.find(r => (r.path eq price.path) && r.complete).flatMap { reading =>
+      val events = price.cost.events.flatMap(material => reading.events.find(event =>
+        event.plyOffset == material.plyOffset && material.promotionGainCp == 0 &&
+          material.capture.exists(c => event.originalVictim.exists(p =>
+            p.role == c.capturedRole && p.side != c.side))))
+      val losses = events.flatMap(_.originalVictim)
+      Option.when(events.size == price.cost.events.size && losses.distinct.size == losses.size)(losses)
+    }
+
   /** The interval runs from the first selected capture through the last.
     * Every material change inside it must be present. Promotions require a
     * different account; quiet context moves may be retained in offsets.

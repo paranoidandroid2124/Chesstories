@@ -1,0 +1,53 @@
+{
+  "scope": "Exact first Bf6 engine reports, not the later live run",
+  "before": [
+    "Nc5 — 백 e4 폰을 새로 공격합니다. 제시된 수순에서 a4에 진출하는 폰을 지원합니다. Bf6 — Bf6–Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다.  Bf6 수순의 비교 시점까지 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+    "Bf6 뒤 조사한 Nf1 응수에서는 같은 기물이 Bg5로 재배치되어 백 e3 비숍을 공격합니다.",
+    "Nc5 — Nf3: 흑 e5 폰을 새로 공격합니다. Qd2까지의 수순에서는 흑 c5 나이트는 흑 b7 폰을 지킵니다. 흑 g7 비숍을 남깁니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+    "Bf6 — Nb3: 흑 a5 폰을 새로 공격합니다. Qxe3까지의 수순에서는 c5·c7에 더블폰이 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+  ],
+  "after": [
+    "Nc5 — 백 e4 폰을 새로 공격합니다. 제시된 수순에서 a4에 진출하는 폰을 지원합니다. Bf6 — Bf6–Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다.  Bf6 수순의 비교 시점까지 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+    "Nc5 — Nf3: 흑 e5 폰을 새로 공격합니다. Qd2까지의 수순에서는 흑 c5 나이트는 흑 b7 폰을 지킵니다. 흑 g7 비숍을 남깁니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+    "Bf6 — Nb3: 흑 a5 폰을 새로 공격합니다. Qxe3까지의 수순에서는 c5·c7에 더블폰이 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+    "Bf6 수순에서: Qc1 응수에서는 g5 칸을 새로 지원하여 원래 h7의 나이트의 진출을 받칩니다. Ng5로 나이트가 활동에 나서 백 e4 폰을 공격합니다.",
+    "Bf6 수순에서: Nf3의 흑 g5 비숍 공격을 Bxe3 수로 피합니다. Nf3 응수에서는 Bg5로 비숍이 활동에 나서 백 e3 비숍을 공격합니다. 이어 Bxe3로 백 e3 비숍을 잡습니다. 제시된 Bf6 수순의 Qxe3까지는 양쪽이 비숍 한 개씩 교환합니다. 백은 폰 한 개를 더 내줍니다."
+  ],
+  "old_replies": [
+    "Nf1",
+    "Nf3"
+  ],
+  "new_replies": [
+    "Qc1",
+    "Nf3"
+  ],
+  "new_manifest": [
+    {
+      "line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:a5ff02bbaa4203dc933caa9f05eaa979596d4579c89368ac015a0ae8278e0621",
+      "entry": 6,
+      "route": [
+        6
+      ],
+      "cause": "new_support",
+      "user": {
+        "side": "black",
+        "role": "knight",
+        "square": "h7"
+      }
+    },
+    {
+      "line_id": "move-review:bc49bb1c20b1f84c229d8afb72529c34317cfca98acc6c9e26f54ff67ef281dc:23:g7f6:line:7f7ad250437f8c960ef9844c518c43c6983026101d15e7a920bcd94f41ce8324",
+      "entry": 6,
+      "route": [
+        0,
+        6
+      ],
+      "cause": "relocation",
+      "user": {
+        "side": "black",
+        "role": "bishop",
+        "square": "g7"
+      }
+    }
+  ]
+}

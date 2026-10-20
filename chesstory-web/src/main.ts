@@ -10,7 +10,7 @@ import { BrowserEngine } from './engine/browserEngine';
 import { moveReviewEngineProfile } from './engine/types';
 import { MoveReviewCoordinator } from './review/moveReviewCoordinator';
 import { createMoveReviewRuntimeSource } from './review/moveReviewRuntimeSource';
-import { moveReviewCopy, moveReviewSans, updateMoveReviewViewForJob, type MoveReviewJobState,
+import { moveReviewBudgets, moveReviewCopy, moveReviewSans, updateMoveReviewViewForJob, type MoveReviewJobState,
   type MoveReviewViewState, type MoveReviewLocale } from './review/moveReview';
 import { renderMoveReview, renderMoveReviewBoard, type MoveReviewPanelProps } from './review/view/moveReview';
 import type { Key, Color, Tree } from './review/types';
@@ -240,7 +240,8 @@ function redraw(): void {
       ]),
       h('section.commentary-column', { attrs: { 'aria-label': t('해설', 'Commentary') } }, [
         h('div.commentary-heading', [h('h2', t('이 수의 의미', 'Why this move')),
-          button(t('해설 · 10초', 'Explain · 10 seconds'), explain, !path || job.kind === 'loading'),
+          button(t(`해설 · ${moveReviewBudgets.singleMs / 1000}초`, `Explain · ${moveReviewBudgets.singleMs / 1000} seconds`),
+            explain, !path || job.kind === 'loading'),
         ]),
         h('output#review-status', { attrs: { 'aria-live': 'polite', 'data-state': job.kind, 'data-elapsed-ms': Math.round(reviewElapsed) } },
           job.kind === 'loading' ? t('수의 목적과 응수를 살펴보고 있습니다.', 'Examining the move and its replies…') :

@@ -1,0 +1,143 @@
+{
+  "status": "active",
+  "created_utc": "2026-10-15T20:28:52.455316+00:00",
+  "objective": "Generalize core idea discovery, selection and explanation across different positional move types, preserving purpose, reply contrast, delayed realization and price.",
+  "baseline": "target/research-runs/idea-generalization-20261016/baseline/state.json",
+  "previous_records": [
+    "generalization-20261014.json",
+    "core-idea-20261014.json",
+    "purpose-comparison-20261015.json",
+    "function-continuity-20261015.json"
+  ],
+  "development_cases": [
+    "kozakov-f6",
+    "historical-ng8",
+    "historical-qc2",
+    "historical-ke6",
+    "kg2",
+    "rf3",
+    "re2",
+    "qa4"
+  ],
+  "heldout_cases": [
+    {
+      "id": "pedersen-nb1",
+      "game": "Daniel V. Pedersen - Jacob Aagaard, Denmark 2012",
+      "fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+      "move": "c3b1",
+      "pdf_page": 76,
+      "kind": "quiet knight regrouping",
+      "criterion": "Explain the useful route toward d2/b3/c5 if supported by returned play; distinguish transient defense from redeployment. Preserve opponent central play and costs; do not import the book continuation.",
+      "san": "Nb1",
+      "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+    },
+    {
+      "id": "danstrup-nxd4",
+      "game": "Danstrup - Aabling-Thomsen, Denmark 2008",
+      "fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+      "move": "c6d4",
+      "pdf_page": 116,
+      "kind": "exchange to change the remaining pieces and pawn play",
+      "criterion": "Explain removal of the original knight/bishop and how remaining pieces and e5/d4 access differ if observed. Do not describe equal material alone or infer a permanent weak/strong square from its name.",
+      "san": "Nxd4",
+      "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+    },
+    {
+      "id": "ciuksyte-be7",
+      "game": "Ciuksyte - Safarli, Internet 2008",
+      "pdf_page": 117,
+      "fen": "r1q1rbk1/2p2ppp/p4Bb1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 w - - 0 26",
+      "move": "f6e7",
+      "san": "Be7",
+      "resulting_fen": "r1q1rbk1/2p1Bppp/p5b1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 b - - 1 26",
+      "kind": "bishop exchange and removal of a defender",
+      "criterion": "Explain bishop exchange or interruption of the c5 defender and observed remaining-piece use if supported; preserve actual reference purpose and response costs without importing the book line.",
+      "registration_utc": "2026-10-15T21:43:04.913324+00:00",
+      "reason": "Both original heldouts exposed failures and became development cases. Add exactly one fourth screen position to retain an independent check after the common exchange fix; do not discard either earlier failure."
+    }
+  ],
+  "heldout_protocol": "No engine output or product commentary for these two positions before a common implementation is frozen. First failure remains a failure if subsequently used for changes. Book purpose is a question, not a forced reference or evaluation truth.",
+  "constraints": {
+    "maximum_depth": 18,
+    "ui_request_ms": 20000,
+    "actual_screen_cases": "Four distinct positions total: Ng8, Nb1, Nxd4, then one new Be7 after the first heldouts failed. No additional positions.",
+    "validation": "Reuse exact owned prior root reports and targeted semantic boundaries; no broad suite or long performance sampling",
+    "preserve_existing_uncommitted": true
+  },
+  "initial_common_hypotheses": [
+    "Any legal MoveIntent candidate currently disables MovePurpose discovery even if unsupported; a speculative attack can hide an observed route/support/exchange question.",
+    "MovePurpose uses static type order and the first candidate instead of considering an observed functional use across candidates.",
+    "Prepared intent admission is limited to non-capturing first actions on the played root; existing functional readers and two-root purpose composition must be reused, not reimplemented for each motif."
+  ],
+  "source": {
+    "title": "Aagaard, Grandmaster Preparation: Positional Play",
+    "local_pdf": "target/research-runs/generalization-20261014/positional-play.pdf",
+    "sha256": "eb5e3c4a4c0216515f2760ec8d69ff399318caca62704bd70000b84e5b0356e1",
+    "pages_studied": [
+      10,
+      11,
+      12,
+      71,
+      72,
+      73,
+      76,
+      77,
+      116,
+      117,
+      118
+    ],
+    "lesson": "A concrete relation can be true without being the important idea. Useful piece improvement, relevant weakness and opponent resources must be connected; exchange changes which apparent weaknesses can actually be used."
+  },
+  "findings": [
+    "First functional contact and first legal destination can displace a later witnessed useful role; selection and composition used different paths.",
+    "Root-PV-only discovery discards useful routes present in owned reply surveys. An independent full-reply survey is now allowed to refine the purpose without reusing a forced plan test.",
+    "Twenty-second functional response work was rejected by a frontend limit branch that only admitted the old short work shape.",
+    "A functional reply added to a selected comparison did not carry its search ownership; the frontend discarded the composed body.",
+    "Protection discovery ignored a newly supplied guard against the actually observed first reply.",
+    "A route returning to the original square cannot causally assign a later plan to the initial move."
+  ],
+  "validation_so_far": {
+    "synthetic_and_current_purpose_checks": "12/12 passed after main shared changes; final small cost-closing/rendering edits still to compile and screen-check",
+    "web_owned_delivery_and_preserved_purpose_checks": "7/7 passed",
+    "historical_MoveIntentTest": "5 failures at old work execution keys; the before-change diagnostic already selects c4a5 whereas the recorded Kg2 report was issued for c4e5. No report was relabelled for a different search."
+  },
+  "screen_runs": [
+    {
+      "id": "historical-ng8",
+      "runs": [
+        {
+          "elapsed_seconds": 2.42,
+          "result": "fault: twenty-second purpose work rejected by browser"
+        },
+        {
+          "elapsed_seconds": 3.28,
+          "result": "backend completed, browser dropped body without functional witness owner"
+        },
+        {
+          "elapsed_seconds": 4.56,
+          "result": "body delivered; short root PV still loses Ng8 purpose although reply PV contains Nf6. Generalization criterion not met."
+        }
+      ],
+      "depths": [
+        11
+      ]
+    },
+    {
+      "id": "pedersen-nb1",
+      "independent_first": {
+        "elapsed_seconds": 2.28,
+        "result": "partial: multi-step route reached Nb3 guarding d4; Nc5 activity relegated to endpoint; b3 alternative purpose unknown"
+      },
+      "after_using_for_changes": {
+        "elapsed_seconds": 3.82,
+        "result": "failed: sparse root PV hides route that is present in reply survey, fallback English incidental support"
+      },
+      "depths": [
+        11
+      ],
+      "independence": "No subsequent result may count as an independent pass."
+    }
+  ],
+  "still_unopened_holdout": "ciuksyte-be7",
+  "updated_utc": "2026-10-15T21:09:03.013586+00:00"
+}

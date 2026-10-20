@@ -1,0 +1,107 @@
+{
+  "status": "active_unachieved",
+  "phase": "settled-function-and-linked-preparations",
+  "started_utc": "2026-10-16T02:06:58.290492+00:00",
+  "previous_goal_turn": "progress",
+  "baseline": "target/research-runs/idea-generalization-preparation-20261016/baseline.json",
+  "constraints": {
+    "max_depth": 18,
+    "request_budget_ms": 20000,
+    "actual_screens": "Only development Ferry d6 and preregistered unused Ivanchuk Kh1, one request each after freeze."
+  },
+  "research": {
+    "source": "Aagaard Positional Play, cached Google Drive file 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      126,
+      127,
+      128,
+      129,
+      133,
+      134,
+      135
+    ],
+    "lesson": "Ferry d6 prevents the intended knight reorganization by changing recapture choices as well as freeing development. A later Qd5 route is one observed consequence, not a replacement for the full idea. Temporary contacts must be read with settled function and necessary preparations; a blanket preference for later survivors would repeat Qa4."
+  },
+  "heldout_preregistration": {
+    "game": "Vassily Ivanchuk - Lars Bo Hansen, Skanderborg 2005",
+    "pdf_diagram_page": 129,
+    "pdf_solution_pages": [
+      134,
+      135
+    ],
+    "fen_before": "r4rk1/1pq1npbp/4p1p1/1BPpn3/1P3B2/5N1P/2P2PP1/1R1Q1RK1 w - - 0 16",
+    "played_uci": "g1h1",
+    "book_continuation_uci": [
+      "g1h1",
+      "e7c6",
+      "c2c4",
+      "d5c4",
+      "d1e2",
+      "f7f6",
+      "b5c4"
+    ],
+    "diagram_inspected": true,
+    "position_valid": true,
+    "history": "standalone diagram with both kings already castled; no castling rights, neutral halfmove clock",
+    "expected_concepts": "Quiet king move avoids later checking resources while preserving the pin and preparing c4, with response-specific development, captures and costs. The actual engine pair and returned moves remain authoritative; no book move or line is forced.",
+    "selected_before_product_edits_and_engine_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "previous_failure_reassessment": "The previous d6 report correctly identified missing sequential clearance, but research shows this alone is not the central prophylactic idea. Avoid merely replacing pawn targeting with queen targeting.",
+  "implementation": [
+    "Track original corridor blockers, including the destination; require the original user to wait, no replacement blocker, no return after departure, and actual legal clearance steps within 18 plies.",
+    "A balanced local exchange contact may yield to the same original piece's witnessed clearance beneficiary; a later survivor alone has no priority.",
+    "A first defensive reply can guard a pawn and then recapture its actual capturer; preserve the resulting original beneficiary placement and all intervening capture receipts.",
+    "Both language routes share the activity cause and exact prepared steps. Required preparation references and the intermediate defensive capture reach the delivery contract.",
+    "Already expressed preparation/endpoint facts share their existing owner; the complete price interval carries unspoken intermediate proof moves without reciting the entire PV."
+  ],
+  "verification": {
+    "runtime": "25 idea cases + 10 Re2/Qa4 purpose cases passed. Final reply-context rendering then passed the affected d6 case. Full 25 and 10 XML retained separately from final 1.",
+    "screen_delivery": "21 delivery checks and type check passed before final reply context; after regenerating the final projection, 17 idea delivery checks and type check passed. The new optional prepared activity-plan validator positive branch is not exercised by this d6 selected-comparison fixture; receipt-removal rejection is exercised.",
+    "actual_ui": "Exactly two first requests after product freeze: d6 6.34s; unused Kh1 11.23s. UI budget 20s and all issued searches D11. Both move-to-board links checked. No new positions or favorable reruns."
+  },
+  "development_failures": [
+    "Old d6 had only the temporary d7-pawn activity candidate.",
+    "Initial corridor certification omitted the destination; returning-bishop boundary failed and was fixed by including it.",
+    "Missing capture receipt for the new defensive recapture rejected the otherwise correct paired account; exact reference restored without weakening validation.",
+    "Separate Korean ActivityUse rendering omitted the cause and fell back to English; routed through the shared Korean reader.",
+    "Old test expectation Nf3 was invalid once b3 became the stronger distinct witnessed reply; actual full-survey order is retained."
+  ],
+  "phase_result": "progress_with_independent_failure",
+  "finished_observation_utc": "2026-10-16T02:45:00.699108+00:00",
+  "actual_screens": [
+    {
+      "label": "d6",
+      "seconds": 6.34,
+      "verdict": "development improvement with remaining partial failure"
+    },
+    {
+      "label": "kh1",
+      "seconds": 11.23,
+      "verdict": "first independent failure of core-purpose discovery"
+    }
+  ],
+  "remaining_common_bottlenecks": [
+    {
+      "source": "PurposeActivityReading.entries/choose and ReferencePurposeReading.purposeKnown",
+      "finding": "The shared discovery seeds cover witnessed clearance, support, route and changed control. A quiet king move that removes a future checking resource can have no such observed use. The Kh1 failure repeats the earlier Kg2 limitation in a new independently selected position.",
+      "boundary": "Do not infer prophylaxis merely from king movement, apply a book c4 template, or promote any distant surviving piece. Separate a legally witnessed prevented resource from the causal reason for an evaluation."
+    },
+    {
+      "source": "PurposeActivityReading.replyPair and response search ownership",
+      "finding": "The unrestricted b3 reply proves its relative rank but has a short PV ending at Nd3; a later restricted b3 report contains Qd7/Qb7. Current selection stays with the earlier survey account and its transient contact. Ranking evidence and continuation evidence need separately certified ownership without silently replacing the actual score or work identity."
+    },
+    {
+      "finding": "Root purpose, actual selected evaluation pair, latent checking options, and reply-specific implementation remain incompletely connected. The observed preparation work is useful progress but does not establish broad commentary generalization."
+    }
+  ],
+  "next_action": "Continue the active long goal with quiet prevention and certified continuation evidence. First reproduce the exact first Kh1 reports and distinguish what is absent from the chosen PV from what discovery discarded; preserve this independent failure and earlier Kg2/Qa4/Re2 boundaries. Do not add sentence templates or move-name exceptions.",
+  "external_blocker": null,
+  "ui_restored": "Original 1.e4 at start, Engine Off, blank inputs; temporary diagnostic network buffers reset to defaults.",
+  "artifacts": {
+    "screen_evidence": "idea-generalization-preparation-20261016/screen-evidence.json",
+    "saved_report_readings": "idea-generalization-preparation-20261016/saved-report-readings.json",
+    "raw_network": "idea-generalization-preparation-20261016/live-reports.json.gz",
+    "preservation": "idea-generalization-preparation-20261016/preservation-check.json"
+  }
+}

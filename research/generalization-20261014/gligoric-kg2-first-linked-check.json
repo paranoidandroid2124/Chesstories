@@ -1,0 +1,15 @@
+{
+  "matched": true,
+  "piece_count": 24,
+  "fen": "3rb2k/p1b1q1p1/1p2pn1p/2p5/P1B1P3/1P2NPP1/1BQ3KP/3R4 b - - 0 33",
+  "uci": [
+    "g1g2",
+    "f8e7",
+    "c4e3",
+    "g6e8",
+    "d3c4",
+    "d7d1",
+    "f1d1"
+  ],
+  "source": "Actual main-board DOM after clicking last Rxd1 statement, compared with independently replayed exact focus report"
+}

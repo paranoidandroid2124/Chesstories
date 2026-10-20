@@ -1,0 +1,291 @@
+--- before/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala
++++ after/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala
+@@ -9,7 +9,7 @@
+   import CommentaryProposal.*
+   import ObservedLineProtocol.{PreparedPath, PreparedPaths}
+ 
+-  val GeneratorVersion = "33"
++  val GeneratorVersion = "34"
+ 
+   final case class Anchor(prefixMoves: List[String], referenceMove: String)
+   final case class SourcePath(moves: List[String], source: Source,
+@@ -951,11 +951,13 @@
+                       replays += moves
+                       pending += moves
+                     current
+-                  def sameResource(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
++                  def sameMover(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
+                     a.move == b.move && left.original(a.actor).nonEmpty &&
+                       left.original(a.actor) == right.original(b.actor) &&
+-                      a.capture.flatMap(left.original) == b.capture.flatMap(right.original) &&
+                       a.promotionRole == b.promotionRole
++                  def sameResource(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
++                    sameMover(left, right, a, b) &&
++                      a.capture.flatMap(left.original) == b.capture.flatMap(right.original)
+                   def emitFunction(condition: Predicate, leftMoves: List[String], rightMoves: List[String],
+                       effect: Predicate, option: LegalMoveResource, at: Board, refs: List[String],
+                       price: Option[(LegalMoveResource, Board)] = None,
+@@ -1028,7 +1030,11 @@
+                       val checkedAlternative = alternative.view.checkingMoves.toList.flatten.map(_.move).toSet
+                       alternativeRows.filter(row => checkedAlternative(row.move) && !checkedReference(row.move))
+                         .sortBy(_.move).foreach { enemy =>
+-                          referenceRows.find(row => sameResource(reference, alternative, row, enemy)).foreach { _ =>
++                          // The same checking move may cease to be a capture
++                          // when the alternative has already moved its victim.
++                          // Capture/recapture comparisons below still require
++                          // the same victim; only the checking tempo differs here.
++                          referenceRows.find(row => sameMover(reference, alternative, row, enemy)).foreach { _ =>
+                             val leftMoves = referencePrefix :+ enemy.move
+                             val rightMoves = alternativePrefix :+ enemy.move
+                             for
+--- before/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala
++++ after/chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala
+@@ -450,12 +450,7 @@
+         plan.targets.map(_.possessiveName).mkString(" and ") + ".") ++
+         retained ++ meeting ++ route ++ preparation ++ exchange ++ guards
+     case FunctionPurpose(value) =>
+-      val q = value.question
+-      val task = if q.kind == "supported_advance" then
+-        s" adds control of ${q.square}, supporting the ${q.user.role.name} advance to ${q.square}" +
+-          (if value.entrants.isEmpty then "." else s" and contesting entry by ${value.entrants.map(_.possessiveName).mkString(" and ")}.")
+-      else s" opens a route for the ${q.user.role.name} through ${q.square}, so its activity can continue beyond the immediate attack."
+-      List[Part](MoveRef(q.path, 0), task) ++ value.pawn.toList.map { (pawn, blockader) =>
++      ReferencePurposeText.functionalPurpose(value, ko = false) ++ value.pawn.toList.map { (pawn, blockader) =>
+         s" ${pawn.possessiveName} remains one step from promotion, in front of ${blockader.possessiveName}; preserving this pawn keeps that restriction while the other piece becomes active."
+       }
+     case ExchangeFunction(value) =>
+--- before/chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala
++++ after/chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala
+@@ -490,7 +490,7 @@
+           other <- search.lines.iterator.map(line => search.pathsByMove(line.evaluation.moves.head))
+             .find(path => !(path eq witness))
+           if search.pairAnswer(packet, witness.moves(1), other.moves(1)).nonEmpty
+-        yield List(witness, other)
++        yield List(witness, other).sortBy(path => search.lines.indexWhere(_.evaluation.moves.head == path.moves(1)))
+         val replyActivities = PurposeActivityReading.replyPair(packet, search, activities, q.purposeActivity)
+         val paired = replyActivities.map(_.map(_.path)).orElse(surveyed).orElse(contrasted)
+         paired.flatMap { pair =>
+--- before/chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala
++++ after/chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala
+@@ -377,6 +377,20 @@
+         .filter(_.kind == LineEventKind.Check).map(_.plyOffset).toSet
+       while end + 1 < path.moves.size && (offsets(end + 1) || checking(end)) do end += 1
+       end
++    def rootSupport(path: PreparedPath, actor: Piece, moved: Piece,
++        original: Piece, target: Piece, count: Int): Boolean =
++      val providerStays = (1 to count).forall(n => current(path, actor, n).contains(moved))
++      val direct = !before.controlledBy(actor)(target.at) &&
++        position(path, 1).exists(_.controlledBy(moved)(target.at))
++      // A supported slider can initially stand between its new defender and
++      // its later destination. Follow that same physical beneficiary while
++      // the root provider stays put; another piece or a later newly opened
++      // ray cannot inherit this causal link.
++      val following = current(path, original, 1).exists(initial =>
++        !before.controlledBy(actor)(initial.at) && (1 to count).forall(n =>
++          current(path, original, n).exists(beneficiary =>
++            position(path, n).exists(_.controlledBy(moved)(beneficiary.at)))))
++      providerStays && (direct || following)
+     def supportedArrivals(path: PreparedPath, actor: Piece, moved: Piece, through: Int): List[SupportedArrival] =
+       (2 to through).flatMap { offset =>
+         for
+@@ -386,9 +400,7 @@
+             current(path, p, offset).contains(arriver))
+           afterUse <- position(path, offset + 1)
+           target <- current(path, original, offset + 1)
+-          if target != arriver && !before.controlledBy(actor)(target.at) &&
+-            position(path, 1).exists(_.controlledBy(moved)(target.at)) &&
+-            (1 to offset + 1).forall(n => current(path, actor, n).contains(moved)) &&
++          if target != arriver && rootSupport(path, actor, moved, original, target, offset + 1) &&
+             afterUse.controlledBy(moved)(target.at)
+         yield
+           proof ++= afterUse.sourceRefs(afterUse.sources(moved, List(target.at)))
+@@ -731,9 +743,8 @@
+       val supported = losses.flatMap(_.originalVictim).filter(p => p.side == side && p != arm.actor).distinct.flatMap { target =>
+         LineContinuationInvestigation.directSupportUse(packet, arm.path, paths,
+           arm.through + 1, arm.actor, target).uses.filter(use => use.provider == arm.moved &&
+-            use.targetCapture.plyOffset > 1 && !before.controlledBy(arm.actor)(use.target.at) &&
+-            position(arm.path, 1).exists(_.controlledBy(arm.moved)(use.target.at)) &&
+-            (1 to use.targetCapture.plyOffset).forall(n => current(arm.path, arm.actor, n).contains(arm.moved)))
++            use.targetCapture.plyOffset > 1 && rootSupport(arm.path, arm.actor, arm.moved,
++              target, use.target, use.targetCapture.plyOffset))
+       }.distinct
+       val supportUse = supported match
+         case List(use) =>
+@@ -836,11 +847,16 @@
+           branch.controllers.toSet, branch.occupant, branch.relocated.toSet)
+       val observed = value.branches.find(_.path.moves(1) == reading.played.path.moves(1))
+       val supported = value.branches.flatMap(_.purposeActivity)
+-      if supported.nonEmpty && (supported.size != value.branches.size || observed.isEmpty ||
++      val conditionalDifference = observed.isEmpty && value.branches.exists(_.realizes) &&
++        value.branches.map(task).distinct.size > 1
++      if conditionalDifference || supported.nonEmpty && (supported.size != value.branches.size || observed.isEmpty ||
+           supported.size == 2 && (!supported.head.sameTask(supported(1)) || supported.head.differentOutcome(supported(1)))) then
+         // The same first reply can lead to a different returned continuation.
+         // Compare both owned realizations and prices, not the reply name alone.
+-        value.branches.map { branch =>
++        val cause = Option.when(conditionalDifference && supported.isEmpty &&
++          value.question.plan.isEmpty && value.question.support.isEmpty && value.question.activity.isEmpty)(
++          Section(List(FunctionPurpose(value)))).toList
++        cause ++ value.branches.map { branch =>
+           continuation(branch.path, branch.through, FunctionReply(value, branch), priceHere = true)
+         }
+       else value.branches.filter(branch => !reading.functional.exists(_.witnessedPlan.exists(_.path eq branch.path)) &&
+--- before/chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala
++++ after/chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala
+@@ -55,6 +55,16 @@
+         List[Part](words(s", that capture with the same ${role(provider)} is unavailable.",
+           s" 뒤에는 같은 ${role(provider)}의 그 잡기가 불가능합니다."))
+     else
++      val replyCapture = value.reference.certified.toList.flatMap(_._2.material.toList.flatMap(_.events))
++        .find(_.plyOffset == proof.reference.size - 1).flatMap(_.capture)
++      val otherCapture = value.alternative.certified.toList.flatMap(_._2.material.toList.flatMap(_.events))
++        .exists(e => e.plyOffset == proof.alternative.size - 1 && e.capture.nonEmpty)
++      val movedVictim = replyCapture.filter(capture => proof.reference.size == 2 && !otherCapture &&
++        proof.alternative.head.take(2) == capture.square.key).toList.flatMap { capture =>
++        List[Part](words(" Here ", " 여기서 "), other, words(
++          s" has already moved the ${capture.capturedRole.name} from ${capture.square.key}, so the checking reply is without a capture.",
++          s" 수는 이미 ${capture.square.key}의 ${roles(capture.capturedRole.name)}을 옮겼으므로, 이 응수는 기물을 잡지 않고 체크만 합니다."))
++      }
+       val option = proof.action.target.filter(_ => proof.action.kind == "legal_capture").fold(
+         words(" available. After ", " 같은 선택도 남습니다. ")) { target =>
+         words(s" to capture the ${role(target)} on ${target.square}. After ",
+@@ -64,8 +74,10 @@
+         " 수는 다음 응수의 체크 효과를 없앱니다. 조건을 확인하는 합법적 예로 "), root, " ") ++ left ++
+         List[Part](words(", the king is not in check, leaving the option ", " 뒤에는 체크가 아니므로 "), value.option,
+           option, other, " ") ++ right ++
+-        List[Part](words(", the king is in check and the same move cannot be played immediately. This proves an available option, not compensation for its material cost.",
+-          " 뒤에는 체크를 해결해야 하므로 그 수를 바로 둘 수 없습니다. 남겨 둔 합법적 선택이며, 그 대가를 보상받는다는 뜻은 아닙니다."))
++        List[Part](words(", the king is in check and the same move cannot be played immediately.",
++          " 뒤에는 체크를 해결해야 하므로 그 수를 바로 둘 수 없습니다.")) ++ movedVictim ++
++        List[Part](words(" This proves an available option, not compensation for its material cost.",
++          " 남겨 둔 합법적 선택이며, 그 대가를 보상받는다는 뜻은 아닙니다."))
+ 
+   def preparedRoute(value: CommentaryAnswer.ClearedRoute, ko: Boolean): List[Part] =
+     List[Part](if ko then "제시된 수순의 " else "In the given line, ") ++
+@@ -249,9 +261,11 @@
+         List(controlUse(causal.get, ko, reply = !(causal.get.path eq arm.path))) ++ sentences(released)
+       else if arm.activity.nonEmpty then
+         val value = arm.activity.get
++        val supported = if value.original == arm.actor then sentences(use) else Nil
+         val condition: List[Part] = if value.path eq arm.path then Nil else
+           List(MoveRef(value.path, 1), if ko then " 응수에서는 " else " is the observed reply; ")
+-        List(condition ++ activity(value, ko, includeCause = true)) ++ sentences(escape ++ check ++ released)
++        supported ++ List(condition ++ activity(value, ko, includeCause = supported.isEmpty,
++          includeReply = supported.isEmpty)) ++ sentences(escape ++ check ++ released)
+       else sentences(capture ++ escape) ++ guard ++ sentences(shield ++ check) ++ attack ++
+         sentences(file ++ exchange ++ use ++ post ++ released ++ unknown))
+       parts.zipWithIndex.flatMap((sentence, index) => (if index == 0 then Nil else List[Part](" ")) ++ sentence)
+@@ -753,6 +767,12 @@
+ 
+   def functionalPurpose(value: MovePurpose.Reading, ko: Boolean): List[Part] =
+     val q = value.question
++    if q.plan.isEmpty && q.support.isEmpty && q.activity.isEmpty then
++      return List[Part](MoveRef(q.path, 0), if q.kind == "supported_advance" then
++        if ko then s" 수는 ${q.square} 통제를 더하여 ${roles(q.user.role.name)}의 진출을 받칩니다. 실현 여부는 응수에 따라 달라집니다."
++        else s" adds control of ${q.square}, supporting the ${q.user.role.name}'s advance. Its realization depends on the reply."
++      else if ko then s" 수는 ${roles(q.user.role.name)}의 ${q.square} 진입 경로를 엽니다. 실현 여부는 응수에 따라 달라집니다."
++        else s" opens a route for the ${q.user.role.name} through ${q.square}. Its realization depends on the reply.")
+     val plan = value.witnessedPlan.get
+     val (own, enemy) = plan.targets.partition(_.side == q.actor.side)
+     val tasks = Option.when(own.nonEmpty)(if ko then s"${names(own, ko)}${obj(own.last)} 지킵니다."
+@@ -846,7 +866,8 @@
+   def condition(value: CommentaryAnswer.Statement): Option[List[Part]] = value match
+     case value: CommentaryAnswer.LegalReplyOption => Some(legalOption(value, ko = true))
+     case CommentaryAnswer.ActivityUse(value, shared) => Some(activityUse(value, ko = true, shared))
+-    case CommentaryAnswer.FunctionPurpose(value) if value.witnessedPlan.nonEmpty =>
++    case CommentaryAnswer.FunctionPurpose(value) if value.witnessedPlan.nonEmpty ||
++        value.question.plan.isEmpty && value.question.support.isEmpty && value.question.activity.isEmpty =>
+       Some(functionalPurpose(value, ko = true))
+     case CommentaryAnswer.FunctionReply(value, branch) if value.question.activity.isEmpty =>
+       Some(functionalReply(value, branch, ko = true))
+--- before/chesstory-runtime/src/test/scala/io/chesstory/runtime/IdeaGeneralizationTest.scala
++++ after/chesstory-runtime/src/test/scala/io/chesstory/runtime/IdeaGeneralizationTest.scala
+@@ -19,7 +19,7 @@
+   private lazy val screenCases = fixture("idea-generalization-browser") ++ fixture("causal-function-browser") ++
+     fixture("activity-browser") ++ fixture("hypothesis-browser") ++ fixture("priority-browser") ++
+     fixture("reply-functions-browser") ++ fixture("counterplay-browser") ++ fixture("obligation-browser") ++
+-    fixture("preparation-browser") ++ fixture("prevention-browser")
++    fixture("preparation-browser") ++ fixture("prevention-browser") ++ fixture("resources-browser")
+ 
+   private def replay(id: String, reportCount: Int = Int.MaxValue): List[CommentaryJobState] =
+     val row = screenCases.find(r => (r \ "id").as[String] == id).get
+@@ -39,6 +39,45 @@
+       state = CommentaryJobReducer.submitIssuedWorkReport(state, report, index.toLong + 2L).toOption.get
+       state
+     }
++
++  private def resourceSnapshot(id: String, state: CommentaryJobState): JsObject =
++    val row = screenCases.find(r => (r \ "id").as[String] == id).get
++    val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
++      (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))
++    Files.writeString(Path.of(s"../target/research-runs/idea-generalization-resources-20261016/$id-reread.json"),
++      Json.stringify(Json.obj("request" -> (row \ "request").get, "snapshot" -> snapshot)), UTF_8)
++    snapshot
++
++  test("resource identity keeps a checking tempo when the alternative moved its capture target"):
++    val state = replay("kh1-resource-fresh", 1).last
++    val snapshot = resourceSnapshot("kh1-resource-fresh", state)
++    val proofs = FunctionalReplyReading.read(state.proposalEntries)
++    assert(proofs.exists(p => p.effect.kind == "check" && p.action.target.exists(_.role == "queen")))
++    val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
++      .find(c => (c \ "selection").asOpt[String].contains("selected")).get
++    val text = (selected \ "detail" \ "summary").as[String]
++    assert(text.contains("Bxc7") && text.contains("Nxf3") && text.contains("Nf3+") && text.contains("without a capture") &&
++      !text.contains("purpose is not established"), text)
++
++  test("resource support and conditional realization survive an independent reply survey"):
++    val state = replay("qg2-first-independent").last
++    val packet = state.observationsPacket.get
++    val paths = state.preparedPaths.get
++    val reading = MovePurpose.read(packet, paths, state.responseSearches, Nil).get
++    val snapshot = resourceSnapshot("qg2-first-independent", state)
++    val selected = (snapshot \ "observations" \ "selection" \ "candidates").as[List[JsObject]]
++      .find(c => (c \ "selection").asOpt[String].contains("selected")).get
++    val text = (selected \ "detail" \ "summary").as[String]
++    assert(reading.branches.exists(_.realizes) && reading.branches.exists(!_.realizes), reading.question.json.toString)
++    assert(text.contains("Rh4") && text.contains("h3") && text.contains("R4f7"), text)
++    val pair = ReferencePurposeReading.assessmentPair(packet, paths)
++    val purpose = ReferencePurposeReading.read(packet, paths, pair, responses = Some(reading)).get
++    assert(purpose.played.supportUse.nonEmpty && purpose.played.supportedArrival.nonEmpty,
++      "the root queen must remain connected to the rook's later arrival and actual recapture")
++    assert(text.contains("supports the rook's arrival on g4") && text.contains("recaptures") &&
++      text.contains("original h2 pawn") && text.contains("e4"), text)
++    assert((selected \ "detail" \ "summary_question" \ "units").as[List[JsObject]]
++      .forall(u => !(u \ "english_only").asOpt[Boolean].contains(true)))
+ 
+   private def prepare(moves: List[String]) =
+     val input = MoveReviewInputAdmission.admit(RawMoveReviewInput(
+--- before/chesstory-web/tests/ideaGeneralization.test.ts
++++ after/chesstory-web/tests/ideaGeneralization.test.ts
+@@ -14,6 +14,31 @@
+   after: { path: 'aa', fen: r.focus.resulting_fen }, played: { uci: r.focus.played_move_uci, san: 'Ng8' },
+ } as MoveReviewSubject }; }
+ const context = contextFor(row.request);
++
++test('moving beneficiaries and conditional resources retain the basic account and their prices', () => {
++  const sources = JSON.parse(gunzipSync(readFileSync(new URL(
++    '../../judgment-evaluation/fixtures/public-commentary-v6/resources-reading.json.gz', import.meta.url,
++  ))).toString('utf8'));
++  for (const name of ['kh1', 'qg2']) {
++    const source = sources[name];
++    const selected = source.snapshot.observations.selection.candidates.find((c: any) => c.selection === 'selected');
++    const decoded = decodeMoveReviewSnapshot(source.snapshot, contextFor(source.request));
++    const shown = decoded?.observations?.selection?.candidates.find(c => c.id === selected.id)?.detail.summary_question;
++    assert.deepEqual(shown, selected.detail.summary_question);
++    assert.ok(shown?.units.every(u => !u.english_only));
++    const text = JSON.stringify(shown?.units);
++    assert.match(text, name === 'kh1' ? /기물을 잡지 않고 체크만/ : /g4에 진출하는 룩/);
++    if (name === 'qg2') {
++      assert.match(text, /h3 통제를 더하여/);
++      assert.match(text, /응수에 따라 달라집니다/);
++    }
++    const raw = structuredClone(source.snapshot);
++    const q = raw.observations.selection.candidates.find((c: any) => c.id === selected.id).detail.summary_question;
++    q.units.find((u: any) => u.covered_moves?.length).covered_moves = [];
++    assert.equal(decodeMoveReviewSnapshot(raw, contextFor(source.request))?.observations?.selection, undefined,
++      'adding a purpose cannot erase the connected exchange cost');
++  }
++});
+ 
+ test('a prevented checking escape retains the actual pair and its conditional queen capture cost', () => {
+   const source = JSON.parse(gunzipSync(readFileSync(new URL(

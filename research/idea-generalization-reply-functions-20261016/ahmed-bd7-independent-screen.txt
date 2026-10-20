@@ -1,0 +1,115 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	1 container app
+		2 container
+			3 text Chesstories
+			4 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				5 menu
+					6 (selected) 한국어
+					7 English
+			8 button 어둡게
+		9 container
+			10 container 체스판과 기보
+				11 heading 분석 기보, Value: 1
+					12 text 분석 기보
+				190 text 29… Bd7
+				156 container
+					157 image
+					158 image
+					159 image
+					160 image
+					161 text 1
+					162 text 2
+					163 text 3
+					164 text 4
+					165 text 5
+					166 text 6
+					167 text 7
+					168 text 8
+					169 text A
+					170 text B
+					171 text C
+					172 text D
+					173 text E
+					174 text F
+					175 text G
+					176 text H
+				35 container 기보 이동
+					36 button 처음
+					37 button 이전 수
+					38 button (disabled) 다음 수
+					39 button (disabled) 마지막
+					40 button 방향 전환
+				41 container
+					42 text field (settable) 수 입력
+					43 button 두기
+				44 container
+					45 heading Engine reference, Value: 2
+						46 text Engine reference
+					47 checkbox Engine / Off, Value: 0
+					48 text Off · Stockfish 18 · 2 threads
+				49 container
+					50 heading 기보, Value: 2
+						51 text 기보
+					52 button PGN 저장
+					53 button 29… Bd7
+				191 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					192 text PGN · FEN 불러오기
+				56 container
+					57 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						58 text 현재 FEN
+			59 container 해설
+				60 heading 이 수의 의미, Value: 2
+					61 text 이 수의 의미
+				62 button 해설 · 20초
+				195 text completed · 2.26s
+				64 container 직전 수 리뷰
+					65 container
+						66 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							67 text 직전 수 리뷰
+						194 text 직전 수 리뷰가 완료되었습니다.
+					196 container 실수: Bd7
+						197 text Bd7
+						198 heading 실수, Value: 3
+							199 text 실수
+					200 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						201 text 평가 수치
+						236 text +
+					203 container
+						204 heading 두 선택의 비교, Value: 3
+							205 text 두 선택의 비교
+						206 pop up button (collapsed) Description: f5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-0
+						207 text  —  백 g4 폰을 새로 공격합니다.
+						208 pop up button (collapsed) Description: Bd7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-4
+						209 text  —  백 g4 폰을 새로 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.
+						210 pop up button (collapsed) Description: f5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-11
+						211 text  수순의 비교 시점까지 백의 g4 폰을 내줍니다.
+						212 pop up button (collapsed) Description: Bd7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-14
+						213 text  수순의 비교 시점까지 백의 e1 룩과 흑의 e7 나이트를 교환합니다.
+						214 pop up button (collapsed) Description: f5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-17
+						215 text  수순에서: 
+						216 pop up button (collapsed) Description: Re5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-19
+						217 text 의 흑 f5 폰 공격을 
+						218 pop up button (collapsed) Description: fxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-0-21
+						219 text  수로 피합니다.
+						220 pop up button (collapsed) Description: f5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-1-0
+						221 text  — 
+						222 pop up button (collapsed) Description: Re5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-1-2
+						223 text : 흑 d5 폰을 새로 공격합니다. 
+						224 pop up button (collapsed) Description: fxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-1-4
+						225 text 까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. g4·g6에 고립된 더블폰이 남습니다. g4 폰은 통과폰입니다. g4 폰에는 현재 방어자가 없습니다.
+						226 pop up button (collapsed) Description: Bd7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-2-0
+						227 text  — 
+						228 pop up button (collapsed) Description: Rxe7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-2-2
+						229 text : 흑 e7 나이트를 잡습니다. 
+						230 pop up button (collapsed) Description: Qxe7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:78c11bd85b700e64a496c8fa685f7ad80dc36969a247a51cabf21e5c0edf267a:57:c6d7:evidence:candidate-comparison:67cd68d88ba832ead8bab77219adb8d63738566c3ec739634ca4dde9f89724ef-question-basic-2-4
+						231 text 까지의 수순에서는 흑 d7 비숍을 남깁니다.
+						232 button 대안 수 · f5 · 재생
+						233 button 둔 수 · Bd7 · 재생
+					234 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						235 text 평가 근거와 관찰 기록
+						237 text +
+		71 container
+			81 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

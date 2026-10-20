@@ -1,0 +1,119 @@
+{
+  "status": "active_unachieved",
+  "phase": "resource-identity-and-conditional-opportunities",
+  "started_utc": "2026-10-16T03:30:22.197279+00:00",
+  "previous_goal_turn": "progress",
+  "baseline": "target/research-runs/idea-generalization-resources-20261016/baseline.json",
+  "constraints": {
+    "max_depth": 18,
+    "request_ms": 20000,
+    "actual_screens": "One development Kh1 or Qg2, chosen before the final freeze, and one preregistered unused Razuvaev h4; saved reports for other development checks."
+  },
+  "research": {
+    "source": "Aagaard Positional Play, cached G Drive file 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145
+    ],
+    "lesson": "Prophylaxis can preserve a developing choice without an immediate attack. The same resource can be neutralized by changing the capture target, removing a checking tempo, or preparing a different recapturer. Conditional purposes need not materialize against every reply."
+  },
+  "heldout_preregistration": {
+    "game": "Razuvaev - Sveshnikov, Moscow 1995",
+    "pdf_diagram_and_solution_page": 140,
+    "fen_before": "2bq1rk1/4bppp/1Pp2n2/2Pp4/1p6/1N3PP1/2Q2P1P/B3KB1R w K - 0 17",
+    "played_uci": "h2h4",
+    "book_continuation_uci": [
+      "h2h4",
+      "d5d4",
+      "f1c4",
+      "f6d5",
+      "a1d4",
+      "f8e8",
+      "e1f1"
+    ],
+    "diagram_inspected": true,
+    "position_valid": true,
+    "castling": "White K right retained: the book explicitly considers later O-O; no queenside rook and black king already on g8.",
+    "expected_concepts": "h4 makes development possible while removing the irritation of Bh3; actual d4 may change Bd3 into Bc4. Engine comparison and returned lines remain authoritative.",
+    "selected_before_product_edits_and_engine_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "implementation": [
+    "Checking resource identity follows the same original mover and destination; capture victim equality remains mandatory for capture/recapture functions. The alternative root moving its victim is explained explicitly.",
+    "Root support follows the same physical beneficiary as it moves under continuous support from the unmoved root provider. A later recapture and resulting activity keep that supporting purpose.",
+    "Independent reply surveys keep their own rank order. Branch-dependent realized opportunities remain in basic commentary even when the actual comparison has a different first reply; conditional purpose, two branches and costs remain together.",
+    "The shared bilingual renderer no longer lets the root mover's later attack erase its earlier supporting role."
+  ],
+  "verification": {
+    "actual_ui": [
+      {
+        "case": "Qg2",
+        "development": true,
+        "seconds": 3.91,
+        "issued_work_count": 2,
+        "issued_depths": [
+          11,
+          11
+        ],
+        "verdict": "failure under new PV",
+        "finding": "The automatic pair changed to Qg2/Rg4. The basic explanation preserves Rg4 exchange and f3 support changes, but Qg2 again lacks its preparation purpose. A separate Qh6 survey supplies Qg2-Qf1-Qg2 and a late g7 attack, which does not establish the purpose of the first Qg2."
+      },
+      {
+        "case": "h4",
+        "heldout": true,
+        "seconds": 8.83,
+        "issued_work_count": 3,
+        "issued_depths": [
+          11,
+          11,
+          11
+        ],
+        "verdict": "first independent failure",
+        "finding": "Automatic Be2/h4 comparison preserves the different physical bishop/knight/pawn exchange costs, but calls Be2 purpose unknown and chooses the opened rook ray after h4. It omits the relation between clearing h2, answering Bh3 by Rxh3, and allowing bishop development without the same opposing trade."
+      }
+    ],
+    "saved_report_checks": "Initial Kh1 passed; Qg2 failed on lost conditional branches, then failed on final basic-purpose suppression despite a correct support reading; both passed after the corresponding common fixes.",
+    "web_delivery_checks": "20 passed including unchanged bilingual receipt delivery and missing-price rejection.",
+    "typecheck": "Passed.",
+    "server_core_checks": "39 passed: IdeaGeneralizationTest 29, PurposeComparisonTest 10. Final XML copied before any further run. Earlier Qg2 missing-purpose failures retained in the development narrative."
+  },
+  "external_blocker": null,
+  "development_screen_selected_before_live": "Qg2, to exercise moving support, conditional response realization and cost delivery together. Kh1 uses exact saved reports, not another screen request.",
+  "new_failure_findings": [
+    {
+      "common_bottleneck": "Conditional resource discovery excludes a quiet enemy arrival on a square controlled by an unmoved allied provider whose ray the root pawn cleared.",
+      "code": "CommentaryDiscovery.inspectFunction: direct quiet-arrival inspection only follows relocated guards, while ownedControls is used for checking arrivals after captures or later observed supported arrivals. h4 changes the h1 rook's h3 control although that rook did not relocate.",
+      "read_only_legal_evidence": "h4 Bh3 permits Rxh3; Be2 Bh3 does not because the h2 pawn still blocks the rook. Both exact branches were checked legally after the first screen, without product edits or engine search. This is a legal resource difference, not an engine valuation or forced refutation."
+    },
+    {
+      "common_bottleneck": "The core purpose ranking can prefer a later witnessed attack over a conditional root opportunity.",
+      "code": "MovePurpose.question ranks witnessed piece_pressure ahead of supported_advance; the fresh Qh6 line returns the queen to g2 after Qf1, Rg1 and Rc3. Its later contact comes after independent allied clearance, so the first move's causal purpose is still unresolved.",
+      "scope": "Do not classify every returning route as useless: some coordinated maneuvers require such a return. The missing test is whether the original move is connected to the intervening duties, not whether a destination repeats."
+    },
+    {
+      "common_bottleneck": "Quiet development and the opponent forcing a retreat/exchange are not yet a root-purpose type.",
+      "scope": "The Be2/Bh3/Bf1/Bxf1 sequence and h4 followed by Be2 are present in actual reports. Geometric rook-ray disclosure and end-piece inventory do not connect that distinction."
+    }
+  ],
+  "product_changes_after_first_live_output": false,
+  "new_engine_reruns": 0,
+  "ui_restored": "Original 1.e4 at start; Engine Off; blank collapsed import; diagnostic buffers reset.",
+  "next_action": "Continue the active goal from the same unresolved semantic criteria. Connect root-cleared allied control to quiet opposing resources and the own development it preserves; qualify later repeated-post activity by its preparation duties. Keep first failures immutable. Avoid repeatedly expanding actual-screen verification; use the saved exact reports for diagnosis.",
+  "goal_turn_audit": {
+    "classification": "progress",
+    "reason": "Common identity, support, branch selection and bilingual delivery changed, and two first live outputs narrowed the remaining causal-discovery gap. No external blocker. Goal not achieved."
+  },
+  "artifacts": {
+    "screen_evidence": "idea-generalization-resources-20261016/screen-evidence.json",
+    "saved_reports": "idea-generalization-resources-20261016/saved-report-readings.json",
+    "network": "idea-generalization-resources-20261016/live-reports.json.gz",
+    "preservation": "idea-generalization-resources-20261016/preservation-check.json",
+    "legal_counterexamples": "idea-generalization-resources-20261016/h4-legal-counterexamples.json"
+  }
+}

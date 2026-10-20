@@ -11,8 +11,8 @@ import {
   decodeCommentarySelection,
   continuationRoutePoolMatches,
   responsePoolMatchesClasses,
-  reviewedMoverResponsePoolMatches,
   purposeResponseMovesMatch,
+  preparationResponseMovesMatch,
   responseSearchMatchesInquiry,
   reserveResponsePoolMatches,
   ownedChoiceSurveyMatches,
@@ -784,7 +784,7 @@ interface MoveReviewDecodeContext {
 }
 
 // The backend's maximum job lifetime is a safety limit, not a shared game budget or analysis target.
-export const moveReviewBudgets = { singleMs: 10_000, jobSafetyMs: 180_000 } as const;
+export const moveReviewBudgets = { singleMs: 20_000, jobSafetyMs: 180_000 } as const;
 
 export interface MoveReviewSourceRequest {
   requestId: string;
@@ -2050,7 +2050,11 @@ function projectIssuedEngineWork(
       anchor.position_id as string,
       anchorPrefix,
     ) &&
-    (purposePool || firstReplySurvey || functionalSurvey || (anchorPrefix.length === 1 &&
+    (purposePool || (observations.selection?.preparation_question && restrictedMoves &&
+      observations.selection.preparation_question.root_move === anchor.root_move &&
+      observations.selection.preparation_question.root_occurrence_id === anchor.root_occurrence_id &&
+      preparationResponseMovesMatch(observations.selection.preparation_question, observations, anchorPrefix, restrictedMoves) &&
+      limits.multiPv === Math.min(3, restrictedMoves.length)) || firstReplySurvey || functionalSurvey || (anchorPrefix.length === 1 &&
       observations.selection?.response_inquiries?.some(
         inquiry =>
           inquiry.state === 'awaiting_engine' &&
@@ -2119,23 +2123,6 @@ function projectIssuedEngineWork(
             ),
         ),
       ));
-  const selectedFirstReply = value.purpose === 'response_comparison' && isObject(anchor) &&
-    Array.isArray(anchorPrefix) && anchorPrefix.length === 1 && restrictedMoves &&
-    ((restrictedMoves.length === 2 && observations?.selection?.proposals?.some(proposal =>
-      proposal.admission === 'generated' &&
-      proposal.requirements.some(reading => reading.kind === 'compare_moves' &&
-        reading.state === 'awaiting_engine' && reading.work_id === value.work_id &&
-        arrayEquals(reading.prefix_moves_uci, anchorPrefix) &&
-        restrictedMoves.includes(reading.reference_move) && restrictedMoves.includes(reading.alternative_move)))) ||
-      (restrictedMoves.length >= 2 && restrictedMoves.length <= 3 &&
-        anchorPrefix[0] === subject.played.uci && observations?.selection?.response_inquiries?.some(inquiry =>
-          inquiry.state === 'awaiting_engine' && inquiry.root_move === subject.played.uci &&
-          inquiry.root_move_occurrence_id === anchor.root_occurrence_id &&
-          inquiry.child_position_id === anchor.position_id &&
-          inquiry.original_target.square === subject.played.uci.slice(0, 2) &&
-          inquiry.target.square === subject.played.uci.slice(2, 4) &&
-          reviewedMoverResponsePoolMatches([inquiry], restrictedMoves,
-            observations.selection?.response_searches, subject.played.uci))));
   if (value.purpose !== 'response_comparison' && anchor !== undefined) return;
   const stoppedFocus = value.purpose === 'focus_comparison' && restrictedMoves &&
     observations?.selection?.root_searches?.some(search => search.purpose === 'focus_comparison' &&
@@ -2162,7 +2149,7 @@ function projectIssuedEngineWork(
       rootOrFocusPosition &&
       unrestricted &&
       ((limits.depth === 8 && limits.nodes === 2_000_000 && limits.movetimeMs === 2_500 && value.max_search_elapsed_ms === 3_500) ||
-        (limits.depth! >= 12 && limits.nodes === 5_000_000 && limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000) ||
+        (limits.depth! >= 11 && limits.nodes === 5_000_000 && limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000) ||
         (limits.depth! >= 16 &&
           ((limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 && value.max_search_elapsed_ms === 9_000) ||
             (limits.nodes === 250_000_000 && limits.movetimeMs === 120_000 && value.max_search_elapsed_ms === 121_000)) &&
@@ -2181,8 +2168,8 @@ function projectIssuedEngineWork(
             replayFen(subject.initialFen, [...(value.engine_position_moves_uci as Uci[]), move]) !==
             undefined,
         )) &&
-      (limits.depth! >= 12 || (value.purpose === 'focus_comparison' && limits.depth === 8)) &&
-      ((value.purpose === 'response_comparison' && limits.depth! >= 12 && limits.depth! <= 18 &&
+      (limits.depth! >= 11 || (value.purpose === 'focus_comparison' && limits.depth === 8)) &&
+      ((value.purpose === 'response_comparison' && limits.depth! >= 11 && limits.depth! <= 18 &&
           Number.isInteger(value.max_search_elapsed_ms) && (value.max_search_elapsed_ms as number) >= 1_000 &&
           (value.max_search_elapsed_ms as number) <= 3_500 && limits.movetimeMs! >= 750 &&
           limits.movetimeMs! <= Math.min(2_500, (value.max_search_elapsed_ms as number) - 250) &&
@@ -2197,11 +2184,14 @@ function projectIssuedEngineWork(
         (limits.nodes === 2_000_000 && limits.movetimeMs === 2_500 && value.max_search_elapsed_ms === 3_500) ||
         (limits.depth! >= 16 && (selectedInquiry || stoppedFocus) && limits.nodes === 20_000_000 && limits.movetimeMs === 2_500 &&
           value.max_search_elapsed_ms === 3_500) ||
-        (selectedFirstReply && limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 &&
+        // Scope and ownership were checked above; the time limit is shared across reply types.
+        (value.purpose === 'response_comparison' &&
+          limits.depth! <= 18 && limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 &&
           value.max_search_elapsed_ms === 9_000) ||
         (limits.depth! >= 16 && stoppedFocus && limits.nodes === 40_000_000 && limits.movetimeMs === 8_000 &&
           value.max_search_elapsed_ms === 9_000) ||
-        (limits.depth! >= 16 && (limits.nodes === 5_000_000 || limits.nodes === 20_000_000) &&
+        ((limits.depth! >= 16 || value.purpose === 'response_comparison' && limits.depth! <= 18) &&
+          (limits.nodes === 5_000_000 || limits.nodes === 20_000_000) &&
           limits.movetimeMs === 5_000 && value.max_search_elapsed_ms === 6_000 &&
           // A selected inquiry may use more nodes inside the same five seconds
           // for its direct reply or one server-scheduled retry. Position, legal roots,

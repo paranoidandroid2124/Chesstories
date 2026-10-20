@@ -1,0 +1,105 @@
+{
+  "status": "active_unachieved",
+  "phase": "check-evasion-and-opposing-reply-selection",
+  "started_utc": "2026-10-16T01:34:26.037727+00:00",
+  "previous_goal_turn": "progress",
+  "baseline": "target/research-runs/idea-generalization-obligations-20261016/baseline.json",
+  "constraints": {
+    "max_depth": 18,
+    "request_budget_ms": 20000,
+    "actual_screens": "Only development Kf8 and preregistered unused Ferry d6 after common changes; saved Bd7 is a replay, no extra screen."
+  },
+  "research": {
+    "source": "Aagaard Positional Play cached G Drive 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_pages": [
+      120,
+      121,
+      122,
+      125,
+      126,
+      127,
+      128
+    ],
+    "lesson": "An immediate obligation such as check evasion and prevention of an opposing route must remain tied to own plans; neither can be skipped by selecting only the original beneficiary."
+  },
+  "heldout_preregistration": {
+    "game": "Ed Ferry - Jacob Aagaard, Bearsden 2007",
+    "pdf_page": 126,
+    "fen_before": "2rq1rk1/3pbppp/p3p3/1p1bP3/3P4/4Q3/PP1B1PPP/R3NRK1 b - - 0 16",
+    "played_uci": "d7d6",
+    "diagram_inspected": true,
+    "legal_book_continuation": [
+      "d7d6",
+      "d2b4",
+      "d6e5",
+      "b4e7",
+      "d8e7",
+      "d4e5",
+      "d5c4",
+      "e1d3",
+      "f8d8",
+      "f1d1",
+      "e7d7",
+      "d1d2"
+    ],
+    "expected_concepts": "d6 attacks the central pawn and prepares development while affecting Nd3 and its choice of recapture. Bb4 changes exchange and queen/bishop continuation. Actual engine pair and replies decide claims; no book line or comparison move is forced.",
+    "fixture_matches": [],
+    "selected_before_product_edits_and_engine_output": true,
+    "history": "standalone diagram FEN, neither side has castling rights, neutral halfmove clock"
+  },
+  "implementation": [
+    "Initial-check roots are admitted only after legal capture of checker, king move, or interposition is certified and the resulting king is no longer checked. Both actual choices keep this obligation.",
+    "The shared reply activity pool includes the first opposing reply and its exchange-enabled use. Own activity can no longer displace a materially earlier opposing use by surviving longer.",
+    "Reply comparison starts at the strongest actual returned reply and selects the next distinct activity with an owned comparison; separated quality is explicitly stated rather than treated as equivalence.",
+    "Opposing activity is not attached as the original mover's own purpose. Independent screen validation checks original side, route, actual controller removal/blocking and scope.",
+    "Identical physical activity through an exact shared move/position prefix can be referred to once, while both owned costs and receipts remain."
+  ],
+  "verification": {
+    "runtime": "23 idea cases + 10 Re2/Qa4-purpose cases passed (33). Final shared-prefix rendering and explicit check/price assertions then passed the two affected cases. Saved idea XML contains those final two only.",
+    "screen_delivery": "Final 16 idea delivery checks and type check passed. Earlier combined run also passed all four purposeComparison checks; its new-case failure was the test projection using an invalid placeholder job ID, corrected to the original actual ID.",
+    "actual_ui": "Exactly two first actual requests after freeze: Kf8 3.51s; unused Ferry d6 3.84s. UI budget 20s, every issued search D11. Both move-to-board links checked. No further engine positions or reruns.",
+    "known_limits": "Root check admission is not a claim of the move's full long-term idea; actual observed counterplay is not proof of engine evaluation causality."
+  },
+  "preimplementation_failures": [
+    "Exact Kf8 reports: ReferencePurposeReading returned None for initial check.",
+    "Exact Bd7 reports: reply branches Qf2/Qe3; Rxe7 discarded despite exchange-enabled f5."
+  ],
+  "phase_result": "progress_with_independent_partial_failure",
+  "finished_observation_utc": "2026-10-16T02:01:40.992804+00:00",
+  "actual_screens": [
+    {
+      "label": "kf8-obligation-live",
+      "seconds": 3.51,
+      "verdict": "development improvement, not a broad generalization success"
+    },
+    {
+      "label": "ferry-d6-first-independent",
+      "seconds": 3.84,
+      "verdict": "first independent partial failure; no product change or favorable rerun afterward"
+    }
+  ],
+  "remaining_common_bottlenecks": [
+    {
+      "source": "PurposeActivityReading.scala:87-98,175-199 and ReferencePurposeReading.scala:216-221,574-585",
+      "finding": "The earliest attack/capture wins even when its original actor disappears in that same local exchange. The independent dxe5 attacking d4 is such a transient contact. An attack also satisfies purposeKnown and can prevent a later use extending the root account.",
+      "preserve": "Do not simply prioritize surviving or later pieces: prior Qa4 deliberately preserves an early purpose that is realized and exchanged."
+    },
+    {
+      "source": "MoveWorkProjection.scala:563-610, especially continuous at 585-588",
+      "finding": "A corridor must remain empty from immediately after the root move to the later use. In the actual d6 lines, the same d-pawn first remains on d6, then leaves by dxe5 and is exchanged, while the original d5 bishop later vacates d5; only then Qd5 uses the route. A sequence of physically certified prerequisites is not represented by the current single-clearance condition.",
+      "boundary": "Keep all intermediate constraints, responses and material costs; do not weaken continuity to borrow an arbitrary distant PV fact."
+    },
+    {
+      "finding": "Quiet defensive reply activity such as Nd3 followed by a recapture, and multi-step preparation absent from the returned PV, remain incompletely discovered. Immediate obligations and target facts alone are not full purpose discovery."
+    }
+  ],
+  "next_action": "Continue the same long goal by separating a temporary exchange contact from its settled functional consequence, and representing the minimum linked sequence of original-piece clearances. First reproduce these exact reports and retain earlier Qa4/Re2 boundaries; do not add move-name exceptions or flip to a general late-activity preference.",
+  "external_blocker": null,
+  "ui_restored": "Original 1.e4 at start, Engine Off, blank input fields. Temporary diagnostic network buffers reset to defaults.",
+  "artifacts": {
+    "screen_evidence": "idea-generalization-obligations-20261016/screen-evidence.json",
+    "saved_report_readings": "idea-generalization-obligations-20261016/saved-report-readings.json",
+    "raw_network": "idea-generalization-obligations-20261016/live-reports.json.gz",
+    "preservation": "idea-generalization-obligations-20261016/preservation-check.json"
+  }
+}

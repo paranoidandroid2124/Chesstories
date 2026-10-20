@@ -21,23 +21,67 @@ private[runtime] object CommentaryAnswer:
   final case class Action(move: MoveRef, detail: Detail) extends Statement:
     def references = List(move)
 
+  final case class PreparedIdea(value: MoveIntent.Reading) extends Statement:
+    def references = (value.pair.map(MoveRef(_, 0)) ++ value.examples.flatMap(path =>
+      path.moves.indices.map(MoveRef(path, _)))).distinct
+    override def covered = value.exampleCaptures
+
+  final case class PreparedReply(value: MoveIntent.Branch) extends Statement:
+    def references = value.references
+    override def actionReferences = value.actionReferences
+
   final case class ReferencePurpose(value: ReferencePurposeReading.Reading) extends Statement:
-    def references = value.arms.map(arm => MoveRef(arm.path, 0))
+    override def actionReferences = value.arms.map(arm => MoveRef(arm.path, 0)) ++ value.sharedCapture.toList.flatMap(s =>
+      List(MoveRef(value.reference.path, s.referenceOffset), MoveRef(value.played.path, s.playedOffset))) ++
+      value.preparation.toList.flatMap(prepared => PreparedIdea(prepared).actionReferences) ++
+      value.sharedPreparation.map((path, offset) => MoveRef(path, offset)) ++
+      value.arms.flatMap(arm => value.preparedDevelopment(arm).toList.flatMap((preparation, _) =>
+        List(MoveRef(arm.path, 1), MoveRef(arm.path, preparation.offset)))) ++
+      value.arms.flatMap(_.controlUse.toList.flatMap(use => List(
+        MoveRef(use.path, use.change), MoveRef(use.path, 1), MoveRef(use.path, use.use)))) ++
+      value.arms.flatMap(arm => arm.activity.toList.flatMap(activity => activity.references.filterNot(move =>
+        move.offset == 1 && (activity.path eq arm.path))))
+    def references = actionReferences ++ value.sharedReplyPressure.toList.flatMap(_ =>
+      value.arms.map(arm => MoveRef(arm.path, 1))) ++
+      Option.when(value.sharedPawnStructure.nonEmpty)(value.arms.map(arm => MoveRef(arm.path, arm.through))).toList.flatten ++
+      Option.when(value.sameAftermath)(value.arms.map(arm => MoveRef(arm.path, arm.through))).toList.flatten ++
+      value.arms.filter(value.hasContinuedRootContact).map(arm => MoveRef(arm.path, arm.through))
+    override def covered = value.preparation.toList.flatMap(_.exampleCaptures)
+
+  final case class ActivityUse(value: PurposeActivityReading.Reading,
+      sharedWith: Option[PurposeActivityReading.Reading] = None) extends Statement:
+    def references = value.references.filterNot(_.offset == 0)
 
   final case class ReferencePosition(value: ReferencePurposeReading.Reading,
       arm: ReferencePurposeReading.Arm) extends Statement:
-    def references = List(MoveRef(arm.path, arm.through))
+    def references = (List(MoveRef(arm.path, 0), MoveRef(arm.path, 1), MoveRef(arm.path, arm.through)) ++
+      arm.pawnWork.toList.filter(_.offset > 1).map(work => MoveRef(arm.path, work.offset)) ++
+      actionReferences).distinct
+    override def actionReferences = arm.counterplay.toList.flatMap(_.references) ++
+      value.replyDefense(arm).toList.flatMap(_.references)
+
+  final case class ReferenceContrast(value: ReferencePurposeReading.Reading) extends Statement:
+    def references = value.arms.flatMap(arm => List(MoveRef(arm.path, 0), MoveRef(arm.path, arm.through))).distinct
+    override def actionReferences = Nil
+
+  final case class ReferenceExchangeReply(comparison: ReferencePurposeReading.Reading,
+      value: MovePurpose.Reading, branch: MovePurpose.Branch) extends Statement:
+    def references = (List(0, 1, branch.through) ++ branch.activity.toList.flatMap(_.pawn.toList
+      .filter(_.continuing).map(_.offset))).distinct.map(MoveRef(branch.path, _))
     override def actionReferences = Nil
 
   final case class FunctionPurpose(value: MovePurpose.Reading) extends Statement:
     override def actionReferences = List(MoveRef(value.question.path, 0)) ++ value.question.plan.toList.flatMap(plan =>
       (0 to plan.through).map(MoveRef(plan.path, _)) ++
-        (0 until plan.join).map(MoveRef(value.question.path, _)))
+        (0 until plan.join).map(MoveRef(value.question.path, _))) ++ value.witnessedSupport.toList.flatMap(branch =>
+          (0 to branch.through).map(MoveRef(branch.path, _)))
     def references = actionReferences ++
       (if value.activityContinuity.nonEmpty then value.branches.map(branch => MoveRef(branch.path, branch.through)) else Nil)
 
   final case class FunctionReply(value: MovePurpose.Reading, branch: MovePurpose.Branch) extends Statement:
-    def references = List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.use), MoveRef(branch.path, branch.through)).distinct
+    def references = (List(MoveRef(branch.path, 1), MoveRef(branch.path, branch.use), MoveRef(branch.path, branch.through)) ++
+      branch.purposeActivity.toList.flatMap(_.references.filterNot(_.offset == 0)) ++
+      branch.activityRoute.map(MoveRef(branch.path, _))).distinct
 
   final case class ChoicePurpose(value: PurposeChoice.Reading) extends Statement:
     def references = value.arms.map(arm => MoveRef(arm.path, 0))
@@ -151,8 +195,8 @@ private[runtime] object CommentaryAnswer:
 
   final case class ClearedRoute(move: MoveRef, before: Piece, mover: Piece, originalUser: Piece,
       use: MoveRef, user: Piece, targets: List[Piece], passage: Boolean,
-      development: Option[Detail]) extends Statement:
-    def references = List(move, use)
+      development: Option[Detail], preparations: List[MoveRef] = Nil) extends Statement:
+    def references = (List(move) ++ preparations :+ use).distinct
 
   final case class SquareReoccupation(move: MoveRef, originalActor: Piece, actor: Piece,
       square: String, use: MoveRef, originalEntry: Piece, entry: Piece) extends Statement:

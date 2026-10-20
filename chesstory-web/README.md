@@ -2,7 +2,14 @@
 
 See [the repository README](../README.md) for setup and use.
 
-`npm start` serves the built UI on loopback port 8787 and launches the compiled
+`npm start` and the root Windows launcher share the same preparation path.
+They check Node 22+ and Java 21+, install locked packages when needed, and
+rebuild changed or missing UI/runtime outputs before starting. Unchanged
+starts skip npm installation and both builds. A failed update stops startup;
+it cannot silently serve the previous build. Stop the app with `Ctrl+C`,
+start it again after editing source, and refresh the browser.
+
+The app serves the UI on loopback port 8787 and launches the compiled
 Java runtime directly on a private loopback port with a fresh bearer token.
 The same-origin proxy keeps that token out of the browser. It accepts only the
 commentary API routes, bounds request bodies to 1 MiB, and rejects foreign
@@ -11,17 +18,25 @@ origins/hosts. COOP/COEP headers enable the two-thread Stockfish worker.
 The built app uses no Lila application source, Play server, database, external
 analysis service, or research-run cache. It retains the existing standard-only
 `public-commentary-v6` protocol, legal replay, evidence ownership checks,
-10-second commentary budget and D18 ceiling. Chessground, chessops, scalachess
+20-second commentary budget and D18 ceiling. Chessground, chessops, scalachess
 and the pinned Stockfish build remain library dependencies.
 
 ## Commands
 
 ```powershell
-npm ci
-npm run build:runtime # also rebuild after a Scala change
-npm run build         # also rebuild after a UI change
-npm start
+npm start             # prepare changed components, then run
+npm run build:runtime # optional manual runtime build
+npm run build         # optional manual UI build
+npm run test:start    # focused update/failure checks, no engine search
 ```
+
+Preparation records input content hashes and output file metadata in ignored
+`.chesstories-prepared.json` files under `node_modules/`, `dist/` and the
+runtime `target/`. The first start after this update prepares all three once.
+Inputs include uncommitted source additions/deletions, build settings and the
+package lock. Manual rebuilds or missing outputs invalidate readiness too.
+The launcher does not fetch repository changes or replace a running server.
+Repair a damaged package installation with `npm ci` while the app is stopped.
 
 The frontend build emits a source input manifest and rejects inputs under
 `lila-docker` or a `target/` directory. Engine JS/WASM comes from the locked npm

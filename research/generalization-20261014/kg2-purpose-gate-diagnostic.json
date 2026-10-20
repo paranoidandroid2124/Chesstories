@@ -1,0 +1,12 @@
+{
+  "research_only" : true,
+  "engine_calls" : 0,
+  "input_scope" : "actual assessment pair, first discovery wave only",
+  "producers" : [ "C-opponent-choice", "C-action_route", "C-action_support", "C-preparation-alternative", "C-preparation-effect", "C-support", "C-action_support", "C-action_support", "C-action_support" ],
+  "functional_replay_needs" : [ [ "b2c3", "f8e7", "c4e3", "h8g8", "c2e2", "g6e8", "d3c4" ], [ "b2c3", "a7a5" ], [ "g1g2", "a7a5" ] ],
+  "scans" : [ {
+    "reference" : "g1g2",
+    "state" : "partial",
+    "reason" : "response_probe_pending"
+  } ]
+}

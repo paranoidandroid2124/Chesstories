@@ -1,0 +1,261 @@
+{
+  "status": "completed_bounded_goal",
+  "started_utc": "2026-10-14T03:31:09Z",
+  "objective": "Discover and select the reviewed move's core idea, connect the preparatory change to an intended action and its useful result, and explain realization, interference and necessary costs under owned replies.",
+  "preservation": "target/research-runs/core-idea-20261014/baseline.json and before-changes.zip retain all 158 pre-existing dirty files; HEAD d8c813979f386eff0a469ec2279e960ea02946c8; no staging, reset or commit.",
+  "constraints": {
+    "maximum_engine_depth": 18,
+    "screen_budget_ms": 10000,
+    "screen_cases": [
+      "Gligoric-Unzicker Kg2",
+      "Kosintseva-Mkrtchian Rf3",
+      "Aagaard-I.Almasi Re2"
+    ],
+    "verification": "Only these actual-screen cases and focused semantic/ownership checks; no broad regression campaign.",
+    "completion": "Text additions, correct incidental facts and passing tests are insufficient. Preserve original failure criteria and report unmet criteria explicitly."
+  },
+  "studied_failures": [
+    "research/repeated-work-review-20261011.json",
+    "research/importance-expression-audit-20261005/result.json",
+    "research/generalization-20261014.json",
+    "research/generalization-20261014/kg2-purpose-gate-diagnostic.json"
+  ],
+  "initial_findings": [
+    "MovePurpose.discover chooses the first candidate and ranks unobserved supported pawn advances ahead of observed uses. Kg2 selected h3; Rf3 selected g3.",
+    "firstPurposeResponse can finish after two response classes have returned, without establishing that the selected task is central or even delivered.",
+    "ReferencePurposeReading.purposeKnown accepts current contacts as sufficient purpose; scheduler and renderer also supply different root-use evidence.",
+    "The existing king-location/check-tempo reader compares immediate opponent moves. The historical Kg2 counterplay needs an intervening central change; extending labels or target lists cannot supply that missing temporal relation."
+  ],
+  "reference": {
+    "title": "Jacob Aagaard, Grandmaster Preparation: Positional Play",
+    "drive_id": "1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "sha256": "eb5e3c4a4c0216515f2760ec8d69ff399318caca62704bd70000b84e5b0356e1",
+    "local_pdf": "target/research-runs/generalization-20261014/positional-play.pdf",
+    "pages_studied": [
+      10,
+      11,
+      12,
+      15,
+      111,
+      112,
+      124,
+      125,
+      126
+    ],
+    "lesson": "A useful positional fact is not automatically the main idea. Identify the problem that matters and connect the move and subsequent play to it; the opponent's counterplay can change the required move order."
+  },
+  "criteria": {
+    "Kg2": "Explain preparatory king relocation and a concrete later checking-tempo difference associated with central play. Do not substitute g3 support or h3 preparation. Distinguish a conditional legal example from best defense or the cause of a numerical evaluation gap.",
+    "Rf3": "Explain the rook's intended activation and why the actual reply changes the required continuation. Preserve the c-pawn/central-knight problem and any material cost in the selected lines. Do not substitute g3 support, arbitrary targets or merely state that its purpose is unknown.",
+    "heldout_Re2": "Explain the clearance/coordination behind moving the e1 rook before the a1 rook, and the opponent's realized or preventive reply with its cost. Actual engine comparisons remain authoritative; the historical book is a hypothesis source, not a forced verdict."
+  },
+  "heldout_preregistration": {
+    "game": "Jacob Aagaard - Istvan Almasi, Budapest 1996",
+    "pdf_pages": [
+      111,
+      112
+    ],
+    "fen": "3rr1k1/pp1bbppp/1q2pn2/8/3N1B2/1BP2Q2/PP3PPP/R3R1K1 w - - 0 17",
+    "move": "e1e2",
+    "san": "Re2",
+    "diagram_inspected": "target/research-runs/core-idea-20261014/book-p111.png",
+    "selected_before_new_product_output": true,
+    "hypothesis": "Re2 makes room for Rae1 and coordinated e-file play; an early ...Bc6 can offer a different course involving an exchange instead of allowing a free attack. Neither the book's verdict nor its exact continuation is required of Stockfish."
+  },
+  "development_findings": [
+    "Admitting new legal preparation examples changes the packet owner. PV readings must be rebound before projection; the first Kg2 screen returned HTTP 500 at 8.31 seconds when this was missed.",
+    "The first Rf3 screen reached the 10-second deadline. A later minimal response removed too much: downstream search requires the exact prefix inventory AND a declared question. Preserve those and omit unrelated future catalogues, not the proof of the next work.",
+    "An owned preparation question now connects candidate use, actual root/reference paths and two bounded scopes: the action after the actual reply, and a second legal first reply observed later in the same source PV.",
+    "Realization is reread from the original pieces and actual controls under each reply. Equal UCI alone cannot establish that a rook battery or king attack survives a blocker or exchange.",
+    "Full-prefix material costs must not seed new escape/clearance stories. Shared completion receives prepared content as meaning sources while all selected capture receipts remain mandatory.",
+    "A preparation can retain its function after the acting central piece trades: king preparation tracks the king after starting the central play; a rook battery must retain both physical rooks and its target relationship.",
+    "Capturing the attacker is not moving its target. An identical prepared move can also have a different target after a pawn recapture; carry that physical change into the response explanation.",
+    "Legality of a later PV reply is not strategic relevance at the root child. The final survey evaluates the complete legal reply pool at that exact owned position and returns the top three; the basic screen uses one additional reply. No additional engine job, depth or node allowance was added."
+  ],
+  "development_runs": [
+    {
+      "case": "Kg2",
+      "capture": "target/research-runs/core-idea-20261014/kg2-dev-http.json",
+      "result": "fault 8.31s; stale packet-owned PV reading"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev-http.json",
+      "result": "abstained 10.00s; no complete screen"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev2-http.json",
+      "result": "fault 4.72s; downstream work missing observation/question scope"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev3-http.json",
+      "result": "fault 3.35s; exact prefix supplied but declared question missing"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev4-http.json",
+      "result": "fault 2.36s; proposed work exceeded ordinary 2M-node scope"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev5-http.json",
+      "result": "fault 3.24s; retained response receipt did not recognize the new owned question"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-dev6-http.json",
+      "result": "completed 4.08s; purpose, interference and costs delivered; unrelated completion episodes and English fallback remained"
+    },
+    {
+      "case": "Kg2",
+      "capture": "target/research-runs/core-idea-20261014/kg2-dev2-http.json",
+      "result": "completed 3.35s; conditional checking-tempo bridge delivered; incorrectly treated the central knight exchange as loss of preparation"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-first-heldout-http.json",
+      "result": "first unseen result completed 4.07s; clearance/Rae1, ...Nd5/Be5 vs immediate Rae1 and ...h6/Rae1 with exchange costs; unnecessary priced-capture episodes remained"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-final-http.json",
+      "result": "completed 5.07s with empty article: an empty text part caused strict client rejection; preserved as failure"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-release-http.json",
+      "result": "completed 4.69s; ...Bc6/Nxc6 incorrectly described the unchanged queen as escaping. Fixed by distinguishing capture of attacker from moving the target"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-release2-http.json",
+      "result": "completed 9.56s; actual ...Bb5 makes immediate Rae1 lose exchange, ...Nd5/Bxd5 avoids it. Same later Rae1 has a different pressure target after ...exd5; absence needs that reason rather than a bare non-realization label"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-release3-http.json",
+      "result": "completed 2.72s; purpose and ...Nd5/Be5 vs immediate Rae1 with bishop/knight prices; ...h6 permits the same Rae1 notation but own e5 bishop blocks pressure. Added an explicit physical-blocker reason."
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-final-source-http.json",
+      "result": "completed 5.22s with core idea and action comparison, but no second first-reply test: played PV had no later opponent move legal at the root child. Fixed common candidate scope to fall back to the actual reference PV."
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-release-final-http.json",
+      "result": "completed 5.74s; an already explained capturing alternative seeded an extra English price paragraph; exact-occurrence display alias fixed without removing the separate comparison receipt"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-delivered-http.json",
+      "result": "completed 4.35s; core idea/costs and duplicate fix delivered, but second reply ...Qc6 was a weak queen-losing move transferred from a later reference PV. Rejected as sufficient evidence of meaningful response selection"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-survey-http.json",
+      "result": "abstained 10.01s on first job after update; surveyed replies were returned, but final article missed client deadline. Kept as a failure, not folded into later success"
+    },
+    {
+      "case": "Re2",
+      "capture": "target/research-runs/core-idea-20261014/re2-survey2-http.json",
+      "result": "completed 6.05s; ...Bb5/Nxb5 before Rae1 versus immediate Rae1 losing the exchange; other top reply ...Nd5 requires Be5. Same single heldout position, not a new independent success"
+    },
+    {
+      "case": "Rf3",
+      "capture": "target/research-runs/core-idea-20261014/rf3-survey-http.json",
+      "result": "completed 8.03s; Rh3 joint king attack, ...Qc6/c3 versus immediate Rh3 with queen exchange and extra pawn cost; other top reply ...Ng6/Qe2"
+    },
+    {
+      "case": "Kg2",
+      "capture": "target/research-runs/core-idea-20261014/kg2-survey-http.json",
+      "result": "completed 6.18s; conditional Ne5/c4/Bxc4/Qc5 versus checking entry without Kg2; actual Qe7 and top Qe8 allow Bc3, immediate Ne5 is less favorable and exchanges N/B. King preparation survives the central exchange"
+    }
+  ],
+  "implementation": {
+    "shared_model": "MoveIntent.Question/Reading/Branch owns the actual assessed root, preparatory change, physical user/partner/target, intended use and its certified legal bridge. Discovery, probe scheduling, completion and rendering consume this reading.",
+    "discovery": "A quiet root must itself open the later route. Candidate uses are ranked by independent assessed PV observation before a structural coordination candidate. King preparation searches bounded paired legal histories for the same later checking entry, with pawn capture and checking response retained.",
+    "reply_work": "One action comparison after the actual reply and one first-reply survey of the complete legal pool at that exact owned child. Return top three and explain one other reply. D12 and ordinary 2M-node/2.5s allowance; no forced book move or substituted root evaluation. Full legal scope is verified independently on the web boundary.",
+    "function": "Reread original pieces, line controls, surviving partner, moved target and blockers. Central-piece exchange does not erase a king preparation; identical rook notation does not prove the same pressure.",
+    "delivery": "New question and pending prefix inventories stay attached to issued work and receipts. Child comparisons supplement, never replace, the actual root evaluation pair. Full branch material costs remain mandatory and no longer seed unrelated escape stories. Identical physical capturing alternatives use their already displayed occurrence, while their separate tested comparison remains a proof receipt; this prevents duplicate capture-cost episodes."
+  },
+  "checks": {
+    "runtime": "MoveIntentTest 7 passed on final source: actual owned causal ideas in 3 cases, conditional/checking boundary, foreign reader, blocker before and after exchange, unadmitted example, full-position reply survey, duplicate capturing-choice price. All replayed engine keys must match exactly. Historical blocked/capture reports stop before the changed reply scope.",
+    "historical": "GeneralizedCoreSelectionTest unknown-purpose case passed on its original root reports only. Historical incidental-pawn child reports cannot answer the new preparation work; original unknown-purpose assertions remain.",
+    "web": "coreIdea 3 passed on final source and all 3 final screens; rejects foreign root/use, arbitrary subset masquerading as the legal reply survey, depth19, foreign move occurrences and deleted costs.",
+    "typing": "npm run check passed",
+    "regression": "No full regression suite or additional chess position.",
+    "total_focused": 11
+  },
+  "remaining_limits": [
+    "The candidate vocabulary remains bounded to prepared activation/coordination and delayed checking-tempo examples. This does not discover every long plan or rank all strategic ideas by human importance.",
+    "A legal checking-tempo bridge is conditional; it does not prove best defense, the book sacrifice, or the full numerical evaluation cause.",
+    "Response and function claims end at named observed checkpoints. A blocked or postponed plan can become available later; no permanent impossibility is asserted.",
+    "Repeated small-search PVs and move classifications vary. Current real assessment pair remains authoritative. One Re2 development run needed 9.56 seconds; broad 10-second stability is unproven. The first job after the final survey update stopped at 10.01s even though the next Re2 job completed at 6.05s.",
+    "Cross-paragraph root/endpoint and similar material-account repetition remain; no claim of universal brevity or release readiness.",
+    "The top-reply survey avoids arbitrary weak later moves, but choosing the most instructive functional contrast among similarly strong replies remains limited. Some top replies can have the same observed continuation; no difference is invented."
+  ],
+  "finished_utc": "2026-10-14T05:43:45.297577+00:00",
+  "verdict": {
+    "bounded_goal": "Met: shared root preparation -> useful action -> owned reply realization and necessary cost, verified in Kg2, Rf3 and the preregistered Re2.",
+    "general_explanatory_power": "Partial: no claim to discover or rank all long-term ideas, explain every numerical evaluation, provide universal brevity or be release-ready.",
+    "evidence": "The actual basic screens explain the causal plan and real response choices. Tests and added prose alone are not the completion criterion.",
+    "timing": "Last jobs 6.18s, 8.03s and 6.05s under 10-second requests. A first Re2 job after the final survey change stopped at 10.01s; general first-run reliability remains unproven."
+  },
+  "final_screens": [
+    {
+      "case": "kg2",
+      "elapsed_ms": 6180,
+      "engine": "Stockfish 18",
+      "depths": [
+        12
+      ],
+      "request_ms": 10000,
+      "screenshot": "research/core-idea-20261014/kg2-final.png",
+      "screen": "research/core-idea-20261014/kg2-screen.txt"
+    },
+    {
+      "case": "rf3",
+      "elapsed_ms": 8030,
+      "engine": "Stockfish 18",
+      "depths": [
+        12
+      ],
+      "request_ms": 10000,
+      "screenshot": "research/core-idea-20261014/rf3-final.png",
+      "screen": "research/core-idea-20261014/rf3-screen.txt"
+    },
+    {
+      "case": "re2",
+      "elapsed_ms": 6050,
+      "engine": "Stockfish 18",
+      "depths": [
+        12
+      ],
+      "request_ms": 10000,
+      "screenshot": "research/core-idea-20261014/re2-final.png",
+      "screen": "research/core-idea-20261014/re2-screen.txt"
+    }
+  ],
+  "preservation_audit": "research/core-idea-20261014/preservation.json",
+  "ui_restored": "Original saved 1.e4 PGN, initial position, Korean/light and Engine Off restored; original user tab refreshed; temporary tab closed. Updated standalone app remains running at 127.0.0.1:8787.",
+  "final_source_sha256": {
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala": "df329c25e96e2cdf441843912fae965123cb0f1c2d8123ba793d43c2f6797ce5",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala": "98ae2601f3d7b573424344c695f13e6f5bd3b0d151af30b29e724c2a57897c0f",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala": "df92e12b497e12cfb4ee2d28eef4b1c4fea2b326bc1a5cfc5960956ca8d968b9",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala": "a3583e40905366030ebce16a6bae10b3dbf47b0f159df5fbda3fcbb4f7bccdbf",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala": "a8daa85a740659a78ef8f2b8e355d26b24546e3049432165593d0348c28811cb",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala": "48dba7de6c1b10b21357a07704a115c6dde352d9fe9ca376b1ecb33aca85ac77",
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/GeneralizedCoreSelectionTest.scala": "a93e6768dc2de7dd8891b315c4e8307257ad9d01411e45cc48a5cff2691e2b9b",
+    "chesstory-web/src/review/moveReviewSelection.ts": "0f80fe2c6b934f7067397ad98684eb68863f4e04f76ab399a0f5164f69401290",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala": "9dde86fc82d2be5ddf307697ea063ca3567e120f5e17cfefcf268b9b1cbb56a3",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala": "ea78b424541f4673f421dd73bbb6b1ce7f606b0459d2d40d864e12ac75f6d775",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala": "9bfefa1aad51f06e2b7592762e1be3335e942a491ce7db4fc1513d60281a7d71",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/PositionCommentaryJobProtocol.scala": "9c4297677a15c5005e80556c3a2a85d75f38d7ac3bec1646dc5237742b1c2ef3",
+    "chesstory-web/src/review/moveReview.ts": "d5c72f47a34f7f015f99ac63b628745570d0bb931809d7313da2979c1be51068",
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/MoveIntentTest.scala": "529b7ccbbe7e5bb44dbdd9bf8b4ae64a22839a44664036027c9a9533c514d4a6",
+    "chesstory-web/tests/coreIdea.test.ts": "895f5522483782a425b36b4821993ff6f4dc6321bda4e2e71c7f917081ab5fa9"
+  }
+}

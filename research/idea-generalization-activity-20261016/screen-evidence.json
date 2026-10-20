@@ -1,0 +1,788 @@
+[
+  {
+    "case": "e5-live",
+    "seconds": 4.13,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-f584990f-8e06-467b-985d-e78359e8a789",
+      "variant": "standard",
+      "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "move_prefix_uci": [
+        "d2d4",
+        "d7d6",
+        "g1f3",
+        "g8f6",
+        "c2c4",
+        "g7g6",
+        "b1c3",
+        "f8g7",
+        "e2e4",
+        "e8g8",
+        "f1e2",
+        "b8a6",
+        "e1g1",
+        "e7e5",
+        "f1e1",
+        "c7c6",
+        "e2f1",
+        "e5d4",
+        "f3d4",
+        "f6g4",
+        "h2h3",
+        "d8b6",
+        "h3g4",
+        "b6d4",
+        "d1f3",
+        "d4e5",
+        "g4g5",
+        "e5e7",
+        "f3g3",
+        "a6c5",
+        "c1f4",
+        "g7e5",
+        "a1d1",
+        "f7f6",
+        "g5f6",
+        "f8f6",
+        "f4e5",
+        "e7e5",
+        "b2b4",
+        "e5g3",
+        "f2g3",
+        "c5d7"
+      ],
+      "current_fen": "r1b3k1/pp1n3p/2pp1rp1/8/1PP1P3/2N3P1/P5P1/3RRBK1 w - - 1 22",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "e4e5",
+        "resulting_fen": "r1b3k1/pp1n3p/2pp1rp1/4P3/1PP5/2N3P1/P5P1/3RRBK1 b - - 0 22"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19742,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "e4e5"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "issued_limits": [
+      {
+        "depth": 11,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 2
+      },
+      {
+        "depth": 11,
+        "nodes": 20000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      }
+    ],
+    "actual_reports": [
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "e4e5",
+              "d6e5",
+              "c3e4",
+              "f6f7",
+              "c4c5",
+              "g8g7",
+              "f1c4",
+              "f7e7",
+              "g3g4"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 70
+            }
+          },
+          {
+            "moves": [
+              "g3g4",
+              "d7e5",
+              "g4g5",
+              "f6e6",
+              "c3a4",
+              "b7b6",
+              "c4c5",
+              "d6c5",
+              "d1d8",
+              "g8f7",
+              "b4c5",
+              "b6b5",
+              "a4b2",
+              "e6e8",
+              "d8d6"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 1
+            }
+          }
+        ]
+      },
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "d7e5",
+              "c3e4",
+              "f6e6",
+              "d1d6",
+              "e6e7",
+              "d6d8",
+              "g8g7",
+              "e4d6",
+              "e5f3",
+              "g2f3",
+              "e7e1",
+              "d6c8",
+              "g7h6",
+              "g1f2",
+              "e1a1",
+              "f2e2"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 97
+            }
+          },
+          {
+            "moves": [
+              "d6e5",
+              "c3e4",
+              "f6e6",
+              "c4c5",
+              "g8g7",
+              "f1c4",
+              "e6e7",
+              "a2a4",
+              "b7b6",
+              "e1f1",
+              "b6c5",
+              "b4c5"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 101
+            }
+          },
+          {
+            "moves": [
+              "f6f8",
+              "e5d6",
+              "d7f6",
+              "c4c5",
+              "c8g4",
+              "f1c4",
+              "g8h8",
+              "d1d4",
+              "f8e8",
+              "e1e7",
+              "e8e7",
+              "d6e7"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 238
+            }
+          }
+        ]
+      }
+    ],
+    "purpose_question": null,
+    "summary_type": "selected_comparison",
+    "english_only": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "basic_text": [
+      "g4 — g4–g5로 폰이 전진하여 흑 f6 룩을 공격합니다. 이 수순에서는 Re6로 공격받은 룩이 물러납니다. e5 — e4 칸을 비워 원래 c3의 나이트의 진입로를 만듭니다. Ne4로 나이트가 활동에 나서 흑 f6 룩을 공격합니다. 이 수순에서는 Rf7로 공격받은 룩이 물러납니다.  g4 수순의 비교 시점까지 백의 c4 폰과 흑의 d6 폰을 교환합니다. e5 수순의 비교 시점까지 백의 e4 폰을 내줍니다. g4 수순에서: Ne5의 백 g4 폰 공격을 g5 수로 피합니다. Ne5 뒤 흑 c8 비숍이 백 g4 폰을 공격하지만, g5 수로 피합니다. 제시된 g4 수순에서: Rd8+ d8 룩으로 흑 킹을 체크합니다; Kf7 킹이 f7로 피합니다.",
+      "g4 — Ne5: 백 c4 폰, 백 g4 폰을 새로 공격합니다. bxc5까지의 수순에서는 백 a4 나이트는 백 c5 폰을 지킵니다. 백 c5 폰은 고립폰입니다. 백 e4 폰을 남깁니다.",
+      "e5 — dxe5: 백 e5 폰을 잡습니다. Re7까지의 수순에서는 백 e4 나이트를 남깁니다. 흑 e5 폰은 통과폰·고립폰입니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+      "e5 이후 별도로 조사한 응수에서는 Nxe5와 dxe5가 비슷한 수준입니다. Nxe5 응수에서는 Ne4로 나이트가 활동에 나서 흑 d6 폰, 흑 f6 룩을 공격합니다. 이 수순에서는 Re6로 공격받은 룩이 물러납니다. 제시된 e5 수순의 Rxd6까지는 양쪽이 폰 한 개씩 교환합니다. Rxd6 뒤 백 d6 룩이 흑 e6 룩·흑 c6 폰을 새로 공격합니다. dxe5 응수에서는 Ne4로 나이트가 활동에 나서 흑 f6 룩을 공격합니다. 이 수순에서는 Re6로 공격받은 룩이 물러납니다. 제시된 e5 수순의 Re6까지는 백은 폰 한 개를 내줍니다."
+    ],
+    "network_sha256": "9888a75bd6c6e8096bb01976c94c434dac27c29397dac80d9a11d7f0dcb720da"
+  },
+  {
+    "case": "h3-first-independent",
+    "seconds": 2.2,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-d5084d97-0f97-4fc9-ae85-4b3b7f976c0c",
+      "variant": "standard",
+      "initial_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "move_prefix_uci": [],
+      "current_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "h2h3",
+        "resulting_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ4P/4BPP1/1R1R2K1 b k - 0 22"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19747,
+      "input_lines": [
+        {
+          "source": "analysis",
+          "moves": [
+            "h2h3"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "issued_limits": [
+      {
+        "depth": 11,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 2
+      },
+      {
+        "depth": 11,
+        "nodes": 20000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      }
+    ],
+    "actual_reports": [
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "h2h3",
+              "h8g8",
+              "e2g4",
+              "e8e7",
+              "c3f3",
+              "c8d8",
+              "g4e6",
+              "f7e6",
+              "d1d8",
+              "g8d8"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 103
+            }
+          },
+          {
+            "moves": [
+              "h2h4",
+              "e8g8",
+              "d1d3",
+              "f8d8",
+              "d3g3",
+              "g8f8",
+              "c3c1",
+              "b7b6"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 92
+            }
+          }
+        ]
+      },
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "e8e7",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b5",
+              "e2g4",
+              "e6g4",
+              "h3g4",
+              "h8d8",
+              "d1d8",
+              "c8d8",
+              "b4b5",
+              "d8d1",
+              "g1h2",
+              "c5f2",
+              "c3b4",
+              "d1d6"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 110
+            }
+          },
+          {
+            "moves": [
+              "h8g8",
+              "e2g4",
+              "e6g4",
+              "h3g4",
+              "g8g4",
+              "d1d5",
+              "c5c6",
+              "b1d1",
+              "h7h5",
+              "f2f3",
+              "g4g6",
+              "c3a5",
+              "e8f8",
+              "d5d8",
+              "c8d8",
+              "d1d8",
+              "f8g7"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 117
+            }
+          },
+          {
+            "moves": [
+              "c5b4",
+              "c3b4",
+              "a5b4",
+              "b1a1",
+              "h8g8",
+              "d1d3",
+              "c8d8",
+              "a1a7",
+              "d8d3",
+              "e2d3",
+              "e8d7",
+              "a7b7",
+              "d7c6",
+              "b7b4",
+              "e6h3"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 120
+            }
+          }
+        ]
+      }
+    ],
+    "purpose_question": {
+      "id": "move-purpose:8b38946d040826fbb5e3f7494b4a54e12f7f678aa4210f5438638e95e3f2ea7c",
+      "root_move": "h2h3",
+      "root_occurrence_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:transition:6c68dd57f7836fef8f6258b37555c04e1c2ea9e8e34c90fa91fbb0af6fb89465",
+      "child_position_id": "a88ac86284a6fb1751e92a75d80b28e28439dc3b0976a99e30b9511eebe79898",
+      "source_line_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:line:ad5ee1ef4601df11a99d90022bf88ac7b5cba55042947c4588df0b71a290c73a",
+      "use_move": "g2g4",
+      "kind": "supported_advance",
+      "square": "g4",
+      "challenge_moves": [
+        "e6g4",
+        "f6f5",
+        "h7h5",
+        "h8g8"
+      ]
+    },
+    "summary_type": "selected_comparison",
+    "english_only": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "basic_text": [
+      "h4 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다. h3 — g4 칸을 새로 지원하여 원래 e2의 비숍의 진출을 받칩니다. Bg4로 비숍이 활동에 나서 흑 e6 비숍을 공격합니다.  h3 수순의 비교 시점까지 비숍 한 쌍·룩 한 쌍을 교환합니다. h3 수순에서: Bg4 뒤 흑 g8 룩이 백 g4 비숍을 새로 공격합니다. Bxe6 수로 비숍이 흑 g8 룩의 공격을 피합니다.",
+      "h4 — O-O 뒤, Rg3+에는 Kf8로 킹이 체크를 피합니다. b6까지의 수순에서는 백 g3 룩, 백 e2 비숍을 남깁니다. f6·f7에 더블폰이 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다. Rfd8의 백 d3 룩 공격을 Rg3+ 수로 피합니다.",
+      "h3 — Rg8: 백 g2 폰을 새로 공격합니다. Rxd8까지의 수순에서는 e5·e6에 더블폰이 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+      "h3 수순에서: Ke7 응수에는 hxg4 뒤 백 g4 폰이 g4 진출을 실현합니다. 제시된 h3 수순의 hxg4까지는 양쪽이 폰 한 개와 비숍 한 개씩 교환합니다."
+    ],
+    "network_sha256": "c15eb4782ef8a0894c061cf9d6e68d51f52f81a7c3ab89bb43764283fadc06f7"
+  },
+  {
+    "case": "h3-development-retry",
+    "seconds": 3.81,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-1f74ca85-6f8a-4a60-acca-41ddef6b15dc",
+      "variant": "standard",
+      "initial_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "move_prefix_uci": [],
+      "current_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "h2h3",
+        "resulting_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ4P/4BPP1/1R1R2K1 b k - 0 22"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19741,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "h2h3"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "issued_limits": [
+      {
+        "depth": 11,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 2
+      },
+      {
+        "depth": 11,
+        "nodes": 20000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      }
+    ],
+    "actual_reports": [
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "h2h3",
+              "b7b6",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "e8g8",
+              "b4b5",
+              "c5c7",
+              "c3g3",
+              "g8h8",
+              "g3h4",
+              "h8g7"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 101
+            }
+          },
+          {
+            "moves": [
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "e8g8",
+              "d1b1",
+              "c8c7",
+              "b4b7",
+              "c7b7",
+              "b1b7",
+              "f8a8",
+              "c3g3"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 94
+            }
+          }
+        ]
+      },
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "e8e7",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b6",
+              "c3a3"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 95
+            }
+          },
+          {
+            "moves": [
+              "h7h5",
+              "d1d2",
+              "h5h4",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b6",
+              "c3b3"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 99
+            }
+          },
+          {
+            "moves": [
+              "e8g8",
+              "c3g3",
+              "g8h8",
+              "e2g4",
+              "c8d8",
+              "g3h4",
+              "d8d1",
+              "b1d1",
+              "c5e7",
+              "d1d3"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 107
+            }
+          }
+        ]
+      }
+    ],
+    "purpose_question": {
+      "id": "move-purpose:8b38946d040826fbb5e3f7494b4a54e12f7f678aa4210f5438638e95e3f2ea7c",
+      "root_move": "h2h3",
+      "root_occurrence_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:transition:6c68dd57f7836fef8f6258b37555c04e1c2ea9e8e34c90fa91fbb0af6fb89465",
+      "child_position_id": "a88ac86284a6fb1751e92a75d80b28e28439dc3b0976a99e30b9511eebe79898",
+      "source_line_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:line:b4f7e04651f9692bfeeb26b262ee2cb5fc8add356e587fe4c648db71645d07d0",
+      "use_move": "g2g4",
+      "kind": "supported_advance",
+      "square": "g4",
+      "challenge_moves": [
+        "e6g4",
+        "f6f5",
+        "h7h5",
+        "h8g8"
+      ]
+    },
+    "summary_type": "selected_comparison",
+    "english_only": [
+      false,
+      false,
+      false
+    ],
+    "basic_text": [
+      "b4 — b3 칸을 비워 원래 b1의 룩의 활동 경로를 엽니다. Rxb4로 룩이 활동에 나서 흑 b7 폰을 공격합니다. 백 c4 폰에 대한 폰의 방어를 놓습니다. b4 수로 b3 칸을 비워 백 c3 퀸의 a3 방향 길을 엽니다. b4 수로 b3 칸을 비워 길을 엽니다. 제시된 수순에서 Rdb1 뒤 백 b1 룩이 열린 길로 백 b4 룩을 지킵니다. h3 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다. b4 수순에서: Rxb4 수로 b1 칸을 비우고, 이후 Rdb1 수로 그 칸을 차지합니다.",
+      "b4 — axb4: 백 b4 폰을 잡습니다. Rdb1까지의 수순에서는 백 b4 룩은 백 c4 폰을 지킵니다; 흑 b7 폰을 공격합니다. 백 b1 룩을 남깁니다.",
+      "h3 — b6 뒤, Rxb4까지의 수순에서는 백 d1 룩은 열린 d 파일에서 활동합니다."
+    ],
+    "network_sha256": "827322cfbf1cbc116c784e1859c672e2c408656ad91b07e8dce8b9d46fdd15cc"
+  },
+  {
+    "case": "h3-final-development",
+    "seconds": 4.14,
+    "request": {
+      "schema_version": "chesstory.position-commentary.job-request.v6",
+      "request_id": "move-review-8e71fdf8-0488-4214-b243-bfc9c657c535",
+      "variant": "standard",
+      "initial_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "move_prefix_uci": [],
+      "current_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+      "focus": {
+        "kind": "played_move",
+        "played_move_uci": "h2h3",
+        "resulting_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ4P/4BPP1/1R1R2K1 b k - 0 22"
+      },
+      "engine_profile": "sf18-smallnet-t2-h16-v1",
+      "remaining_budget_ms": 19742,
+      "input_lines": [
+        {
+          "source": "pgn_record",
+          "moves": [
+            "h2h3"
+          ]
+        }
+      ]
+    },
+    "depths": [
+      11,
+      11
+    ],
+    "issued_limits": [
+      {
+        "depth": 11,
+        "nodes": 5000000,
+        "movetime_ms": 5000,
+        "multi_pv": 2
+      },
+      {
+        "depth": 11,
+        "nodes": 20000000,
+        "movetime_ms": 5000,
+        "multi_pv": 3
+      }
+    ],
+    "actual_reports": [
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "h2h3",
+              "h7h5",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b5",
+              "d1b1",
+              "b5c4",
+              "c3f3",
+              "e8e7"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 79
+            }
+          },
+          {
+            "moves": [
+              "h2h4",
+              "e8e7",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b5",
+              "c3a3",
+              "b5c4",
+              "e2c4",
+              "h8d8",
+              "d1d8",
+              "e7d8",
+              "c4e6"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 78
+            }
+          }
+        ]
+      },
+      {
+        "kind": "completed",
+        "line_suffixes": [
+          {
+            "moves": [
+              "e8e7",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b6",
+              "d1b1",
+              "c8c6",
+              "b4b5",
+              "c5d4",
+              "c3a3",
+              "d4d6",
+              "c4c5",
+              "b6c5"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 93
+            }
+          },
+          {
+            "moves": [
+              "h7h6",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "e8g8",
+              "d1b1",
+              "c5d4",
+              "c3f3",
+              "g8g7",
+              "b1d1",
+              "d4a7",
+              "b4b5"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 103
+            }
+          },
+          {
+            "moves": [
+              "h8g8",
+              "b3b4",
+              "a5b4",
+              "b1b4",
+              "b7b6",
+              "d1b1",
+              "c8c6",
+              "b4b5",
+              "c5d4",
+              "c3d4"
+            ],
+            "depth": 11,
+            "white_score": {
+              "kind": "cp",
+              "value": 109
+            }
+          }
+        ]
+      }
+    ],
+    "purpose_question": {
+      "id": "move-purpose:8b38946d040826fbb5e3f7494b4a54e12f7f678aa4210f5438638e95e3f2ea7c",
+      "root_move": "h2h3",
+      "root_occurrence_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:transition:6c68dd57f7836fef8f6258b37555c04e1c2ea9e8e34c90fa91fbb0af6fb89465",
+      "child_position_id": "a88ac86284a6fb1751e92a75d80b28e28439dc3b0976a99e30b9511eebe79898",
+      "source_line_id": "move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:line:c01fbfc6b06db2821d85f81bdf4b62b69a2382bf9c1adec247c71a1e4cc8f241",
+      "use_move": "g2g4",
+      "kind": "supported_advance",
+      "square": "g4",
+      "challenge_moves": [
+        "e6g4",
+        "f6f5",
+        "h7h5",
+        "h8g8"
+      ]
+    },
+    "summary_type": "selected_comparison",
+    "english_only": [
+      true,
+      true
+    ],
+    "basic_text": [
+      "After h3, White's queen on c3 adds support to White's pawn on h3, which is under attack from Black's bishop on e6. After h3, White's pawn on g2 adds support to White's pawn on h3, which is under attack from Black's bishop on e6.",
+      "The recorded continuation is h4."
+    ],
+    "network_sha256": "291305110df7217ddd4eaa4badcb4a54434f765d8add070c7d0ca33e754df74e"
+  }
+]

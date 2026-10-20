@@ -7,7 +7,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:runtime": "node scripts/build-runtime.mjs",
-    "start": "node scripts/serve.mjs",
+    "start": "node scripts/start.mjs",
+    "test:start": "node --test scripts/prepare.test.mjs",
     "check": "tsc --noEmit",
     "test": "node scripts/test.mjs"
   },

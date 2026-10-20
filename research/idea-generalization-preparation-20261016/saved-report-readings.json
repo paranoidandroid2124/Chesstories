@@ -1,0 +1,29 @@
+{
+  "input_source": "judgment-evaluation/fixtures/public-commentary-v6/preparation-browser.json.gz",
+  "output_source": "judgment-evaluation/fixtures/public-commentary-v6/preparation-reading.json.gz",
+  "scope": "Exact three original reports, original work keys and job ID. No new engine output.",
+  "before": [
+    {
+      "question": "selected_comparison",
+      "paragraphs_ko": [
+        "f6 — 백 e5 폰을 새로 공격합니다. d6 — Nd3 응수에서는 d6–dxe5로 폰이 전진하여 백 d4 폰을 공격합니다.  f6 수순의 비교 시점까지 백의 e5 폰과 흑의 f7 폰을 교환합니다. d6 수순의 비교 시점까지 백의 e5 폰과 흑의 d7 폰을 교환합니다.",
+        "f6 — exf6: 흑 f6 폰을 잡습니다. Nd3까지의 수순에서는 원래 d7 폰이 d7에 남습니다.",
+        "d6 — Nd3 뒤, Nxe5까지 기록되어 있습니다.",
+        "d6 이후 별도로 조사한 응수에서는 Nd3와 Nf3가 비슷한 수준입니다. Nd3 응수에서는 dxe5로 폰이 전진하여 백 d4 폰을 공격합니다. 제시된 d6 수순에서 양쪽이 폰 한 개씩 교환합니다. Nf3 응수에서는 Qxd6로 퀸이 활동에 나서 백 d4 폰, 백 h2 폰을 공격합니다. 제시된 d6 수순의 Qxf3까지는 양쪽이 폰 한 개씩 교환합니다. 백은 나이트 한 개를 내주고 비숍 한 개를 얻습니다."
+      ]
+    }
+  ],
+  "after": [
+    {
+      "question": "selected_comparison",
+      "paragraphs_ko": [
+        "f6 — 백 e5 폰을 새로 공격합니다. d6 — 제시된 수순의 d6 … dxe5 … Ba8를 거쳐 원래 d8의 퀸의 d5 진입로를 차례로 비웁니다. Qd5로 퀸이 활동에 나서 백 d4 폰, 백 e5 나이트, 백 f3 폰을 공격합니다.  f6 수순의 비교 시점까지 백의 폰 둘과 흑의 f7 폰을 교환합니다. d6 수순의 비교 시점까지 백의 e5 폰과 흑의 d7 폰을 교환합니다.",
+        "f6 — exf6: 흑 f6 폰을 잡습니다. Bc4까지의 수순에서는 흑 d8 퀸은 흑 d7 폰을 지킵니다. 원래 d7 폰이 d7에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+        "d6 — Nd3로 나이트가 활동에 나서 공격받는 백 e5 폰을 지킵니다. 이어 dxe5의 교환에는 Nxe5로 되잡아 나이트가 e5에 남습니다. Qd5까지 기록되어 있습니다.",
+        "d6 이후 별도로 조사한 응수에서는 Nd3와 b3가 비슷한 수준입니다. Nd3 응수에서는 제시된 수순의 d6 … dxe5 … Bb7를 거쳐 원래 d8의 퀸의 d5 진입로를 차례로 비웁니다. Qd5로 퀸이 활동에 나서 백 a2 폰, 백 d4 폰, 백 e5 나이트, 백 g2 폰을 공격합니다. 제시된 d6 수순에서 양쪽이 폰 한 개씩 교환합니다. b3 응수에서는 Qd7로 퀸이 활동에 나서 백 d3 나이트를 공격합니다. 제시된 d6 수순의 Qd7까지는 양쪽이 폰 한 개씩 교환합니다."
+      ]
+    }
+  ],
+  "finding": "The temporary dxe5 contact yields only to the directly linked prepared Qd5 activity. Nd3 guarding e5 and then recapturing with Nxe5 is preserved. Actual Nd3/b3 reply activities and complete costs remain.",
+  "limit": "This establishes an observed preparation, not the full prophylactic reason for d6 or the reason for the engine evaluation."
+}

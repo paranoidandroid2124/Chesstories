@@ -1,0 +1,33 @@
+{
+  "source": "Previous first independent Ahmed-Shaw Bd7 screen; exact work keys and reports replayed, no engine rerun",
+  "original_raw_source": "research/idea-generalization-reply-functions-20261016/live-reports.json.gz",
+  "after_raw_source": "judgment-evaluation/fixtures/public-commentary-v6/counterplay-reading.json.gz",
+  "before": [
+    {
+      "question": "selected_comparison",
+      "paragraphs_ko": [
+        "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — 백 g4 폰을 새로 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  f5 수순의 비교 시점까지 백의 g4 폰을 내줍니다. Bd7 수순의 비교 시점까지 백의 e1 룩과 흑의 e7 나이트를 교환합니다. f5 수순에서: Re5의 흑 f5 폰 공격을 fxg4 수로 피합니다.",
+        "f5 — Re5: 흑 d5 폰을 새로 공격합니다. fxg4까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. g4·g6에 고립된 더블폰이 남습니다. g4 폰은 통과폰입니다. g4 폰에는 현재 방어자가 없습니다.",
+        "Bd7 — Rxe7: 흑 e7 나이트를 잡습니다. Qxe7까지의 수순에서는 흑 d7 비숍을 남깁니다."
+      ]
+    }
+  ],
+  "after": [
+    {
+      "question": "selected_comparison",
+      "paragraphs_ko": [
+        "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — 백 g4 폰을 새로 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다. 백의 e1 룩과 흑의 e7 나이트를 교환합니다. f5에서는 그 밖에 백의 g4 폰을 내줍니다. Bd7에서는 그 밖에 흑의 g6 폰을 내줍니다. f5 수순에서: Re5의 흑 f5 폰 공격을 fxg4 수로 피합니다. Bd7 수순에서: f5 뒤 흑 d4 나이트가 백 f5 폰을 새로 공격합니다. f5 뒤 흑 d7 비숍이 백 f5 폰을 새로 공격합니다. fxg6 수로 폰이 흑 d7 비숍·흑 d4 나이트의 공격을 피합니다.",
+        "f5 — Re5: 흑 d5 폰을 새로 공격합니다. gxf5까지의 수순에서는 흑 h4 퀸은 흑 g4 폰을 지킵니다. 흑 f5 폰은 통과폰입니다. 흑 g4 폰은 통과폰입니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+        "다른 선택인 f5 수순에서는 흑 e7 나이트가 남아 f5에 Nexf5로 대응합니다. Bd7 — Rxe7에서 원래 e7의 나이트를 교환하여 f5 칸 통제 기능을 없앱니다. f5로 폰이 전진하여 흑 g6 폰을 공격합니다. 이어 fxg6에 Kxg6로 되잡아 흑 킹이 g6로 나옵니다. Nxd5까지의 수순에서는 흑 f8 퀸은 흑 f7 폰을 지킵니다. 흑 f7 폰은 고립폰입니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+      ]
+    }
+  ],
+  "confirmed": [
+    "e7 knight originally controls f5",
+    "Rxe7 exchanges that same original controller",
+    "f4 pawn uses f5 on the next own turn",
+    "fxg6 Kxg6 brings black king to g6",
+    "in the other actual f5 root line, the same e7 knight survives to answer f5 by Nexf5"
+  ],
+  "boundary": "No intervening independent own plan may borrow this later activity; no claim of evaluation causality or safety"
+}

@@ -1,0 +1,23 @@
+{
+  "utc": "2026-10-13T17:12:50.752708+00:00",
+  "frozen_before_outputs": true,
+  "cases": [
+    {
+      "id": "giri-e5",
+      "seconds": 4.56,
+      "depth": 12,
+      "decision": "failed_actual_pair_and_root_function",
+      "observed": "Actual e5/Qe7 replaced by e5 first-reply comparison; e5 and dxe5 repeated; bishop release absent. English fallback.",
+      "first_screen": "giri-e5-heldout-first.png"
+    },
+    {
+      "id": "gligoric-kg2",
+      "seconds": 2.88,
+      "depth": 12,
+      "decision": "partial_observed_functions_not_prophylactic_purpose",
+      "observed": "Actual Ne5/Kg2, g3 guard, different minor-piece retention and rook activity retained. Does not discover king prophylaxis before Ne5/Qc5+. Repeated Bc4 clearance in both branches.",
+      "first_screen": "gligoric-kg2-heldout-first.png"
+    }
+  ],
+  "recording_correction": "Initial helper closure read older tab when saving Giri text/HTTP. Corrected by explicit tab/cap arguments; screenshot was always Giri. Saved actual job a4rhNJG6xP1gjq3DyXxBC-OfZ1yWfkgJ. No second engine run."
+}

@@ -1,0 +1,20 @@
+{
+  "utc": "2026-10-13T20:04:55.071984+00:00",
+  "phase": 30,
+  "product_source_hashes_match": 107,
+  "original_research_body_exact": true,
+  "readme_links_resolve": 9,
+  "final_ui_cases_with_screens": 7,
+  "network_runs_including_first_failures": 14,
+  "ui_configured_budget_ms": 10000,
+  "server_remaining_budget_range_ms": [
+    9575,
+    9744
+  ],
+  "budget_note": "The request carries remaining time after client preparation, not the original ten-second UI budget.",
+  "maximum_issued_search_depth": 12,
+  "issued_works_inspected": 34,
+  "no_general_shortening_claim": true,
+  "no_release_ready_claim": true,
+  "meaning": "Evidence consistency only. These are not additional independent quality passes."
+}

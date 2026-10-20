@@ -1,0 +1,98 @@
+[
+  {
+    "class": "black rook",
+    "style": "transform: translate(210px, 0px);"
+  },
+  {
+    "class": "black bishop",
+    "style": "transform: translate(280px, 0px);"
+  },
+  {
+    "class": "black king",
+    "style": "transform: translate(490px, 0px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(0px, 70px);"
+  },
+  {
+    "class": "black bishop",
+    "style": "transform: translate(140px, 70px);"
+  },
+  {
+    "class": "black queen",
+    "style": "transform: translate(280px, 70px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(420px, 70px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(70px, 140px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(280px, 140px);"
+  },
+  {
+    "class": "black knight",
+    "style": "transform: translate(350px, 140px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(490px, 140px);"
+  },
+  {
+    "class": "black pawn",
+    "style": "transform: translate(140px, 210px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(0px, 280px);"
+  },
+  {
+    "class": "white bishop",
+    "style": "transform: translate(140px, 280px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(280px, 280px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(70px, 350px);"
+  },
+  {
+    "class": "white knight",
+    "style": "transform: translate(280px, 350px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(350px, 350px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(420px, 350px);"
+  },
+  {
+    "class": "white bishop",
+    "style": "transform: translate(70px, 420px);"
+  },
+  {
+    "class": "white queen",
+    "style": "transform: translate(140px, 420px);"
+  },
+  {
+    "class": "white king",
+    "style": "transform: translate(420px, 420px);"
+  },
+  {
+    "class": "white pawn",
+    "style": "transform: translate(490px, 420px);"
+  },
+  {
+    "class": "white rook",
+    "style": "transform: translate(210px, 490px);"
+  }
+]

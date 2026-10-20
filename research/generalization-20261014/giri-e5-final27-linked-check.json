@@ -1,0 +1,15 @@
+{
+  "line_id": "move-review:7315d3bbac0996bde053ce99ef401a33b59fbfb52ad8173cba49f86179c1c076:35:e6e5:line:82130777d9c91c9a171ea390b72555b2941d413fb94a512a20874c2a221fe100",
+  "occurrence_id": "move-review:7315d3bbac0996bde053ce99ef401a33b59fbfb52ad8173cba49f86179c1c076:35:e6e5:evidence:transition:d1044f16468d2add72bf90967507ddedbbf5d704e105a0b195956d0562ddc57e",
+  "offset": 4,
+  "uci": "e5e4",
+  "fen": "r1bq1r1k/1p4p1/2p4p/p1PP1p2/PbQ1p3/2N3P1/1P3PBP/R1R3K1 w - - 0 21",
+  "piece_count": 26,
+  "dom_matches_exact_reply_path": true,
+  "black_f5_guards_e4": true,
+  "white_attackers_on_e4": [
+    "g2",
+    "c3",
+    "c4"
+  ]
+}

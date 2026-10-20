@@ -1,0 +1,139 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories 기보와 해설
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				202 text 14. Nb1
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 14. Nb1
+				188 container
+					189 button (expanded) PGN · FEN 불러오기, Secondary Actions: Collapse
+						190 text PGN · FEN 불러오기
+					191 text entry area (settable) Description: PGN or FEN, Value: [Event "pedersen-nb1"]
+[SetUp "1"]
+[FEN "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14"]
+
+14. Nb1 *
+					192 button 불러오기
+					193 text 파일 선택
+					194 button 파일 선택
+					195 text 한 경기씩 불러옵니다. 변형·주석은 PGN 저장에 함께 보존됩니다.
+				128 container
+					129 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						130 text 현재 FEN
+			131 container 해설
+				132 heading 이 수의 의미, Value: 2
+					133 text 이 수의 의미
+				134 button 해설 · 20초
+				205 text completed · 2.28s
+				136 container 직전 수 리뷰
+					137 container
+						138 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							139 text 직전 수 리뷰
+						204 text 직전 수 리뷰가 완료되었습니다.
+					206 container 이번 분석에서 가장 높게 평가한 수입니다: Nb1
+						207 text Nb1
+						208 heading 이번 분석에서 가장 높게 평가한 수입니다, Value: 3
+							209 text 이번 분석에서 가장 높게 평가한 수입니다
+					210 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						211 text 평가 수치
+						260 text +
+					213 container
+						214 heading 두 선택의 비교, Value: 3
+							215 text 두 선택의 비교
+						216 pop up button (collapsed) Description: b3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-0
+						217 text  —  이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다. 제시된 수순에서 원래 c3의 나이트가 
+						218 pop up button (collapsed) Description: Nb1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-5
+						219 text  … 
+						220 pop up button (collapsed) Description: Nbd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-7
+						221 text  … 
+						222 pop up button (collapsed) Description: Nb3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-9
+						223 text 로 재배치됩니다.
+						224 pop up button (collapsed) Description: Nb3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-12
+						225 text  뒤 백 b3 나이트가 흑 f5 나이트에게 공격받는 백 d4 폰을 지킵니다.
+						226 pop up button (collapsed) Description: Nb1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-15
+						227 text  수로 c3 칸을 비우고, 이후 
+						228 pop up button (collapsed) Description: c3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-17
+						229 text  수로 그 칸을 차지합니다.
+						230 pop up button (collapsed) Description: b3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-21
+						231 text  수순의 비교 시점까지 폰 한 쌍을 교환합니다.
+						232 pop up button (collapsed) Description: b3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-24
+						233 text  수순에서: 
+						234 pop up button (collapsed) Description: hxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-26
+						235 text  뒤 흑 h8 룩이 백 h3 폰을 공격하지만, 
+						236 pop up button (collapsed) Description: hxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-0-28
+						237 text  수로 피합니다.
+						238 pop up button (collapsed) Description: b3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-1-0
+						239 text  — 
+						240 pop up button (collapsed) Description: Bh6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-1-2
+						241 text : 백 f4 폰을 새로 공격합니다. 
+						242 pop up button (collapsed) Description: hxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-1-4
+						243 text 까지의 수순에서는 원래 h2 폰이 g4에 남습니다. g4 폰에는 현재 방어자가 없습니다.  이 뒤의 응수는 기록되어 있지 않습니다.
+						244 pop up button (collapsed) Description: Nb1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-2-0
+						245 text  — 
+						246 pop up button (collapsed) Description: e6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-2-2
+						247 text  뒤, 
+						248 pop up button (collapsed) Description: Ng5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-2-4
+						249 text 까지의 수순에서는 백 c5 나이트는 흑 a6 폰, 흑 b7 비숍, 흑 e6 폰을 공격합니다. 원래 h5 폰이 h5에 남습니다.  이 뒤의 응수는 기록되어 있지 않습니다.
+						250 pop up button (collapsed) Description: Nb1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-3-0
+						251 text  수순에서: 
+						252 pop up button (collapsed) Description: Nc4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-3-2
+						253 text  응수에는 
+						254 pop up button (collapsed) Description: Nbd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:evidence:candidate-comparison:0d1383405124ebc1bd01b651574593023bc9d4c19e707450d524c94f7d4c31a8-question-basic-3-4
+						255 text  뒤 백 d2 나이트가 d2 진출을 실현합니다. 흑 c4 나이트가 d2를 새로 통제합니다.
+						256 button 둔 수 · Nb1 · 재생
+						257 button 대안 수 · b3 · 재생
+					258 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						259 text 평가 근거와 관찰 기록
+						261 text +
+		143 container
+			201 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

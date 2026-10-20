@@ -1,0 +1,16 @@
+{
+  "source_run": "giri-e5-final30",
+  "exact_piece_count": 26,
+  "all_pieces_match": true,
+  "owned_witness_line": "move-review:7315d3bbac0996bde053ce99ef401a33b59fbfb52ad8173cba49f86179c1c076:35:e6e5:line:d066678911c8719b592dac8fd7e038e2f031e619be6d7ae38ed78e2d74e5cead",
+  "moves": [
+    "e6e5",
+    "d4d5",
+    "f7f5",
+    "b1c3",
+    "e5e4"
+  ],
+  "fen": "r1bq1r1k/1p4p1/2p4p/p1PP1p2/PbQ1p3/2N3P1/1P3PBP/R1R3K1 w - - 0 21",
+  "black_f5_guards_e4": true,
+  "white_c3_c4_g2_attack_e4": true
+}

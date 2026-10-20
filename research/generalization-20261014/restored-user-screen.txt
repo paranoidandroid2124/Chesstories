@@ -1,0 +1,55 @@
+- banner:
+  - generic: Chesstories
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "분석 기보" [level=1]
+    - generic: 시작 국면
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음" [disabled]: ⏮
+      - button "이전 수" [disabled]: ←
+      - button "다음 수": →
+      - button "마지막": ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "1. e4"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초" [disabled]
+    - status: 기보에서 수를 고르거나 판 위에 수를 두세요.
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status
+      - heading "아직 리뷰할 수가 없습니다" [level=3]
+      - paragraph: 수를 두거나 기보에서 수를 선택하세요.
+- contentinfo:
+  - status
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

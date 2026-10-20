@@ -1,0 +1,19 @@
+{
+  "result": {
+    "id": "gligoric-kg2-release",
+    "reports_consumed": 2,
+    "available": 2,
+    "failure": null,
+    "replay_phase": "completed",
+    "en_exact_same_text_as_live": true,
+    "en_live_chars": 185,
+    "en_final_replay_chars": 185,
+    "ko_exact_same_text_as_live": true,
+    "ko_live_chars": 185,
+    "ko_final_replay_chars": 185
+  },
+  "live_en": "After Kg2, White's king on g2 adds support to White's pawn on g3, which is under attack from Black's bishop on c7.\n\nAfter Bc3, White's bishop on c3 keeps targeting Black's knight on f6.",
+  "final_en": "After Kg2, White's king on g2 adds support to White's pawn on g3, which is under attack from Black's bishop on c7.\n\nAfter Bc3, White's bishop on c3 keeps targeting Black's knight on f6.",
+  "live_ko": "After Kg2, White's king on g2 adds support to White's pawn on g3, which is under attack from Black's bishop on c7.\n\nAfter Bc3, White's bishop on c3 keeps targeting Black's knight on f6.",
+  "final_ko": "After Kg2, White's king on g2 adds support to White's pawn on g3, which is under attack from Black's bishop on c7.\n\nAfter Bc3, White's bishop on c3 keeps targeting Black's knight on f6."
+}

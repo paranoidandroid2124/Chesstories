@@ -1,0 +1,189 @@
+- banner:
+  - generic: Chesstories
+  - generic: 기보와 해설
+  - combobox "Language":
+    - option "한국어" [selected]
+    - option "English"
+  - button "어둡게"
+- main:
+  - region "체스판과 기보":
+    - heading "분석 기보" [level=1]
+    - generic: 17. Qa4
+    - generic: "1"
+    - generic: "2"
+    - generic: "3"
+    - generic: "4"
+    - generic: "5"
+    - generic: "6"
+    - generic: "7"
+    - generic: "8"
+    - generic: a
+    - generic: b
+    - generic: c
+    - generic: d
+    - generic: e
+    - generic: f
+    - generic: g
+    - generic: h
+    - navigation "기보 이동":
+      - button "처음": ⏮
+      - button "이전 수": ←
+      - button "다음 수" [disabled]: →
+      - button "마지막" [disabled]: ⏭
+      - button "방향 전환"
+    - textbox "수 입력":
+      - /placeholder: e4, Nf3, e2e4
+    - button "두기"
+    - heading "Engine reference" [level=2]
+    - button "Engine / Off"
+    - paragraph: Off · Stockfish 18 · 2 threads
+    - heading "기보" [level=2]
+    - button "PGN 저장"
+    - button "17. Qa4"
+    - generic "PGN · FEN 불러오기"
+    - generic "현재 FEN"
+  - region "해설":
+    - heading "이 수의 의미" [level=2]
+    - button "해설 · 10초"
+    - status: completed · 8.55s
+    - region "직전 수 리뷰":
+      - heading "직전 수 리뷰" [level=2]
+      - status: 직전 수 리뷰가 완료되었습니다.
+      - 'region "이번 분석에서 가장 높게 평가한 수입니다: Qa4"':
+        - generic: Qa4
+        - heading "이번 분석에서 가장 높게 평가한 수입니다" [level=3]
+      - generic "평가 수치 +"
+      - article:
+        - heading "두 선택의 비교" [level=3]
+        - paragraph:
+          - button "Nf4 · 위치 살펴보기": Nf4
+          - text: — 백 f4 나이트가 흑 h6 비숍에서 백 e3 폰 쪽으로 이어지는 공격선을 막습니다. 흑 e6 폰, 흑 h5 폰을 새로 공격합니다.
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 는 c6에 압박을 걸어 후속 행동과 연결합니다.
+          - button "d5 · 위치 살펴보기": d5
+          - text: 뒤에는 폰과 퀸이 같은 c6 폰을 함께 압박합니다. 상대 응수에 따라 실행 순서와 대가가 달라집니다. 두 비교 지점 모두 f2·f4에 더블폰이 남습니다.
+          - button "Nf4 · 위치 살펴보기": Nf4
+          - text: 수순의 비교 시점까지 백의 d3 나이트와 흑의 h6 비숍을 교환합니다.
+        - paragraph:
+          - button "Nf4 · 위치 살펴보기": Nf4
+          - text: —
+          - button "Bxf4 · 위치 살펴보기": Bxf4
+          - text: ": 백 f4 나이트를 잡습니다."
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 까지 기록되어 있습니다.
+        - paragraph:
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 뒤
+          - button "Bb7 · 위치 살펴보기": Bb7
+          - text: 에
+          - button "Nf4 · 위치 살펴보기": Nf4
+          - text: 를 먼저 둡니다. 이 응수에는 비교 수를 한 수 늦춰 둘 수 있습니다. 이 구간에서는 준비한 배치가 실현되지 않습니다. 확인한 구간은
+          - button "exf4 · 위치 살펴보기": exf4
+          - text: 까지입니다. 제시된
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 수순의
+          - button "exf4 · 위치 살펴보기": exf4
+          - text: 까지는 백은 나이트 한 개를 내주고 비숍 한 개를 얻습니다.
+        - paragraph:
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - button "Bb7 · 위치 살펴보기": Bb7
+          - text: 뒤에도
+          - button "d5 · 위치 살펴보기": d5
+          - text: 로 준비한 구상을 실행하는 선택은
+          - button "Nf4 · 위치 살펴보기": Nf4
+          - text: 와 이 국면에서 평가가 가깝습니다.
+          - button "d5 · 위치 살펴보기": d5
+          - text: 에서 공동 압박이 생긴 뒤, 교환을 통해 참여하는 폰이 바뀝니다. 구상에 참여하던 d4 폰은 이 수순 뒤 남지 않습니다.
+          - button "cxd5 · 위치 살펴보기": cxd5
+          - text: 뒤에는 원래 c4 폰이 d5에 남아 e6 폰을 압박합니다. 확인한 구간은
+          - button "cxd5 · 위치 살펴보기": cxd5
+          - text: 까지입니다. 제시된
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 수순의
+          - button "cxd5 · 위치 살펴보기": cxd5
+          - text: 까지는 양쪽이 폰 한 개씩 교환합니다.
+        - paragraph:
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 에 대해 조사한 다른 응수
+          - button "d5 · 위치 살펴보기": d5
+          - text: 는 c4 폰을 겨냥합니다.
+          - button "cxd5 · 위치 살펴보기": cxd5
+          - text: 를 먼저 둡니다. 공격한 기물을 잡아 그 공격을 없앱니다. 이 구간에서는 준비한 배치가 실현되지 않습니다. 확인한 구간은
+          - button "Nb4 · 위치 살펴보기": Nb4
+          - text: 까지입니다. 제시된
+          - button "Qa4 · 위치 살펴보기": Qa4
+          - text: 수순의
+          - button "Nb4 · 위치 살펴보기": Nb4
+          - text: 까지는 양쪽이 폰 한 개씩 교환합니다.
+        - button "둔 수 · Qa4 · 재생"
+        - button "대안 수 · Nf4 · 재생"
+      - generic "평가 근거와 관찰 기록 +"
+      - text: + + + + + + +
+      - option "칸 선택" [selected]
+      - option "a1"
+      - option "b1"
+      - option "c1"
+      - option "d1"
+      - option "e1"
+      - option "f1"
+      - option "g1"
+      - option "h1"
+      - option "a2"
+      - option "b2"
+      - option "c2"
+      - option "d2"
+      - option "e2"
+      - option "f2"
+      - option "g2"
+      - option "h2"
+      - option "a3"
+      - option "b3"
+      - option "c3"
+      - option "d3"
+      - option "e3"
+      - option "f3"
+      - option "g3"
+      - option "h3"
+      - option "a4"
+      - option "b4"
+      - option "c4"
+      - option "d4"
+      - option "e4"
+      - option "f4"
+      - option "g4"
+      - option "h4"
+      - option "a5"
+      - option "b5"
+      - option "c5"
+      - option "d5"
+      - option "e5"
+      - option "f5"
+      - option "g5"
+      - option "h5"
+      - option "a6"
+      - option "b6"
+      - option "c6"
+      - option "d6"
+      - option "e6"
+      - option "f6"
+      - option "g6"
+      - option "h6"
+      - option "a7"
+      - option "b7"
+      - option "c7"
+      - option "d7"
+      - option "e7"
+      - option "f7"
+      - option "g7"
+      - option "h7"
+      - option "a8"
+      - option "b8"
+      - option "c8"
+      - option "d8"
+      - option "e8"
+      - option "f8"
+      - option "g8"
+      - option "h8"
+- contentinfo:
+  - status
+  - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

@@ -1,0 +1,137 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories 기보와 해설
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				14 text 22. h3
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 22. h3
+				55 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					56 text PGN · FEN 불러오기
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button 해설 · 20초
+				76 text completed · 4.71s
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+						75 text 직전 수 리뷰가 완료되었습니다.
+					77 container 이번 분석에서 가장 높게 평가한 수입니다: h3
+						78 text h3
+						79 heading 이번 분석에서 가장 높게 평가한 수입니다, Value: 3
+							80 text 이번 분석에서 가장 높게 평가한 수입니다
+					81 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						82 text 평가 수치
+						139 text +
+					84 container
+						85 heading 두 선택의 비교, Value: 3
+							86 text 두 선택의 비교
+						87 pop up button (collapsed) Description: Rb2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-0
+						88 text  — 
+						89 pop up button (collapsed) Description: Rb2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-2
+						90 text –
+						91 pop up button (collapsed) Description: Rxb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-4
+						92 text 로 룩이 활동에 나서  흑 b7 폰을 공격합니다.
+						93 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-8
+						94 text  — 
+						95 pop up button (collapsed) Description: b6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-10
+						96 text  응수에서는  g4 칸을 새로 지원하여 원래 e2의 비숍의 진출을 받칩니다. 
+						97 pop up button (collapsed) Description: Bg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-13
+						98 text 로 비숍이 활동에 나서  흑 e6 비숍을 공격합니다.  이어 
+						99 pop up button (collapsed) Description: Bxe6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-0-17
+						100 text 로 흑 e6 비숍을 잡습니다. 아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다.
+						101 pop up button (collapsed) Description: Rb2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-1-0
+						102 text  — 
+						103 pop up button (collapsed) Description: Kf8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-1-2
+						104 text  뒤, 
+						105 pop up button (collapsed) Description: Rxb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-1-4
+						106 text 까지 기록되어 있습니다.  이 뒤의 응수는 기록되어 있지 않습니다.
+						107 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-2-0
+						108 text  — 
+						109 pop up button (collapsed) Description: Ke7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-2-2
+						110 text  뒤, 
+						111 pop up button (collapsed) Description: Rxb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-2-4
+						112 text 까지 기록되어 있습니다.
+						113 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-3-0
+						114 text  수순에서: 
+						115 pop up button (collapsed) Description: b6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-3-2
+						116 text  응수에서는 
+						117 pop up button (collapsed) Description: Bg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-3-4
+						118 text 로 비숍이 활동에 나서  흑 e6 비숍을 공격합니다.  이어 
+						119 pop up button (collapsed) Description: Bxe6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-3-8
+						120 text 로 흑 e6 비숍을 잡습니다. 제시된 
+						121 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-3-12
+						122 text  수순에서  양쪽이 비숍 한 개씩 교환합니다.
+						123 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-0
+						124 text  수순에서: 
+						125 pop up button (collapsed) Description: Ke7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-2
+						126 text  응수에는 
+						127 pop up button (collapsed) Description: b4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-4
+						128 text  뒤 g4를 쓰는 대신 백 b4 폰의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다.  이어지는 교환·체크는 
+						129 pop up button (collapsed) Description: Rxb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-7
+						130 text 까지 확인했습니다. 제시된 
+						131 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-11
+						132 text  수순의 
+						133 pop up button (collapsed) Description: Rxb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:8102a042e1edc73fc729ae95c9ec2506e543c641ee28d404a39e939c6a028b1b-question-basic-4-13
+						134 text 까지는  양쪽이 폰 한 개씩 교환합니다.
+						135 button 둔 수 · h3 · 재생
+						136 button 대안 수 · Rb2 · 재생
+					137 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						138 text 평가 근거와 관찰 기록
+						140 text +
+		72 container
+			73 text 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

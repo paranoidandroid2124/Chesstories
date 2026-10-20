@@ -1,0 +1,128 @@
+{
+  "status": "active_unachieved",
+  "started_utc": "2026-10-15T22:52:18.239567+00:00",
+  "phase": "purpose-beneficiary-activity-and-reply-selection",
+  "previous_records": [
+    "research/idea-generalization-20261016.json",
+    "research/idea-generalization-causal-20261016.json",
+    "research/core-idea-20261014.json",
+    "research/core-selection-20261013.json"
+  ],
+  "diagnosis": [
+    "The first entry onto a released square is separated from its useful function and the actual reply to that function.",
+    "A preselected capture/noncapture pair can exclude a returned stronger peer that distinguishes realization and price of the same root idea.",
+    "Correct local contacts do not prove that an idea causes the numerical evaluation gap."
+  ],
+  "constraints": {
+    "depth_max": 18,
+    "live_budget_ms": 20000,
+    "live_positions": [
+      "Gelfand-Markowski 22.e5 (development)",
+      "Khalifman-Polgar 22.h3 (unused at preregistration)"
+    ],
+    "no_extra_search_for_this_reading": true,
+    "completion": "Preserve both actual roots, reply-dependent function, delayed use and mandatory cost. Do not complete on shorter text or passing tests."
+  },
+  "preservation": "target/research-runs/idea-generalization-activity-20261016/baseline.json and baseline/ preserve all 268 existing dirty/untracked files before this phase.",
+  "heldout_preregistration": {
+    "game": "Alexander Khalifman - Judit Polgar, Las Vegas (5.1) 1999",
+    "pdf_page": 86,
+    "printed_page": 87,
+    "fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ5/4BPPP/1R1R2K1 w k - 0 22",
+    "move_uci": "h2h3",
+    "san": "h3",
+    "resulting_fen": "2r1k2r/1p3p1p/4bp2/p1q1p3/2P1P3/1PQ4P/4BPP1/1R1R2K1 b k - 0 22",
+    "source": "Aagaard, Grandmaster Preparation: Positional Play, cached G Drive PDF",
+    "diagram": "target/research-runs/idea-generalization-activity-20261016/book-p86.png",
+    "history": "Reconstructed initial position from the inspected diagram; no invented prehistory. Black kingside castling right is supported by the book continuation 22...O-O.",
+    "selected_before_new_product_output": true,
+    "expectation": "h3 supplies g4 support for the e2 bishop and prepares exchanging the e6 defender. The actual engine roots and replies remain authoritative; their purposes, different realizations/remaining pawn or square costs must be explained if supported.",
+    "first_failure_must_be_retained": true,
+    "now_development_case": true
+  },
+  "first_live_results": [
+    {
+      "case": "e5",
+      "seconds": 4.13,
+      "status": "development_improvement",
+      "finding": "Actual g4/e5 comparison shows the knight beneficiary and actual Nxe5/dxe5 choice with Rxd6 recovery versus a retained pawn deficit. The fresh line uses a rook, not the previous stored Nxd6. Repetition and incidental conditions remain."
+    },
+    {
+      "case": "h3",
+      "seconds": 2.2,
+      "status": "first_independent_partial_failure",
+      "finding": "g4 support and the e2 bishop use are discovered without case-specific tuning. The alternate h4 purpose is unknown; reply inquiry still chooses a speculative g-pawn advance and calls hxg4 the purpose. Post-exchange structural costs are listed but not connected to the original bishop idea."
+    }
+  ],
+  "continued_common_diagnosis": "MovePurpose.discover admits supported pawns but excludes supported bishops/other pieces. Its unseen g2-g4 question therefore survives even when the shared beneficiary reader has an actual Bg4 witness. The scheduler and explanation disagree on the task identity.",
+  "progress_utc": "2026-10-15T23:13:53.628087+00:00",
+  "additional_live_failure": {
+    "case": "h3-development-retry",
+    "seconds": 3.81,
+    "actual_pair": [
+      "b4",
+      "h3"
+    ],
+    "root_pv_omits_bg4": true,
+    "independent_reply_survey_contains_bg4": true,
+    "diagnosis": "Supported beneficiary discovery read only the root PV, while redeployment discovery also used the independent reply survey. This lost the same idea when the engine returned a different short root PV.",
+    "status": "development_failure_preserved"
+  },
+  "implementation": [
+    "Root-created vacancy, cleared route and newly supported entry share physical beneficiary activity, actual retreat/recovery and bounded exchange costs.",
+    "Strong returned replies can be compared through the same beneficiary task and different costs, even when both capture.",
+    "Question selection and explanation share supported-entry tracking for every piece, preserving the source path and continuous provider.",
+    "A local exchange can pass a removed controller's function to the next allied user, with actual contacts and remaining enemy control. An intervening own plan breaks this connection.",
+    "Full reply surveys can supply a witnessed supported beneficiary absent from the short root PV; forced subsets cannot discover their own task.",
+    "Independent client checks preserve the same actual survey owner, purpose question, physical provider and complete prices."
+  ],
+  "final_live_result": {
+    "case": "h3-final-development",
+    "seconds": 4.14,
+    "actual_pair": [
+      "h4",
+      "h3"
+    ],
+    "result": "failed_objective",
+    "all_new_reports_omit_bg4": true,
+    "visible_result": "English support-fact fallback, with neither root purpose explained. No further retries were made to obtain a favorable PV."
+  },
+  "verification": {
+    "runtime": {
+      "idea_generalization": 15,
+      "purpose_comparison": 10,
+      "physical_episode_boundary": 3,
+      "all_passed": true,
+      "note": "25 final core checks and 3 boundary checks earlier in this phase; no full suite."
+    },
+    "independent_screen_decoder": {
+      "tests": 9,
+      "all_passed": true,
+      "includes_both_h3_saved_reports": true
+    },
+    "type_check": true,
+    "normal_standalone_update": true,
+    "depths_observed": [
+      11
+    ],
+    "request_budget_ms": 20000,
+    "completion_claim": false
+  },
+  "failures_during_implementation": [
+    "Activity reading initially invaded already complete preparation and broke exact Re2/Qa4 receipts; preparation ownership was restored without weakening checks.",
+    "New reply peer was initially rejected by the independent client because only capture/noncapture witnesses were admitted; corrected using exact full-survey ownership and restricted/foreign/missing-peer negatives.",
+    "A standalone activity section lost Korean classification and functional inquiry ownership; attached activity to its owned functional reply and retained both proof and price.",
+    "First independent h3 screen exposed pawn-only question selection. Corrected the shared beneficiary reader, preserving the failure.",
+    "First h3 development retry exposed root-only supported-purpose discovery despite an independent reply witness. Extended discovery and source positions to that actual survey.",
+    "Final h3 development screen contained no Bg4 in any returned line and reverted to generic English support facts. This remains unresolved."
+  ],
+  "remaining": [
+    "Idea discovery is still bounded by returned engine lines. Legal but unseen non-pawn tasks are not generated and independently evaluated; the remaining speculative question is pawn-only.",
+    "When both root purposes are unestablished, a generic fact fallback can displace the understandable partial pair account and fall back to English.",
+    "Candidate importance and numerical evaluation causality are still unproven; correct geometry is not enough to select the central explanation.",
+    "Duplicated root-clearing and endpoint functions remain in some new b4 continuations.",
+    "The preregistered unused h3 position failed on first contact; later development improvements are not independent acceptance. No successful unseen-position validation was obtained in this phase."
+  ],
+  "next_shared_bottleneck": "Generate a bounded non-pawn purpose hypothesis before a PV witnesses it, use an independent engine comparison to test realization versus prevention within the existing request budget, and preserve an honest partial two-root account when evidence is absent. Do not add a h3/Bg4-specific rule or rely on favorable reruns.",
+  "last_recorded_utc": "2026-10-15T23:37:50.408822+00:00"
+}

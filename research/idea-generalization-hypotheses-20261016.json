@@ -1,0 +1,79 @@
+{
+  "status": "active_unachieved",
+  "phase": "bounded-purpose-hypotheses-and-independent-action-comparison",
+  "started_utc": "2026-10-15T23:43:56.445938+00:00",
+  "previous_goal_turn": "progress: changed shared readers and ownership, and the final live h3 failure identified absent purpose hypotheses and fact fallback as the next common bottleneck.",
+  "baseline": "target/research-runs/idea-generalization-hypotheses-20261016/baseline.json",
+  "previous_record": "research/idea-generalization-activity-20261016.json",
+  "constraints": {
+    "depth_max": 18,
+    "request_budget_ms": 20000,
+    "live_cases": [
+      "h3 development",
+      "Aabling-Thomsen-Aagaard 19...Rc7 preregistered unused"
+    ],
+    "completion": "Full original goal remains active; no completion from tests or one improved case."
+  },
+  "heldout_preregistration": {
+    "game": "Jakob Aabling-Thomsen - Jacob Aagaard, Helsingor 2012",
+    "pdf_pages": [
+      89,
+      90,
+      91,
+      92
+    ],
+    "source": "Aagaard Grandmaster Preparation: Positional Play, cached G Drive PDF",
+    "pgn_before": "1. e4 c5 2. d4 cxd4 3. c3 Nf6 4. e5 Nd5 5. Nf3 d6 6. Bc4 Nb6 7. Bb3 dxe5 8. Nxe5 e6 9. O-O Nc6 10. Nxc6 bxc6 11. cxd4 Be7 12. Nc3 O-O 13. Qf3 Ba6 14. Rd1 Rc8 15. Bc2 Bc4 16. b3 Bd5 17. Qh3 g6 18. Bh6 Re8 19. Rd3 *",
+    "fen_before": "2rqr1k1/p3bp1p/1np1p1pB/3b4/3P4/1PNR3Q/P1B2PPP/R5K1 b - - 3 19",
+    "played_uci": "c8c7",
+    "fen_after": "3qr1k1/p1r1bp1p/1np1p1pB/3b4/3P4/1PNR3Q/P1B2PPP/R5K1 w - - 4 20",
+    "expected_concepts": "The rook prepares pressure on d4 while vacating c8 for the b6 knight, with its later route and White's counterplay. Actual engine alternatives and replies remain authoritative. Both purposes, relative realization and costs must be retained.",
+    "selected_before_new_product_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "research_observation": "Existing MoveIntent already has a bounded legal example, independent reply survey and an action-vs-actual-move test; latent beneficiaries are excluded by its activation bridge, while MovePurpose answers a question once response classes are merely present. Reuse the existing investigation rather than create another generator or extra engine service.",
+  "development_first_live": {
+    "case": "h3",
+    "completed_seconds": 4.64,
+    "actual_pair": [
+      "h3",
+      "Rd2"
+    ],
+    "status": "failed",
+    "finding": "The full independent survey contained Rg8 Bg4, but geometric challenge pairing selected h5 and Ke7, neither realizing the supported entry. The discovered bishop purpose was dropped and English rook-exchange inventory returned.",
+    "evidence": "research/idea-generalization-hypotheses-20261016/live-reports.json.gz",
+    "replay_failure": "MovePurpose.read returned None despite the independent supported-activity witness."
+  },
+  "shared_corrections": [
+    "Extend existing MoveIntent legal examples to newly supported non-pawn activity; an independent reply survey precedes a latent hypothesis action comparison.",
+    "Reuse completed full legal reply surveys instead of repeating them. Test the action against actual next own move and eligible actual root alternative at the exact child.",
+    "Distinguish independently tested negative results from untested hypotheses; preserve new entry control and essential prices without certifying an unsound plan.",
+    "Preserve the exact independent realized source against the best other reply before classifying geometric challenge/non-challenge; the client independently validates its owned scope, source and physical supporter."
+  ],
+  "validation_before_final_live": {
+    "runtime_idea_and_prior_purpose_tests": 27,
+    "web_delivery_tests": 11,
+    "typescript": "passed",
+    "limit": "Core stored cases only; not broad regression or independent live acceptance.",
+    "product_freeze": "research/idea-generalization-hypotheses-20261016/frozen-before-final-live.json"
+  },
+  "live_result": {
+    "evidence": "research/idea-generalization-hypotheses-20261016/screen-evidence.json",
+    "h3": "4.71s, actual Rb2/h3: h3 supports Bg4 against e6 under b6; Ke7 instead continues b4 and pawn exchange. Repetition and the causal importance of Rb2 remain weak.",
+    "Rc7": "2.95s first unused result: actual c5/Rc7; c5 pawn trade and Bb7 activity, Rc7-Rd7 guard, c8 vacating-Nc8 and Nd6 checkpoint. Full survey contains later Nc8-Nd6-Nf5, but the core reading favors early Rd7 protection and does not explain the knight route as its central role.",
+    "verdict": "partial_failure; original long goal remains active and unachieved",
+    "latent_action_limit": "The exact old no-Bg4 report now issues an independently owned action comparison against b4 without repeating its full survey. New live h3 reports both contained Bg4 in a reply survey, so completed latent negative-action behavior was not claimed as live-verified."
+  },
+  "remaining_shared_bottlenecks": [
+    "PurposeActivityReading sorts entry/use and ReferencePurposeReading takes one head candidate, so an early incidental guard can displace a later enabled beneficiary with a useful route.",
+    "MovePurpose still selects a single task before comparing explanatory importance across actual root alternatives and responses.",
+    "Purpose and response text can repeat the same activity and costs; missing/weak purpose identification is not fixed by shorter prose."
+  ],
+  "next_action": "Keep first Rc7 output as a heldout partial failure. Study shared core selection against prior Re2/Kg2/Rf3 failures: distinguish an intermediate duty from the root-enabled beneficiary and its later role, preserve both actual root purposes and counterplay. No move-name/FEN rule or favorable rerun selection.",
+  "preservation": "research/idea-generalization-hypotheses-20261016/preservation-check.json",
+  "product_scope": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+    "chesstory-web/src/review/moveReviewSelection.ts"
+  ]
+}

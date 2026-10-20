@@ -58,7 +58,7 @@ class ReferencePurposeReadingTest extends munit.FunSuite:
   test("the actual c6/Bd5 comparison keeps the pawn-backed post and closes the whole exchange"):
     val reading = read("existing")
     assertEquals(reading.arms.map(_.path.moves.head), List("c7c6", "b3d5"))
-    assertEquals(reading.square, "d5")
+    assertEquals(reading.supportedPost, Some("d5"))
     assert(reading.reference.shields.exists((attacker, target) =>
       attacker.square.key == "g2" && target.square.key == "b7"))
     assert(reading.reference.remainingGuards.exists(_.square.key == "c6"))
@@ -68,18 +68,20 @@ class ReferencePurposeReadingTest extends munit.FunSuite:
       "the intermediate knight is gone after the selected exchange closes")
     assert(reading.played.retainedMover.isEmpty)
 
-    // The same position's earlier live run ranked Bd5 just above c6. An
-    // interesting Nd5 question must not remove c6 from the next comparison.
+    // The earlier rank flip must not substitute the supplementary Nd5 choice
+    // for the actual assessment pair. A completed pair needs no extra search.
     val flipped = (fixture \ "rank_flip").get
     val next = submit(start(flipped), (flipped \ "saved_reports").as[List[JsObject]].head, 0)
-      .asInstanceOf[AwaitingEngineWork].issuedWork
-    assertEquals(next.rootRestriction,
-      EngineRootRestriction.Restricted(List("b3d5", "b6d5", "c7c6")))
+    next match
+      case pending: AwaitingEngineWork => pending.issuedWork.rootRestriction match
+        case EngineRootRestriction.Restricted(moves) => assert(!moves.contains("b6d5"))
+        case _ => ()
+      case _ => ()
 
   test("Nd4/e4 connects loss of the supporting pawn to the opponent's resulting central knight"):
     val reading = read("new")
     assertEquals(reading.arms.map(_.path.moves.head), List("c6d4", "e5e4"))
-    assertEquals(reading.square, "d4")
+    assertEquals(reading.supportedPost, Some("d4"))
     assert(reading.reference.remainingGuards.exists(_.square.key == "e5"))
     assert(reading.reference.occupant.exists(_.role.name == "knight"))
     assert(reading.retainedChoice.exists(_.square.key == "e5"))

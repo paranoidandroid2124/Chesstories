@@ -1,0 +1,19 @@
+두 선택의 비교
+Bd7 ↔ a5
+
+In the Bd7 line: Qd6 attacks White's bishop on d5; Bxb7 moves that piece out of the attack. After Bxd5, Black's pawn on e6 now targets White's bishop on d5. Bxb7 moves the bishop out of the attacks from Black's pawn on e6 and Black's queen on d6. Bxb7 attacks Black's rook on a8; Rd8 moves that piece out of the attack. Bd7 brings the bishop to d7; later Rd8: Black's rook on d8 passes through the vacated c8 square in this line. After Bd7, Black's queen on e7 does not support Black's pawn on b7, whereas the e7-queen does after a5. In the Bd7 line: With Bxb7, the white bishop originally on g2 captures the black pawn originally on b7.
+
+In the Bd7 line: cxd5 … Bxd5: White's d5 pawn and Black's d5 pawn and d5 pawn are exchanged. White's bishop recaptures on d5.
+
+이어지는 변화
+
+두 수의 엔진 평가는 비슷합니다. 작은 점수 차이만으로 어느 수가 더 강하다고 단정하지 않습니다.
+
+비교의 상세 기록
+두 수순 살펴보기
+둔 수 · Bd7
+백 기준 -0.18 · 깊이 12
+비교 수순 보기 · Bd7
+대안 수 · a5
+백 기준 -0.13 · 깊이 12
+비교 수순 보기 · a5

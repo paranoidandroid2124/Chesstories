@@ -1,0 +1,293 @@
+{
+  "status": "active",
+  "created_utc": "2026-10-15T20:28:52.455316+00:00",
+  "objective": "Generalize core idea discovery, selection and explanation across different positional move types, preserving purpose, reply contrast, delayed realization and price.",
+  "baseline": "target/research-runs/idea-generalization-20261016/baseline/state.json",
+  "previous_records": [
+    "generalization-20261014.json",
+    "core-idea-20261014.json",
+    "purpose-comparison-20261015.json",
+    "function-continuity-20261015.json"
+  ],
+  "development_cases": [
+    "kozakov-f6",
+    "historical-ng8",
+    "historical-qc2",
+    "historical-ke6",
+    "kg2",
+    "rf3",
+    "re2",
+    "qa4"
+  ],
+  "heldout_cases": [
+    {
+      "id": "pedersen-nb1",
+      "game": "Daniel V. Pedersen - Jacob Aagaard, Denmark 2012",
+      "fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+      "move": "c3b1",
+      "pdf_page": 76,
+      "kind": "quiet knight regrouping",
+      "criterion": "Explain the useful route toward d2/b3/c5 if supported by returned play; distinguish transient defense from redeployment. Preserve opponent central play and costs; do not import the book continuation.",
+      "san": "Nb1",
+      "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+    },
+    {
+      "id": "danstrup-nxd4",
+      "game": "Danstrup - Aabling-Thomsen, Denmark 2008",
+      "fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+      "move": "c6d4",
+      "pdf_page": 116,
+      "kind": "exchange to change the remaining pieces and pawn play",
+      "criterion": "Explain removal of the original knight/bishop and how remaining pieces and e5/d4 access differ if observed. Do not describe equal material alone or infer a permanent weak/strong square from its name.",
+      "san": "Nxd4",
+      "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+    },
+    {
+      "id": "ciuksyte-be7",
+      "game": "Ciuksyte - Safarli, Internet 2008",
+      "pdf_page": 117,
+      "fen": "r1q1rbk1/2p2ppp/p4Bb1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 w - - 0 26",
+      "move": "f6e7",
+      "san": "Be7",
+      "resulting_fen": "r1q1rbk1/2p1Bppp/p5b1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 b - - 1 26",
+      "kind": "bishop exchange and removal of a defender",
+      "criterion": "Explain bishop exchange or interruption of the c5 defender and observed remaining-piece use if supported; preserve actual reference purpose and response costs without importing the book line.",
+      "registration_utc": "2026-10-15T21:43:04.913324+00:00",
+      "reason": "Both original heldouts exposed failures and became development cases. Add exactly one fourth screen position to retain an independent check after the common exchange fix; do not discard either earlier failure."
+    }
+  ],
+  "heldout_protocol": "Nb1 and Nxd4 were unopened before the first common implementation; both exposed failures and became development cases. Exactly one fourth live position, Be7, was registered before seeing any product output and evaluated once after the last source freeze. Its partial failure remains an independent result. No fifth position was added.",
+  "constraints": {
+    "maximum_depth": 18,
+    "ui_request_ms": 20000,
+    "actual_screen_cases": "Four distinct positions total, all with twenty-second requests and D11. Existing failures were retried only while fixing their concrete boundary; Be7 was opened exactly once and no fifth position was added.",
+    "validation": "Reuse exact owned prior root reports and targeted semantic boundaries; no broad suite or long performance sampling",
+    "preserve_existing_uncommitted": true
+  },
+  "initial_common_hypotheses": [
+    "Any legal MoveIntent candidate currently disables MovePurpose discovery even if unsupported; a speculative attack can hide an observed route/support/exchange question.",
+    "MovePurpose uses static type order and the first candidate instead of considering an observed functional use across candidates.",
+    "Prepared intent admission is limited to non-capturing first actions on the played root; existing functional readers and two-root purpose composition must be reused, not reimplemented for each motif."
+  ],
+  "source": {
+    "title": "Aagaard, Grandmaster Preparation: Positional Play",
+    "local_pdf": "target/research-runs/generalization-20261014/positional-play.pdf",
+    "sha256": "eb5e3c4a4c0216515f2760ec8d69ff399318caca62704bd70000b84e5b0356e1",
+    "pages_studied": [
+      10,
+      11,
+      12,
+      71,
+      72,
+      73,
+      76,
+      77,
+      116,
+      117,
+      118
+    ],
+    "lesson": "A concrete relation can be true without being the important idea. Useful piece improvement, relevant weakness and opponent resources must be connected; exchange changes which apparent weaknesses can actually be used."
+  },
+  "findings": [
+    "First functional contact and first legal destination can displace a later witnessed useful role; selection and composition used different paths.",
+    "Root-PV-only discovery discards useful routes present in owned reply surveys. An independent full-reply survey is now allowed to refine the purpose without reusing a forced plan test.",
+    "Twenty-second functional response work was rejected by a frontend limit branch that only admitted the old short work shape.",
+    "A functional reply added to a selected comparison did not carry its search ownership; the frontend discarded the composed body.",
+    "Protection discovery ignored a newly supplied guard against the actually observed first reply.",
+    "A route returning to the original square cannot causally assign a later plan to the initial move.",
+    "Capture roots could lose both purposes merely because their post-exchange positions converge. The same removed controller and remaining user can instead be a shared purpose.",
+    "A quiet declined recapture could have no later capture event, detaching the original loss from its response paragraph. Complete reply pricing now includes that root loss.",
+    "Grouping multiple evaded attackers in English but not Korean changes anchor multiplicity and triggers paragraph fallback; both languages now share the same group.",
+    "Independent Be7 proves a remaining common gap: the f8 bishop/c5 pawn guard interruption is already in observations but is not connected to the witnessed Qxc5 in basic purpose selection."
+  ],
+  "validation_so_far": {
+    "runtime": "16/16 targeted tests passed: six new legal/owned functional boundaries plus ten existing Re2/Qa4 purpose, delayed-use, cost and ownership checks.",
+    "web": "10/10 targeted tests passed: six delivery/negative-scope/root-price boundaries plus four existing purpose and function-continuity screen receipts.",
+    "build": "Runtime compiled after final changes; app started through normal startup. Type check and web build passed earlier after the frontend changes; no frontend product changes followed those checks.",
+    "historical_MoveIntentTest": "Five failures against historical work execution keys remain recorded. The initial diagnostic already selected c4a5 whereas the recorded Kg2 work was c4e5; the current independent survey also differs from old forced work. No report was relabelled for a different search. This is not a full-suite green claim.",
+    "not_run": [
+      "full regression suite",
+      "long-running performance sampling",
+      "additional live positions beyond Ng8, Nb1, Nxd4, Be7"
+    ]
+  },
+  "screen_runs": [
+    {
+      "id": "historical-ng8",
+      "independent": false,
+      "elapsed_seconds": 4.86,
+      "result": "partial",
+      "delivered": "Ng8 gives up d5/f5 guards; in an owned Nc3 response the original knight reaches f6 and restores d5 protection. Actual R8c7 comparison remains.",
+      "limitation": "A valid defensive task is now visible, but its strategic importance as the main reason for Ng8 is not established. Incidental comparison narrative remains.",
+      "attempts": [
+        {
+          "seconds": 2.42,
+          "result": "fault: twenty-second work rejected"
+        },
+        {
+          "seconds": 3.28,
+          "result": "body dropped without functional search owner"
+        },
+        {
+          "seconds": 4.56,
+          "result": "purpose unavailable with short root PV"
+        },
+        {
+          "seconds": 7.43,
+          "result": "survey task found but exact branch witness lost"
+        },
+        {
+          "seconds": 4.86,
+          "result": "owned function delivered"
+        }
+      ]
+    },
+    {
+      "id": "pedersen-nb1",
+      "independent_first": {
+        "seconds": 2.28,
+        "result": "partial failure: Nb3 guard selected; useful Nc5 late role relegated to endpoint"
+      },
+      "after_using_for_changes": {
+        "seconds": 3.42,
+        "result": "Nb1-Nd2-Nb3-Nc5 reaches basic commentary in an observed Qc6 response; reference Rdg1 longer purpose remains unknown"
+      },
+      "intermediate": [
+        {
+          "seconds": 3.82,
+          "result": "sparse root route and English support fallback"
+        },
+        {
+          "seconds": 3.47,
+          "result": "full reply survey work rejected"
+        }
+      ],
+      "independence": "Later improvement does not count as an independent pass."
+    },
+    {
+      "id": "danstrup-nxd4",
+      "independent_first": {
+        "seconds": 2.02,
+        "result": "fault: ordinary capture reply survey budget rejected"
+      },
+      "first_delivered": {
+        "seconds": 2.2,
+        "result": "semantic failure: capture/check inventory, no exchange purpose"
+      },
+      "after_using_for_changes": [
+        {
+          "seconds": 3.92,
+          "result": "removed d4 controller -> surviving c5 knight uses e6; common function repeated and one English reply paragraph"
+        },
+        {
+          "seconds": 5.24,
+          "result": "shared function stated once; newly returned Bf1/Nc6 response exposes grouped-evasion translation and detached root loss"
+        }
+      ],
+      "final_exact_report_replay": "Same 5.24-second report: all four basic units Korean; Bf1/Nc6 keeps the lost white knight with its reply; no new live Nxd4 search after this last delivery fix.",
+      "independence": "Later improvements do not count as independent passes."
+    },
+    {
+      "id": "ciuksyte-be7",
+      "independent": true,
+      "source_freeze": "idea-generalization-20261016/frozen-before-be7-3.json",
+      "seconds": 5.1,
+      "result": "partial failure",
+      "delivered": "Actual Be7/Bc3 comparison, bishop exchange, later queen/rook activity, Rxe7 versus h6 responses and material costs are present.",
+      "missing": "The existing f8-bishop/c5-pawn guard-interruption fact is not connected to observed Qxc5 as the central idea. Attack/escape facts dominate; a final Qxe7 capture remains English-only and separate.",
+      "after_result_changes": "None to product sources. First output preserved; no Be7 retry or fifth position."
+    }
+  ],
+  "still_unopened_holdout": null,
+  "updated_utc": "2026-10-15T22:02:19.702253+00:00",
+  "assessment": "partial; the long-term generalization objective is not achieved",
+  "result_summary": "Shared discovery now preserves useful routes from owned independent reply surveys, composes them into the actual root comparison, and links captured controllers to a remaining piece's actual later use. Delivery and reply-price gaps were repaired. The independent Be7 still exposes fact-to-purpose selection and transaction-composition failures; this is not release-level generalization.",
+  "evidence_directory": "idea-generalization-20261016/",
+  "screen_evidence": "idea-generalization-20261016/screen-evidence.json",
+  "implementation": [
+    {
+      "files": [
+        "MovePurpose.scala",
+        "ObservedLineProtocol.scala",
+        "MoveIntent.scala"
+      ],
+      "change": "Collect witnessed functional candidates before selecting a speculative move idea. Reuse only owned unrestricted/full-legal reply surveys for discovery. A forced plan test cannot vote for itself. Rewitness the same original piece/task on a different owned branch, including an actually attacked own target."
+    },
+    {
+      "files": [
+        "MoveWorkProjection.scala",
+        "ReferencePurposeReading.scala"
+      ],
+      "change": "Follow the same piece through quiet intermediate posts to useful play and close connected exchanges. Compose observed functional purpose with both actual assessment roots. Reject a route returning to the original square as causal evidence for the first move."
+    },
+    {
+      "files": [
+        "ReferencePurposeReading.scala",
+        "CommentaryAnswer.scala",
+        "ReferencePurposeText.scala"
+      ],
+      "change": "After a root capture, connect an originally controlling piece removed in the initial transaction with a surviving piece's later actual arrival on that square. Preserve other controllers and exact witnesses. Shared access is meaningful even when both roots converge; share the same function without claiming different rook boards transpose."
+    },
+    {
+      "files": [
+        "CommentaryJobReducer.scala",
+        "RuntimeProtocol.scala",
+        "RootQuestionSummary.scala",
+        "moveReviewSelection.ts",
+        "moveReview.ts"
+      ],
+      "change": "The issued question, selected comparison and browser use the same owned functional witness. Admit existing twenty-second work shapes under the same scope/identity/depth checks; retain rejection of foreign reports, missing prices and depth 19. No search ceiling increase."
+    },
+    {
+      "files": [
+        "ResponsePurposeReading.scala",
+        "ReferencePurposeText.scala",
+        "CommentarySequenceText.scala",
+        "CommentaryEnglish.scala",
+        "RootQuestionSummary.scala"
+      ],
+      "change": "Preserve root purpose while adding reply comparison, omit transient attacks by pieces already exchanged away, include root losses when a recapture is declined, and share grouped escape anchors across languages. A broader late-capture completion/translation problem remains in Be7."
+    }
+  ],
+  "remaining_common_bottlenecks": [
+    {
+      "priority": 1,
+      "finding": "An observed useful action still does not establish the main strategic idea. Static candidate type/order and early contacts can dominate importance.",
+      "locations": [
+        "MovePurpose.scala:179",
+        "MovePurpose.scala:255"
+      ]
+    },
+    {
+      "priority": 1,
+      "finding": "Controller removal is connected for a capturing root, while a quiet move interrupting a defender and the later target use are still separate. Be7 already has both the f8-c5 blocked relation and the h6/Qxc5 witness.",
+      "locations": [
+        "ReferencePurposeReading.scala:322",
+        "MoveWorkProjection.scala:1594"
+      ]
+    },
+    {
+      "priority": 2,
+      "finding": "Completion of missing capture obligations can append a separate English-only action after a purpose/response account. Be7 Qxe7 shows that price closure and semantic narration still have different boundaries.",
+      "locations": [
+        "RootQuestionSummary.scala:197",
+        "RootQuestionSummary.scala:855"
+      ]
+    },
+    {
+      "priority": 2,
+      "finding": "Some actual alternatives still have unknown purpose, and finite PV evidence does not generally discover prevention, space or long-term plans. No strategy claim is licensed merely by a legal route."
+    }
+  ],
+  "next_shared_work": "Connect a changed opponent guard, the actual target/square use, and the reply that preserves or defeats it as one causal candidate; then select its importance against the actual alternative rather than adding another named motif. Keep the first independent failures as the quality baseline.",
+  "preservation": {
+    "starting_dirty_or_untracked_files": 220,
+    "baseline": "target/research-runs/idea-generalization-20261016/baseline/",
+    "all_original_files_present": true,
+    "all_original_backup_hashes_match": true,
+    "earlier_research_unchanged": true,
+    "staged": false,
+    "committed": false,
+    "browser_restored": "1.e4, start position, engine Off, both inputs empty, PGN panel collapsed"
+  }
+}

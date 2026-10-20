@@ -1,0 +1,351 @@
+[
+  {
+    "label": "kf8-obligation-live",
+    "first_run_only": true,
+    "ui_request_ms": 20000,
+    "remaining_budget_at_server_ms": 19740,
+    "displayed_seconds": 3.51,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      }
+    ],
+    "reports": [
+      {
+        "work_id": "work:0",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "c8e6",
+                "h3e6",
+                "c7f7",
+                "e6d6",
+                "b8b6",
+                "d6c5",
+                "g7d4",
+                "c5c2",
+                "f7f5",
+                "c2e2",
+                "d4b2",
+                "h4f2",
+                "c6d4",
+                "e2e8",
+                "f5f8"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -95
+              }
+            },
+            {
+              "moves": [
+                "g8f8",
+                "f4f5",
+                "g6g5",
+                "h4g5",
+                "c8e6",
+                "f5e6",
+                "f8g8",
+                "e6e7",
+                "c7c8",
+                "h3f3",
+                "c6e5",
+                "f3d5",
+                "g8h7",
+                "d5e4",
+                "h7g8"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": 146
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Bxe6 — 백 e6 비숍을 잡아 체크를 해소합니다. 원래 e6의 비숍을 교환하여 f7 칸 통제 기능을 없앱니다. 제시된 수순의 Qf7에서 남은 원래 c7의 퀸이 그 칸을 실제로 사용합니다. 그 칸에는 여전히 백 e6 퀸의 공격이 있습니다. Kf8 — 백 e6 비숍의 체크를 피해 킹을 f8로 옮깁니다.  두 수순 모두 같은 원래 c8의 비숍으로 백 e6 비숍을 잡습니다. 다만 Kf8 수순에서는 Bxe6까지 교환을 미룹니다. 차이는 교환의 유무만이 아니라 그 전에 확보한 기물의 활동입니다. 아래 비교 시점까지 두 수순 모두 비숍 한 쌍을 교환합니다. Bxe6에서는 그 밖에 흑의 d6 폰을 내줍니다. Kf8에서는 그 밖에 흑의 g6 폰을 내줍니다. Bxe6 수순에서: Qf7의 백 e6 퀸 공격을 Qxd6 수로 피합니다.",
+          "Bxe6 — Qxe6+로 퀸이 활동에 나서 흑 d6 폰, 흑 g6 폰, 흑 g8 킹을 공격합니다. 이어 Qxd6로 흑 d6 폰을 잡습니다. Qxe6+에는 Qf7로 퀸을 끼워 체크를 막습니다. Bd4까지의 수순에서는 흑 f7 퀸은 백 a2 폰, 백 f4 폰을 공격합니다.",
+          "Kf8 — f5: 흑 g6 폰을 새로 공격합니다. 제시된 Kf8 수순에서: fxe6+ f1 룩의 길을 열어, f1 룩으로 흑 킹을 체크합니다; Kg8 킹이 g8로 피합니다. Kg8까지의 수순에서는 백 e6 폰은 통과폰·고립폰입니다."
+        ]
+      }
+    ],
+    "screen": "kf8-obligation-live-screen.png",
+    "screen_text": "kf8-obligation-live-screen.txt",
+    "complete_network_capture": true,
+    "actual_pair": [
+      "Bxe6",
+      "Kf8"
+    ],
+    "observed": "Bxe6 captures the checking bishop, while Kf8 evades check with the king and delays that same bishop exchange. The actual f5 g5 Bxg5 Bxe6 fxe6+ Kg8 line opens the f-file for the rook check; different pawn losses remain. The fxe6+ move opens the correct board.",
+    "verdict": "development improvement, not a broad generalization success",
+    "remaining": "Qf7/Qxd6 pressure and ending targets still compete with the main idea; knowing the immediate obligation does not establish full long-term purpose.",
+    "not_substituted": "The earlier fxg7+ and book fxg6+ lines are not this fresh PV."
+  },
+  {
+    "label": "ferry-d6-first-independent",
+    "first_run_only": true,
+    "ui_request_ms": 20000,
+    "remaining_budget_at_server_ms": 19744,
+    "displayed_seconds": 3.84,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:1",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "d7d6"
+        ],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 40000000,
+          "movetime_ms": 8000,
+          "multi_pv": 2
+        },
+        "prefix": [
+          "d7d6"
+        ],
+        "restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "e1d3",
+            "e5d6"
+          ]
+        }
+      }
+    ],
+    "reports": [
+      {
+        "work_id": "work:0",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d7d6",
+                "e1d3",
+                "d6e5",
+                "d3e5",
+                "d5a8",
+                "a2a3",
+                "h7h6",
+                "f2f3",
+                "d8d5",
+                "d2c3",
+                "e7g5"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -111
+              }
+            },
+            {
+              "moves": [
+                "f7f6",
+                "e5f6",
+                "e7f6",
+                "e1d3",
+                "h7h6",
+                "a1c1",
+                "d5a2",
+                "c1a1",
+                "a2c4"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -84
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:1",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "e1d3",
+                "d6e5",
+                "d3e5",
+                "d5b7",
+                "f1c1",
+                "d8d5",
+                "f2f3",
+                "h7h6",
+                "a2a3",
+                "f8e8",
+                "e3f2",
+                "e8d8",
+                "d2e3"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -96
+              }
+            },
+            {
+              "moves": [
+                "b2b3",
+                "d6e5",
+                "d4e5",
+                "d5a8",
+                "e1d3",
+                "d8d7",
+                "d2b4",
+                "e7b4",
+                "d3b4",
+                "d7b7"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -103
+              }
+            },
+            {
+              "moves": [
+                "e1f3",
+                "d5f3",
+                "e5d6",
+                "d8d6",
+                "e3f3",
+                "e6e5",
+                "a1d1",
+                "e5d4",
+                "d2f4",
+                "d6f6",
+                "f1e1",
+                "e7d6",
+                "f4d6",
+                "f6d6"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -104
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "e1d3",
+                "d6e5",
+                "d3e5",
+                "e7d6",
+                "f1c1",
+                "c8c1",
+                "a1c1"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -96
+              }
+            },
+            {
+              "moves": [
+                "e5d6",
+                "e7d6",
+                "a2a3",
+                "c8c4",
+                "e1f3",
+                "d8a8",
+                "f1c1",
+                "d5f3",
+                "c1c4",
+                "f3g2",
+                "c4c2"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -125
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "f6 — 백 e5 폰을 새로 공격합니다. d6 — Nd3 응수에서는 d6–dxe5로 폰이 전진하여 백 d4 폰을 공격합니다.  f6 수순의 비교 시점까지 백의 e5 폰과 흑의 f7 폰을 교환합니다. d6 수순의 비교 시점까지 백의 e5 폰과 흑의 d7 폰을 교환합니다.",
+          "f6 — exf6: 흑 f6 폰을 잡습니다. Nd3까지의 수순에서는 원래 d7 폰이 d7에 남습니다.",
+          "d6 — Nd3 뒤, Nxe5까지 기록되어 있습니다.",
+          "d6 이후 별도로 조사한 응수에서는 Nd3와 Nf3가 비슷한 수준입니다. Nd3 응수에서는 dxe5로 폰이 전진하여 백 d4 폰을 공격합니다. 제시된 d6 수순에서 양쪽이 폰 한 개씩 교환합니다. Nf3 응수에서는 Qxd6로 퀸이 활동에 나서 백 d4 폰, 백 h2 폰을 공격합니다. 제시된 d6 수순의 Qxf3까지는 양쪽이 폰 한 개씩 교환합니다. 백은 나이트 한 개를 내주고 비숍 한 개를 얻습니다."
+        ]
+      }
+    ],
+    "screen": "ferry-d6-first-independent-screen.png",
+    "screen_text": "ferry-d6-first-independent-screen.txt",
+    "complete_network_capture": true,
+    "actual_pair": [
+      "f6",
+      "d6"
+    ],
+    "observed": "The actual engine ranks d6 first. The basic text compares Nd3 and Nf3, keeps their pawn and bishop/knight exchanges, and links Qxd6 to the correct board.",
+    "verdict": "first independent partial failure; no product change or favorable rerun afterward",
+    "failure": "The core d6 account is still dxe5 attacking d4, although Nxe5 removes that pawn immediately. Root PV Ba8/Qd5 and independent reply Bb7/Qd5 are present but their connected clearance and central activity are absent. The alternative f6 remains an immediate pawn attack. The book Bb4 line is not forced or substituted.",
+    "not_claimed": "A geometric dependency in the observed line does not prove this is the sole purpose or the cause of the engine evaluation."
+  }
+]

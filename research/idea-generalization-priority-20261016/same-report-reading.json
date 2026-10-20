@@ -1,0 +1,53 @@
+{
+  "question": "selected_comparison",
+  "paragraphs": [
+    "c5 — 백 d4 폰을 새로 공격합니다. 흑 d5 비숍에 대한 폰의 방어를 놓습니다. c5 수로 c6 칸을 비워 길을 엽니다. 제시된 수순에서 Bb7 수로 흑 비숍이 그 길을 지나 b7에 진출합니다. Rc7 — Bf4 응수에서는 c8 칸을 비워 원래 b6의 나이트의 진입로를 만듭니다. Nc8–Nd6–Nf5로 나이트가 활동에 나서 백 d4 폰, 백 e3 퀸을 공격합니다. 이 수순에서는 Qd2로 공격받은 퀸이 물러납니다. 제시된 수순에서 원래 c8의 룩이 Rc7 … Rd7로 재배치됩니다. Rd7 뒤 흑 d7 룩이 백 c3 나이트에게 공격받는 흑 d5 비숍을 지킵니다.  c5 수순의 비교 시점까지 폰 한 쌍을 교환합니다. c5 수순에서: dxc5 뒤 백 d3 룩이 흑 d5 비숍을 새로 공격합니다. Bb7 수로 비숍이 백 d3 룩·백 c3 나이트의 공격을 피합니다.",
+    "c5 — dxc5: 흑 c5 폰을 잡습니다. Bb7까지의 수순에서는 흑 c8 룩은 열린 c 파일에서 활동합니다. 흑 b7 비숍은 백 g2 폰을 공격합니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+    "Rc7 — Qe3 뒤, Nd6까지의 수순에서는 흑 d7 룩을 남깁니다. 백 d4 폰은 고립폰입니다.",
+    "Rc7 수순에서: Bf4 응수에서는 앞서 설명한 Nf5까지의 나이트 활동을 실현합니다.",
+    "Rc7 수순에서: Qe3 응수에서는 Nc8–Nd6로 나이트를 재배치합니다. f5에서의 활동까지는 이 수순에 나타나지 않습니다."
+  ],
+  "english_only": [
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "source": "Exact first three reports from earlier Rc7 screen, replay only; not a fresh engine success.",
+  "purpose_question": {
+    "id": "move-purpose:2b5b70acf1587247b5d16838824a39ff69acd6a3a0b63184b2bb92225cafd7a1",
+    "root_move": "c8c7",
+    "root_occurrence_id": "move-review:ed2e84f8d9789b9cfd4a0b913ce80cc99ab5072e2e6daf30501fd4a3d0b64b3e:37:c8c7:evidence:transition:1d94816bf8e0a7dfa040d319767a1afca9421a4e5ebe667fdcc7cb4fa08cd6ed",
+    "child_position_id": "65327de530928843d8ef551ae04da06373f59a3f81df49e650200e548f324181",
+    "source_line_id": "move-review:ed2e84f8d9789b9cfd4a0b913ce80cc99ab5072e2e6daf30501fd4a3d0b64b3e:37:c8c7:line:0f7b127e8906ab7b7efdd2c3d9d4e7840e20519ed36a40e4f8b2f294d299796b",
+    "use_move": "d6f5",
+    "kind": "enabled_activity",
+    "square": "f5",
+    "challenge_moves": [
+      "d3d1",
+      "d3d2",
+      "d3e3",
+      "d3f3",
+      "d3g3",
+      "g2g4",
+      "h3e6",
+      "h3f5"
+    ],
+    "activity_plan": {
+      "entry": 4,
+      "route": [
+        4,
+        6,
+        8
+      ],
+      "cause": "cleared_square",
+      "user": {
+        "side": "black",
+        "role": "knight",
+        "square": "b6"
+      }
+    }
+  },
+  "used_work_count": 3
+}

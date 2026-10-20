@@ -1,0 +1,15 @@
+{
+  "utc": "2026-10-13T17:09:27.997821+00:00",
+  "heldout_output_seen": false,
+  "focused_checks": "GeneralizedCoreSelectionTest 9 and QuiescentCommentaryTest 3 passed; CoreSelectionTest 6 and CommentaryEnglishCompositionTest 15 passed before last first-reply-check rendering edit",
+  "product_hashes": {
+    "CommentaryAnswer.scala": "f069dee67037d41130a1aec32a2c78c83dd6185c698d3b0e01342edaa0fc22c5",
+    "CommentaryEnglish.scala": "66b40b13b8b236bb72136b88e9f76a676b1f11d8740763728d630dc3aa312c99",
+    "CommentaryJobReducer.scala": "2ca816dfc073593f8267fe1be53a7220e1c35a1469c7dbe980712bee7d199f23",
+    "ExchangeActivity.scala": "f83c938716df27fb58c5fc88b156f757081aaae04bf3a665d3dea99630ddda3a",
+    "MoveWorkProjection.scala": "124302e8b947d8ca77038832901a5e6f6ca001458c584f8c42abcce0cc8c2f28",
+    "ReferencePurposeReading.scala": "835da1c6c1efba3facfc34e40f80bb43c93830c6e00c335e8d33292b1193a3f0",
+    "ReferencePurposeText.scala": "2e59b129d34963125bd5381646794029198a825221a8460690e19afcd726b9e3",
+    "RootQuestionSummary.scala": "06c6e6611703d472624123d23779f78b4757ccf5ccdf0b93f06f9b04c7fe4717"
+  }
+}

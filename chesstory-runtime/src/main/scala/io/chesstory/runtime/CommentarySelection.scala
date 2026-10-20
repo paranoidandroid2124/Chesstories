@@ -113,7 +113,8 @@ private[runtime] object CommentarySelection:
   final class Result private[CommentarySelection] (
       private val candidates: List[Candidate], private val scenes: List[JsObject],
       private[runtime] val local: List[MoveWorkProjection.LocalCandidate],
-      explainMoves: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject]
+      explainMoves: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject],
+      val rootUses: List[ObservedLineProtocol.PreparedPath] => List[(CommentaryAnswer.Section, List[String])]
   ):
     def withMoveEffects(candidate: JsObject, explained: Set[JsObject] = Set.empty,
         context: List[MoveWorkProjection.Context] = Nil): JsObject = explainMoves(List(candidate -> context), explained).head
@@ -141,7 +142,8 @@ private[runtime] object CommentarySelection:
 
   def fromPacket(packet: EvidenceBackedJudgmentPacket,
       local: List[MoveWorkProjection.LocalCandidate], prepared: ObservedLineProtocol.PreparedPaths,
-      withMoveEffects: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject]): Result =
+      withMoveEffects: (List[(JsObject, List[MoveWorkProjection.Context])], Set[JsObject]) => List[JsObject],
+      rootUses: List[ObservedLineProtocol.PreparedPath] => List[(CommentaryAnswer.Section, List[String])]): Result =
     prepared.requireOwner(packet)
     val ctx = packet.assembly
     val root = ctx.playedTransition.get
@@ -220,7 +222,7 @@ private[runtime] object CommentarySelection:
     }
     // The only cross-kind order is obligation first, exact context next, optional facts last.
     // Local display ranking stays in MoveWorkProjection; it is not a game-scene importance score.
-    new Result(comparisons ++ lines, scenes, local, withMoveEffects)
+    new Result(comparisons ++ lines, scenes, local, withMoveEffects, rootUses)
 
   private[runtime] type MaterialSignature = (List[(String, String, Int)], List[(String, String, String, Int)])
 

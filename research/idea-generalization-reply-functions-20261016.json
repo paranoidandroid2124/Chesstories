@@ -1,0 +1,128 @@
+{
+  "status": "active_unachieved",
+  "phase": "root-opportunities-and-reply-specific-functions",
+  "started_utc": "2026-10-16T00:46:52.303599+00:00",
+  "previous_goal_turn": "progress: code and independent first Bf6 evidence changed the next action; no blocker.",
+  "baseline": "target/research-runs/idea-generalization-reply-functions-20261016/baseline.json",
+  "constraints": {
+    "depth_max": 18,
+    "request_budget_ms": 20000,
+    "live_cases": [
+      "Bf6 development",
+      "Ahmed-Shaw 29...Bd7 unused"
+    ]
+  },
+  "research": {
+    "source": "Aagaard Positional Play, cached G Drive PDF 1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pages": [
+      100,
+      101,
+      121,
+      122,
+      124,
+      125,
+      126,
+      127
+    ],
+    "lesson": "A root move can improve different pieces under different replies. Opponent counterplay and the original plan must be compared before selecting a main story. A good square can precede any immediate target; existing target-based readers remain limited."
+  },
+  "heldout_preregistration": {
+    "game": "Nasir Ahmed - John Shaw, Edinburgh 2003",
+    "pdf_page": 121,
+    "fen_before": "1r5r/p3npk1/2bq2p1/2pp4/3n1PP1/PpNP2B1/1P1Q2B1/4RRK1 b - - 0 29",
+    "played_uci": "c6d7",
+    "fen_after": "1r5r/p2bnpk1/3q2p1/2pp4/3n1PP1/PpNP2B1/1P1Q2B1/4RRK1 w - - 1 30",
+    "expected_concepts": "Bd7 intends to provoke the g-pawn to allow Nf5 but neglects Qe3 and f5 activating White bishops along the e-file/king diagonal. Rbe8 is the book preventive alternative, not a forced engine reference. Actual current engine pair and replies decide what can be claimed.",
+    "legal_book_continuation_uci": [
+      "c6d7",
+      "d2e3",
+      "d7g4",
+      "f4f5",
+      "e7f5",
+      "g3e5",
+      "f7f6",
+      "e5d6",
+      "f5e3",
+      "e1e3",
+      "d4f5",
+      "f1f5",
+      "g4f5",
+      "d6b8",
+      "d5d4",
+      "e3e7",
+      "g7h6",
+      "b8f4",
+      "g6g5",
+      "f4d2",
+      "d4c3",
+      "d2c3"
+    ],
+    "standalone_history": "FEN from inspected diagram. No castling rights; neutral halfmove clock, no claimed repetition history.",
+    "fixture_matches": [],
+    "selected_before_product_edits_and_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "updated_utc": "2026-10-16T01:04:10.899212+00:00",
+  "implementation": [
+    "Shared replyPair starts at the strongest independent returned reply and compares actual root-related activity; a preferred task no longer excludes another beneficiary. Both quiet-purpose and capture/noncapture readers use it.",
+    "Owned question carries two reply activities, physical original identity, full route and root cause. Independent screen decoding checks them and unrestricted/all-legal receipt ownership.",
+    "Keep partial progress of the former task beside another activity; avoid the second standalone plan paragraph only when that exact path, original mover, use and targets are already explained by its reply."
+  ],
+  "checks": {
+    "runtime": [
+      {
+        "name": "IdeaGeneralizationTest",
+        "tests": 19,
+        "failures": 0
+      },
+      {
+        "name": "PurposeComparisonTest",
+        "tests": 10,
+        "failures": 0
+      },
+      {
+        "name": "MoveIntentTest",
+        "tests": 7,
+        "failures": 5
+      }
+    ],
+    "web_tests": {
+      "passed": 17,
+      "suites": [
+        "ideaGeneralization",
+        "purposeComparison"
+      ]
+    },
+    "typecheck": "passed",
+    "normal_start_update": "passed: 66 source inputs; no Lila or research-cache inputs",
+    "historical_failures": "MoveIntentTest 5 work-key mismatches remain as previously recorded in idea-generalization-20261016.json. Reports were not substituted. No full-suite green claim.",
+    "setup_error": "npm run typecheck does not exist; actual script npm run check passed."
+  },
+  "live_results": [
+    {
+      "id": "bf6-development",
+      "seconds": 5.56,
+      "depths": [
+        11,
+        11
+      ],
+      "verdict": "development improvement; delayed Ng5 under Qc1 and bishop trade/pawn cost under Nf3 reach basic text; still verbose"
+    },
+    {
+      "id": "ahmed-bd7-independent",
+      "seconds": 2.26,
+      "depths": [
+        11,
+        11
+      ],
+      "verdict": "first independent failure: stops at Rxe7-Qxe7 and omits f5 despite it being in the actual PV"
+    }
+  ],
+  "remaining_bottlenecks": [
+    "Latent clearance/quiet square ideas without returned material or contact remain outside current proposal discovery.",
+    "ReferencePurposeReading.controlUse only admits the root mover side and root/opening removal; it cannot connect an opponent reply exchange to its next useful move.",
+    "purposeKnown treats an immediate attack/guard as sufficient. In the unused Bd7 first output, actual comparison f5/Bd7 was reduced to g4 attack plus first exchange, even though the owned PV contains Rxe7 Qxe7 f5 Qf8 fxg6 Kxg6 Nxd5 Re8.",
+    "Alternative purpose importance, concise synthesis and the causal reason for evaluation remain unachieved."
+  ],
+  "next_action": "Generalize bounded exchange-to-function reading to the responding side, retain original piece/control identity, and make selection look past an immediate root contact when the actual comparison contains a decisive response mechanism. Do not replace the engine pair with the book pair or claim the unseen g5-Nf5 plan."
+}

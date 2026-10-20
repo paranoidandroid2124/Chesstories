@@ -1,0 +1,19 @@
+{
+  "result": {
+    "id": "kozakov-f6-release",
+    "reports_consumed": 3,
+    "available": 3,
+    "failure": null,
+    "replay_phase": "completed",
+    "en_exact_same_text_as_live": true,
+    "en_live_chars": 1042,
+    "en_final_replay_chars": 1042,
+    "ko_exact_same_text_as_live": false,
+    "ko_live_chars": 546,
+    "ko_final_replay_chars": 542
+  },
+  "live_en": "Rac8 — Places the rook on the open c-file. In the provided Rac8 line, the same rook next moves with Rc2 to c2. After Rc2, Black's rook on c2 now targets White's queen on d2. f6 — Newly attacks White's pawn on e5. f6 clears f7; later Bg6: Black's bishop on g6 passes through that square in this line.  Up to the checkpoints below, in both lines 1 pair of pawns is exchanged. f6 additionally: White's original f3 knight and Black's original e7 bishop are exchanged. In the Rac8 line: Nd6 attacks Black's rook on c8; Rc2 moves that piece out of the attack. fxe5 leaves Black's rook on f8 attacking White's pawn on f4; fxe5 moves that piece out of the attack.\n\nRac8 — after g4, Rc2: in this continuation, Black's rook on c2 works on the open c-file. Black's bishop on e7 remains. The original f4 pawn remains on e5.\n\nf6 — after Qd2: newly attacks Black's knight on b4. dxe5: in this continuation, Black's rook on a8 remains. The original d4 pawn remains on e5. The checkpoints have different lengths, so this does not establish a tempo advantage.",
+  "final_en": "Rac8 — Places the rook on the open c-file. In the provided Rac8 line, the same rook next moves with Rc2 to c2. After Rc2, Black's rook on c2 now targets White's queen on d2. f6 — Newly attacks White's pawn on e5. f6 clears f7; later Bg6: Black's bishop on g6 passes through that square in this line.  Up to the checkpoints below, in both lines 1 pair of pawns is exchanged. f6 additionally: White's original f3 knight and Black's original e7 bishop are exchanged. In the Rac8 line: Nd6 attacks Black's rook on c8; Rc2 moves that piece out of the attack. fxe5 leaves Black's rook on f8 attacking White's pawn on f4; fxe5 moves that piece out of the attack.\n\nRac8 — after g4, Rc2: in this continuation, Black's rook on c2 works on the open c-file. Black's bishop on e7 remains. The original f4 pawn remains on e5.\n\nf6 — after Qd2: newly attacks Black's knight on b4. dxe5: in this continuation, Black's rook on a8 remains. The original d4 pawn remains on e5. The checkpoints have different lengths, so this does not establish a tempo advantage.",
+  "live_ko": "Rac8 — 룩을 열린 c 파일에 배치합니다. 제시된 수순에서 원래 a8의 룩이 Rac8 … Rc2로 재배치됩니다. 이후 Rc2 수로 흑 c2 룩이 백 d2 퀸을 새로 공격합니다. f6 — 백 e5 폰을 새로 공격합니다. f6 수로 f7 칸을 비워 길을 엽니다. 제시된 수순에서 Bg6 수로 흑 비숍이 그 길을 지나 g6에 진출합니다.  아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다. f6에서는 그 밖에 백의 f3 나이트와 흑의 e7 비숍을 교환합니다. Rac8 수순에서: Nd6의 흑 c8 룩 공격을 Rc2 수로 피합니다. fxe5 뒤 흑 f8 룩이 백 f4 폰을 공격하지만, fxe5 수로 피합니다.\n\nRac8 — g4 뒤, Rc2까지의 수순에서는 흑 c2 룩은 열린 c 파일에서 활동합니다. 흑 e7 비숍을 남깁니다. 원래 f4 폰이 e5에 남습니다.\n\nf6 — Qd2: 흑 b4 나이트를 새로 공격합니다. dxe5까지의 수순에서는 흑 a8 룩을 남깁니다. 원래 d4 폰이 e5에 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+  "final_ko": "Rac8 — 룩을 열린 c 파일에 배치합니다. 제시된 수순에서 원래 a8의 룩이 Rac8 … Rc2로 재배치됩니다. Rc2 뒤 흑 c2 룩이 백 d2 퀸을 새로 공격합니다. f6 — 백 e5 폰을 새로 공격합니다. f6 수로 f7 칸을 비워 길을 엽니다. 제시된 수순에서 Bg6 수로 흑 비숍이 그 길을 지나 g6에 진출합니다.  아래 비교 시점까지 두 수순 모두 폰 한 쌍을 교환합니다. f6에서는 그 밖에 백의 f3 나이트와 흑의 e7 비숍을 교환합니다. Rac8 수순에서: Nd6의 흑 c8 룩 공격을 Rc2 수로 피합니다. fxe5 뒤 흑 f8 룩이 백 f4 폰을 공격하지만, fxe5 수로 피합니다.\n\nRac8 — g4 뒤, Rc2까지의 수순에서는 흑 c2 룩은 열린 c 파일에서 활동합니다. 흑 e7 비숍을 남깁니다. 원래 f4 폰이 e5에 남습니다.\n\nf6 — Qd2: 흑 b4 나이트를 새로 공격합니다. dxe5까지의 수순에서는 흑 a8 룩을 남깁니다. 원래 d4 폰이 e5에 남습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+}

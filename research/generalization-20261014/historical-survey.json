@@ -1,0 +1,247 @@
+{
+  "rows": 16,
+  "unique_fens": 12,
+  "limitation": "6 complete exact-replay rows before the final selection-boundary correction; other rows have old work/schema mismatch or incomplete reports. No report transplant. These counts are not quality successes or independent fresh positions.",
+  "cases": [
+    {
+      "id": "function-purpose-browser-FJ-SG42-RD3",
+      "fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "played": "e3d3",
+      "before": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "work_changed_at_0"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "work_changed_at_0"
+      }
+    },
+    {
+      "id": "function-purpose-browser-GF-IVANCHUK-2009-10-A3",
+      "fen": "r1b1k2r/pp3ppp/1qn1p3/2bn4/8/6P1/PPN1PPBP/RNBQ1RK1 w kq - 2 10",
+      "played": "a2a3",
+      "before": {
+        "consumed": 0,
+        "available": 2,
+        "failure": "work_changed_at_0"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 2,
+        "failure": "work_changed_at_0"
+      }
+    },
+    {
+      "id": "redeployment-purpose-browser-existing",
+      "fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+      "played": "e7g8",
+      "before": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "redeployment-purpose-browser-new",
+      "fen": "5rk1/1ppq2p1/p2p2np/3Ppr2/4N3/1PPQR1P1/2P2P1P/R5K1 b - - 3 24",
+      "played": "g6e7",
+      "before": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "strategic-purpose-browser-existing",
+      "fen": "4r3/pp6/2p2k2/3p1bp1/PP1P4/1BP1r3/4p1PP/2R1R2K b - - 0 1",
+      "played": "f5d3",
+      "before": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "strategic-purpose-browser-new",
+      "fen": "8/3r4/5kp1/1p5p/1p1pqP1P/1P1R2P1/P2Q1K2/8 b - - 15 58",
+      "played": "f6e6",
+      "before": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "strategic-function-browser-existing",
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "played": "b3d5",
+      "before": {
+        "consumed": 1,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "strategic-function-browser-new",
+      "fen": "2b2n2/2q1k3/1p1npp1p/pP1p2p1/P2P2P1/3BPPNP/1Q2NK2/8 w - - 4 36",
+      "played": "b2c2",
+      "before": {
+        "consumed": 3,
+        "available": 3,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 3,
+        "available": 3,
+        "failure": null
+      }
+    },
+    {
+      "id": "choice-neutralization-browser-existing",
+      "fen": "r3r1k1/1b1n1ppp/p4b2/1p6/3Bn3/1BN2N1P/PP3PP1/R3R1K1 w - - 2 21",
+      "played": "b3d5",
+      "before": {
+        "consumed": 1,
+        "available": 3,
+        "failure": "work_changed_at_1"
+      },
+      "phase29": {
+        "consumed": 1,
+        "available": 3,
+        "failure": "work_changed_at_1"
+      }
+    },
+    {
+      "id": "choice-neutralization-browser-new",
+      "fen": "r2q1rk1/1pp2pbp/1n4p1/pP2p1N1/P2n4/1bNPB1P1/4PPBP/RQ3RK1 b - - 0 14",
+      "played": "b3d5",
+      "before": {
+        "consumed": 2,
+        "available": 4,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 4,
+        "failure": "work_changed_at_2"
+      }
+    },
+    {
+      "id": "evaluation-reference-browser-existing",
+      "fen": "r2q1rk1/1pp2pbp/1n4p1/pP2p1N1/P2n4/1bNPB1P1/4PPBP/RQ3RK1 b - - 0 14",
+      "played": "b3d5",
+      "before": {
+        "consumed": 1,
+        "available": 1,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 1,
+        "available": 1,
+        "failure": null
+      }
+    },
+    {
+      "id": "evaluation-reference-browser-new",
+      "fen": "r1bq1rk1/ppp2pbp/1nn3p1/4p3/1P6/2NPBNP1/P3PPBP/R2Q1RK1 b - - 0 10",
+      "played": "e5e4",
+      "before": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      },
+      "phase29": {
+        "consumed": 2,
+        "available": 2,
+        "failure": null
+      }
+    },
+    {
+      "id": "purpose-delivery-browser-FJ-SG35-LATE-NE4",
+      "fen": "2r4k/6p1/1pr1qn1p/3p1p2/P1nP1P2/PR1QP1N1/6BP/4R2K b - - 2 40",
+      "played": "f6e4",
+      "before": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "play.api.libs.json.JsResultException: JsResultException(errors:List((,List(JsonValidationError(List('issued_work' is undefined on object. Available keys are 'request', 'elapsed_ms'),ArraySeq())))))"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "play.api.libs.json.JsResultException: JsResultException(errors:List((,List(JsonValidationError(List('issued_work' is undefined on object. Available keys are 'request', 'elapsed_ms'),ArraySeq())))))"
+      }
+    },
+    {
+      "id": "purpose-delivery-browser-GF-WANG-16-G5",
+      "fen": "r4rk1/2qnp1bn/2p1b1pp/ppPp1p2/3P1PPP/P1NNPB2/1P6/R1BQ1RK1 w - - 0 16",
+      "played": "g4g5",
+      "before": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "play.api.libs.json.JsResultException: JsResultException(errors:List((,List(JsonValidationError(List('issued_work' is undefined on object. Available keys are 'request', 'elapsed_ms'),ArraySeq())))))"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 3,
+        "failure": "play.api.libs.json.JsResultException: JsResultException(errors:List((,List(JsonValidationError(List('issued_work' is undefined on object. Available keys are 'request', 'elapsed_ms'),ArraySeq())))))"
+      }
+    },
+    {
+      "id": "exchange-function-produced-FJ-SG35-LATE-NE4",
+      "fen": "2r4k/6p1/1pr1qn1p/3p1p2/P1nP1P2/PR1QP1N1/6BP/4R2K b - - 2 40",
+      "played": "f6e4",
+      "before": {
+        "consumed": 0,
+        "available": 8,
+        "failure": "work_changed_at_0"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 8,
+        "failure": "work_changed_at_0"
+      }
+    },
+    {
+      "id": "exchange-function-produced-GF-1975-24-NF3",
+      "fen": "1r1q1r2/1p1b1ppk/p1pp1n1p/P3nP2/3NP3/1BN3QP/1PP3P1/R4R1K w - - 0 24",
+      "played": "d4f3",
+      "before": {
+        "consumed": 0,
+        "available": 5,
+        "failure": "work_changed_at_0"
+      },
+      "phase29": {
+        "consumed": 0,
+        "available": 5,
+        "failure": "work_changed_at_0"
+      }
+    }
+  ]
+}

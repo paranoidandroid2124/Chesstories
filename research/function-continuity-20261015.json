@@ -1,0 +1,167 @@
+{
+  "status": "completed_scoped",
+  "goal": "Reduce repeated functional claims between root purpose and observed endpoint without removing persistence or changed meaning.",
+  "started_utc": "2026-10-15T07:49:21.684900+00:00",
+  "prior_records": [
+    "core-selection-20261013.json",
+    "purpose-comparison-20261015.json",
+    "concise-purpose-20261015.json"
+  ],
+  "recurrence": [
+    "Earlier contact deduplication handled root-use Action and ClearedRoute statements, but not protections/attacks stated directly by the root-purpose reader.",
+    "The last cost/prefix composition preserved the same endpoint function because it had no shared account of where the root had already described that relation.",
+    "Deleting an endpoint solely because its pieces or square match could lose a restored relation, changed physical participant or later realization."
+  ],
+  "acceptance": [
+    "Use the same physical actor and target and complete geometric relation throughout the observed segment, not endpoint equality alone.",
+    "Explain the function and its observed lifetime once; keep the branch endpoint, reply, changes, costs and move anchors.",
+    "Retain both root purposes, different reply choices, late rook coordination, pawn successor and distinct mandatory prices.",
+    "Use only Re2 and Qa4 actual screens at a twenty-second request and D18 ceiling; do not force a book move or replay old PVs as fresh engine output.",
+    "Do not complete on text length or tests alone."
+  ],
+  "preservation": {
+    "baseline": "target/research-runs/function-continuity-20261015/baseline/state.json",
+    "existing_dirty_files": 210,
+    "staging_or_commit_authorized": false,
+    "originals_present": 210,
+    "exact_original_copies": 210,
+    "old_research_body_exact": true,
+    "head_unchanged": true,
+    "index_empty": true,
+    "changed_existing_files": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/PurposeComparisonTest.scala",
+      "chesstory-web/tests/purposeComparison.test.ts",
+      "research/README.md"
+    ],
+    "added_lines_trailing_spaces": "none; original CRLF/LF preserved"
+  },
+  "validation": {
+    "positions": [
+      "Re2",
+      "Qa4"
+    ],
+    "budget_ms": 20000,
+    "depth_ceiling": 18,
+    "actual_screens": [
+      {
+        "id": "re2-first",
+        "elapsed_ms": 5430,
+        "depths": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "result": "partial",
+        "finding": "The original guarding target was exchanged, so continuity correctly did not apply. Late rook realization and prices remained, but its full function was still repeated after the purpose."
+      },
+      {
+        "id": "qa4-first",
+        "elapsed_ms": 2480,
+        "depths": [
+          11,
+          11,
+          11
+        ],
+        "result": "preserved_differences",
+        "finding": "Late d5 was present in both assessed root paths. Two different branch realizations and c4 successor must not be merged solely because their functional wording matches."
+      },
+      {
+        "id": "qa4-second",
+        "elapsed_ms": 4390,
+        "result": "preserved_changed_target",
+        "finding": "Fresh automatic reference changed to d5; kept that actual pair. Explained c6 moving to c5, original d4 loss, replacement c4 pawn and branch-specific trades. No reference move was forced."
+      },
+      {
+        "id": "qa4-final",
+        "elapsed_ms": 4830,
+        "depths": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "result": "passed_semantic_preservation",
+        "actual_pair": [
+          "Nf4",
+          "Qa4"
+        ],
+        "finding": "Nf4 blocks the h6-e3 line and attacks e6/h5; Qa4 prepares d5 against c6. After Bb7 the original d4 pawn is exchanged and 19.cxd5 brings the original c4 pawn to d5, attacking e6. A separately assessed d5 continuation loses the original pawn without that successor, so it remains distinct. Qd7 requires Ne4 and retains the c4 pawn/a6 bishop price. The clicked cxd5 position was checked on the real board.",
+        "screen": "function-continuity-20261015/qa4-final.png",
+        "board": "function-continuity-20261015/qa4-final-board.png"
+      },
+      {
+        "id": "re2-final",
+        "elapsed_ms": 3050,
+        "depths": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "result": "passed_function_continuity_and_reply_realization",
+        "actual_pair": [
+          "Be5",
+          "Re2"
+        ],
+        "finding": "Be5 guards the original d4 knight through 19.Bc2; this lifetime is stated in the purpose and the endpoint omits the repeated bishop-guard clause. The linked real board shows e5 bishop/d4 knight intact. Re2 prepares e-file rook coordination and e6 pressure. Bb5 requires Nxb5 before Rae1, with d4 knight/d7 bishop exchange; premature Rae1 and delayed Be5 retain the e1 rook/d7 bishop cost and lost relationship. Nd5 allows delayed Be5, then Rxe5 realizes the prepared connection with f4/e7 bishop exchange. Both realization anchors remain without repeating the full purpose.",
+        "screen": "function-continuity-20261015/re2-final.png",
+        "board": "function-continuity-20261015/re2-final-board.png"
+      }
+    ],
+    "engine": "Stockfish 18, browser worker, two threads; actual auto-selected pair, no forced reference or fabricated PV",
+    "same_input": [
+      {
+        "id": "re2",
+        "before_chars": 646,
+        "after_chars": 607,
+        "before_paragraphs": 3,
+        "after_paragraphs": 3,
+        "semantic_result": "Guard lifetime moved into the purpose once; prepared rook function is announced once and realized in each appropriate branch. Exact covered, required, proof, action and recorded-end sets preserved."
+      },
+      {
+        "id": "qa4",
+        "before_chars": 656,
+        "after_chars": 656,
+        "before_paragraphs": 3,
+        "after_paragraphs": 3,
+        "semantic_result": "No unjustified shortening: the original Nf4 knight is exchanged; the changed target, original d4/d3 losses and c4 successor remain."
+      }
+    ],
+    "same_input_scope": "Replays the exact previous final reports from concise-purpose-browser.json.gz, not a fresh engine run. Count includes spaces and SAN, excludes paragraph separators and UI. Not compared numerically to fresh PVs.",
+    "core_checks": {
+      "runtime_meaning_and_receipts": {
+        "tests": 10,
+        "failures": 0
+      },
+      "web_delivery_and_rejection": {
+        "tests": 4,
+        "failures": 0
+      },
+      "normal_app_build": "passed",
+      "standalone_guard": "Without a preceding owned purpose, endpoint and standalone reply retain the full function. Korean and English receipt sets agree."
+    },
+    "fixture": "judgment-evaluation/fixtures/public-commentary-v6/function-continuity-browser.json.gz",
+    "fixture_sha256": "5a06fa610eea94355477960f3888a16620bb9fb1662818a02cfff06a440a233b",
+    "browser_restored": "1. e4 *, starting position, engine Off, empty input, import collapsed; app remains running on 127.0.0.1:8787"
+  },
+  "implementation_findings": [
+    "Direct root contacts need the same identity and complete continuous geometry, and their lifetime must be stated before endpoint prose can omit the repeated function.",
+    "A single common rendering context records which owned purpose was actually stated in earlier basic paragraphs. A branch can then state its realization succinctly. Standalone details retain the full function.",
+    "The first direct-contact fix alone left the prepared rook purpose repeated in every branch. It was not accepted as completion."
+  ],
+  "completed_utc": "2026-10-15T08:23:40.399203+00:00",
+  "verdict": "The shared reading and composition reduce an already-stated root function at the endpoint and prepared-function restatement across replies, while preserving both root purposes, distinct replies, late realization and mandatory costs. Re2 supplies a positive actual-screen continuity case; Qa4 preserves changed targets and a physical successor. This does not establish general concision, purpose discovery or release readiness.",
+  "limits": [
+    "Only Re2 and Qa4 were run on the actual screen. No extra positions, broad regression suite or repeated performance sampling.",
+    "Conservative continuity requires the same original actor and target at their same squares and a complete relation at every observed position. Moved, interrupted, restored and successor relations are not merged by endpoint equality.",
+    "This change covers directly stated guard/attack contacts and already-announced prepared realizations. It does not create a general strategic-purpose equivalence system.",
+    "Remaining inventory statements, repeated scope labels and genuinely distinct branch costs may still make a long explanation. No claim that Qa4 was shorter or all paragraph repetition was solved."
+  ]
+}

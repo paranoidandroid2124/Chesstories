@@ -1,0 +1,260 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: Chesstories
+    - generic [ref=e5]: 기보와 해설
+    - generic [ref=e6]:
+      - combobox "Language" [ref=e7] [cursor=pointer]:
+        - option "한국어" [selected]
+        - option "English"
+      - button "어둡게" [ref=e8] [cursor=pointer]
+  - main [ref=e9]:
+    - region "체스판과 기보" [ref=e10]:
+      - generic [ref=e11]:
+        - heading "Boris Gelfand – Boris Avrukh" [level=1] [ref=e418]
+        - generic [ref=e13]: 14… Bd5
+      - generic [ref=e416]:
+        - generic [ref=e417] [cursor=pointer]
+        - generic:
+          - generic: "1"
+          - generic: "2"
+          - generic: "3"
+          - generic: "4"
+          - generic: "5"
+          - generic: "6"
+          - generic: "7"
+          - generic: "8"
+        - generic:
+          - generic: a
+          - generic: b
+          - generic: c
+          - generic: d
+          - generic: e
+          - generic: f
+          - generic: g
+          - generic: h
+      - navigation "기보 이동" [ref=e18]:
+        - button "처음" [ref=e19] [cursor=pointer]: ⏮
+        - button "이전 수" [ref=e20] [cursor=pointer]: ←
+        - button "다음 수" [ref=e21] [cursor=pointer]: →
+        - button "마지막" [ref=e22] [cursor=pointer]: ⏭
+        - button "방향 전환" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - textbox "수 입력" [ref=e25]:
+          - /placeholder: e4, Nf3, e2e4
+        - button "두기" [ref=e26] [cursor=pointer]
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - heading "Engine reference" [level=2] [ref=e29]
+          - button "Engine / Off" [ref=e30] [cursor=pointer]
+        - paragraph [ref=e31]: Off · Stockfish 18 · 2 threads
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading "기보" [level=2] [ref=e34]
+          - button "PGN 저장" [ref=e35] [cursor=pointer]
+        - generic [ref=e36]:
+          - button "1. c4" [ref=e419] [cursor=pointer]
+          - button "1… Nf6" [ref=e420] [cursor=pointer]
+          - button "2. Nc3" [ref=e421] [cursor=pointer]
+          - button "2… d5" [ref=e422] [cursor=pointer]
+          - button "3. cxd5" [ref=e423] [cursor=pointer]
+          - button "3… Nxd5" [ref=e424] [cursor=pointer]
+          - button "4. g3" [ref=e425] [cursor=pointer]
+          - button "4… g6" [ref=e426] [cursor=pointer]
+          - button "5. Bg2" [ref=e427] [cursor=pointer]
+          - button "5… Nb6" [ref=e428] [cursor=pointer]
+          - button "6. Nf3" [ref=e429] [cursor=pointer]
+          - button "6… Bg7" [ref=e430] [cursor=pointer]
+          - button "7. O-O" [ref=e431] [cursor=pointer]
+          - button "7… O-O" [ref=e432] [cursor=pointer]
+          - button "8. d3" [ref=e433] [cursor=pointer]
+          - button "8… Nc6" [ref=e434] [cursor=pointer]
+          - button "9. Be3" [ref=e435] [cursor=pointer]
+          - button "9… e5" [ref=e436] [cursor=pointer]
+          - button "10. b4" [ref=e437] [cursor=pointer]
+          - button "10… Nd4" [ref=e438] [cursor=pointer]
+          - button "11. a4" [ref=e439] [cursor=pointer]
+          - button "11… Be6" [ref=e440] [cursor=pointer]
+          - button "12. Ng5" [ref=e441] [cursor=pointer]
+          - button "12… Bb3" [ref=e442] [cursor=pointer]
+          - button "13. Qb1" [ref=e443] [cursor=pointer]
+          - button "13… a5" [ref=e444] [cursor=pointer]
+          - button "14. b5" [ref=e445] [cursor=pointer]
+          - button "14… Bd5" [ref=e446] [cursor=pointer]
+          - button "15. Nge4" [ref=e447] [cursor=pointer]
+      - group [ref=e37]:
+        - generic "PGN · FEN 불러오기" [ref=e38] [cursor=pointer]
+        - textbox "PGN or FEN" [ref=e54]:
+          - /placeholder: 기보(PGN) 또는 국면(FEN)을 붙여 넣으세요.
+          - text: "[Event \"Ramat Aviv\"] [Site \"?\"] [Date \"1999.??.??\"] [Round \"?\"] [White \"Boris Gelfand\"] [Black \"Boris Avrukh\"] [Result \"*\"] 1. c4 Nf6 2. Nc3 d5 3. cxd5 Nxd5 4. g3 g6 5. Bg2 Nb6 6. Nf3 Bg7 7. O-O O-O 8. d3 Nc6 9. Be3 e5 10. b4 Nd4 11. a4 Be6 12. Ng5 Bb3 13. Qb1 a5 14. b5 Bd5 15. Nge4 *"
+        - generic [ref=e55]:
+          - button "불러오기" [ref=e56] [cursor=pointer]
+          - generic [ref=e57] [cursor=pointer]:
+            - text: 파일 선택
+            - button "파일 선택" [ref=e58]
+        - paragraph [ref=e59]: 한 경기씩 불러옵니다. 변형·주석은 PGN 저장에 함께 보존됩니다.
+      - group [ref=e39]:
+        - generic "현재 FEN" [ref=e40] [cursor=pointer]
+    - region "해설" [ref=e41]:
+      - generic [ref=e42]:
+        - heading "이 수의 의미" [level=2] [ref=e43]
+        - button "해설 · 10초" [ref=e44] [cursor=pointer]
+      - status [ref=e45]: completed · 3.95s
+      - region [ref=e46]:
+        - generic [ref=e47]:
+          - heading "직전 수 리뷰" [level=2] [ref=e48]
+          - status [ref=e99]: 직전 수 리뷰가 완료되었습니다.
+        - generic [ref=e540]:
+          - 'region "부정확한 수: Bd5" [ref=e541]':
+            - generic [aria-hidden] [ref=e542]: "?!"
+            - generic [ref=e543]:
+              - generic [ref=e544]: Bd5
+              - heading "부정확한 수" [level=3] [ref=e545]
+          - group [ref=e546]:
+            - generic "평가 수치 +" [ref=e547] [cursor=pointer]
+        - article [ref=e549]:
+          - heading "두 선택의 비교" [level=3] [ref=e550]
+          - paragraph [ref=e551]:
+            - text: 평가에서 비교한 두 선택은
+            - button "c6 · 위치 살펴보기" [ref=e552] [cursor=pointer]: c6
+            - text: 와
+            - button "Bd5 · 위치 살펴보기" [ref=e553] [cursor=pointer]: Bd5
+            - text: 입니다.
+            - button "c6 · 위치 살펴보기" [ref=e554] [cursor=pointer]: c6
+            - text: — 흑 c6 폰이 백 g2 비숍에서 흑 b7 폰 쪽으로 이어지는 공격선을 막습니다. 백 b5 폰을 새로 공격합니다. 흑 c6 폰이 d5 진출을 받칩니다.
+            - button "Bd5 · 위치 살펴보기" [ref=e555] [cursor=pointer]: Bd5
+            - text: — 원래 b3의 비숍을 옮겨 백 b1 퀸의 공격을 피합니다. 흑 d5 비숍이 백 g2 비숍에서 흑 b7 폰 쪽으로 이어지는 공격선을 막습니다. 백 g2 비숍을 새로 공격합니다. d5 칸은 폰의 지원을 받지 못합니다. 아래는 엔진이 제시한 각 응수에서 남는 기능과 교환 비용입니다.
+          - paragraph [ref=e556]:
+            - text: 제시된 수순은
+            - button "c6 · 위치 살펴보기" [ref=e557] [cursor=pointer]: c6
+            - button "Nge4 · 위치 살펴보기" [ref=e558] [cursor=pointer]: Nge4
+            - button "Nd5 · 위치 살펴보기" [ref=e559] [cursor=pointer]: Nd5
+            - button "Qb2 · 위치 살펴보기" [ref=e560] [cursor=pointer]: Qb2
+            - button "Nxc3 · 위치 살펴보기" [ref=e561] [cursor=pointer]: Nxc3
+            - button "Nxc3 · 위치 살펴보기" [ref=e562] [cursor=pointer]: Nxc3
+            - button "Rb8 · 위치 살펴보기" [ref=e563] [cursor=pointer]: Rb8
+            - button "Rfb1 · 위치 살펴보기" [ref=e564] [cursor=pointer]: Rfb1
+            - button "Bc2 · 위치 살펴보기" [ref=e565] [cursor=pointer]: Bc2
+            - text: 입니다. 응수
+            - button "Nge4 · 위치 살펴보기" [ref=e566] [cursor=pointer]: Nge4
+            - text: — 상대는 나이트를 e4 칸으로 옮깁니다. 제시된
+            - button "Bc2 · 위치 살펴보기" [ref=e567] [cursor=pointer]: Bc2
+            - text: "이후의 배치에서는: d5 칸은 여전히 흑 c6 폰이 받칩니다. 원래 b3의 비숍은 c2에 남습니다. 백 a4 폰, 백 b1 룩, 백 d3 폰을 공격합니다. 원래 a8의 룩은 b8에 남습니다. 흑 b7 폰을 지킵니다. 원래 c7의 폰은 교환을 거쳐 c6에 남습니다. 현재 흑 b7 폰, 흑 d4 나이트가 지킵니다. 제시된"
+            - button "c6 · 위치 살펴보기" [ref=e568] [cursor=pointer]: c6
+            - text: 수순에서 양쪽이 나이트 한 개씩 교환합니다. 기록된 수순은
+            - button "Bc2 · 위치 살펴보기" [ref=e569] [cursor=pointer]: Bc2
+            - text: 이후에 끝나며, 그다음 응수는 기록되어 있지 않습니다.
+          - paragraph [ref=e570]:
+            - button "Bd5 · 위치 살펴보기" [ref=e571] [cursor=pointer]: Bd5
+            - text: "수순에서: 이후"
+            - button "c6 · 위치 살펴보기" [ref=e572] [cursor=pointer]: c6
+            - text: 수로 백 b5 폰이 흑 c6 폰을 새로 공격합니다.
+            - button "cxd5 · 위치 살펴보기" [ref=e573] [cursor=pointer]: cxd5
+            - text: 수로 흑 d5 폰이 백 b5 폰의 공격을 피합니다. 제시된 수순은
+            - button "Bd5 · 위치 살펴보기" [ref=e574] [cursor=pointer]: Bd5
+            - button "Nge4 · 위치 살펴보기" [ref=e575] [cursor=pointer]: Nge4
+            - button "Rb8 · 위치 살펴보기" [ref=e576] [cursor=pointer]: Rb8
+            - button "Bd2 · 위치 살펴보기" [ref=e577] [cursor=pointer]: Bd2
+            - button "c6 · 위치 살펴보기" [ref=e578] [cursor=pointer]: c6
+            - button "e3 · 위치 살펴보기" [ref=e579] [cursor=pointer]: e3
+            - button "Ne6 · 위치 살펴보기" [ref=e580] [cursor=pointer]: Ne6
+            - button "Nxd5 · 위치 살펴보기" [ref=e581] [cursor=pointer]: Nxd5
+            - button "cxd5 · 위치 살펴보기" [ref=e582] [cursor=pointer]: cxd5
+            - text: 입니다. 응수
+            - button "Nge4 · 위치 살펴보기" [ref=e583] [cursor=pointer]: Nge4
+            - text: — e4에 나이트를 끼워 백 g2 비숍 쪽 공격선을 막습니다. 제시된
+            - button "cxd5 · 위치 살펴보기" [ref=e584] [cursor=pointer]: cxd5
+            - text: "이후의 배치에서는: d5 칸에는 여전히 폰의 지원이 없습니다. 흑 d5 폰이 그 칸을 차지합니다. 원래 b3의 비숍은 교환되어 남지 않습니다. 원래 a8의 룩은 b8에 남습니다. 흑 b7 폰을 지킵니다. 원래 c7의 폰은 교환을 거쳐 d5에 남습니다. 현재 흑 b6 나이트, 흑 d8 퀸이 지킵니다. 제시된"
+            - button "Bd5 · 위치 살펴보기" [ref=e585] [cursor=pointer]: Bd5
+            - text: 수순에서 백은 나이트 한 개를 내주고 비숍 한 개를 얻습니다.
+          - paragraph [ref=e586]:
+            - text: 기능 차이는
+            - button "c6 · 위치 살펴보기" [ref=e587] [cursor=pointer]: c6
+            - text: 수순의
+            - button "Bc2 · 위치 살펴보기" [ref=e588] [cursor=pointer]: Bc2
+            - text: 뒤와
+            - button "Bd5 · 위치 살펴보기" [ref=e589] [cursor=pointer]: Bd5
+            - text: 수순의
+            - button "cxd5 · 위치 살펴보기" [ref=e590] [cursor=pointer]: cxd5
+            - text: 뒤에서 확인할 수 있습니다. 원래 b6의 나이트는
+            - button "c6 · 위치 살펴보기" [ref=e591] [cursor=pointer]: c6
+            - text: 에서는 교환되어 남지 않습니다.
+            - button "Bd5 · 위치 살펴보기" [ref=e592] [cursor=pointer]: Bd5
+            - text: 에서는 b6에 남습니다; 흑 d5 폰을 지킵니다. 원래 d4의 나이트는
+            - button "c6 · 위치 살펴보기" [ref=e593] [cursor=pointer]: c6
+            - text: 에서는 d4에 남습니다; 흑 c6 폰을 지킵니다.
+            - button "Bd5 · 위치 살펴보기" [ref=e594] [cursor=pointer]: Bd5
+            - text: 에서는 e6에 남습니다.
+          - generic [ref=e595]:
+            - button "대안 수 · c6 · 재생" [ref=e596] [cursor=pointer]
+            - button "둔 수 · Bd5 · 재생" [ref=e597] [cursor=pointer]
+        - group [ref=e598]:
+          - generic "평가 근거와 관찰 기록 +" [ref=e599] [cursor=pointer]
+          - text: + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+          - option "칸 선택" [selected]
+          - option "a1"
+          - option "b1"
+          - option "c1"
+          - option "d1"
+          - option "e1"
+          - option "f1"
+          - option "g1"
+          - option "h1"
+          - option "a2"
+          - option "b2"
+          - option "c2"
+          - option "d2"
+          - option "e2"
+          - option "f2"
+          - option "g2"
+          - option "h2"
+          - option "a3"
+          - option "b3"
+          - option "c3"
+          - option "d3"
+          - option "e3"
+          - option "f3"
+          - option "g3"
+          - option "h3"
+          - option "a4"
+          - option "b4"
+          - option "c4"
+          - option "d4"
+          - option "e4"
+          - option "f4"
+          - option "g4"
+          - option "h4"
+          - option "a5"
+          - option "b5"
+          - option "c5"
+          - option "d5"
+          - option "e5"
+          - option "f5"
+          - option "g5"
+          - option "h5"
+          - option "a6"
+          - option "b6"
+          - option "c6"
+          - option "d6"
+          - option "e6"
+          - option "f6"
+          - option "g6"
+          - option "h6"
+          - option "a7"
+          - option "b7"
+          - option "c7"
+          - option "d7"
+          - option "e7"
+          - option "f7"
+          - option "g7"
+          - option "h7"
+          - option "a8"
+          - option "b8"
+          - option "c8"
+          - option "d8"
+          - option "e8"
+          - option "f8"
+          - option "g8"
+          - option "h8"
+  - contentinfo [ref=e52]:
+    - status [ref=e53]: 기보를 불러왔습니다.
+    - text: 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.

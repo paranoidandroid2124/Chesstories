@@ -1,0 +1,536 @@
+[
+  {
+    "label": "bd7-counterplay-live",
+    "first_run_only": true,
+    "request_budget_ms": 19740,
+    "displayed_seconds": 5.58,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:1",
+        "purpose": "focus_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "f7f5",
+            "c6d7"
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 20000000,
+          "movetime_ms": 5000,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "c6d7"
+        ],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      }
+    ],
+    "reports": [
+      {
+        "work_id": "work:0",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f7f5",
+                "a3a4",
+                "a7a5",
+                "g4g5",
+                "d4c2",
+                "e1e5",
+                "d5d4"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -181
+              }
+            },
+            {
+              "moves": [
+                "d4c2",
+                "e1e5",
+                "f7f5",
+                "g3f2",
+                "d5d4",
+                "e5e7",
+                "d6e7",
+                "g2c6",
+                "e7e6"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -149
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:1",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "f7f5",
+                "g4g5",
+                "d4c2",
+                "d3d4",
+                "c2e1"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -170
+              }
+            },
+            {
+              "moves": [
+                "c6d7",
+                "d2e3",
+                "e7f5",
+                "g4f5",
+                "d4f5",
+                "e3f2",
+                "h8h5",
+                "e1e5",
+                "d7c6",
+                "f2f3"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": 37
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "d2e3",
+                "e7f5",
+                "g4f5",
+                "d4f5",
+                "e3f3",
+                "d7c6",
+                "g3f2",
+                "h8h5",
+                "e1e5",
+                "b8h8",
+                "f1e1",
+                "c6a8",
+                "c3b5"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": 103
+              }
+            },
+            {
+              "moves": [
+                "e1e7",
+                "d6e7",
+                "f4f5",
+                "f7f6",
+                "f1e1",
+                "e7f7",
+                "g3b8",
+                "h8b8",
+                "f5g6",
+                "g7g6",
+                "c3d5",
+                "b8e8",
+                "e1e4",
+                "e8e4",
+                "g2e4",
+                "f6f5",
+                "g4f5",
+                "d7f5"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": 31
+              }
+            },
+            {
+              "moves": [
+                "d2f2",
+                "f7f5",
+                "e1e5",
+                "d7e6",
+                "f1e1",
+                "e7c6",
+                "g3h4",
+                "b8f8",
+                "g4f5"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -90
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "screen": "bd7-counterplay-live-screen.png",
+    "screen_text": "bd7-counterplay-live-screen.txt",
+    "capture_errors": [],
+    "actual_pair": [
+      "f5",
+      "Bd7"
+    ],
+    "basic_reading": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — f5 칸을 새로 지원하여 원래 e7의 나이트의 진출을 받칩니다. Nef5로 나이트가 활동에 나서 백 e3 퀸, 백 g3 비숍을 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  f5 수순의 비교 시점까지 백의 e1 룩을 내줍니다. Bd7 수순의 비교 시점까지 백의 g4 폰과 흑의 e7 나이트를 교환합니다. Bd7 수순에서: Qe3 뒤 백 e3 퀸이 흑 d4 나이트를 새로 공격합니다. Nxf5 수로 나이트가 백 e3 퀸의 공격을 피합니다.",
+          "Bd7 뒤 조사한 Qf2 응수에서는 같은 기물이 Be6로 재배치되어 흑 d5 폰을 지킵니다.",
+          "f5 — g5: 공격받던 원래 g4의 폰을 피합니다. Nxe1까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. 원래 g4 폰이 g5에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+          "Bd7 — Qe3: 흑 d4 나이트, 흑 e7 나이트를 새로 공격합니다. Nxf5까지의 수순에서는 흑 d7 비숍을 남깁니다."
+        ]
+      }
+    ],
+    "observed": "Qe3 Nef5 support/use, releasing d5 defense, material costs, and Qf2 Be6 defense are delivered with a valid Nef5 board link.",
+    "failure": "The separate full reply survey also contains Rxe7 Qxe7 f5, but basic selection still omits that opposing activity. Main comparison PV differs from the saved old Rxe7 line.",
+    "verdict": "development partial improvement; screen does not establish opponent-counterplay generalization"
+  },
+  {
+    "label": "kf8-first-independent",
+    "first_run_only": true,
+    "request_budget_ms": 19745,
+    "displayed_seconds": 7.98,
+    "engine_profile": "sf18-smallnet-t2-h16-v1",
+    "issued_work": [
+      {
+        "work_id": "work:0",
+        "purpose": "root_search",
+        "limits": {
+          "depth": 11,
+          "nodes": 5000000,
+          "movetime_ms": 5000,
+          "multi_pv": 2
+        },
+        "prefix": [],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:1",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "c8e6",
+          "h3e6",
+          "g8h7",
+          "f4f5",
+          "c6e5",
+          "h4e7",
+          "c7c2"
+        ],
+        "restriction": {
+          "kind": "unrestricted"
+        }
+      },
+      {
+        "work_id": "work:2",
+        "purpose": "response_comparison",
+        "limits": {
+          "depth": 11,
+          "nodes": 2000000,
+          "movetime_ms": 2500,
+          "multi_pv": 3
+        },
+        "prefix": [
+          "c8e6",
+          "h3e6",
+          "g8h7",
+          "f4f5",
+          "c6e5",
+          "h4e7",
+          "c7c2"
+        ],
+        "restriction": {
+          "kind": "restricted",
+          "moves_uci": [
+            "b2b3",
+            "b2b4",
+            "e7d6"
+          ]
+        }
+      }
+    ],
+    "reports": [
+      {
+        "work_id": "work:0",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "c8e6",
+                "h3e6",
+                "g8h7",
+                "f4f5",
+                "c6e5",
+                "h4e7",
+                "c7c2",
+                "e7d6",
+                "b8b2",
+                "f5g6",
+                "c2g6",
+                "e6h3",
+                "g6h6",
+                "h3f5",
+                "e5g6",
+                "f5c8",
+                "h6h5",
+                "c8a6",
+                "h5g4"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -95
+              }
+            },
+            {
+              "moves": [
+                "g8f8",
+                "f4f5",
+                "g6g5",
+                "f5f6",
+                "c8e6",
+                "h3e6",
+                "g5h4",
+                "f6g7",
+                "f8g7",
+                "e6f6",
+                "g7g8",
+                "f6g5",
+                "c7g7",
+                "g5d5",
+                "g8h7"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": 142
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:1",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "e7d6",
+                "b8b2",
+                "f5g6",
+                "c2g6",
+                "e6h3",
+                "g6h6",
+                "h3f5",
+                "e5g6",
+                "h2h3",
+                "h6h4",
+                "h1h2",
+                "b2a2"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -110
+              }
+            },
+            {
+              "moves": [
+                "f5f6",
+                "c2d3",
+                "f1e1",
+                "d3d2",
+                "e1g1",
+                "g7f8",
+                "h2h3",
+                "a6a5",
+                "b2b3",
+                "b8e8",
+                "g1f1",
+                "d2e2",
+                "f1g1",
+                "f8e7",
+                "f6e7",
+                "h7g7",
+                "e6d6"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -131
+              }
+            },
+            {
+              "moves": [
+                "e7f6",
+                "c2d3",
+                "f1e1",
+                "g7f6",
+                "e6f6",
+                "d3f5",
+                "f6d6",
+                "b8b2",
+                "h2h3",
+                "e5f7"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -222
+              }
+            }
+          ]
+        }
+      },
+      {
+        "work_id": "work:2",
+        "outcome": {
+          "kind": "completed",
+          "line_suffixes": [
+            {
+              "moves": [
+                "b2b3",
+                "c2d3",
+                "h1g1",
+                "g6f5",
+                "f1f5",
+                "d3e3",
+                "g1f1",
+                "e3c1",
+                "f1f2",
+                "c1d2",
+                "f2f1",
+                "d2d1",
+                "f1f2",
+                "d1d4",
+                "f2f1"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -173
+              }
+            },
+            {
+              "moves": [
+                "e7d6",
+                "c2d3",
+                "f5g6",
+                "e5g6",
+                "e6h3",
+                "d3h3",
+                "g2h3",
+                "b8b2",
+                "f1f7",
+                "b2a2",
+                "f7a7",
+                "h7g8",
+                "a7a8",
+                "g8f7",
+                "a8a7",
+                "f7f6"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -250
+              }
+            },
+            {
+              "moves": [
+                "b2b4",
+                "b8b4",
+                "f5g6",
+                "c2g6",
+                "e6g6",
+                "h7g6",
+                "e7d6",
+                "b4b2"
+              ],
+              "depth": 11,
+              "white_score": {
+                "kind": "cp",
+                "value": -255
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "screen": "kf8-first-independent-screen.png",
+    "screen_text": "kf8-first-independent-screen.txt",
+    "capture_errors": [
+      "Error: Request content was evicted from inspector cache"
+    ],
+    "actual_pair": [
+      "Bxe6",
+      "Kf8"
+    ],
+    "observed": "Actual line is Kf8 f5 g5 f6 Bxe6 Qxe6 gxh4 fxg7+ Kxg7. The f-file discovered/double check and the fxg7+ board link exist.",
+    "failure": "Basic explanation falls back to long English captures/checks and does not organize the purpose and consequential reply.",
+    "verdict": "first independent failure; no product tuning or favorable rerun afterward",
+    "capture_limitation": "Final HTTP response body was evicted from the inspector cache. All exact issued work and engine reports, preceding responses, UI text and screenshots were retained. No reconstructed response is labelled as live.",
+    "not_claimed": "The book fxg6+ intermezzo was not in this actual PV; it is not substituted for fxg7+."
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "ui_label": "8.Qd3+ · 수 이후",
+  "move_count": 3,
+  "expected_fen": "rnbq1r2/pppnbppk/4p3/3pP3/3P4/2NQ1N2/PPP2PPP/R1B1K2R b KQ - 1 8",
+  "displayed_board_fen": "rnbq1r2/pppnbppk/4p3/3pP3/3P4/2NQ1N2/PPP2PPP/R1B1K2R",
+  "exact_board_match": true
+}

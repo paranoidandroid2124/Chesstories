@@ -1,0 +1,96 @@
+{
+  "schema_version": "chesstory.startup-update.v1",
+  "recorded_utc": "2026-10-13T04:10:11.599229+00:00",
+  "base_commit": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "status": "startup-completed-generalization-failure-reproduced",
+  "working_tree_before": "Clean on codex/functional-choice-value; no pre-existing uncommitted changes were replaced.",
+  "objective": "Use one start path that prepares changed or missing components, skips unchanged builds, and stops on preparation failure; then return to commentary generalization.",
+  "implementation": [
+    "Start-Chesstories.cmd and npm start both call scripts/start.mjs.",
+    "Check Node >=22, Java >=21 (including CHESSTORIES_JAVA), and reserve the loopback port before preparation.",
+    "Package input content hashes include package.json/package-lock.json and Node major; runtime inputs include src/main, build.sbt, project settings, build script and Java major; UI inputs include src, index, build script, packages and licenses.",
+    "Readiness records compare output paths, sizes and modification times as well as source content. Added/deleted source, missing output and manual rebuilds invalidate readiness.",
+    "Invalidate readiness before preparation. A failed/interrupted build cannot fall back to an older successful marker. Source changes during preparation stop startup.",
+    "No new dependency, background build watcher, repository update, engine-policy change or game-storage change."
+  ],
+  "verification": {
+    "focused_checks": {
+      "command": "npm run test:start",
+      "passed": 2,
+      "covers": [
+        "unchanged and timestamp-only source",
+        "edited/added/deleted source",
+        "missing/externally rebuilt output",
+        "toolchain change",
+        "failed update followed by source reversion"
+      ]
+    },
+    "actual_start": [
+      "Duplicate launch refused while the old app was listening; no build or runtime was started by that attempt.",
+      "After verifying the old server and runtime belonged to this worktree, restarted via Start-Chesstories.cmd. Package installation, runtime preparation and frontend build completed.",
+      "Stopped with Ctrl+C and the Windows batch confirmation; the server and owned Java child were gone.",
+      "Started again with the same file: all three components reported up to date, with no npm installation or sbt/frontend build."
+    ],
+    "actual_screen": {
+      "position": "Gelfand-Avrukh, Ramat Aviv 1999, 14...Bd5",
+      "restored": "Previously saved PGN including 15.Nge4 restored after restart/reload.",
+      "analysis_depth": 16,
+      "review_elapsed_ms": 4961,
+      "review_budget_ms": 10000,
+      "review_depths": [
+        12
+      ],
+      "physical_reports": 3,
+      "http_statuses": [
+        201,
+        200,
+        200,
+        200
+      ],
+      "navigation": "Qxd5 opened the exact 17...Qxd5 occurrence, displayed it on the main board, then returned to the game.",
+      "screens": [
+        "startup-update-20261013/review.png",
+        "startup-update-20261013/linked-board.png"
+      ],
+      "response_fixture": "startup-update-20261013/screen-responses.json.gz",
+      "initial_http_remaining_budget_ms": 9744
+    },
+    "harness_limit": "The initial browser wait incorrectly expected data-state=ready, so it timed out after the app had already completed. The actual product state was completed and its measured elapsed time was 4961ms; no extra engine run was used to hide the harness error.",
+    "not_run": [
+      "historical full regression suite",
+      "clean-machine tool installation",
+      "cross-platform startup",
+      "new commentary quality case"
+    ]
+  },
+  "generalization_return": {
+    "status": "unresolved-reproduced",
+    "observed_primary_pair": [
+      "Rb8",
+      "Bd5"
+    ],
+    "observed_primary_uci": [
+      "a8b8",
+      "b3d5"
+    ],
+    "observed_body_pair": [
+      "Bd5",
+      "Nd5"
+    ],
+    "body_question": "move_purpose",
+    "failure": "The main answer explains the supplementary Bd5/Nd5 question while the actual assessed Rb8/Bd5 pair appears only in the closing sentence and playback controls. Mentioning both actual roots is not explaining their difference.",
+    "prior_records": [
+      "evaluation-reference-20261013.json",
+      "choice-neutralization-20261012.json",
+      "basic-purpose-20261005/result.json"
+    ],
+    "mechanism": [
+      "ReferencePurposeReading reads the actual assessment pair first, but its pawn-backed central-post predicate does not cover this Rb8/Bd5 result.",
+      "MoveWorkProjection then accepts MovePurpose.answer. Its ChoicePurpose comes from PurposeChoice, whose inquiry asks about another actor reaching the played destination. This produces Bd5/Nd5 regardless of the different assessed reference.",
+      "The actual pair survives protocol ownership and appears as a final Continuation, but there is no requirement that both roots own the substantive purpose contrast. This is the prior evaluation-question substitution failure outside the narrow central-post fix."
+    ],
+    "next_scope": "Keep the actual assessed pair as the owning question through purpose discovery, reply reading and basic rendering. Explain the remaining assets, support duties and exchange costs of both returned paths; subordinate a supplementary same-destination comparison. Begin with the preserved Rb8/Bd5 counterexample, not a hard-coded Rb8 template.",
+    "next_completion": "Existing counterexample plus one previously unused position, depth <=18 and actual approximately 10-second basic screens. Both actual moves must have an evidenced purpose and reply/cost contrast. Adding their names, translating the body or passing tests alone is insufficient.",
+    "limits": "No commentary implementation changed in this startup task. The old position with a different live engine result is not a new independent quality case. Korean prose remains an independent unresolved delivery issue."
+  }
+}

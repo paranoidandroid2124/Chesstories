@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-13T18:05:09.791391+00:00",
+  "id": "ferry-rd6",
+  "independent_first_result": true,
+  "freeze_unchanged": true,
+  "seconds": 5.34,
+  "depth": 12,
+  "reports": 2,
+  "verdict": "bounded_observed_comparison_pass; full_prophylaxis_unestablished",
+  "observed": "Automatic Ra3/Rd6; root pawn attacks, actual Rc2 vs a5 replies, a6-for-b2 trade vs b2 loss, rook activity and doubled b4/b5 pawns. No forced-loss claim.",
+  "limitation": "Ra3 prevention of hypothetical ...a5/...Rc5 is not proved; e6 rook pressure is repeated between purpose and final board. These are separate limits from the bounded comparison pass.",
+  "screen": "ferry-rd6-heldout-first.png"
+}

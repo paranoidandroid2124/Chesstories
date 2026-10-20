@@ -1,0 +1,192 @@
+{
+  "status": "achieved_for_scoped_goal",
+  "goal": "Reduce repeated context and common costs in basic purpose comparison without removing distinct choices, late realization, or mandatory prices.",
+  "baseline": "target/research-runs/concise-purpose-20261015/baseline/state.json",
+  "prior_records": [
+    "core-selection-20261013.json",
+    "quiescent-commentary-20261013.json",
+    "purpose-comparison-20261015.json"
+  ],
+  "recurrence": [
+    "The earlier cost grouping was local to the root-purpose section. PreparedReply later introduced independently rendered branch paragraphs with their own Material statements.",
+    "Every branch restated the root, reply, observed end, then its material statement restated the same root and end again.",
+    "Earlier successes on c6/Bd5 and h4/Bxh7+ did not establish composition across the newly added purpose/response path. Global truncation had previously removed four mandatory prices.",
+    "The actual Qa4 run exposed a second boundary: the actual root PV and its separately tested choice shared the same closed prefix but remained separate statements because their full PVs differed. The root aftermath also used a different endpoint from its prepared branch, so looking up only the root-arm endpoint prevented physical cost sharing.",
+    "The entry short-job policy and three internal purpose-routing gates had different budget thresholds. The first twenty-second screen reopened generic discovery and failed. All gates now honor the same existing shortJob policy; changing only the visible deadline was insufficient."
+  ],
+  "criteria": [
+    "Keep both assessed root purposes and each distinct response/choice consequence.",
+    "Retain the late Rae1 and common late d5 evidence from the existing reports, even when a fresh run chooses another continuation.",
+    "Share costs only when the same original physical pieces are identified; equal role counts are insufficient.",
+    "Keep whole admitted ledgers, proof ownership, all required captures and finite observed endpoints.",
+    "Inspect meaning in the actual Re2 and Qa4 screens, not only shorter text or test success."
+  ],
+  "validation": {
+    "positions": [
+      "Re2",
+      "Qa4"
+    ],
+    "search_depth_ceiling": 18,
+    "request_budget_ms": 20000,
+    "same_report_comparison": "purpose-comparison-browser.json.gz",
+    "fresh_screen_runs": [
+      {
+        "id": "re2-first",
+        "result": "failed",
+        "elapsed_ms": 20210,
+        "depth": 11,
+        "request_budget_ms": 19724,
+        "reason": "The entry policy used shortJob for twenty seconds, but internal purpose routing still depended only on remaining <= 10000. Generic discovery took 14.38 seconds; the UI reached its deadline and the returned fallback lacked the rook-coordination purpose.",
+        "evidence": "target/research-runs/concise-purpose-20261015/re2-first-network.json",
+        "fix": "Use the existing shortJob policy also for PV guidance, purpose-only reading and first-purpose response routing. Do not transplant the old unrestricted reply into the new inquiry."
+      },
+      {
+        "id": "re2-before-outcome-merge",
+        "elapsed_ms": 8260,
+        "depth": 11,
+        "result": "completed_with_remaining_repetition",
+        "finding": "Be5 is present in the actual short root PV and in a separately tested longer line. The latter realizes the rook connection after Rxe5 and has a different price; these must remain distinct, but must not be worded as a different action."
+      },
+      {
+        "id": "qa4-before-outcome-merge",
+        "elapsed_ms": 4080,
+        "depth": 11,
+        "result": "completed_but_content_criterion_failed",
+        "finding": "The actual and tested d5 paths repeated the same joint pressure, c4 pawn successor and pawn exchange at the same closed prefix. Keep both original receipts but state the outcome once."
+      },
+      {
+        "id": "qa4-final",
+        "result": "semantic_criteria_met",
+        "elapsed_ms": 9030,
+        "depths": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "request_budget_ms": 19740,
+        "actual_pair": [
+          "Nf4",
+          "Qa4"
+        ],
+        "screenshot": "concise-purpose-20261015/qa4-final.png",
+        "board_screenshot": "concise-purpose-20261015/qa4-final-board.png",
+        "meaning": [
+          "Nf4 blocks the h6 bishop line toward e3 and attacks e6/h5; Qa4 prepares d5 and joint queen/pawn pressure on c6.",
+          "The original white d3 knight / black h6 bishop trade is shared once, explicitly scoped to Nf4 and Qa4 Bb7 Nf4. The f2/f4 doubled pawns remain in the explanation.",
+          "Against Bb7, Nf4 is preferred; d5 is close in evaluation but the original d4 pawn disappears and the original relationship does not survive. The original d4/c6 pawn exchange remains explicit.",
+          "Against Qe8, Ne4 comes first and later d5 creates the joint pressure. After 20.cxd5, the original c4 pawn takes over the pressure from d5 against c6; verified on the main board.",
+          "The later Bxd3 checkpoint costs White its original d4 pawn and d3 knight for Black's e6 pawn. This additional knight loss is retained."
+        ]
+      },
+      {
+        "id": "re2-final",
+        "result": "semantic_criteria_met",
+        "elapsed_ms": 6080,
+        "depths": [
+          11,
+          11,
+          11,
+          11
+        ],
+        "request_budget_ms": 19743,
+        "actual_pair": [
+          "Be5",
+          "Re2"
+        ],
+        "screenshot": "concise-purpose-20261015/re2-final.png",
+        "board_screenshot": "concise-purpose-20261015/re2-final-board.png",
+        "meaning": [
+          "Be5 protects d4 from the b6 queen and attacks f6; Re2 vacates e1 for the other rook and prepares file coordination against e6.",
+          "The Be5 reference line after a5 retains its pawn-pair exchange and observed endpoint.",
+          "After Re2 a5, Be5 comes first and the rook arrangement is not yet realized through Qg3. The separately tested Rae1 realizes the connection but is inferior to Be5, through Bc2.",
+          "Against Nd5, Be5 evades the attack; after 20.Rxe5 the rooks connect and pressure e6. The bishop-pair exchange is preserved; verified on the main board.",
+          "The root and endpoint both still mention the bishop guarding d4. This remaining repetition is recorded, not counted as solved."
+        ]
+      }
+    ],
+    "same_report_metrics": [
+      {
+        "id": "re2",
+        "before_characters": 939,
+        "after_characters": 765,
+        "before_paragraphs": 6,
+        "after_paragraphs": 3,
+        "preserved_receipts": {
+          "covered_moves": 14,
+          "required_moves": 32,
+          "proof_moves": 32,
+          "action_moves": 31,
+          "recorded_end_moves": 0
+        }
+      },
+      {
+        "id": "qa4",
+        "before_characters": 808,
+        "after_characters": 631,
+        "before_paragraphs": 5,
+        "after_paragraphs": 3,
+        "preserved_receipts": {
+          "covered_moves": 8,
+          "required_moves": 24,
+          "proof_moves": 24,
+          "action_moves": 23,
+          "recorded_end_moves": 0
+        }
+      }
+    ],
+    "metric_definition": "Korean basic-paragraph characters including spaces and SAN, excluding paragraph separators and surrounding UI. Same exact previously issued engine reports before/after; fresh PVs are not compared against old text as a shortening metric.",
+    "core_checks": {
+      "runtime_purpose_comparison": {
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "report": "chesstory-runtime/target/test-reports/TEST-io.chesstory.runtime.PurposeComparisonTest.xml"
+      },
+      "web_purpose_comparison": {
+        "tests": 3,
+        "failures": 0
+      },
+      "typescript_check": "passed",
+      "normal_app_build_startup": "passed",
+      "scope": "Only Re2 and Qa4 actual screens and replay of their owned reports. No additional positions, full suite or long-running performance benchmark."
+    },
+    "protected_boundaries": [
+      "Both root purposes and per-reply choice quality",
+      "Late Rae1 from the earlier exact Re2 reports and late shared d5 from earlier Qa4 reports",
+      "Different physical pawns despite equal pawn-trade counts",
+      "Same selected outcome with different full PV lengths vs a genuinely later realization",
+      "Exact covered, required, proof, action and recorded-end reference sets in both old and intermediate actual reports",
+      "Rejection of foreign move ownership and missing mandatory material coverage in old and final browser responses"
+    ]
+  },
+  "completed_at": "2026-10-15T05:53:43.769800+09:00",
+  "verdict": "Re2 and Qa4 now reduce repeated root/reply/endpoint narration and exact shared costs in the common delivery composition while preserving purposes, different reply outcomes, late realization, successors and mandatory prices. This is not a claim that all repetition or general commentary quality is solved.",
+  "implementation": [
+    "Compose adjacent owned reply sections before rendering. State the root and first reply once within a common context, then attach each complete price to its own finite outcome.",
+    "Identify captured original physical pieces from complete admitted continuation readings. Equal piece counts or material values do not establish the same cost. Move whole statements, retaining original proof ownership and required captures.",
+    "Share a common exchange across root and reply branches only when all grouped lines lose those same original pieces. Keep distinct extra losses and scope labels; a common loss on just one side of different trades is insufficient.",
+    "An actual PV and one separately evaluated choice can share one explanation only when the exact selected prefix, original owner, observed end and all functional outcomes agree. Retain both receipts and the choice comparison. A longer late realization remains separate.",
+    "Recognize both root-arm and prepared-branch endpoints when pricing the same root path; do not require the full PVs or their unused endpoints to match.",
+    "Use a twenty-second basic commentary budget consistently in the app and short-job routing, with D11 searches and unchanged D18 admission ceiling. No additional engine work or deeper search was added for prose composition."
+  ],
+  "preservation": {
+    "workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+    "branch": "codex/functional-choice-value",
+    "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+    "preexisting_dirty_files": 196,
+    "original_bytes_and_hashes_saved": true,
+    "missing_original_files": 0,
+    "altered_baseline_archive_files": 0,
+    "staging": "unchanged and empty",
+    "commit_created": false,
+    "historical_research_records": "unchanged; this section is inserted into README without modifying its previous bytes",
+    "browser_restored": "1. e4 *, initial position, engine Off, empty collapsed import field"
+  },
+  "remaining_limits": [
+    "Some repeated functional descriptions still occur between the initial purpose and the observed endpoint, including Re2's e5 bishop guarding d4.",
+    "Different replies can legitimately produce the same functional conclusion. Broadly removing those sentences without preserving their conditions would lose meaning.",
+    "Purpose discovery and human importance ranking outside the implemented evidence types remain limited.",
+    "Two final screens within twenty seconds do not prove timing reliability for every PV, machine or position. This turn checked no positions beyond Re2 and Qa4."
+  ]
+}

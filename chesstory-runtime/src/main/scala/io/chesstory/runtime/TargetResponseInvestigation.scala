@@ -24,9 +24,27 @@ private[runtime] object TargetResponseInvestigation:
       val pathsByMove: Map[String, ObservedLineProtocol.PreparedPath], private val mover: chess.Color):
     def belongsTo(packet: EvidenceBackedJudgmentPacket): Boolean = owner eq packet
     val anchor: EngineSearchAnchor = work.searchAnchor.get
+    lazy val coversAllLegalMoves: Boolean = work.rootRestriction match
+      case EngineRootRestriction.Unrestricted => true
+      case EngineRootRestriction.Restricted(moves) =>
+        owner.assembly.input.positionHistory.extend(anchor.prefixMoves).toOption.exists(history =>
+          history.currentLegalMoveUcis.toSet == moves.toSet)
     lazy val completedDepth: Option[Int] =
       val depths = lines.flatMap(_.evaluation.engineLine.map(_.depth))
       Option.when(depths.nonEmpty && depths.size == lines.size && depths.distinct.size == 1)(depths.head)
+    /** A longer returned witness can explain this same reply. Its own path
+      * remains the owner of the continuation; this search still owns ranking. */
+    def continuationWitness(move: String, searches: List[Search]): Option[ObservedLineProtocol.PreparedPath] =
+      pathsByMove.get(move).map { original =>
+        val count = anchor.plyOffset + 1
+        val candidates = searches.filter(search => search.belongsTo(owner) && search.anchor == anchor &&
+          search.work.engineProfile == work.engineProfile && completedDepth.exists(depth =>
+            search.completedDepth.exists(_ >= depth))).flatMap(_.pathsByMove.get(move)).filter(path =>
+          path.moves.take(count) == original.moves.take(count) &&
+            path.ids.take(count) == original.ids.take(count) &&
+            path.positions.take(count + 1) == original.positions.take(count + 1))
+        (original :: candidates).maxBy(_.moves.size)
+      }
     /** A requested pair at this exact child, independent of target-response discovery. */
     def pairAnswer(packet: EvidenceBackedJudgmentPacket, referenceMove: String, alternativeMove: String)
         : Option[CommentaryInvestigation.Answer] =
@@ -303,7 +321,11 @@ private[runtime] object TargetResponseInvestigation:
       position: String, targetState: String, target: Option[RelationColoredPieceWitness], providers: Providers,
       capturer: Option[RelationColoredPieceWitness], recaptures: Recaptures, observed: ObservedRecapture):
     def complete: Boolean = targetState != "unknown" && providers.state != "unknown" && recaptures.state != "unknown" &&
-      (recaptures.moves.isEmpty || observed.state == "complete")
+      (recaptures.moves.isEmpty || observed.state == "complete" ||
+        // A legal, recorded different action is an observed choice to delay
+        // recovery, not missing evidence about a hypothetical recapture.
+        observed.state == "not_observed" && path.moves == path.sourceMoves &&
+          path.moves.lift(2).exists(move => !recaptures.moves.exists(_.move == move)))
     def json(question: Question): JsObject = Json.obj("line_id" -> path.line.ref.id,
       "reply_move" -> reply, "reply_occurrence_id" -> occurrence, "position_id" -> position,
       "target_state" -> targetState, "target" -> target.map(piece(_, position)),

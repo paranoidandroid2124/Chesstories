@@ -1,0 +1,54 @@
+{
+  "original_220": {
+    "count": 220,
+    "missing_current": [],
+    "backup_mismatch": [],
+    "changed_current": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ObservedLineProtocol.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ResponsePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+      "chesstory-web/src/review/moveReview.ts",
+      "chesstory-web/src/review/moveReviewSelection.ts",
+      "research/README.md",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentarySequenceText.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala"
+    ]
+  },
+  "phase_start_311": {
+    "count": 311,
+    "missing_current": [],
+    "backup_mismatch": [],
+    "changed_current": [
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeActivityReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+      "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+      "chesstory-runtime/src/test/scala/io/chesstory/runtime/IdeaGeneralizationTest.scala",
+      "chesstory-web/src/review/moveReviewSelection.ts",
+      "chesstory-web/tests/ideaGeneralization.test.ts",
+      "research/README.md"
+    ]
+  },
+  "old_research_changed": [],
+  "previous_readme_preserved": true,
+  "frozen_product_changed": [],
+  "frozen_product_count": 109,
+  "branch": "codex/functional-choice-value",
+  "head": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "same_branch_head": true,
+  "staged_files": [],
+  "ui_restored": "1.e4, starting position, Engine Off, empty move/import fields, importer collapsed; see restored-ui.txt",
+  "utc": "2026-10-16T00:41:17.311005+00:00"
+}

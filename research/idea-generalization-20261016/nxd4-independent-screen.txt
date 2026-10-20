@@ -1,0 +1,75 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories 기보와 해설
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				216 text 20… Nxd4
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 20… Nxd4
+				217 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					218 text PGN · FEN 불러오기
+				128 container
+					129 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						130 text 현재 FEN
+			131 container 해설
+				132 heading 이 수의 의미, Value: 2
+					133 text 이 수의 의미
+				134 button 해설 · 20초
+				219 text fault · 2.02s
+				136 container 직전 수 리뷰
+					137 container
+						138 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							139 text 직전 수 리뷰
+					220 heading 직전 수 리뷰를 불러오지 못했습니다., Value: 3
+						221 text 직전 수 리뷰를 불러오지 못했습니다.
+		143 container
+			215 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

@@ -1,0 +1,19 @@
+{
+  "result": {
+    "id": "ferry-rd6-release",
+    "reports_consumed": 2,
+    "available": 2,
+    "failure": null,
+    "replay_phase": "completed",
+    "en_exact_same_text_as_live": true,
+    "en_live_chars": 724,
+    "en_final_replay_chars": 724,
+    "ko_exact_same_text_as_live": false,
+    "ko_live_chars": 370,
+    "ko_final_replay_chars": 366
+  },
+  "live_en": "Ra3 — Newly attacks Black's pawn on a6. In the provided Ra3 line, the same rook next moves with Rb3 to b3. After Rb3, White's rook on b3 adds support to White's pawn on b2, which is under attack from Black's rook on e2. After Rb3, White's rook on b3 now targets Black's pawn on b5. Rd6 — Newly attacks Black's pawn on a6 and Black's pawn on e6. Places the rook on the open d-file.  Rd6 through its checkpoint: White gives up the original b2 pawn.\n\nRa3 — after Rc6, Rc2+ is answered by Kg3, which moves the king out of check. Rb3 is the observed checkpoint.\n\nRd6 — after a5: moves the attacked pawn away. Kf3: in this continuation, White's rook on d4 works on the open d-file. The pawns on b4 and b5 are doubled and isolated.",
+  "final_en": "Ra3 — Newly attacks Black's pawn on a6. In the provided Ra3 line, the same rook next moves with Rb3 to b3. After Rb3, White's rook on b3 adds support to White's pawn on b2, which is under attack from Black's rook on e2. After Rb3, White's rook on b3 now targets Black's pawn on b5. Rd6 — Newly attacks Black's pawn on a6 and Black's pawn on e6. Places the rook on the open d-file.  Rd6 through its checkpoint: White gives up the original b2 pawn.\n\nRa3 — after Rc6, Rc2+ is answered by Kg3, which moves the king out of check. Rb3 is the observed checkpoint.\n\nRd6 — after a5: moves the attacked pawn away. Kf3: in this continuation, White's rook on d4 works on the open d-file. The pawns on b4 and b5 are doubled and isolated.",
+  "live_ko": "Ra3 — 흑 a6 폰을 새로 공격합니다. 제시된 수순에서 원래 d3의 룩이 Ra3 … Rb3로 재배치됩니다. Rb3 뒤 백 b3 룩이 흑 e2 룩에게 공격받는 백 b2 폰을 지킵니다. 이후 Rb3 수로 백 b3 룩이 흑 b5 폰을 새로 공격합니다. Rd6 — 흑 a6 폰, 흑 e6 폰을 새로 공격합니다. 룩을 열린 d 파일에 배치합니다.  Rd6 수순의 비교 시점까지 백의 b2 폰을 내줍니다.\n\nRa3 — Rc6 뒤, Rc2+에는 Kg3로 킹이 체크를 피합니다. Rb3까지 기록되어 있습니다.\n\nRd6 — a5: 공격받던 원래 a6의 폰을 피합니다. Kf3까지의 수순에서는 백 d4 룩은 열린 d 파일에서 활동합니다. b4·b5에 고립된 더블폰이 남습니다.",
+  "final_ko": "Ra3 — 흑 a6 폰을 새로 공격합니다. 제시된 수순에서 원래 d3의 룩이 Ra3 … Rb3로 재배치됩니다. Rb3 뒤 백 b3 룩이 흑 e2 룩에게 공격받는 백 b2 폰을 지킵니다. Rb3 뒤 백 b3 룩이 흑 b5 폰을 새로 공격합니다. Rd6 — 흑 a6 폰, 흑 e6 폰을 새로 공격합니다. 룩을 열린 d 파일에 배치합니다.  Rd6 수순의 비교 시점까지 백의 b2 폰을 내줍니다.\n\nRa3 — Rc6 뒤, Rc2+에는 Kg3로 킹이 체크를 피합니다. Rb3까지 기록되어 있습니다.\n\nRd6 — a5: 공격받던 원래 a6의 폰을 피합니다. Kf3까지의 수순에서는 백 d4 룩은 열린 d 파일에서 활동합니다. b4·b5에 고립된 더블폰이 남습니다."
+}

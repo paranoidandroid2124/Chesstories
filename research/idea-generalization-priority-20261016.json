@@ -1,0 +1,144 @@
+{
+  "status": "active_unachieved",
+  "phase": "causal-choice-priority-and-late-beneficiary",
+  "started_utc": "2026-10-16T00:11:05.711035+00:00",
+  "previous_goal_turn": "progress: common reply selection and latent-action scheduling changed; unused Rc7 exposed early-duty priority.",
+  "baseline": "target/research-runs/idea-generalization-priority-20261016/baseline.json",
+  "previous_record": "research/idea-generalization-hypotheses-20261016.json",
+  "constraints": {
+    "depth_max": 18,
+    "request_budget_ms": 20000,
+    "live_cases": [
+      "Rc7 development",
+      "Shaw-Hebden 12...Bf6 preregistered unused"
+    ],
+    "completion": "Original multi-type goal remains active; neither one case nor tests constitutes completion."
+  },
+  "research": {
+    "source": "Aagaard Grandmaster Preparation: Positional Play, cached G Drive PDF",
+    "drive_id": "1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pages": [
+      93,
+      94,
+      99,
+      100
+    ],
+    "lesson": "Piece activity must be read with opponent resources, follow-on roles, and the original structural cost. Earlier first-use priority fixed exchanged-purpose loss in Qa4; reversing it to a late-move preference would reintroduce that failure. Compare the cause and relevant role rather than time or survival alone."
+  },
+  "heldout_preregistration": {
+    "game": "John Shaw - Mark Hebden, Liverpool 2006",
+    "pdf_pages": [
+      99,
+      100
+    ],
+    "fen_before": "r1bq1rk1/1pp2pbn/n2p2p1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R b KQ - 0 12",
+    "played_uci": "g7f6",
+    "fen_after": "r1bq1rk1/1pp2p1n/n2p1bp1/p2Pp3/2P1P1P1/2N1B3/PP1NBP2/R2QK2R w KQ - 1 13",
+    "rights_evidence": "Diagram plus move count: White has used all twelve moves for seven pawn moves (c4, d4, d5, e4, g4, h3, hxg4) and five development moves (Nc3, Nf3-Nd2, Be2, Be3). Both rooks and king remain unmoved. The printed continuation also castles queenside. Black is already castled.",
+    "expected_concepts": "Bishop route toward f4 addresses dark squares and enables the h7 knight to join from g5 after the bishop moves/exchanges. Opponent g-pawn activity, actual alternative purpose and response costs remain essential; no book verdict or exact continuation is forced.",
+    "selected_before_new_product_output": true,
+    "no_fixture_contains_position": true,
+    "first_failure_must_be_retained": true
+  },
+  "implementation": [
+    "Shared activity selection may replace an incidental same-piece defensive duty with an independently observed root-enabled beneficiary; existing witnessed attack, exchange, support task and control-change purpose retain priority.",
+    "A delayed beneficiary is a typed question carrying physical original identity, root clearance/support, entry, whole route and owned independent survey. Immediate activities retain their existing reply account.",
+    "Both replies are read for the same beneficiary: complete use and partial route are distinct; a partial route never borrows a later use from another reply.",
+    "The scheduler accepts a complete independent reply pair for this activity without requiring one geometric challenge class per reply.",
+    "Shared root clearance and exactly previously described activity are rendered once while original proof references and costs remain.",
+    "The web boundary separately reconstructs identity, clearance or support, route, meaningful use and full legal search scope."
+  ],
+  "development_failures": [
+    "Unconditional causal-activity priority displaced already witnessed Nb1 and h3 purposes and diverted Be7/e5 answer selection; corrected by preserving existing meaningful functions and limiting the new question to delayed beneficiaries.",
+    "Root-PV source tied with the independent survey and prevented reply ownership; delayed questions now derive from the independent survey itself.",
+    "Immediate e5 activity gained redundant separate functional paragraphs; it remains on the existing capture/beneficiary reply account.",
+    "Completion based on any observed functional read shortened old Ng8 replay unexpectedly; the new completion criterion is applied only to the new typed delayed activity."
+  ],
+  "checks_before_live": {
+    "runtime_28_passed": true,
+    "after_final_rendering_change": "four relevant idea checks and four purpose/concision checks passed",
+    "web_delivery_checks_passed": 12,
+    "typecheck": "passed",
+    "normal_update": "passed, 66 standalone source inputs; no Lila/research cache",
+    "frozen_product_files": 109
+  },
+  "rc7_live": {
+    "elapsed_ui_seconds": 5.63,
+    "actual_pair": [
+      "c5",
+      "Rc7"
+    ],
+    "result": "below target: the new live unrestricted survey has no Nc8-Nd6-Nf5; basic commentary again selects Rd7 guarding d5. The saved earlier survey improvement is not counted as fresh success.",
+    "all_depths": 11,
+    "unrestricted_reply_paths": [
+      [
+        "Rc7",
+        "Bf4",
+        "Rb7",
+        "Re1",
+        "Bf6",
+        "Qe3",
+        "Bg7",
+        "Qd2",
+        "Qe7",
+        "Bd1",
+        "Nd7"
+      ],
+      [
+        "Rc7",
+        "Rad1",
+        "Bg5",
+        "Rg3",
+        "Bf6",
+        "Bf4",
+        "Rb7",
+        "Rdd3"
+      ],
+      [
+        "Rc7",
+        "Re1",
+        "Bg5",
+        "Rg3",
+        "Bf6",
+        "Rg4"
+      ]
+    ],
+    "no_favorable_rerun": true,
+    "board_link_checked": "20...Rd7"
+  },
+  "heldout_first_result": {
+    "game": "Shaw-Hebden 12...Bf6",
+    "elapsed_ui_seconds": 2.14,
+    "actual_pair": [
+      "Bf6",
+      "Nc5"
+    ],
+    "result": "partial failure: bishop Bg5 and the actual exchange cost reach basic commentary. Independent Qc1 line contains h7-g5 knight activity supported by Bf6, but that different beneficiary is omitted. Nf1-Bg5 repeats the chosen bishop task.",
+    "same_source_not_tuned": true,
+    "new_case_not_reclassified_as_development_success": true
+  },
+  "remaining_common_bottlenecks": [
+    {
+      "problem": "An absent long activity cannot become a tested root-clearance hypothesis. MoveIntent still starts the candidate action immediately after the first reply and usually requires a contact at that action.",
+      "evidence": "Rc7 live has neither Nc8 nor Nf5 in the actual unrestricted report; saved-report success cannot substitute it."
+    },
+    {
+      "problem": "One purpose is selected for the whole root before different response functions are compared. Preserving the original meaningful attack avoids prior regressions, but can suppress a different root-enabled beneficiary under the strongest reply.",
+      "evidence": "Bf6: chosen Bg5 bishop pressure; omitted Qc1 ...Ng5 knight activity."
+    },
+    {
+      "problem": "Observed causal use and demonstrated importance to the engine evaluation remain different.",
+      "evidence": "Neither the useful saved Rc7 route nor the Bf6 contact list establishes why it is the central plan across replies."
+    }
+  ],
+  "next_work": {
+    "focus": "Keep root opportunities and each independently observed reply realization together before selecting the explanatory core; include bounded absent-clearance inquiries without overwriting the actual root verdict or transplanting PVs.",
+    "preserve": "Earlier Qa4 first-use/exchanged-function rule, actual alternatives, costs, source ownership and separate first failures.",
+    "avoid": "Do not add Rc7/Bf6/FEN branches, prefer late surviving moves blindly, add another favorable live rerun, or declare release quality."
+  },
+  "outputs": {
+    "screens": "research/idea-generalization-priority-20261016/screen-evidence.json",
+    "same_report": "research/idea-generalization-priority-20261016/same-report-reading.json",
+    "raw_reports": "research/idea-generalization-priority-20261016/live-reports.json.gz"
+  }
+}

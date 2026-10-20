@@ -151,17 +151,21 @@ object RuntimeProtocol:
             .getOrElse(Json.obj())
     }
 
-  /** A pending first-response work needs its exact root/child inventories and
+  /** A pending response work needs its exact root/prefix inventories and
     * receipts, not every future position catalogue or rendered explanation.
     * Omitted future catalogues have explicit null resource references. Full
     * paths, scores and material summaries retain their original identities. */
   private[runtime] def responseWorkObservationsJson(packet: EvidenceBackedJudgmentPacket,
       paths: ObservedLineProtocol.PreparedPaths, inquiries: List[CommentaryResponseInquiry],
-      searches: List[TargetResponseInvestigation.Search]): JsObject =
+      searches: List[TargetResponseInvestigation.Search], pending: Option[EngineSearchAnchor] = None): JsObject =
     paths.requireOwner(packet)
     require(searches.forall(_.belongsTo(packet)))
+    val purposeQuestion = MovePurpose.observedQuestion(packet, paths, searches)
     val positions = inquiries.flatMap(value => List(value.question.rootPositionId, value.question.childPositionId)).toSet ++
-      searches.map(_.anchor.positionId) ++ paths.movePurpose.toList.flatMap(_.resourcePositions)
+      searches.map(_.anchor.positionId) ++ purposeQuestion.toList.flatMap(_.resourcePositions) ++
+      paths.moveIntent.toList.flatMap(_.root.positions.take(3).flatMap(_.id)) ++
+      pending.toList.flatMap(anchor => paths.paths.filter(path => path.ids.headOption.contains(anchor.rootOccurrenceId) &&
+        path.moves.startsWith(anchor.prefixMoves)).flatMap(_.positions.take(anchor.plyOffset + 1).flatMap(_.id)))
     val conditional = searches.flatMap(search => search.lines.map { line =>
       search.pathsByMove(line.evaluation.moves.head).line.ref.id ->
         Json.obj("search_position_id" -> search.anchor.positionId, "ply_offset" -> search.anchor.plyOffset,
@@ -171,7 +175,8 @@ object RuntimeProtocol:
       "response_searches" -> searches.map(_.json),
       "response_inquiries" -> inquiries.map(inquiry => TargetResponseInvestigation.snapshot(inquiry.question,
         inquiry.state, inquiry.answer.map(_.json), inquiry.stopReason))) ++
-      paths.movePurpose.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj())
+      purposeQuestion.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj()) ++
+      MoveIntent.questionJson(packet, paths, searches).map(q => Json.obj("preparation_question" -> q)).getOrElse(Json.obj())
     Json.obj("statements" -> Json.arr(),
       "paths" -> observationPathsJson(packet, paths, conditional, Some(positions)),
       "positions" -> packet.resources.filter(view => view.position.id.exists(positions)).map(PositionResourceProtocol.json),
@@ -291,6 +296,7 @@ object RuntimeProtocol:
       "state" -> point.state.toString.toLowerCase, "premise_ids" -> point.premises.map(_.id))
     val ctx = packet.assembly
     val preparedPaths = prepared.getOrElse(ObservedLineProtocol.prepare(packet))
+    val purposeQuestion = MovePurpose.observedQuestion(packet, preparedPaths, responseSearches)
     preparedPaths.requireOwner(packet)
     val eligible = preparedPaths.eligible
     val resources = packet.resources
@@ -571,7 +577,7 @@ object RuntimeProtocol:
             roots, card.answer.engineProfile, depth)
             .map(value => MoveWorkProjection.Context("", anchoredChoice = Some(value))))
       yield context
-      val purpose = Option.when(preparedPaths.movePurpose.nonEmpty)(MoveWorkProjection.Context("", purposeSearches = responseSearches,
+      val purpose = Option.when(purposeQuestion.nonEmpty || preparedPaths.moveIntent.nonEmpty)(MoveWorkProjection.Context("", purposeSearches = responseSearches,
         purposeRoots = rootSearches.filter(_.stopReason.isEmpty).flatMap(_.receipt)))
       val composed = projection.withSharedMoveEffects((candidate -> (rootContext ++ functional ++ anchored ++ purpose)) :: peers.map(other =>
         other -> contexts((other \ "id").as[String])))
@@ -591,7 +597,8 @@ object RuntimeProtocol:
     // The automatic first-reply account is already complete. Optional long-PV
     // cards need not run their separate prose pipelines to deliver that core;
     // full paths and material records remain in observations.
-    val directPurpose = (firstTargets.nonEmpty || preparedPaths.movePurpose.nonEmpty && responseSearches.nonEmpty) &&
+    val directPurpose = (firstTargets.nonEmpty || preparedPaths.moveIntent.nonEmpty ||
+      purposeQuestion.nonEmpty && responseSearches.nonEmpty) &&
       proposalEntries.isEmpty && inquiries.isEmpty && continuationInquiries.isEmpty
     val additions = if directPurpose then Nil else questionComparisons ++ (pvComparisons.map(value => withFreshEffects(value.candidateJson(packet))) ++
       targetReadings.map(_.candidateJson(packet))).map(withTrajectories) ++
@@ -615,7 +622,9 @@ object RuntimeProtocol:
     // A retained inquiry may outlive the PV comparison that originally ordered
     // it. Its lifecycle stays intact; public links must name current candidates.
     val orderingCandidates = pvComparisons.filter(_.eligibleQuietFocus).map(_.id).toSet
-    val selection = compared ++ preparedPaths.movePurpose.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj()) ++
+    val selection = compared ++ purposeQuestion.map(q => Json.obj("purpose_question" -> q.json)).getOrElse(Json.obj()) ++
+      MoveIntent.questionJson(packet, preparedPaths, responseSearches)
+        .map(q => Json.obj("preparation_question" -> q)).getOrElse(Json.obj()) ++
       Option.when(proposalEntries.nonEmpty || localExpansionsUsed > 0 || discovery.nonEmpty)(Json.obj(
         "proposals" -> CommentaryProposal.snapshots(proposalEntries, _.explanation(packet, preparedPaths), preparedPaths.notation.line),
       "local_expansions_used" -> localExpansionsUsed)).getOrElse(Json.obj()) ++
@@ -717,7 +726,7 @@ object RuntimeProtocol:
       (selection \ "candidates").as[List[JsObject]].flatMap(candidate =>
         referredPositions((candidate \ "detail").get)) ++
       preparedPaths.paths.flatMap(_.positions.take(4).flatMap(_.id)) ++
-      preparedPaths.movePurpose.toList.flatMap(_.resourcePositions))
+      purposeQuestion.toList.flatMap(_.resourcePositions))
     val publishedSelection = publishedPositions.fold(selection)(ids => selection + ("candidates" ->
       Json.toJson((selection \ "candidates").as[List[JsObject]].map(candidate =>
         candidate + ("position_ids" -> Json.toJson((candidate \ "position_ids").as[List[String]].filter(ids)))))))

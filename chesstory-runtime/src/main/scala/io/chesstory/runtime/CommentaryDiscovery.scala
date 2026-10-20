@@ -9,7 +9,7 @@ private[runtime] object CommentaryDiscovery:
   import CommentaryProposal.*
   import ObservedLineProtocol.{PreparedPath, PreparedPaths}
 
-  val GeneratorVersion = "32"
+  val GeneratorVersion = "35"
 
   final case class Anchor(prefixMoves: List[String], referenceMove: String)
   final case class SourcePath(moves: List[String], source: Source,
@@ -951,11 +951,13 @@ private[runtime] object CommentaryDiscovery:
                       replays += moves
                       pending += moves
                     current
-                  def sameResource(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
+                  def sameMover(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
                     a.move == b.move && left.original(a.actor).nonEmpty &&
                       left.original(a.actor) == right.original(b.actor) &&
-                      a.capture.flatMap(left.original) == b.capture.flatMap(right.original) &&
                       a.promotionRole == b.promotionRole
+                  def sameResource(left: Board, right: Board, a: LegalMoveResource, b: LegalMoveResource): Boolean =
+                    sameMover(left, right, a, b) &&
+                      a.capture.flatMap(left.original) == b.capture.flatMap(right.original)
                   def emitFunction(condition: Predicate, leftMoves: List[String], rightMoves: List[String],
                       effect: Predicate, option: LegalMoveResource, at: Board, refs: List[String],
                       price: Option[(LegalMoveResource, Board)] = None,
@@ -1013,7 +1015,7 @@ private[runtime] object CommentaryDiscovery:
                       canonical, pair :: (facts ++ task :+ context), List(context.id), Some(alternativeMove),
                       additionalHeads = Option.when(task.nonEmpty)(List("function_task_context")).toList,
                       question = Some((if price.isEmpty then
-                        "Which already possible reply remains usable against this same conditional resource? " else
+                        "Which concrete reply remains or becomes usable against this same conditional resource? " else
                         "Which same legal capture has a different immediate price after this conditional resource? ") +
                         "The root-owned condition and the legal response are separate from the resource's strength and the whole evaluation."))
 
@@ -1028,7 +1030,11 @@ private[runtime] object CommentaryDiscovery:
                       val checkedAlternative = alternative.view.checkingMoves.toList.flatten.map(_.move).toSet
                       alternativeRows.filter(row => checkedAlternative(row.move) && !checkedReference(row.move))
                         .sortBy(_.move).foreach { enemy =>
-                          referenceRows.find(row => sameResource(reference, alternative, row, enemy)).foreach { _ =>
+                          // The same checking move may cease to be a capture
+                          // when the alternative has already moved its victim.
+                          // Capture/recapture comparisons below still require
+                          // the same victim; only the checking tempo differs here.
+                          referenceRows.find(row => sameMover(reference, alternative, row, enemy)).foreach { _ =>
                             val leftMoves = referencePrefix :+ enemy.move
                             val rightMoves = alternativePrefix :+ enemy.move
                             for
@@ -1036,14 +1042,25 @@ private[runtime] object CommentaryDiscovery:
                               right <- functionalBoard(rightMoves)
                               if value(left, Predicate("check", side = Some(side))).value.contains("absent") &&
                                 value(right, Predicate("check", side = Some(side))).value.contains("present")
-                              goal <- observedActions.filter(goal => goal.actor.side == side && goal.actor.role != "king" &&
-                                value(root, goal.predicate).value.contains("legal") &&
+                              // Moving the front of a relative pin can expose
+                              // its rear piece; a checking tempo may forbid that capture.
+                              exposed = root.path.toList.flatMap(path => prepared.purposePosition(path, 0).toList
+                                .flatMap(position => left.view.legalRows.toList.flatten.flatMap(row =>
+                                  action(left, row, canonical).filter(goal => goal.capture.nonEmpty &&
+                                    position.relativeAlignments(goal.actor.witness).exists { (_, front, rear) =>
+                                      alternative.original(enemy.actor).exists(_.witness == front) &&
+                                        goal.capture.exists(_.witness == rear)
+                                    }))))
+                              goal <- (exposed ++ observedActions.filter(goal =>
+                                value(root, goal.predicate).value.contains("legal"))).filter(goal =>
+                                goal.actor.side == side && goal.actor.role != "king" &&
                                 value(left, Predicate("location", Some(goal.actor))).value.nonEmpty &&
                                 value(left, Predicate("location", Some(goal.actor))).value ==
                                   value(right, Predicate("location", Some(goal.actor))).value &&
                                 value(left, goal.predicate).value.contains("legal") &&
                                 value(right, goal.predicate).value.contains("illegal"))
-                                .sortBy(goal => (goal.observedAt.getOrElse(MaximumPly), goal.predicate.json.toString)).take(1)
+                                .sortBy(goal => (if exposed.exists(_.predicate == goal.predicate) then 0 else 1,
+                                  goal.observedAt.getOrElse(MaximumPly), goal.predicate.json.toString)).take(1)
                               option <- left.view.legalRows.toList.flatten.find(row =>
                                 action(left, row, canonical).exists(_.predicate == goal.predicate))
                             do emitFunction(condition, leftMoves, rightMoves, Predicate("check", side = Some(side)),
@@ -1097,6 +1114,24 @@ private[runtime] object CommentaryDiscovery:
                     value(root, condition).value.nonEmpty && value(reference, condition).value.contains("present") &&
                       value(alternative, condition).value.contains("absent")
                   }
+                  // A root can open an unmoved ally's line against a quiet
+                  // opposing resource; neither a check nor a recapture is required.
+                  for
+                    (provider, destination, sourceId) <- ownedControls
+                    arrival <- referenceRows.filter(row => firstReplies(row.move) && row.to == destination &&
+                      row.capture.isEmpty && row.promotionRole.isEmpty)
+                    peer <- alternativeRows.find(row => sameResource(reference, alternative, arrival, row))
+                    enemy <- reference.original(arrival.actor) if enemy.role != "king" && enemy.side != provider.side
+                    leftMoves = referencePrefix :+ arrival.move
+                    rightMoves = alternativePrefix :+ peer.move
+                    left <- functionalBoard(leftMoves)
+                    right <- functionalBoard(rightMoves)
+                    effect = Predicate("legal_capture", Some(provider), Some(enemy))
+                    if value(left, effect).value.contains("legal") && value(right, effect).value.contains("illegal")
+                    option <- left.view.legalRows.toList.flatten.find(row =>
+                      action(left, row, canonical).exists(_.predicate == effect))
+                  do emitFunction(Predicate("control", Some(provider), square = Some(destination.key)),
+                    leftMoves, rightMoves, effect, option, left, List(sourceId, arrival.sourceId, option.sourceId))
                   if ownedControls.nonEmpty then referenceRows.filter(row => firstReplies(row.move) &&
                       row.capture.nonEmpty && row.promotionRole.isEmpty).foreach { capture =>
                     alternativeRows.find(row => sameResource(reference, alternative, capture, row)).foreach { _ =>

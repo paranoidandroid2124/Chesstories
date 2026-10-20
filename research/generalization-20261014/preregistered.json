@@ -1,0 +1,90 @@
+{
+  "created_utc": "2026-10-13T15:29:29.501614+00:00",
+  "product_code_modified": false,
+  "fresh_engine_output_seen": false,
+  "minimum_finish_utc": "2026-10-13T20:10:49Z",
+  "source": {
+    "drive_id": "1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "pdf_sha256": "eb5e3c4a4c0216515f2760ec8d69ff399318caca62704bd70000b84e5b0356e1",
+    "fen_method": "Manual transcription of rendered diagrams; Ganguly from book opening sequence. Legal board and played SAN validated. Halfmove clocks reset to zero where historical value unknown; no repetition claims."
+  },
+  "fresh_cases": [
+    {
+      "id": "vaulin-bd7",
+      "split": "development",
+      "game": "Vaulin–Prandstetter, Pardubice 1996",
+      "fen": "r1b2rk1/pp2q1pp/2p1pn2/3p4/2PP4/1P2PRP1/PQN3BP/R5K1 b - - 0 17",
+      "san": "Bd7",
+      "played_uci": "c8d7",
+      "resulting_fen": "r4rk1/pp1bq1pp/2p1pn2/3p4/2PP4/1P2PRP1/PQN3BP/R5K1 w - - 1 18",
+      "pdf_page": 71,
+      "book_question_not_automatic_truth": "Quiet bishop redeployment and rook route release; distinguish later e8–g6–e4 plan from immediate d7 occupancy. Preserve any exchange price and reply that interrupts the route."
+    },
+    {
+      "id": "kozakov-f6",
+      "split": "development",
+      "game": "Kozakov–Topalovic, Varazdin 2003",
+      "fen": "r4rk1/1p1bbppp/1qn1p3/pN1pP3/Pn1P1P2/BP3N2/4B1PP/R2Q1R1K b - - 0 17",
+      "san": "f6",
+      "played_uci": "f7f6",
+      "resulting_fen": "r4rk1/1p1bb1pp/1qn1pp2/pN1pP3/Pn1P1P2/BP3N2/4B1PP/R2Q1R1K w - - 0 18",
+      "pdf_page": 73,
+      "book_question_not_automatic_truth": "Pawn lever can open f-file and bishop d7–e8–g6 route. Do not infer both purposes merely from destination. If the reply trades or closes the pawn contact, connect the changed piece function and price; e6 weakness is a book hypothesis, not an engine-certified loss."
+    },
+    {
+      "id": "ganguly-b4",
+      "split": "development",
+      "game": "Ganguly–Aagaard, Helsingor 2010",
+      "fen": "rnb2rk1/4q1pp/3bpn2/1p1pNp2/3P4/pP3NP1/P1Q1PPBP/R1B2RK1 b - - 1 14",
+      "san": "b4",
+      "played_uci": "b5b4",
+      "resulting_fen": "rnb2rk1/4q1pp/3bpn2/3pNp2/1p1P4/pP3NP1/P1Q1PPBP/R1B2RK1 w - - 0 15",
+      "pdf_page": 17,
+      "book_question_not_automatic_truth": "Missed prophylaxis: ...Ne4 and ...b4 differ if Bg5 pins the f6 knight. Explain the actual evaluation pair and observed prevention/permission, not the book verdict by authority."
+    },
+    {
+      "id": "kosintseva-rf3",
+      "split": "development",
+      "game": "Kosintseva–Mkrtchian, Jermuk 2012",
+      "fen": "5rk1/1pr1nppp/pq1Np3/3pP3/1P3P2/P2Q4/2P3PP/3R1R1K w - - 0 21",
+      "san": "Rf3",
+      "played_uci": "f1f3",
+      "resulting_fen": "5rk1/1pr1nppp/pq1Np3/3pP3/1P3P2/P2Q1R2/2P3PP/3R3K b - - 1 21",
+      "pdf_page": 126,
+      "book_question_not_automatic_truth": "Rook attack preparation vs pawn weakness: ...Qc6 attacks c2 and changes when c4 can be played; ...Nc8 challenges original Nd6. Preserve the opponent idea if observed, and do not call delayed c4 equivalent solely by reaching c4."
+    },
+    {
+      "id": "giri-e5",
+      "split": "held_out",
+      "game": "Giri–Aronian, Istanbul olympiad 2012",
+      "fen": "r1bq1r1k/1p3pp1/2p1p2p/p1P5/PbQP4/6P1/1P3PBP/RNR3K1 b - - 0 18",
+      "san": "e5",
+      "played_uci": "e6e5",
+      "resulting_fen": "r1bq1r1k/1p3pp1/2p4p/p1P1p3/PbQP4/6P1/1P3PBP/RNR3K1 w - - 0 19",
+      "pdf_page": 13,
+      "book_question_not_automatic_truth": "Central pawn lever: attack d4 and release c8 bishop. Accept current engine reference; retain actual d5/dxe5 response, pawn cost and resulting activity if observed. No claim of forced pawn recovery from the book alone."
+    },
+    {
+      "id": "gligoric-kg2",
+      "split": "held_out",
+      "game": "Gligoric–Unzicker, Bath 1973",
+      "fen": "3r1q1k/p1br2p1/1p2pnbp/2p5/P1N1P3/1P1B1PP1/1BQ4P/3R1RK1 w - - 0 30",
+      "san": "Kg2",
+      "played_uci": "g1g2",
+      "resulting_fen": "3r1q1k/p1br2p1/1p2pnbp/2p5/P1N1P3/1P1B1PP1/1BQ3KP/3R1R2 b - - 1 30",
+      "pdf_page": 124,
+      "book_question_not_automatic_truth": "Quiet king prophylaxis before Ne5: a change to potential checks/tempo must have an observed witness. Do not invent improved king safety from the destination or declare all continuations strategically equivalent."
+    }
+  ],
+  "historical_corpus": "Survey.scala fixed eight fixture files; 16 rows include repeated positions. Exact replay work mismatch is a recorded limitation, not license to transplant an old report. Counts reported as unique positions separately.",
+  "quality_axes": [
+    "Actual evaluated pair is the owner; neither book best move nor easier alternative replaces it.",
+    "Root purpose or explicitly bounded uncertainty is visible in basic commentary.",
+    "At least one observed reply and consequent function/role change are connected where present.",
+    "Selected captures, intervening checks, sacrificed material, lost current obligations, exact physical identity and finite-PV boundary remain covered.",
+    "Repeated facts are grouped by meaning and ownership, not string match, same role, or same square alone.",
+    "Compare same saved report before/after for length; actual browser read for quality and 10-second request behavior."
+  ],
+  "held_out_protocol": "Do not request engine output or inspect product commentary for held_out cases until a shared implementation has passed development checks. Any held-out failure stays recorded as held-out; later fixing it does not make it independent success.",
+  "scope_limit": "No requirement that every literary long plan fits D<=18/10sec. Any unsupported long-term purpose remains a failed/limited type; must not claim total generalized completion."
+}

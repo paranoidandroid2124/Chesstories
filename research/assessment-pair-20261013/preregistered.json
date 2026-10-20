@@ -1,0 +1,62 @@
+{
+  "schema_version": "chesstory.assessment-pair.v1",
+  "status": "active",
+  "started_utc": "2026-10-13T04:18:06Z",
+  "deadline_utc": "2026-10-13T08:48:06Z",
+  "limits": {
+    "minutes": 270,
+    "depth_max": 18,
+    "request_ms": 10000,
+    "quality_positions": 2
+  },
+  "objective": "Bind the actual assessed pair to substantive purpose, opponent-reply and post-exchange functional contrasts in the basic answer, beyond a special central-post reading.",
+  "source": "G:/내 드라이브/GoodNotes Sync/Chess/Custom/Boris Gelfand - Positional Decision Making in Chess - Reading Edition.pdf",
+  "source_pages": [
+    226,
+    227,
+    230,
+    231,
+    292,
+    293,
+    295,
+    361,
+    362
+  ],
+  "cases": [
+    {
+      "id": "existing",
+      "game": "Gelfand-Avrukh, Ramat Aviv 1999, 14...Bd5",
+      "required_pair": [
+        "Rb8",
+        "Bd5"
+      ],
+      "minimum": [
+        "The main explanation must describe Rb8 and Bd5 as the evaluated choices, without substituting Nd5.",
+        "Connect rook/bishop duty around the b-file and central exchanges to the actual reply and surviving pawn/piece activity.",
+        "Close Qxb3/dxc3 and Bxd5/Nxd5/Bxd4/exd4/Nxd5/Qxd5 if selected; do not invent a retained bishop or guaranteed advantage."
+      ]
+    },
+    {
+      "id": "new",
+      "game": "Cohn-Rubinstein, St Petersburg 1909, 19...Bxf3",
+      "fen": "3r4/pp2kppp/4p3/8/1PB1n1b1/P3PN2/5PPP/R3K3 b - - 2 19",
+      "played": "g4f3",
+      "pgn": "[White \"Erich Cohn\"]\n[Black \"Akiba Rubinstein\"]\n[Event \"St Petersburg\"]\n[Date \"1909.??.??\"]\n\n1.d4 d5 2.Nf3 c5 3.c4 dxc4 4.dxc5 Qxd1+ 5.Kxd1 Nc6 6.e3 Bg4 7.Bxc4 e6 8.a3 Bxc5 9.b4 Bd6 10.Bb2 Nf6 11.Nbd2 Ke7 12.Ke2 Be5 13.Bxe5 Nxe5 14.Rhc1 Rac8 15.Bb3 Rhd8 16.Nc4 Nxc4 17.Rxc4 Rxc4 18.Bxc4 Ne4 19.Ke1 Bxf3 *",
+      "selection": "Chosen from book page 230 before engine output. No matching name/position case found in the retained research index.",
+      "minimum": [
+        "Use the actual returned assessment reference, even if it differs from the book.",
+        "Explain why exchanging bishop for knight changes the pawn structure and subsequent piece tasks, or explain the actual different response if the engine returns one.",
+        "Compare that commitment with the actual other root and its reply; pawn doubling alone is not proof of a win, and the later historical won pawn ending must not be imported into the short PV."
+      ]
+    }
+  ],
+  "completion": "Both actual basic screens must explain both assessed roots, their actual replies and surviving function/cost difference within the short budget. Tests or additional sentences alone do not count. If unmet, report incomplete.",
+  "prior_failures": [
+    "startup-update-20261013.json",
+    "evaluation-reference-20261013.json",
+    "choice-neutralization-20261012.json",
+    "repeated-work-review-20261011.json",
+    "basic-purpose-20261005/result.json"
+  ],
+  "preservation": "13 pre-existing dirty files copied with SHA-256 and original bytes to target/research-runs/assessment-pair-20261013/before-changes.zip; prior text is not rewritten."
+}

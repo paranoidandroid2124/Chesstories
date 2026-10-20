@@ -60,6 +60,18 @@ class TargetResponseInvestigationTest extends munit.FunSuite:
     assert((candidate \ "state").toOption.isEmpty)
     (candidate \ "detail" \ "branches").as[List[JsObject]]
 
+  test("a recorded alternative to recapturing is complete, but a missing own continuation is not"):
+    val decline = List("d2d3", "d8d7", "f3g5")
+    for own <- List(Nil, List("f3g5")) do
+      val capture = List("d2d3", "d5e4") ++ own
+      val source = packet(support, "d2d3", List(capture, decline))
+      val q = requestedPair(source, "d2d3", "d5e4", "d8d7")
+      val result = reading(source, q, capture, decline)
+      val first = branches(result, source).head
+      assert((first \ "recaptures" \ "moves").as[List[JsObject]].nonEmpty)
+      assertEquals((first \ "observed_recapture" \ "state").as[String], "not_observed")
+      assertEquals(result.complete, own.nonEmpty)
+
   test("owned child answers use the child mover and calibrate reply prose without changing raw answer states"):
     import CommentaryProposal.*
     import PrincipalVariationComparison.QualityBand

@@ -1,0 +1,122 @@
+{
+  "status": "active",
+  "phase": "causal function selection",
+  "started_utc": "2026-10-15T22:16:43.971214+00:00",
+  "previous_phase": "idea-generalization-20261016.json",
+  "baseline": "target/research-runs/idea-generalization-causal-20261016/baseline.json",
+  "development_cases": [
+    "ciuksyte-be7 (first independent failure remains unchanged)",
+    "previous Ng8/Nb1/Nxd4 and Re2/Qa4 exact reports only"
+  ],
+  "heldout": {
+    "id": "gelfand-e5",
+    "game": "Boris Gelfand - Tomasz Markowski, Polanica Zdroj 1998",
+    "fen": "r1b3k1/pp1n3p/2pp1rp1/8/1PP1P3/2N3P1/P5P1/3RRBK1 w - - 1 22",
+    "move": "e4e5",
+    "resulting_fen": "r1b3k1/pp1n3p/2pp1rp1/4P3/1PP5/2N3P1/P5P1/3RRBK1 b - - 0 22",
+    "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "prefix_uci": [
+      "d2d4",
+      "d7d6",
+      "g1f3",
+      "g8f6",
+      "c2c4",
+      "g7g6",
+      "b1c3",
+      "f8g7",
+      "e2e4",
+      "e8g8",
+      "f1e2",
+      "b8a6",
+      "e1g1",
+      "e7e5",
+      "f1e1",
+      "c7c6",
+      "e2f1",
+      "e5d4",
+      "f3d4",
+      "f6g4",
+      "h2h3",
+      "d8b6",
+      "h3g4",
+      "b6d4",
+      "d1f3",
+      "d4e5",
+      "g4g5",
+      "e5e7",
+      "f3g3",
+      "a6c5",
+      "c1f4",
+      "g7e5",
+      "a1d1",
+      "f7f6",
+      "g5f6",
+      "f8f6",
+      "f4e5",
+      "e7e5",
+      "b2b4",
+      "e5g3",
+      "f2g3",
+      "c5d7"
+    ],
+    "source_pdf_page": 80,
+    "source": "Aagaard, Grandmaster Preparation: Positional Play",
+    "criterion": "Explain the pawn advance as clearing a useful square/route for the knight if the actual returned play supports it; compare the actual engine alternative and replies, preserve the pawn cost and delayed use. Do not impose the book continuation or use a future target list as the idea.",
+    "unopened": false,
+    "first_result": {
+      "status": "failed",
+      "screen_elapsed_s": 1.64,
+      "reason": "Pending response recheck was serialized as an answered inquiry after its first survey; the screen correctly rejected the inconsistent lifecycle.",
+      "evidence": "idea-generalization-causal-20261016/gelfand-e5-independent-screen.png"
+    },
+    "after_first_result": "First lifecycle-only fix delivered the first article, which exposed that legal recaptures incorrectly gated all reply explanations. e5 was then used for the common non-recapture completeness fix and remains a development case; first independent result stays failed."
+  },
+  "constraints": {
+    "maximum_depth": 18,
+    "live_request_ms": 20000,
+    "live_positions_this_phase": [
+      "Be7",
+      "gelfand-e5"
+    ],
+    "independence": "No product output for Gelfand e5 before a source freeze. Preserve a first failure; do not add a replacement position in this phase."
+  },
+  "initial_failure": "Be7 observations already contain blocking f8-c5 support, but purpose does not connect it to h6/Qxc5; late capture completion is appended separately.",
+  "outcome": "partial; generalization not achieved",
+  "last_updated_utc": "2026-10-15T22:43:22.861337+00:00",
+  "implementation": [
+    "Shared ControlUse joins root capture/exchange or quiet control interruption to an actual later use, with physical identity, restored-control rejection, remaining attacks, and independently surveyed response witnesses.",
+    "Root and reply explanation retain the same use receipt. Material completion closes only certified adjacent trades in the original cost paragraph.",
+    "Recorded non-recapture choices are complete observations when their legal recapture inventory is known; missing continuation or unknown actual recapture support is still incomplete. Server and frontend validate independently.",
+    "A selected recheck accurately marks the question pending while prior search receipts remain available. The corrected non-recapture reader completes e5 from the first survey, so the historical extra work is no longer issued."
+  ],
+  "checks": {
+    "runtime": 23,
+    "frontend": 7,
+    "typecheck": "passed",
+    "normal_start_and_build": "passed",
+    "depth_limit": 18,
+    "issued_live_depths": [
+      11
+    ],
+    "full_regression": false
+  },
+  "screens": "idea-generalization-causal-20261016/screen-evidence.json",
+  "same_report_history": "idea-generalization-causal-20261016/same-report-reading.json",
+  "preservation": "idea-generalization-causal-20261016/preservation-check.json",
+  "remaining": [
+    "Select the main evaluation-relevant idea among true functional facts rather than treat every real function as equally explanatory.",
+    "Both assessed roots still do not always receive a meaningful long-term purpose; Ng8 importance and Nb1 alternative Rdg1 remain unresolved.",
+    "Be7 and e5 improve after common fixes, but e5 first failed and subsequently informed the non-recapture completeness fix. No independent passing case is claimed.",
+    "Response paragraphs still contain repeated local functions and prices. No guarantee of all-position quality or twenty-second reliability."
+  ],
+  "book_reference": {
+    "title": "Aagaard: Grandmaster Preparation, Positional Play",
+    "pdf_pages": [
+      79,
+      80
+    ],
+    "drive_id": "1wetMIOy6rrHBhN56krUonQig1lgk6oqN",
+    "cached_pdf": "target/research-runs/generalization-20261014/positional-play.pdf",
+    "sha256": "eb5e3c4a4c0216515f2760ec8d69ff399318caca62704bd70000b84e5b0356e1"
+  }
+}

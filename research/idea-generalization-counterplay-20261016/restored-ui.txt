@@ -1,0 +1,76 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	1 container app
+		2 container
+			3 text Chesstories
+			4 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				5 menu
+					6 (selected) 한국어
+					7 English
+			8 button 어둡게
+		9 container
+			10 container 체스판과 기보
+				11 heading 분석 기보, Value: 1
+					12 text 분석 기보
+				318 text 시작 국면
+				289 container
+					290 image
+					291 image
+					292 image
+					293 image
+					294 text 1
+					295 text 2
+					296 text 3
+					297 text 4
+					298 text 5
+					299 text 6
+					300 text 7
+					301 text 8
+					302 text A
+					303 text B
+					304 text C
+					305 text D
+					306 text E
+					307 text F
+					308 text G
+					309 text H
+				35 container 기보 이동
+					36 button (disabled) 처음
+					37 button (disabled) 이전 수
+					38 button 다음 수
+					39 button 마지막
+					40 button 방향 전환
+				41 container
+					42 text field (settable) 수 입력
+					43 button 두기
+				44 container
+					45 heading Engine reference, Value: 2
+						46 text Engine reference
+					47 checkbox Engine / Off, Value: 0
+					48 text Off · Stockfish 18 · 2 threads
+				49 container
+					50 heading 기보, Value: 2
+						51 text 기보
+					52 button PGN 저장
+					53 button 1. e4
+				323 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					324 text PGN · FEN 불러오기
+				56 container
+					57 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						58 text 현재 FEN
+			59 container 해설
+				60 heading 이 수의 의미, Value: 2
+					61 text 이 수의 의미
+				62 button (disabled) 해설 · 20초
+				319 text 기보에서 수를 고르거나 판 위에 수를 두세요.
+				64 container 직전 수 리뷰
+					65 container
+						66 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							67 text 직전 수 리뷰
+					320 heading 아직 리뷰할 수가 없습니다, Value: 3
+						321 text 아직 리뷰할 수가 없습니다
+					322 text 수를 두거나 기보에서 수를 선택하세요.
+		71 container
+			81 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 323 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand

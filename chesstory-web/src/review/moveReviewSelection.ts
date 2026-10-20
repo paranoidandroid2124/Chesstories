@@ -121,6 +121,7 @@ export interface CommentarySelection {
   response_inquiries?: CommentaryResponseInquiry[];
   response_searches?: CommentaryResponseSearch[];
   purpose_question?: CommentaryPurposeQuestion;
+  preparation_question?: CommentaryPreparationQuestion;
   root_searches?: CommentaryRootSearch[];
   continuation_inquiries?: CommentaryContinuationInquiry[];
   proposals?: CommentaryProposal[];
@@ -130,6 +131,74 @@ export interface CommentarySelection {
   discovery?: CommentaryDiscovery;
 }
 
+/** A preparatory action owns a tested use after one reply. Its legal examples
+ * propose the idea; the child scores never replace the actual root assessment. */
+export interface CommentaryPreparationQuestion {
+  id: string;
+  root_move: Uci;
+  root_occurrence_id: string;
+  source_line_id: string;
+  reference_line_id: string;
+  use_move: Uci;
+  example_line_ids: string[];
+}
+
+function decodePreparationQuestion(raw: unknown, observations: MoveReviewObservations,
+  playedMove?: Uci): CommentaryPreparationQuestion | undefined {
+  if (!object(raw) || !exactKeys(raw, ['id', 'root_move', 'root_occurrence_id', 'source_line_id',
+    'reference_line_id', 'use_move', 'example_line_ids']) || raw.root_move !== playedMove ||
+    !['id', 'root_occurrence_id', 'source_line_id', 'reference_line_id'].every(key => id(raw[key])) ||
+    typeof raw.use_move !== 'string' || !/^[a-h][1-8][a-h][1-8]$/.test(raw.use_move) ||
+    !ids(raw.example_line_ids) || raw.example_line_ids.length < 1 || raw.example_line_ids.length > 2) return;
+  const root = observations.paths.find(p => p.id === raw.source_line_id);
+  const reference = observations.paths.find(p => p.id === raw.reference_line_id);
+  if (!root || !reference || root.moves.length < 3 || root.moves[0].uci !== playedMove ||
+    root.occurrenceIds[0] !== raw.root_occurrence_id || reference.moves[0]?.uci === playedMove ||
+    reference.startFen !== root.startFen || reference.positionIds?.[0] !== root.positionIds?.[0] ||
+    ![root, reference].every(p => p.evaluations?.some(e =>
+      ['root_search', 'focus_comparison', 'investigation_comparison'].includes(e.source))) ||
+    !observations.positions?.some(p => p.id === root.positionIds?.[2] && p.legal_moves.complete &&
+      p.legal_moves.moves.some(m => m.uci === raw.use_move))) return;
+  const examples = raw.example_line_ids.map(line => observations.paths.find(p => p.id === line));
+  if (!examples.every(p => p?.lineSummary?.material && [root, reference].some(owner =>
+    p.startFen === owner.startFen && p.positionIds?.[0] === owner.positionIds?.[0] &&
+    p.occurrenceIds[0] === owner.occurrenceIds[0] && p.moves[0]?.uci === owner.moves[0]?.uci)) ||
+    !examples[0] || !root.moves.slice(0, 2).every((move, n) => examples[0]!.moves[n]?.uci === move.uci) ||
+    examples[0].moves[2]?.uci !== raw.use_move) return;
+  return raw as unknown as CommentaryPreparationQuestion;
+}
+
+export function preparationResponseMovesMatch(question: CommentaryPreparationQuestion,
+  observations: MoveReviewObservations, prefix: readonly Uci[], moves: readonly Uci[]): boolean {
+  const root = observations.paths.find(p => p.id === question.source_line_id);
+  const reference = observations.paths.find(p => p.id === question.reference_line_id);
+  if (!root || !reference || prefix[0] !== question.root_move || prefix.length < 1 || prefix.length > 2 ||
+    !prefix.every((move, n) => root.moves[n]?.uci === move)) return false;
+  const at = observations.positions?.find(p => p.id === root.positionIds?.[prefix.length]);
+  if (!at?.legal_moves.complete) return false;
+  const legal = at.legal_moves.moves.map(m => m.uci);
+  const expected = prefix.length === 2
+    ? [question.use_move, root.moves[2].uci, ...[reference.moves[0].uci].filter(move => legal.includes(move))]
+    : legal;
+  const unique = [...new Set(expected)].sort();
+  return unique.length >= 2 && (prefix.length === 1 || unique.length <= 3) && moves.length === unique.length &&
+    moves.every(move => legal.includes(move)) && JSON.stringify([...moves].sort()) === JSON.stringify(unique);
+}
+
+interface CommentaryActivityPlan {
+  entry: number;
+  route: number[];
+  cause: 'cleared_square' | 'cleared_route' | 'new_support' | 'relocation' |
+    'reply_exchange' | 'reply_block' | 'reply_activity';
+  user: Pick<CommentaryInquiryPiece, 'side' | 'role' | 'square'>;
+  preparations?: number[];
+  control?: {
+    controller: Pick<CommentaryInquiryPiece, 'side' | 'role' | 'square'>;
+    change: number;
+    removed: boolean;
+  };
+}
+
 export interface CommentaryPurposeQuestion {
   id: string;
   root_move: Uci;
@@ -137,9 +206,11 @@ export interface CommentaryPurposeQuestion {
   child_position_id: string;
   source_line_id: string;
   use_move: Uci;
-  kind: 'supported_advance' | 'entry_route' | 'piece_pressure' | 'support_release' | 'exchange_activity';
+  kind: 'supported_advance' | 'entry_route' | 'piece_pressure' | 'support_release' | 'exchange_activity' | 'enabled_activity';
   square: string;
   challenge_moves: Uci[];
+  activity_plan?: CommentaryActivityPlan;
+  reply_activities?: (CommentaryActivityPlan & { line_id: string })[];
   activity?: {
     targets: Pick<CommentaryInquiryPiece, 'side' | 'role' | 'square'>[];
     offers: Uci[];
@@ -167,9 +238,9 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
   playedMove?: Uci, owned = false): CommentaryPurposeQuestion | undefined {
   if (!object(raw) || !exactKeys(raw, ['id', 'root_move', 'root_occurrence_id', 'child_position_id',
     'source_line_id', 'use_move', 'kind', 'square', 'challenge_moves',
-      ...(owned ? ['work_id', 'execution_key_sha256'] : [])], ['plan', 'support', 'activity', ...(owned ? ['choice'] : [])]) ||
+      ...(owned ? ['work_id', 'execution_key_sha256'] : [])], ['plan', 'support', 'activity', 'activity_plan', 'reply_activities', ...(owned ? ['choice'] : [])]) ||
     !['id', 'root_occurrence_id', 'child_position_id', 'source_line_id'].every(field => id(raw[field])) ||
-    raw.root_move !== playedMove || !['supported_advance', 'entry_route', 'piece_pressure', 'support_release', 'exchange_activity'].includes(String(raw.kind)) ||
+    raw.root_move !== playedMove || !['supported_advance', 'entry_route', 'piece_pressure', 'support_release', 'exchange_activity', 'enabled_activity'].includes(String(raw.kind)) ||
     typeof raw.square !== 'string' || !/^[a-h][1-8]$/.test(raw.square) ||
     typeof raw.use_move !== 'string' || !/^[a-h][1-8][a-h][1-8]$/.test(raw.use_move) ||
     raw.use_move.slice(2, 4) !== raw.square || !Array.isArray(raw.challenge_moves) || !raw.challenge_moves.length ||
@@ -182,6 +253,177 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
   if (!path || !before?.controls.complete || !after?.controls.complete || !after.legal_moves.complete ||
     !raw.challenge_moves.every(move => after.legal_moves.moves.some(row => row.uci === move))) return;
   const actor = after.controls.pieces.find(row => row.piece.square === playedMove?.slice(2, 4));
+  function newlySupported(line: ObservationPath, original: CommentaryInquiryPiece, destination: Key, through: number): boolean {
+    const provider = before?.controls.pieces.find(row => row.piece.square === playedMove?.slice(0, 2));
+    if (!actor || !provider || original.side !== actor.piece.side || original.square === provider.piece.square ||
+      through < 3 || through > 18) return false;
+    let direct = !provider.squares.includes(destination), following = !provider.squares.includes(original.square);
+    for (let count = 1; count <= through; count++) {
+      const board = observations.positions?.find(p => p.id === line.positionIds?.[count]);
+      const pieces = trackedPieces(line, count);
+      const supporter = pieces?.find(p => p.original.square === provider.piece.square &&
+        p.original.side === provider.piece.side && p.original.role === provider.piece.role)?.current;
+      const user = pieces?.find(p => samePiece(p.original, original))?.current;
+      if (!board?.controls.complete || !supporter || !user || supporter.square !== actor.piece.square ||
+        supporter.role !== actor.piece.role || supporter.side !== actor.piece.side) return false;
+      const controls = board.controls.pieces.find(row => row.piece.square === supporter.square &&
+        row.piece.role === supporter.role && row.piece.side === supporter.side)?.squares;
+      direct &&= Boolean(controls?.includes(destination));
+      following &&= Boolean(controls?.includes(user.square));
+      if (count === through && user.square !== destination) return false;
+    }
+    return direct || following;
+  }
+  function validActivity(plan: unknown, path: MoveReviewObservations['paths'][number], useMove: string, reply = false): boolean {
+    const opposing = object(plan) && ['reply_exchange', 'reply_block', 'reply_activity'].includes(String(plan.cause));
+    if (!actor || !before || !object(plan) ||
+      !exactKeys(plan, ['entry', 'route', 'cause', 'user', ...(reply ? ['line_id'] : [])], ['control', 'preparations']) ||
+      !Number.isInteger(plan.entry) || Number(plan.entry) < (opposing ? 1 : 2) ||
+      !Array.isArray(plan.route) || !plan.route.length || !plan.route.every(n =>
+        Number.isInteger(n) && n >= 0 && n < 18 && n % 2 === (opposing ? 1 : 0)) ||
+      !object(plan.user) || !exactKeys(plan.user, ['side', 'role', 'square']) ||
+      !['cleared_square', 'cleared_route', 'new_support', ...(reply ?
+        ['relocation', 'reply_exchange', 'reply_block', 'reply_activity'] : [])].includes(String(plan.cause))) return false;
+    const relocating = plan.cause === 'relocation';
+    if (plan.preparations !== undefined && (plan.cause !== 'cleared_route' ||
+      !Array.isArray(plan.preparations) || plan.preparations.length < 2 || plan.preparations[0] !== 0 ||
+      !plan.preparations.every((n, i, values) => Number.isInteger(n) && n >= 0 && n < Number(plan.entry) &&
+        (i === 0 || n > values[i - 1])))) return false;
+    if (relocating ? plan.route[0] !== 0 || plan.route[plan.route.length - 1] !== plan.entry :
+      plan.route[0] !== plan.entry) return false;
+    const user = plan.user;
+    const initial = before.controls.pieces.find(row => row.piece.square === user.square &&
+      row.piece.role === user.role && row.piece.side === user.side &&
+      (opposing ? row.piece.side !== actor.piece.side : row.piece.side === actor.piece.side) &&
+      (relocating ? row.piece.square === playedMove?.slice(0, 2) : row.piece.square !== playedMove?.slice(0, 2)));
+    const rootMove = before.legal_moves?.moves.find(row => row.uci === playedMove);
+    if (!initial || !rootMove || !relocating && !opposing && rootMove.captured_square &&
+      plan.preparations === undefined) return false;
+    const original = { ...initial.piece, position_id: before.id };
+    const resource = (count: number) => observations.positions?.find(p => p.id === path.positionIds?.[count]);
+    const current = (count: number) => trackedPieces(path, count)?.find(p => samePiece(p.original, original))?.current;
+    const entry = plan.entry as number, use = plan.route[plan.route.length - 1] as number;
+    const destination = path.moves[entry]?.uci.slice(2, 4) as Key;
+    const exactRoute = path.moves.flatMap((move, offset) => offset >= (relocating ? 0 : entry) && offset <= use &&
+      current(offset)?.square === move.uci.slice(0, 2) ? [offset] : []);
+    if (!destination || path.moves[use]?.uci !== useMove ||
+      JSON.stringify(exactRoute) !== JSON.stringify(plan.route)) return false;
+    if (opposing && plan.cause !== 'reply_activity') {
+      const control = plan.control;
+      if (!object(control) || !exactKeys(control, ['controller', 'change', 'removed']) ||
+        !object(control.controller) || !exactKeys(control.controller, ['side', 'role', 'square']) ||
+        !Number.isInteger(control.change) || Number(control.change) < 1 || Number(control.change) >= entry ||
+        control.removed !== (plan.cause === 'reply_exchange')) return false;
+      const subject = control.controller;
+      const controller = before.controls.pieces.find(row => row.piece.side === subject.side &&
+        row.piece.role === subject.role && row.piece.square === subject.square &&
+        row.piece.side === actor.piece.side);
+      if (!controller) return false;
+      const identity = { ...controller.piece, position_id: before.id };
+      const defender = (count: number) => trackedPieces(path, count)?.find(p => samePiece(p.original, identity))?.current;
+      const controls = (count: number) => resource(count)?.controls.pieces.find(row => {
+        const piece = defender(count);
+        return piece && row.piece.square === piece.square && row.piece.role === piece.role && row.piece.side === piece.side;
+      })?.squares.includes(destination);
+      if (!resource(1)?.controls.complete || !controls(1)) return false;
+      const change = Number(control.change), captured = resource(change)?.legal_moves.moves
+        .find(row => row.uci === path.moves[change]?.uci)?.captured_square;
+      if (control.removed) {
+        if (!defender(change) || captured !== defender(change)?.square || defender(change + 1)) return false;
+        for (let count = 1; count < entry; count++) {
+          const board = resource(count), move = board?.legal_moves.moves.find(row => row.uci === path.moves[count]?.uci);
+          const moving = board?.controls.pieces.find(row => row.piece.square === path.moves[count]?.uci.slice(0, 2));
+          const king = board?.controls.pieces.find(row => row.piece.side === moving?.piece.side && row.piece.role === 'king');
+          const checked = king && board?.controls.pieces.some(row => row.piece.side !== king.piece.side && row.squares.includes(king.piece.square));
+          if (!board?.controls.complete || !board.legal_moves.complete || !move || !move.captured_square && !checked) return false;
+        }
+      } else if (change !== 1 || !defender(2)) return false;
+      for (let count = change + 1; count <= entry; count++) {
+        if (!resource(count)?.controls.complete || controls(count) || control.removed && defender(count)) return false;
+      }
+    } else if (plan.control !== undefined || opposing && (entry !== 1 || use !== 1)) return false;
+    for (let count = 1; count <= use + 1; count++) {
+      const board = resource(count), piece = current(count);
+      if (!board?.controls.complete || !piece || (relocating || count > entry) && piece.square === original.square) return false;
+      if (count <= entry && ['cleared_square', 'cleared_route'].includes(String(plan.cause)) &&
+        board.controls.pieces.some(row => row.piece.square === playedMove?.slice(0, 2))) return false;
+    }
+    if (plan.cause === 'cleared_square' && destination !== playedMove?.slice(0, 2)) return false;
+    if (plan.cause === 'cleared_route') {
+      const from = current(entry)?.square, cleared = playedMove?.slice(0, 2);
+      if (!from || !cleared || !['bishop', 'rook', 'queen'].includes(original.role)) return false;
+      const dx = destination.charCodeAt(0) - from.charCodeAt(0), dy = Number(destination[1]) - Number(from[1]);
+      const bx = cleared.charCodeAt(0) - from.charCodeAt(0), by = Number(cleared[1]) - Number(from[1]);
+      if (!(dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) || dx * by !== dy * bx ||
+        Math.sign(bx) !== Math.sign(dx) || Math.sign(by) !== Math.sign(dy) ||
+        Math.max(Math.abs(bx), Math.abs(by)) >= Math.max(Math.abs(dx), Math.abs(dy)) || !(bx || by)) return false;
+      if (plan.preparations !== undefined) {
+        const corridor = Array.from({ length: Math.max(Math.abs(dx), Math.abs(dy)) }, (_, n) =>
+          String.fromCharCode(from.charCodeAt(0) + Math.sign(dx) * (n + 1)) +
+            (Number(from[1]) + Math.sign(dy) * (n + 1)));
+        const blockers = before.controls.pieces.filter(row => corridor.includes(row.piece.square));
+        if (!blockers.some(row => row.piece.square === cleared) ||
+          blockers.some(row => row.piece.side !== original.side)) return false;
+        const identities = blockers.map(row => ({ ...row.piece, position_id: before.id }));
+        const blockingPiece = (identity: typeof original, count: number) =>
+          trackedPieces(path, count)?.find(p => samePiece(p.original, identity))?.current;
+        const inRoute = (identity: typeof original, count: number) => {
+          const piece = blockingPiece(identity, count);
+          return Boolean(piece && corridor.includes(piece.square));
+        };
+        for (let count = 0; count <= entry; count++) {
+          const board = resource(count);
+          if (current(count)?.square !== from || !board?.controls.complete ||
+            board.controls.pieces.some(row => corridor.includes(row.piece.square) &&
+              !identities.some(identity => {
+                const piece = blockingPiece(identity, count);
+                return piece && piece.square === row.piece.square && piece.role === row.piece.role &&
+                  piece.side === row.piece.side;
+              }))) return false;
+        }
+        for (const identity of identities) {
+          let left = false;
+          for (let count = 1; count <= entry; count++) {
+            if (!inRoute(identity, count)) left = true;
+            else if (left) return false;
+          }
+          if (!left) return false;
+        }
+        const actual = Array.from({ length: entry }, (_, n) => n).filter(n => identities.some(identity => {
+          const before = blockingPiece(identity, n), after = blockingPiece(identity, n + 1);
+          return inRoute(identity, n) && before && (!after || before.square !== after.square ||
+            before.role !== after.role || before.side !== after.side);
+        }));
+        if (JSON.stringify(actual) !== JSON.stringify(plan.preparations)) return false;
+      }
+    }
+    if (plan.cause === 'new_support' && !newlySupported(path, original, destination, entry + 1)) return false;
+    const end = resource(use + 1), moved = current(use + 1);
+    const control = end?.controls.pieces.find(row => moved && row.piece.square === moved.square &&
+      row.piece.role === moved.role && row.piece.side === moved.side);
+    const meaningful = control && trackedPieces(path, use + 1)?.some(piece => piece.current &&
+      !samePiece(piece.original, original) && control.squares.includes(piece.current.square) &&
+      !initial.squares.includes(piece.original.square) && (piece.current.side !== original.side ||
+        end?.controls.pieces.some(row => row.piece.side !== original.side && row.squares.includes(piece.current!.square))));
+    return Boolean(meaningful || resource(use)?.legal_moves?.moves.find(row => row.uci === useMove)?.captured_square);
+  }
+  if (raw.reply_activities !== undefined) {
+    if (!Array.isArray(raw.reply_activities) || raw.reply_activities.length !== 2 ||
+      new Set(raw.reply_activities.map(a => object(a) && a.line_id)).size !== 2 ||
+      !raw.reply_activities.every(a => {
+        if (!object(a) || !Array.isArray(a.route)) return false;
+        const line = observations.paths.find(p => p.id === a.line_id && p.moves[0]?.uci === playedMove &&
+          p.occurrenceIds[0] === raw.root_occurrence_id && p.positionIds?.[1] === raw.child_position_id);
+        const use = line?.moves[a.route[a.route.length - 1]]?.uci;
+        return line && use && validActivity(a, line, use, true);
+      })) return;
+  }
+  if (raw.kind === 'enabled_activity') {
+    if (!actor || raw.plan !== undefined || raw.support !== undefined || raw.activity !== undefined ||
+      !validActivity(raw.activity_plan, path, raw.use_move)) return;
+    return raw as unknown as CommentaryPurposeQuestion;
+  }
+  if (raw.activity_plan !== undefined) return;
   if (raw.kind === 'exchange_activity') {
     if (!actor || ['pawn', 'king'].includes(actor.piece.role) || raw.plan !== undefined ||
       raw.support !== undefined || !object(raw.activity) ||
@@ -326,21 +568,34 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
         seed.moves.slice(0, (plan.use as number) + 1).every(move =>
           move.uci.slice(0, 2) !== target.square && move.uci.slice(2, 4) !== target.square) &&
         tracking?.some(piece => samePiece(piece.original, { ...target, position_id: before.id } as CommentaryInquiryPiece) &&
-          piece.original.side !== original.side && piece.current && control.squares.includes(piece.current.square) &&
+          piece.current && control.squares.includes(piece.current.square) &&
           !actor.squares.includes(piece.original.square) &&
-          !before.controls.pieces.find(row => samePiece({ ...row.piece, position_id: before.id }, original))
-            ?.squares.includes(piece.original.square)))) return;
+          (piece.original.side !== original.side ?
+            !before.controls.pieces.find(row => samePiece({ ...row.piece, position_id: before.id }, original))
+              ?.squares.includes(piece.original.square) :
+            !samePiece(piece.original, original) && end.controls.pieces.some(row =>
+              row.piece.side !== original.side && row.squares.includes(piece.current!.square)))))) return;
     return raw as unknown as CommentaryPurposeQuestion;
   }
   if (raw.plan !== undefined) return;
-  if (!actor?.squares.includes(raw.square as Key)) return;
+  if (!actor || raw.kind !== 'supported_advance' && !actor.squares.includes(raw.square as Key)) return;
   if (raw.kind === 'entry_route' && raw.use_move.slice(0, 2) !== playedMove?.slice(2, 4)) return;
   if (raw.kind === 'supported_advance' && !path.moves.some(move => move.uci === raw.use_move) &&
     !(before.legal_moves.complete && before.legal_moves.moves.some(row => row.uci === raw.use_move &&
       !row.captured_square && before.controls.pieces.some(piece => piece.piece.role === 'pawn' &&
         piece.piece.side === actor.piece.side && piece.piece.square === row.uci.slice(0, 2))))) return;
-  if (raw.kind === 'supported_advance' && before.controls.pieces.some(row =>
-    row.piece.square === playedMove?.slice(0, 2) && row.squares.includes(raw.square as Key))) return;
+  if (raw.kind === 'supported_advance') {
+    const useMove = raw.use_move;
+    const use = path.moves.findIndex(move => move.uci === useMove);
+    if (use >= 0) {
+      const user = trackedPieces(path, use)?.find(piece => piece.current?.square === useMove.slice(0, 2));
+      if (!user || user.original.side !== actor.piece.side || user.original.square === playedMove?.slice(0, 2)) return;
+      // A witnessed piece entry needs its continuing physical supporter.
+      // The independent reader reconstructs this rather than trusting a task label.
+      if (use < 2 || use >= 18 || use % 2 || !newlySupported(path, user.original, raw.square as Key, use + 1)) return;
+    } else if (!actor.squares.includes(raw.square as Key) || before.controls.pieces.some(row =>
+      row.piece.square === playedMove?.slice(0, 2) && row.squares.includes(raw.square as Key))) return;
+  }
   return raw as unknown as CommentaryPurposeQuestion;
 }
 
@@ -1189,12 +1444,15 @@ export const targetResponseDetail = (
     ? (candidate.detail as unknown as CommentaryTargetResponseDetail)
     : undefined;
 
-function targetResponseComplete(detail: CommentaryTargetResponseDetail): boolean {
-  return detail.branches.every(branch =>
-    branch.providers.state !== 'unknown' &&
+function targetResponseComplete(detail: CommentaryTargetResponseDetail, observations: MoveReviewObservations): boolean {
+  return detail.branches.every(branch => {
+    const next = observations.paths.find(path => path.id === branch.line_id)?.moves[2]?.uci;
+    return branch.providers.state !== 'unknown' &&
     branch.recaptures.state !== 'unknown' &&
-    (!branch.recaptures.moves.length || branch.observed_recapture.state === 'complete'),
-  );
+    (!branch.recaptures.moves.length || branch.observed_recapture.state === 'complete' ||
+      branch.observed_recapture.state === 'not_observed' && !!next &&
+        !branch.recaptures.moves.some(move => move.move_uci === next));
+  });
 }
 
 export interface CommentaryPvComparisonDetail {
@@ -1572,7 +1830,8 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
   const selectedAnswer = ['observed_exchange', 'observed_terminal_comparison', 'selected_comparison'].includes(String(value.question));
   const typedAnswer = value.schema_version === 2;
   const firstResponseAnswer = ['first_target_response', 'exchange_function'].includes(String(value.question));
-  const purposeAnswer = value.question === 'move_purpose';
+  const purposeAnswer = value.question === 'move_purpose' ||
+    typedAnswer && value.question === 'selected_comparison' && value.move_purpose !== undefined;
   if (value.question === 'current_defense' && !typedAnswer) return;
   const commonAnswer = typedAnswer || selectedAnswer;
   const terminal = (path: ObservationPath) => {
@@ -1665,8 +1924,21 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       search.execution_key_sha256 === owner.execution_key_sha256 &&
       search.root_move === purpose.root_move && search.root_move_occurrence_id === purpose.root_occurrence_id &&
       search.child_position_id === purpose.child_position_id && search.prefix_moves_uci?.length === 1);
-    if (!search || !search.candidates.some(c => purpose.challenge_moves.includes(c.move_uci)) ||
-      !search.candidates.some(c => !purpose.challenge_moves.includes(c.move_uci))) return;
+    if (!search) return;
+    const contrasted = search.candidates.some(c => purpose.challenge_moves.includes(c.move_uci)) &&
+      search.candidates.some(c => !purpose.challenge_moves.includes(c.move_uci));
+    const child = observations.positions?.find(p => p.id === search.child_position_id);
+    const fullSurvey = search.root_restriction.kind === 'unrestricted' ||
+      child?.legal_moves?.complete && sameIds(search.root_restriction.moves_uci,
+        child.legal_moves.moves.map(move => move.uci));
+    const witness = purpose.plan ? purpose.plan.use >= 0 && purpose.plan.line_id : purpose.source_line_id;
+    const surveyed = value.question === 'selected_comparison' && fullSurvey && search.candidates.length >= 2 &&
+      search.candidates.some(c => c.line_id === witness && observations.paths.some(path =>
+        path.id === c.line_id && path.moves.slice(2).some(move => move.uci === purpose.use_move)));
+    if (!contrasted && !surveyed || purpose.kind === 'enabled_activity' && !surveyed) return;
+    if (purpose.reply_activities && (!fullSurvey ||
+      purpose.reply_activities[0].line_id !== search.candidates[0]?.line_id ||
+      !purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)))) return;
     for (const candidate of search.candidates) conditionalPaths.add(candidate.line_id);
     if (owner.choice !== undefined) {
       const choice = owner.choice;
@@ -1766,13 +2038,50 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       }
     }
   }
+  // A completed first-target inquiry may supplement the actual root pair.
+  // Its issued reply paths keep their own receipt; sharing the root is not enough.
+  const replyWitnesses = new Set<string>();
+  if (typedAnswer && value.question === 'selected_comparison' && playedMove) {
+    const primary = usedPaths.find(path => path.moves[0]?.uci === playedMove);
+    for (const inquiry of responseInquiries) {
+      if (!primary || inquiry.state !== 'answered' || inquiry.stop_reason !== null || !inquiry.answer ||
+        inquiry.root_move !== playedMove || inquiry.root_occurrence_id !== primary.occurrenceIds[0] ||
+        inquiry.root_move_occurrence_id !== primary.occurrenceIds[0] ||
+        inquiry.child_position_id !== primary.positionIds?.[1] ||
+        inquiry.original_target.square !== playedMove.slice(0, 2) ||
+        inquiry.target.square !== playedMove.slice(2, 4)) continue;
+      const answer = inquiry.answer;
+      const search = responseSearches.find(search => responseSearchMatchesInquiry(search, inquiry) &&
+        search.work_id === answer.work_id && search.execution_key_sha256 === answer.execution_key_sha256 &&
+        search.engine_profile === answer.engine_profile && search.required_depth === answer.required_depth);
+      const lines = [answer.reference_line_id, answer.alternative_line_id];
+      if (search && lines.every(line => search.candidates.some(candidate => candidate.line_id === line))) {
+        lines.forEach(line => replyWitnesses.add(line));
+        // A functional comparison may use another returned peer of this same
+        // independently searched pool. The old capture/noncapture labels do not
+        // own the only meaningful pair, but a shared root alone grants nothing.
+        const pool = [...responseSearches].reverse().filter(pool =>
+          responseSearchMatchesInquiry(pool, inquiry) && pool.root_restriction.kind === 'unrestricted' &&
+          pool.engine_profile === search.engine_profile && pool.required_depth >= search.required_depth)
+          .sort((a, b) => b.required_depth - a.required_depth)[0];
+        const leader = pool?.candidates[0];
+        const selection = leader?.move_uci === inquiry.reference_move ? inquiry.reference_selection :
+          leader?.move_uci === inquiry.alternative_move ? inquiry.alternative_selection : undefined;
+        if (pool && leader && selection?.source === 'child_search' && responseSearches.some(origin =>
+          responseSearchMatchesInquiry(origin, inquiry) && origin.work_id === selection.work_id &&
+          origin.engine_profile === pool.engine_profile && origin.candidates.some(candidate =>
+            candidate.move_uci === leader.move_uci && candidate.line_id === selection.line_id)))
+          pool.candidates.forEach(candidate => replyWitnesses.add(candidate.line_id));
+      }
+    }
+  }
   const summaryPaths = [...usedPaths];
   if (value.witness_line_ids !== undefined) {
     const acceptsWitnesses = value.question === 'attacker_removal_or_recapture' ||
       (typedAnswer && (['investigated_mechanism', 'observed_terminal_comparison', 'functional_response'].includes(String(value.question)) ||
         firstResponseAnswer && !!firstReplyPath ||
         conditionalPaths.size > 0));
-    if (!acceptsWitnesses || !ids(value.witness_line_ids) ||
+    if ((!acceptsWitnesses && !replyWitnesses.size) || !ids(value.witness_line_ids) ||
       // Each delivery layer has its own five-path proof budget. The exact
       // referenced union is checked after admitting the units below.
       !value.witness_line_ids.length || value.witness_line_ids.length > (typedAnswer ? 10 : 5)) return;
@@ -1780,7 +2089,8 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       const path = observations.paths.find(path => path.id === lineId);
       // Retain the current evaluation pair. A supplementary path only witnesses
       // an actual legal response after one of those same root transitions.
-      if (!path || summaryPaths.includes(path) || !path.lineSummary?.material ||
+      if (!path || (!acceptsWitnesses && !replyWitnesses.has(lineId)) ||
+        summaryPaths.includes(path) || !path.lineSummary?.material ||
         (purposeAnswer && !conditionalPaths.has(path.id) &&
           (!object(value.move_purpose) || value.move_purpose.source_line_id !== path.id)) ||
         (path.lineSummary.ending.kind !== 'line_end' && !(typedAnswer && terminal(path))) ||
@@ -6891,6 +7201,7 @@ export function decodeCommentarySelection(
         'response_inquiries',
         'response_searches',
         'purpose_question',
+        'preparation_question',
         'root_searches',
         'continuation_inquiries',
         'proposals',
@@ -6909,6 +7220,9 @@ export function decodeCommentarySelection(
   const purposeQuestion = value.purpose_question === undefined ? undefined :
     decodePurposeQuestion(value.purpose_question, observations, context?.playedMove);
   if (value.purpose_question !== undefined && !purposeQuestion) return;
+  const preparationQuestion = value.preparation_question === undefined ? undefined :
+    decodePreparationQuestion(value.preparation_question, observations, context?.playedMove);
+  if (value.preparation_question !== undefined && !preparationQuestion) return;
   const occurrences = new Set(observations.paths.flatMap(p => p.occurrenceIds).filter(id));
   const positions = new Map(observations.positions?.map(p => [p.id, p] as const));
   let responseSearches: CommentaryResponseSearch[] | undefined;
@@ -6983,6 +7297,10 @@ export function decodeCommentarySelection(
           context?.playedMove,
         ) &&
         !proposalContainsResponsePool(proposals ?? [], search, observations) &&
+        !(preparationQuestion && search.root_move === preparationQuestion.root_move &&
+          search.root_move_occurrence_id === preparationQuestion.root_occurrence_id &&
+          preparationResponseMovesMatch(preparationQuestion, observations,
+            search.prefix_moves_uci ?? [search.root_move], search.root_restriction.moves_uci)) &&
         !(purposeQuestion && search.root_move === purposeQuestion.root_move &&
           search.root_move_occurrence_id === purposeQuestion.root_occurrence_id &&
           search.child_position_id === purposeQuestion.child_position_id && search.prefix_moves_uci?.length === 1 &&
@@ -9081,6 +9399,7 @@ export function decodeCommentarySelection(
     candidate.selection === 'selected' && !scenes.some(scene => scene.candidateIds.includes(candidate.id)))) return;
   const responseFields = {
     ...(purposeQuestion === undefined ? {} : { purpose_question: purposeQuestion }),
+    ...(preparationQuestion === undefined ? {} : { preparation_question: preparationQuestion }),
     ...(discovery === undefined ? {} : { discovery }),
     ...(proposals === undefined
       ? {}
@@ -9097,7 +9416,7 @@ export function decodeCommentarySelection(
         !candidates.some(candidate => {
           const detail = targetResponseDetail(candidate);
           return (
-            detail && targetResponseComplete(detail) &&
+            detail && targetResponseComplete(detail, observations) &&
             detail?.response_inquiry_id === inquiry.id &&
             detail.branches[0]?.reply_move === inquiry.reference_move &&
             detail.branches[1]?.reply_move === inquiry.alternative_move

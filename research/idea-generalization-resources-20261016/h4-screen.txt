@@ -1,0 +1,132 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				169 text 17. h4
+				135 container
+					136 image
+					137 image
+					138 image
+					139 image
+					140 text 1
+					141 text 2
+					142 text 3
+					143 text 4
+					144 text 5
+					145 text 6
+					146 text 7
+					147 text 8
+					148 text A
+					149 text B
+					150 text C
+					151 text D
+					152 text E
+					153 text F
+					154 text G
+					155 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 17. h4
+				170 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					171 text PGN · FEN 불러오기
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button 해설 · 20초
+				174 text completed · 8.83s
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+						173 text 직전 수 리뷰가 완료되었습니다.
+					175 text 추가 조사에서 함께 확인한 수들을 기준으로 한 평가입니다. 모든 합법수 중 최선이라는 뜻은 아닙니다.
+					176 container 충분히 둘 만한 수: h4
+						177 text h4
+						178 heading 충분히 둘 만한 수, Value: 3
+							179 text 충분히 둘 만한 수
+					180 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						181 text 평가 수치
+						232 text +
+					183 container
+						184 container move-review-pv-pv-comparison:8cde9e178454a855ad252a876a1a3f34ac467228ad702969a4f58b943af0b74e
+							185 heading 두 선택의 비교, Value: 4
+								186 text 두 선택의 비교
+							187 text Be2 ↔ h4
+							188 container
+								189 pop up button (collapsed) Description: Be2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-0-0
+								190 text  —  이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.
+								191 pop up button (collapsed) Description: h4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-0-4
+								192 text  수로 h2 칸을 비워 백 h1 룩의 h3 방향 길을 엽니다.
+								193 pop up button (collapsed) Description: Be2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-0-8
+								194 text  수순의 비교 시점까지 백의 f1 비숍과 흑의 c8 비숍을 교환합니다.
+								195 pop up button (collapsed) Description: h4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-0-11
+								196 text  수순의 비교 시점까지 나이트 한 쌍을 교환합니다. 백의 폰 둘과 흑의 e7 비숍을 교환합니다.
+							197 container
+								198 pop up button (collapsed) Description: Be2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-1-0
+								199 text  — 
+								200 pop up button (collapsed) Description: Bh3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-1-2
+								201 text  뒤, 
+								202 pop up button (collapsed) Description: Nd7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-1-4
+								203 text 까지의 수순에서는 백 b3 나이트를 남깁니다.
+							204 container
+								205 pop up button (collapsed) Description: h4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-2-0
+								206 text  — 
+								207 pop up button (collapsed) Description: Nd7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-2-2
+								208 text : 백 b6 폰, 백 c5 폰을 새로 공격합니다. 
+								209 pop up button (collapsed) Description: Bxc5 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:9d74fa35a4848b016adf74e04e6e233487df4d1a2c34acecaa4d7fe2e42800be:32:h2h4:evidence:candidate-comparison:346e5f556f17e7e01b9db7408ddf0d36afb76d9fb8ed24743ad7788bfacccc9e-question-basic-2-4
+								210 text 까지의 수순에서는 백 e2 비숍을 남깁니다.  이 뒤의 응수는 기록되어 있지 않습니다.  두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.
+							211 button (collapsed) 이어지는 변화 +, Secondary Actions: Expand
+								212 text 이어지는 변화
+								233 text +
+							214 text 두 수의 엔진 평가는 비슷합니다. 작은 점수 차이만으로 어느 수가 더 강하다고 단정하지 않습니다.
+							215 button (collapsed) 비교의 상세 기록 +, Secondary Actions: Expand
+								216 text 비교의 상세 기록
+								234 text +
+							218 heading 두 수순 살펴보기, Value: 5
+								219 text 두 수순 살펴보기
+							220 text 대안 수 · Be2
+							221 text 백 기준 +1.72 · 깊이 11
+							222 button 비교 수순 보기 · Be2
+							223 text 둔 수 · h4
+							224 text 백 기준 +1.56 · 깊이 11
+							225 button 비교 수순 보기 · h4
+						226 button (collapsed) 다른 비교와 후속 질문 (1) +, Secondary Actions: Expand
+							227 text 다른 비교와 후속 질문 (1)
+							235 text +
+						229 text 제시된 수순에서 확인한 변화입니다. 모든 응수에 강제되거나 평가 차이의 원인이라는 뜻은 아닙니다.
+					230 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						231 text 평가 근거와 관찰 기록
+						236 text +
+		72 container
+			82 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

@@ -1,0 +1,47 @@
+{
+  "input_source": "judgment-evaluation/fixtures/public-commentary-v6/obligation-browser.json.gz",
+  "output_source": "judgment-evaluation/fixtures/public-commentary-v6/obligation-reading.json.gz",
+  "bd7": {
+    "scope": "Exact three original reports, original work keys and job ID; no engine rerun.",
+    "before": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — f5 칸을 새로 지원하여 원래 e7의 나이트의 진출을 받칩니다. Nef5로 나이트가 활동에 나서 백 e3 퀸, 백 g3 비숍을 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  f5 수순의 비교 시점까지 백의 e1 룩을 내줍니다. Bd7 수순의 비교 시점까지 백의 g4 폰과 흑의 e7 나이트를 교환합니다. Bd7 수순에서: Qe3 뒤 백 e3 퀸이 흑 d4 나이트를 새로 공격합니다. Nxf5 수로 나이트가 백 e3 퀸의 공격을 피합니다.",
+          "Bd7 뒤 조사한 Qf2 응수에서는 같은 기물이 Be6로 재배치되어 흑 d5 폰을 지킵니다.",
+          "f5 — g5: 공격받던 원래 g4의 폰을 피합니다. Nxe1까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. 원래 g4 폰이 g5에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+          "Bd7 — Qe3: 흑 d4 나이트, 흑 e7 나이트를 새로 공격합니다. Nxf5까지의 수순에서는 흑 d7 비숍을 남깁니다."
+        ]
+      }
+    ],
+    "after": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "f5 — 백 g4 폰을 새로 공격합니다. Bd7 — f5 칸을 새로 지원하여 원래 e7의 나이트의 진출을 받칩니다. Nef5로 나이트가 활동에 나서 백 e3 퀸, 백 g3 비숍을 공격합니다. 흑 d5 폰에 대한 비숍의 방어를 놓습니다.  f5 수순의 비교 시점까지 백의 e1 룩을 내줍니다. Bd7 수순의 비교 시점까지 백의 g4 폰과 흑의 e7 나이트를 교환합니다. Bd7 수순에서: Qe3 뒤 백 e3 퀸이 흑 d4 나이트를 새로 공격합니다. Nxf5 수로 나이트가 백 e3 퀸의 공격을 피합니다.",
+          "f5 — g5: 공격받던 원래 g4의 폰을 피합니다. Nxe1까지의 수순에서는 흑 c6 비숍은 흑 d5 폰을 지킵니다. 흑 e7 나이트는 흑 d5 폰을 지킵니다. 원래 g4 폰이 g5에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+          "Bd7 — Qe3: 흑 d4 나이트, 흑 e7 나이트를 새로 공격합니다. Nxf5까지의 수순에서는 흑 d7 비숍을 남깁니다.",
+          "Bd7 이후 별도로 조사한 응수에서는 Qe3가 Rxe7보다 더 높게 평가됩니다.",
+          "Bd7 수순에서: Qe3 뒤 백 e3 퀸이 흑 d4 나이트를 새로 공격합니다. Nxf5 수로 나이트가 백 e3 퀸의 공격을 피합니다. Qe3 응수에서는 앞서 설명한 Nef5까지의 나이트 활동을 실현합니다. 제시된 Bd7 수순에서 백은 폰 한 개를 내주고 나이트 한 개를 얻습니다.",
+          "Bd7 수순에서: Rxe7에서 원래 e7의 나이트를 교환하여 f5 칸 통제 기능을 없앱니다. f5로 폰이 전진하여 흑 g6 폰을 공격합니다. 제시된 Bd7 수순의 f5까지는 백은 룩 한 개를 내주고 나이트 한 개를 얻습니다."
+        ]
+      }
+    ],
+    "finding": "The strongest actual Qe3 reply remains first. Rxe7 is no longer excluded when the original e7 knight disappears: exchange of that controller enables f5. The engine quality difference is stated, not treated as equivalence."
+  },
+  "kf8": {
+    "scope": "Exact first root report only, original work key and job ID. New code completes with this report; the old later probes are not submitted to a different issued task.",
+    "before_failure": "The initial-check gate returned no ReferencePurposeReading; the previous actual screen used a long fallback. Its last HTTP response was not captured, and is not reconstructed here.",
+    "after": [
+      {
+        "question": "selected_comparison",
+        "paragraphs_ko": [
+          "Bxe6 — 백 e6 비숍을 잡아 체크를 해소합니다. Kf8 — 백 e6 비숍의 체크를 피해 킹을 f8로 옮깁니다.  두 수순 모두 같은 원래 c8의 비숍으로 백 e6 비숍을 잡습니다. 다만 Kf8 수순에서는 Bxe6까지 교환을 미룹니다. 차이는 교환의 유무만이 아니라 그 전에 확보한 기물의 활동입니다. 아래 비교 시점까지 두 수순 모두 비숍 한 쌍을 교환합니다. 백의 f4 폰을 내줍니다. Bxe6에서는 그 밖에 백의 b2 폰과 흑의 폰 둘을 교환합니다. Kf8에서는 그 밖에 비숍 한 쌍을 교환합니다. Bxe6 수순에서: Bxd6의 흑 b8 룩 공격을 Rxb2 수로 피합니다. Kf8 수순에서: fxg7+ 뒤 백 f1 룩이 흑 f8 킹을 공격하지만, Kxg7 수로 피합니다.",
+          "Bxe6 — Qxe6+에서 원래 c8의 비숍을 교환하여 f5 칸 통제 기능을 없앱니다. f5로 폰이 전진하여 흑 g6 폰을 공격합니다. Qxe6+에는 Kh7로 킹이 체크를 피합니다; 이어 fxg6+에는 Qxg6로 체크한 폰을 잡습니다. Qxg6까지의 수순에서는 흑 b2 룩은 열린 b 파일에서 활동합니다. 흑 g7 비숍을 남깁니다.",
+          "Kf8 — f5: 흑 g6 폰을 새로 공격합니다. 제시된 Kf8 수순에서: fxg7+ f1 룩의 길을 열어, f1 룩·g7 폰으로 흑 킹을 체크합니다; Kxg7 킹으로 g7의 체크 기물(폰)을 잡습니다. Kxg7까지의 수순에서는 흑 b8 룩을 남깁니다. 흑 h4 폰은 고립폰입니다. h4 폰에는 현재 방어자가 없습니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다."
+        ]
+      }
+    ],
+    "finding": "Actual capture of the checker versus king escape, delayed bishop exchange, f-file check and pawn costs retain their own evidence."
+  }
+}

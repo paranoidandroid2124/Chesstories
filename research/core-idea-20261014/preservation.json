@@ -1,0 +1,24 @@
+{
+  "checked_utc": "2026-10-14T05:43:45.218247+00:00",
+  "workspace": "C:\\Users\\양자\\.codex\\worktrees\\functional-choice-value\\Chesstories",
+  "branch": "codex/functional-choice-value",
+  "head_unchanged": "d8c813979f386eff0a469ec2279e960ea02946c8",
+  "index_empty": true,
+  "preexisting_files": 158,
+  "byte_identical": 149,
+  "intentionally_extended": [
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+    "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+    "chesstory-runtime/src/test/scala/io/chesstory/runtime/GeneralizedCoreSelectionTest.scala",
+    "chesstory-web/src/review/moveReviewSelection.ts",
+    "research/README.md"
+  ],
+  "missing_files": [],
+  "original_archive": "target/research-runs/core-idea-20261014/before-changes.zip",
+  "all_archived_original_hashes_verified": true,
+  "previous_research_readme_bytes_preserved": true
+}

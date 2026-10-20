@@ -1,0 +1,121 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	2 container app
+		3 container
+			4 text Chesstories
+			5 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				6 menu
+					7 (selected) 한국어
+					8 English
+			9 button 어둡게
+		10 container
+			11 container 체스판과 기보
+				12 heading 분석 기보, Value: 1
+					13 text 분석 기보
+				83 text 27. Qg2
+				15 container
+					16 image
+					17 image
+					18 image
+					19 image
+					20 text 1
+					21 text 2
+					22 text 3
+					23 text 4
+					24 text 5
+					25 text 6
+					26 text 7
+					27 text 8
+					28 text A
+					29 text B
+					30 text C
+					31 text D
+					32 text E
+					33 text F
+					34 text G
+					35 text H
+				36 container 기보 이동
+					37 button 처음
+					38 button 이전 수
+					39 button (disabled) 다음 수
+					40 button (disabled) 마지막
+					41 button 방향 전환
+				42 container
+					43 text field (settable) 수 입력
+					44 button 두기
+				45 container
+					46 heading Engine reference, Value: 2
+						47 text Engine reference
+					48 checkbox Engine / Off, Value: 0
+					49 text Off · Stockfish 18 · 2 threads
+				50 container
+					51 heading 기보, Value: 2
+						52 text 기보
+					53 button PGN 저장
+					54 button 27. Qg2
+				84 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					85 text PGN · FEN 불러오기
+				57 container
+					58 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						59 text 현재 FEN
+			60 container 해설
+				61 heading 이 수의 의미, Value: 2
+					62 text 이 수의 의미
+				63 button 해설 · 20초
+				88 text completed · 3.91s
+				65 container 직전 수 리뷰
+					66 container
+						67 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							68 text 직전 수 리뷰
+						87 text 직전 수 리뷰가 완료되었습니다.
+					89 container 이번 분석에서 가장 높게 평가한 수입니다: Qg2
+						90 text Qg2
+						91 heading 이번 분석에서 가장 높게 평가한 수입니다, Value: 3
+							92 text 이번 분석에서 가장 높게 평가한 수입니다
+					93 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						94 text 평가 수치
+						135 text +
+					96 container
+						97 heading 두 선택의 비교, Value: 3
+							98 text 두 선택의 비교
+						99 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-0
+						100 text  —  백 g4 룩이 흑 h5 퀸에서 백 f3 폰 쪽으로 이어지는 공격선을 막습니다. 룩을 반열린 g 파일에 배치합니다. 룩 교환을 제안합니다. 백 f3 폰에 대한 룩의 방어를 놓습니다.
+						101 pop up button (collapsed) Description: Qg2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-10
+						102 text  —  백 e4 폰에 대한 퀸의 방어를 놓습니다.
+						103 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-15
+						104 text  수순의 비교 시점까지 룩 한 쌍을 교환합니다.
+						105 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-18
+						106 text  수순에서: 
+						107 pop up button (collapsed) Description: Rxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-20
+						108 text  뒤 흑 f8 룩이 백 f3 폰을 공격하지만, 
+						109 pop up button (collapsed) Description: fxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-0-22
+						110 text  수로 피합니다.
+						111 pop up button (collapsed) Description: Qg2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-1-0
+						112 text  뒤 조사한 
+						113 pop up button (collapsed) Description: Qh6 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-1-2
+						114 text  응수에서는 같은 기물이 
+						115 pop up button (collapsed) Description: Qf1 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-1-4
+						116 text  … 
+						117 pop up button (collapsed) Description: Qg2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-1-6
+						118 text 로 재배치되어 흑 g7 폰을 공격합니다.
+						119 pop up button (collapsed) Description: Rg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-2-0
+						120 text  — 
+						121 pop up button (collapsed) Description: Rxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-2-2
+						122 text : 교환을 받아들입니다. 
+						123 pop up button (collapsed) Description: fxg4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-2-4
+						124 text 까지의 수순에서는 백 e2 퀸은 백 e4 폰, 백 g4 폰을 지킵니다. 원래 f3 폰이 g4에 남습니다.
+						125 pop up button (collapsed) Description: Qg2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-3-0
+						126 text  — 
+						127 pop up button (collapsed) Description: R4f7 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-3-2
+						128 text  뒤, 
+						129 pop up button (collapsed) Description: Nb4 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:e489d6366ec4cc6ea4a47fd92c0c0c15e118a04c1bca327f765ab77b603301fd:52:e2g2:evidence:candidate-comparison:bdfed78c515aed174734b2619887f1aab1beefc1bd55cca6a1e9df6051655dbc-question-basic-3-4
+						130 text 까지의 수순에서는 백 g2 퀸은 백 f3 폰을 지킵니다. 백 g3 룩은 백 f3 폰을 지킵니다.
+						131 button 둔 수 · Qg2 · 재생
+						132 button 대안 수 · Rg4 · 재생
+					133 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						134 text 평가 근거와 관찰 기록
+						136 text +
+		72 container
+			82 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 1 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/

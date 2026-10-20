@@ -1,0 +1,3553 @@
+{
+  "recorded_utc": "2026-10-15T22:01:05.052354+00:00",
+  "attempts": [
+    {
+      "id": "ng8-first",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/ng8-first-network.json",
+      "raw_network_sha256": "20f3fb336d8f5b4ce587b5d1f754a31c462585555da20b7555b34b1c016759fc",
+      "screenshot_sha256": "4be756b287ba86c0094e7ca90b34f09d2708b5e816227bf56eb013cd06084c55",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-fd4e3086-f7a2-4aaa-ad34-2226d3974951",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "d2d4",
+          "g8f6",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "d7d5",
+          "g1f3",
+          "f8b4",
+          "c1d2",
+          "b4e7",
+          "f1g2",
+          "c7c6",
+          "d1c2",
+          "b8d7",
+          "e1g1",
+          "b7b6",
+          "f1d1",
+          "e8g8",
+          "d2f4",
+          "c8b7",
+          "f3e5",
+          "f6h5",
+          "f4d2",
+          "h5f6",
+          "c4d5",
+          "c6d5",
+          "e5c6",
+          "b7c6",
+          "c2c6",
+          "a8c8",
+          "c6b5",
+          "f6e8",
+          "b5d3",
+          "e8d6",
+          "b2b3",
+          "f7f5",
+          "f2f3",
+          "d7b8",
+          "b1c3",
+          "b8c6",
+          "e2e3",
+          "e7f6",
+          "c3e2",
+          "d8d7",
+          "a1c1",
+          "c8c7",
+          "d2e1",
+          "f8c8",
+          "g3g4",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "b3a4",
+          "d6c4",
+          "g4f5",
+          "e6f5",
+          "c1b1",
+          "c6e7",
+          "e1b4",
+          "g8h8",
+          "f3f4",
+          "d7e6",
+          "b4d2",
+          "f6h4",
+          "b1b5",
+          "c7c6",
+          "d1b1",
+          "h7h6",
+          "g1h1",
+          "h4f2",
+          "b5b3"
+        ],
+        "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e7g8",
+          "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19742,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "e7g8"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": null,
+      "state": "awaiting_engine_work",
+      "summary": null
+    },
+    {
+      "id": "ng8-final",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/ng8-final-network.json",
+      "raw_network_sha256": "dafce2628dedd54b27601bbd984c6c7e097ca0a751b739918dc0cb42d6f1c7d3",
+      "screenshot_sha256": "75e87ce86fb71b0cbeb549ee6b25db80226dfe7bc5c8bd728191f21761a9063c",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-365f1b5f-21c4-4077-87fe-74fe7cb09128",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "d2d4",
+          "g8f6",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "d7d5",
+          "g1f3",
+          "f8b4",
+          "c1d2",
+          "b4e7",
+          "f1g2",
+          "c7c6",
+          "d1c2",
+          "b8d7",
+          "e1g1",
+          "b7b6",
+          "f1d1",
+          "e8g8",
+          "d2f4",
+          "c8b7",
+          "f3e5",
+          "f6h5",
+          "f4d2",
+          "h5f6",
+          "c4d5",
+          "c6d5",
+          "e5c6",
+          "b7c6",
+          "c2c6",
+          "a8c8",
+          "c6b5",
+          "f6e8",
+          "b5d3",
+          "e8d6",
+          "b2b3",
+          "f7f5",
+          "f2f3",
+          "d7b8",
+          "b1c3",
+          "b8c6",
+          "e2e3",
+          "e7f6",
+          "c3e2",
+          "d8d7",
+          "a1c1",
+          "c8c7",
+          "d2e1",
+          "f8c8",
+          "g3g4",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "b3a4",
+          "d6c4",
+          "g4f5",
+          "e6f5",
+          "c1b1",
+          "c6e7",
+          "e1b4",
+          "g8h8",
+          "f3f4",
+          "d7e6",
+          "b4d2",
+          "f6h4",
+          "b1b5",
+          "c7c6",
+          "d1b1",
+          "h7h6",
+          "g1h1",
+          "h4f2",
+          "b5b3"
+        ],
+        "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e7g8",
+          "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19741,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "e7g8"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": null,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:65a2f5905b85c1b145bf9721ec7bf66f5d8150cc3a70c7fdface3d09c1a2657d",
+            "kind": "played",
+            "moves": [
+              "e7g8"
+            ],
+            "san": [
+              "Ng8"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:3b99b766b7c044f6c3a664e896c2c82bc2c61397b997c97f44fa83b79d23ecee",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "g2h3",
+              "g7g6",
+              "e2c3",
+              "g8f6",
+              "h3g2",
+              "c6c7",
+              "d3e2",
+              "g6g5",
+              "f4g5",
+              "h6g5"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Bh3",
+              "g6",
+              "Nc3",
+              "Nf6",
+              "Bg2",
+              "R6c7",
+              "Qe2",
+              "g5",
+              "fxg5",
+              "hxg5"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:59b2ed17efb454c774d1f72710bafd8cc53cad2c5f27f5e8c4eb1051a7aba487",
+            "kind": "analysis",
+            "moves": [
+              "h8h7",
+              "b1f1",
+              "c4d2",
+              "d3d2",
+              "c6c2",
+              "d2d3",
+              "f2e3",
+              "d3e3",
+              "c2e2",
+              "e3e6"
+            ],
+            "san": [
+              "Kh7",
+              "Rf1",
+              "Nxd2",
+              "Qxd2",
+              "Rc2",
+              "Qd3",
+              "Bxe3",
+              "Qxe3",
+              "Rxe2",
+              "Qxe6"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:30b384997b7ab80d1e09226d6cf7597f942b7ac0410c30a421d447d67cffc3ed",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "g2h3",
+              "g7g6",
+              "f1g1",
+              "c4d2",
+              "d3d2"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Bh3",
+              "g6",
+              "Rg1",
+              "Nxd2",
+              "Qxd2"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:a41a46ee7186a81f28c0b6a1486e8d87a118da3df1fb560d79c7a9aea71280a1",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "e2c3",
+              "c4d2",
+              "d3d2",
+              "f2e3",
+              "d2d3",
+              "g8f6",
+              "b1f1",
+              "c6c4",
+              "g2h3",
+              "f6g4",
+              "h3g4",
+              "f5g4"
+            ],
+            "san": [
+              "Ng8",
+              "Nc3",
+              "Nxd2",
+              "Qxd2",
+              "Bxe3",
+              "Qd3",
+              "Nf6",
+              "Rf1",
+              "Rc4",
+              "Bh3",
+              "Ng4",
+              "Bxg4",
+              "fxg4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:86bedba2c51f6f01c6edfc830202b7f87fe6147eec62d211b7cfc2014536da43",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b3b5",
+              "g8f6",
+              "e2g3",
+              "f2g3",
+              "h2g3",
+              "c4d2",
+              "d3d2",
+              "c6c2",
+              "d2e1",
+              "c2g2"
+            ],
+            "san": [
+              "Ng8",
+              "Rb5",
+              "Nf6",
+              "Ng3",
+              "Bxg3",
+              "hxg3",
+              "Nxd2",
+              "Qxd2",
+              "Rc2",
+              "Qe1",
+              "Rxg2"
+            ]
+          },
+          {
+            "id": "history:move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:evidence:transition:c964ca041f1bd7c84898475cdce1d9dba682de5f4d5f5ca9870c1e478b69177d",
+            "kind": "history",
+            "moves": [
+              "b5b3",
+              "e7g8"
+            ],
+            "san": [
+              "R5b3",
+              "Ng8"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Kh7 — This move's longer-term purpose is not established by the shown continuation. Ng8 — Gives up the knight's guard of Black's pawn on d5 and Black's pawn on f5. In the provided Ng8 line, the same knight next moves with Nf6 to f6. After Nf6, Black's knight on f6 adds support to Black's pawn on d5, which is under attack from White's knight on c3.  Kh7 and Ng8 both meet Rf1: the reply newly attacks Black's bishop on f2. Kh7 through its checkpoint: 1 pair of bishops and 1 pair of knights are exchanged. White's original e3 pawn and Black's original e6 queen are exchanged. In the Kh7 line: After Rf1, White's rook on f1 now targets Black's bishop on f2. Bxe3 moves the bishop out of the attack from White's rook on f1. Qd3 clears d2; later Rxe2: Black's rook on e2 passes through that square in this line.",
+            "ko": "Kh7 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다. Ng8 — 흑 d5 폰, 흑 f5 폰에 대한 나이트의 방어를 놓습니다. 제시된 수순에서 원래 e7의 나이트가 Ng8 … Nf6로 재배치됩니다. Nf6 뒤 흑 f6 나이트가 백 c3 나이트에게 공격받는 흑 d5 폰을 지킵니다.  Kh7와 Ng8 모두 Rf1 응수에서 흑 f2 비숍을 새로 공격합니다. Kh7 수순의 비교 시점까지 비숍 한 쌍·나이트 한 쌍을 교환합니다. 백의 e3 폰과 흑의 e6 퀸을 교환합니다. Kh7 수순에서: Rf1 뒤 백 f1 룩이 흑 f2 비숍을 새로 공격합니다. Bxe3 수로 흑 e3 비숍이 백 f1 룩의 공격을 피합니다. Qd3 수로 d2 칸을 비워 길을 엽니다. 제시된 수순에서 Rxe2 수로 흑 룩이 그 길을 지나 e2에 진출합니다.",
+            "english_only": false,
+            "covered_count": 6,
+            "required_count": 13,
+            "proof_count": 13,
+            "action_count": 12
+          },
+          {
+            "en": "Kh7 — after Rf1, Qxe6: in this continuation, Black's knight on e7 guards Black's pawn on d5 and Black's pawn on f5. Black's rook on e2 works on the open e-file. No further reply is recorded.",
+            "ko": "Kh7 — Rf1 뒤, Qxe6까지의 수순에서는 흑 e7 나이트는 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 e2 룩은 열린 e 파일에서 활동합니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 1
+          },
+          {
+            "en": "Ng8 — after Rf1, Nf6: in this continuation, Black's rook on c6 works on the open c-file. Black's queen on e6 guards Black's pawn on d5 and Black's pawn on f5. Black's knight on c4 and Black's bishop on h4 remain. The checkpoints have different lengths, so this does not establish a tempo advantage.",
+            "ko": "Ng8 — Rf1 뒤, Nf6까지의 수순에서는 흑 c6 룩은 열린 c 파일에서 활동합니다. 흑 e6 퀸은 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 c4 나이트, 흑 h4 비숍을 남깁니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "In the Ng8 line: Nc3 is met by Nf6; Black's knight on f6 guards Black's pawn on d5. In the Ng8 continuation through Nf6, White gives up one pawn and one bishop for one knight.",
+            "ko": "Ng8 수순에서: Nc3 응수에는 Nf6 뒤 흑 f6 나이트가 흑 d5 폰을 지킵니다. 제시된 Ng8 수순의 Nf6까지는 백은 폰 한 개와 비숍 한 개를 내주고 나이트 한 개를 얻습니다.",
+            "english_only": false,
+            "covered_count": 3,
+            "required_count": 7,
+            "proof_count": 7,
+            "action_count": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "ng8-delivered",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/ng8-delivered-network.json",
+      "raw_network_sha256": "1e4afcba5f7b886a5d3a4a74d9e270e7bea65f43bac82657f3a18df553916dc5",
+      "screenshot_sha256": "2e3d56da9306a7d558c139cab0029bf489bfc55f991b1d82cfee6a1a7b91cdea",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-78666a11-f08f-4d7b-8858-c9fc14816740",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "d2d4",
+          "g8f6",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "d7d5",
+          "g1f3",
+          "f8b4",
+          "c1d2",
+          "b4e7",
+          "f1g2",
+          "c7c6",
+          "d1c2",
+          "b8d7",
+          "e1g1",
+          "b7b6",
+          "f1d1",
+          "e8g8",
+          "d2f4",
+          "c8b7",
+          "f3e5",
+          "f6h5",
+          "f4d2",
+          "h5f6",
+          "c4d5",
+          "c6d5",
+          "e5c6",
+          "b7c6",
+          "c2c6",
+          "a8c8",
+          "c6b5",
+          "f6e8",
+          "b5d3",
+          "e8d6",
+          "b2b3",
+          "f7f5",
+          "f2f3",
+          "d7b8",
+          "b1c3",
+          "b8c6",
+          "e2e3",
+          "e7f6",
+          "c3e2",
+          "d8d7",
+          "a1c1",
+          "c8c7",
+          "d2e1",
+          "f8c8",
+          "g3g4",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "b3a4",
+          "d6c4",
+          "g4f5",
+          "e6f5",
+          "c1b1",
+          "c6e7",
+          "e1b4",
+          "g8h8",
+          "f3f4",
+          "d7e6",
+          "b4d2",
+          "f6h4",
+          "b1b5",
+          "c7c6",
+          "d1b1",
+          "h7h6",
+          "g1h1",
+          "h4f2",
+          "b5b3"
+        ],
+        "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e7g8",
+          "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19744,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "e7g8"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 4.56,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:65a2f5905b85c1b145bf9721ec7bf66f5d8150cc3a70c7fdface3d09c1a2657d",
+            "kind": "played",
+            "moves": [
+              "e7g8"
+            ],
+            "san": [
+              "Ng8"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:b2d95a13c28c7480ff2b6c1d96f3099d17612c259d25c4542f7d0269b0306dd3",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "g7g6"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "g6"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:5a2775c85669af1ec0bc84687c65291a10e1ebbe788c1648fb95e12ccb189d65",
+            "kind": "analysis",
+            "moves": [
+              "c4d2",
+              "d3d2",
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "f1c1",
+              "g8f6",
+              "b3c3",
+              "h4f2",
+              "c3c6",
+              "c8c6",
+              "c1c6",
+              "e6c6",
+              "e2g3",
+              "f2g3",
+              "h2g3",
+              "c6c4"
+            ],
+            "san": [
+              "Nxd2",
+              "Qxd2",
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Rc1",
+              "Nf6",
+              "Rbc3",
+              "Bf2",
+              "Rxc6",
+              "Rxc6",
+              "Rxc6",
+              "Qxc6",
+              "Ng3",
+              "Bxg3",
+              "hxg3",
+              "Qc4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:c56827b528e1c7d38a74f915c9b07ee415f4f2b9eb3ba0bd3941802113f0e195",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "g8f6",
+              "e2g3",
+              "g7g6",
+              "b3c3",
+              "h6h5",
+              "d3c2",
+              "h5h4",
+              "c2f2"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "Nf6",
+              "Ng3",
+              "g6",
+              "Rc3",
+              "h5",
+              "Qc2",
+              "h4",
+              "Qf2"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:00478b776713a1ecbbf79c9380f6e392a6f04956f08a8cdd53f07a936c83fed7",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "g2f3",
+              "g8f6",
+              "b1f1",
+              "f6e4",
+              "d2c1",
+              "e6d7",
+              "d3d1",
+              "f2h4",
+              "f3e4",
+              "f5e4",
+              "f4f5"
+            ],
+            "san": [
+              "Ng8",
+              "Bf3",
+              "Nf6",
+              "Rf1",
+              "Ne4",
+              "Bc1",
+              "Qd7",
+              "Qd1",
+              "Bh4",
+              "Bxe4",
+              "fxe4",
+              "f5"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:75d24f82edc80718967579ef65b752a3e31a68ae8ea449cdc229f0cbd6771fae",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "g2h3",
+              "c4d2",
+              "d3d2",
+              "g8f6",
+              "a4a5",
+              "f6e4",
+              "d2d3",
+              "b6a5",
+              "h3g2",
+              "c6c2",
+              "b3b8"
+            ],
+            "san": [
+              "Ng8",
+              "Bh3",
+              "Nxd2",
+              "Qxd2",
+              "Nf6",
+              "a5",
+              "Ne4",
+              "Qd3",
+              "bxa5",
+              "Bg2",
+              "Rc2",
+              "Rb8"
+            ]
+          },
+          {
+            "id": "history:move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:evidence:transition:c964ca041f1bd7c84898475cdce1d9dba682de5f4d5f5ca9870c1e478b69177d",
+            "kind": "history",
+            "moves": [
+              "b5b3",
+              "e7g8"
+            ],
+            "san": [
+              "R5b3",
+              "Ng8"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Nxd2 — Newly attacks White's rook on b1 and White's rook on b3. Gives up the knight's guard of Black's pawn on b6. Ng8 — Gives up the knight's guard of Black's pawn on d5 and Black's pawn on f5. This move's longer-term purpose is not established by the shown continuation.  Nxd2 through its checkpoint: White's original d2 bishop and Black's original c4 knight are exchanged. Ng8 through its checkpoint: White's original d2 bishop and Black's original f2 bishop are exchanged.",
+            "ko": "Nxd2 — 백 b1 룩, 백 b3 룩을 새로 공격합니다. 흑 b6 폰에 대한 나이트의 방어를 놓습니다. Ng8 — 흑 d5 폰, 흑 f5 폰에 대한 나이트의 방어를 놓습니다. 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  Nxd2 수순의 비교 시점까지 백의 d2 비숍과 흑의 c4 나이트를 교환합니다. Ng8 수순의 비교 시점까지 백의 d2 비숍과 흑의 f2 비숍을 교환합니다.",
+            "english_only": false,
+            "covered_count": 4,
+            "required_count": 12,
+            "proof_count": 12,
+            "action_count": 12
+          },
+          {
+            "en": "Nxd2 — after Qxd2: recaptures in the exchange. Rc1: in this continuation, Black's bishop on h4 remains.",
+            "ko": "Nxd2 — Qxd2: 되잡기로 교환에 응합니다. Rc1까지의 수순에서는 흑 h4 비숍을 남깁니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "Ng8 — after Rf1: newly attacks Black's bishop on f2. Rxe1: in this continuation, Black's knight on c4 guards Black's pawn on b6.",
+            "ko": "Ng8 — Rf1: 흑 f2 비숍을 새로 공격합니다. Rxe1까지의 수순에서는 흑 c4 나이트는 흑 b6 폰을 지킵니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "In the Ng8 line: Bf3 is met by Ne4; The line continues with Black's knight on e4 instead of using g4; the plan is not realized in this segment. White's bishop on f3 now control g4.",
+            "ko": "Ng8 수순에서: Bf3 응수에는 Ne4 뒤 g4를 쓰는 대신 흑 e4 나이트의 수가 이어집니다. 이 구간에서 계획의 실현은 확인되지 않습니다. 백 f3 비숍이 g4를 새로 통제합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 2,
+            "proof_count": 3,
+            "action_count": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ng8-full-survey-final",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/ng8-full-survey-final-network.json",
+      "raw_network_sha256": "051a4db6475d1e2279b1f0470a3bb33e569da13646cfed558b7fcc191c663c7f",
+      "screenshot_sha256": "ebab3db87c5401835b67772b42298202e384a60aa2abc280697f9620ca4f3b25",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-5da81eca-2050-459a-a85d-349312736f75",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "d2d4",
+          "g8f6",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "d7d5",
+          "g1f3",
+          "f8b4",
+          "c1d2",
+          "b4e7",
+          "f1g2",
+          "c7c6",
+          "d1c2",
+          "b8d7",
+          "e1g1",
+          "b7b6",
+          "f1d1",
+          "e8g8",
+          "d2f4",
+          "c8b7",
+          "f3e5",
+          "f6h5",
+          "f4d2",
+          "h5f6",
+          "c4d5",
+          "c6d5",
+          "e5c6",
+          "b7c6",
+          "c2c6",
+          "a8c8",
+          "c6b5",
+          "f6e8",
+          "b5d3",
+          "e8d6",
+          "b2b3",
+          "f7f5",
+          "f2f3",
+          "d7b8",
+          "b1c3",
+          "b8c6",
+          "e2e3",
+          "e7f6",
+          "c3e2",
+          "d8d7",
+          "a1c1",
+          "c8c7",
+          "d2e1",
+          "f8c8",
+          "g3g4",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "b3a4",
+          "d6c4",
+          "g4f5",
+          "e6f5",
+          "c1b1",
+          "c6e7",
+          "e1b4",
+          "g8h8",
+          "f3f4",
+          "d7e6",
+          "b4d2",
+          "f6h4",
+          "b1b5",
+          "c7c6",
+          "d1b1",
+          "h7h6",
+          "g1h1",
+          "h4f2",
+          "b5b3"
+        ],
+        "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e7g8",
+          "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19738,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "e7g8"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 7.43,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:65a2f5905b85c1b145bf9721ec7bf66f5d8150cc3a70c7fdface3d09c1a2657d",
+            "kind": "played",
+            "moves": [
+              "e7g8"
+            ],
+            "san": [
+              "Ng8"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:2475597a207a8abe21a99cc286ac63eaea2f3bc466157c9679e7754f484ba75d",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "c4d6"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "Nd6"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:45bf7fcef0bca829e44b79836a58843a862942dc07f3f743be300f2caffc058d",
+            "kind": "analysis",
+            "moves": [
+              "g7g6",
+              "b1f1",
+              "c4d2",
+              "d3d2",
+              "c6c2",
+              "d2d3",
+              "f2e3",
+              "d3e3",
+              "c2e2",
+              "e3e6",
+              "e2e6",
+              "b3b5",
+              "c8c4"
+            ],
+            "san": [
+              "g6",
+              "Rf1",
+              "Nxd2",
+              "Qxd2",
+              "Rc2",
+              "Qd3",
+              "Bxe3",
+              "Qxe3",
+              "Rxe2",
+              "Qxe6",
+              "Rxe6",
+              "Rb5",
+              "Rc4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:8afe1e758626af7d4d9bc11b9a63f1782217ddf1038cac26c665b923a3e6ce88",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "g8f6",
+              "e2g3",
+              "g7g6",
+              "g3f1",
+              "h6h5",
+              "d3e2"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "Nf6",
+              "Ng3",
+              "g6",
+              "Nf1",
+              "h5",
+              "Qe2"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:eb705ce328b4aea3f33e67cbe68d8b4f9914923b784e54b879a1e5ac8d9eb363",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "d2e1",
+              "f2e1",
+              "b1e1",
+              "g8f6",
+              "e2g3",
+              "g7g6",
+              "b3c3",
+              "h6h5",
+              "g3f1",
+              "e6d7",
+              "d3e2",
+              "h5h4"
+            ],
+            "san": [
+              "Ng8",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "Nf6",
+              "Ng3",
+              "g6",
+              "Rc3",
+              "h5",
+              "Nf1",
+              "Qd7",
+              "Qe2",
+              "h4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:d6792af3323d2fdbe5d15cc4d3cbe5179a9ce0c7052df79897b805412a4addf4",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "e2g3",
+              "f2g3",
+              "h2g3",
+              "g8f6",
+              "h1g1",
+              "c4d2",
+              "d3d2",
+              "c6c2",
+              "d2d1"
+            ],
+            "san": [
+              "Ng8",
+              "Ng3",
+              "Bxg3",
+              "hxg3",
+              "Nf6",
+              "Kg1",
+              "Nxd2",
+              "Qxd2",
+              "Rc2",
+              "Qd1"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:3bcf5f59a491ccd2fa638477dccae6969c8dace7c06d7cf87683ee0a0bb6c608",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "g2h3",
+              "g7g6",
+              "e2g1",
+              "g8f6",
+              "d2b4",
+              "f6g4",
+              "h3g4",
+              "f5g4",
+              "g1e2",
+              "c6c7",
+              "f4f5",
+              "g6f5",
+              "f1f5",
+              "h4g5"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Bh3",
+              "g6",
+              "Ng1",
+              "Nf6",
+              "Bb4",
+              "Ng4",
+              "Bxg4",
+              "fxg4",
+              "Ne2",
+              "R6c7",
+              "f5",
+              "gxf5",
+              "Rxf5",
+              "Bg5"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:bb5e9a98ca7064799622b8fbc4e5bb16bbe5bee288c1f8731c7512eff654540f",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "e2c3",
+              "g8f6",
+              "b1f1",
+              "c4d2",
+              "d3d2",
+              "f2e3",
+              "d2e1",
+              "c8e8",
+              "g2h3",
+              "e3d4"
+            ],
+            "san": [
+              "Ng8",
+              "Nc3",
+              "Nf6",
+              "Rf1",
+              "Nxd2",
+              "Qxd2",
+              "Bxe3",
+              "Qe1",
+              "Re8",
+              "Bh3",
+              "Bxd4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:8a1ed17e83906a23c4ac6e5e47dfa7ceb147b19384c5244326a56a255aa6fc4e",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b3b5",
+              "g8f6",
+              "d2c1",
+              "f6e4",
+              "g2f3",
+              "c6c7",
+              "f3g2",
+              "g7g6",
+              "g2f3",
+              "g6g5",
+              "a4a5",
+              "b6a5"
+            ],
+            "san": [
+              "Ng8",
+              "Rb5",
+              "Nf6",
+              "Bc1",
+              "Ne4",
+              "Bf3",
+              "R6c7",
+              "Bg2",
+              "g6",
+              "Bf3",
+              "g5",
+              "a5",
+              "bxa5"
+            ]
+          },
+          {
+            "id": "history:move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:evidence:transition:c964ca041f1bd7c84898475cdce1d9dba682de5f4d5f5ca9870c1e478b69177d",
+            "kind": "history",
+            "moves": [
+              "b5b3",
+              "e7g8"
+            ],
+            "san": [
+              "R5b3",
+              "Ng8"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "g6 — Uses Black's pawn on g6 to guard Black's pawn on f5 against White's queen on d3. Ng8 — Gives up the knight's guard of Black's pawn on d5 and Black's pawn on f5. This move's longer-term purpose is not established by the shown continuation.  g6 and Ng8 both meet Rf1: the reply newly attacks Black's bishop on f2. Up to the checkpoints below, in both lines 1 pair of bishops is exchanged. g6 additionally: 1 pair of knights and 1 pair of queens are exchanged. White gives up the original e3 pawn. In the g6 line: After Rf1, White's rook on f1 now targets Black's bishop on f2. Bxe3 moves the bishop out of the attack from White's rook on f1. Qd3 clears d2; later Rxe2: Black's rook on e2 passes through that square in this line.",
+            "ko": "g6 — 흑 g6 폰이 백 d3 퀸에게 공격받는 흑 f5 폰을 지킵니다. Ng8 — 흑 d5 폰, 흑 f5 폰에 대한 나이트의 방어를 놓습니다. 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  g6와 Ng8 모두 Rf1 응수에서 흑 f2 비숍을 새로 공격합니다. 아래 비교 시점까지 두 수순 모두 비숍 한 쌍을 교환합니다. g6에서는 그 밖에 나이트 한 쌍·퀸 한 쌍을 교환합니다. 백의 e3 폰을 내줍니다. g6 수순에서: Rf1 뒤 백 f1 룩이 흑 f2 비숍을 새로 공격합니다. Bxe3 수로 흑 e3 비숍이 백 f1 룩의 공격을 피합니다. Qd3 수로 d2 칸을 비워 길을 엽니다. 제시된 수순에서 Rxe2 수로 흑 룩이 그 길을 지나 e2에 진출합니다.",
+            "english_only": false,
+            "covered_count": 9,
+            "required_count": 17,
+            "proof_count": 17,
+            "action_count": 17
+          },
+          {
+            "en": "g6 — after Rf1, Rxe6: in this continuation, Black's knight on e7 guards Black's pawn on d5 and Black's pawn on f5. Black's rook on e6 works on the open e-file.",
+            "ko": "g6 — Rf1 뒤, Rxe6까지의 수순에서는 흑 e7 나이트는 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 e6 룩은 열린 e 파일에서 활동합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "Ng8 — after Rf1, Rxe1: in this continuation, Black's rook on c6 works on the open c-file. Black's queen on e6 guards Black's pawn on d5 and Black's pawn on f5. Black's knight on g8 and Black's knight on c4 remain. The checkpoints have different lengths, so this does not establish a tempo advantage.",
+            "ko": "Ng8 — Rf1 뒤, Rxe1까지의 수순에서는 흑 c6 룩은 열린 c 파일에서 활동합니다. 흑 e6 퀸은 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 g8 나이트, 흑 c4 나이트를 남깁니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "ng8-final-owned",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/ng8-final-owned-network.json",
+      "raw_network_sha256": "8e94b6c26860691e7882f8fd88cc05c0b672ad40849784541c47040942213ad1",
+      "screenshot_sha256": "d498b61d5b61e45982f73d6660c3218cc2518d8732e74e88a4f1c8e4e9592a54",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-f5679cb3-7898-4af8-b0a5-18648e3241be",
+        "variant": "standard",
+        "initial_fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "move_prefix_uci": [
+          "d2d4",
+          "g8f6",
+          "c2c4",
+          "e7e6",
+          "g2g3",
+          "d7d5",
+          "g1f3",
+          "f8b4",
+          "c1d2",
+          "b4e7",
+          "f1g2",
+          "c7c6",
+          "d1c2",
+          "b8d7",
+          "e1g1",
+          "b7b6",
+          "f1d1",
+          "e8g8",
+          "d2f4",
+          "c8b7",
+          "f3e5",
+          "f6h5",
+          "f4d2",
+          "h5f6",
+          "c4d5",
+          "c6d5",
+          "e5c6",
+          "b7c6",
+          "c2c6",
+          "a8c8",
+          "c6b5",
+          "f6e8",
+          "b5d3",
+          "e8d6",
+          "b2b3",
+          "f7f5",
+          "f2f3",
+          "d7b8",
+          "b1c3",
+          "b8c6",
+          "e2e3",
+          "e7f6",
+          "c3e2",
+          "d8d7",
+          "a1c1",
+          "c8c7",
+          "d2e1",
+          "f8c8",
+          "g3g4",
+          "a7a5",
+          "a2a3",
+          "a5a4",
+          "b3a4",
+          "d6c4",
+          "g4f5",
+          "e6f5",
+          "c1b1",
+          "c6e7",
+          "e1b4",
+          "g8h8",
+          "f3f4",
+          "d7e6",
+          "b4d2",
+          "f6h4",
+          "b1b5",
+          "c7c6",
+          "d1b1",
+          "h7h6",
+          "g1h1",
+          "h4f2",
+          "b5b3"
+        ],
+        "current_fen": "2r4k/4n1p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K b - - 3 36",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "e7g8",
+          "resulting_fen": "2r3nk/6p1/1pr1q2p/3p1p2/P1nP1P2/PR1QP3/3BNbBP/1R5K w - - 4 37"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19741,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "e7g8"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 4.86,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:65a2f5905b85c1b145bf9721ec7bf66f5d8150cc3a70c7fdface3d09c1a2657d",
+            "kind": "played",
+            "moves": [
+              "e7g8"
+            ],
+            "san": [
+              "Ng8"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:a76c64c336987ff6b780b1a0d3be6cef212c3c3e3b2df4ea7c827c81077d2982",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "g7g6",
+              "e1b1"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "g6",
+              "Reb1"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:c824d099141a1e6254615df62799bd195f58a555090c8319434cfd4cead18626",
+            "kind": "analysis",
+            "moves": [
+              "c8c7",
+              "b1f1",
+              "c4d2",
+              "d3d2",
+              "c6c2",
+              "d2d3",
+              "f2e3",
+              "d3e3",
+              "c2e2",
+              "e3e6",
+              "e2e6",
+              "b3b5"
+            ],
+            "san": [
+              "R8c7",
+              "Rf1",
+              "Nxd2",
+              "Qxd2",
+              "Rc2",
+              "Qd3",
+              "Bxe3",
+              "Qxe3",
+              "Rxe2",
+              "Qxe6",
+              "Rxe6",
+              "Rb5"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:d8aa83d8a4ab79d10d0813831a63094823eca549e88cc3f0f9f9ef36963ebde4",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "d2e1",
+              "h4e1",
+              "f1e1",
+              "g8f6",
+              "e2g3",
+              "g7g6",
+              "b3c3",
+              "c4b2",
+              "c3c6",
+              "e6c6",
+              "d3b3"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "Nf6",
+              "Ng3",
+              "g6",
+              "Rc3",
+              "Nb2",
+              "Rxc6",
+              "Qxc6",
+              "Qb3"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:9e7afb8521f16c778bd566f0e9395cd93a0225e6a96cdaa5843cb1bfe33434c5",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "d2e1",
+              "f2e1",
+              "b1e1",
+              "c8c7",
+              "e2g3",
+              "g7g6",
+              "b3c3",
+              "g8f6",
+              "c3c2",
+              "h6h5"
+            ],
+            "san": [
+              "Ng8",
+              "Be1",
+              "Bxe1",
+              "Rxe1",
+              "R8c7",
+              "Ng3",
+              "g6",
+              "Rc3",
+              "Nf6",
+              "Rc2",
+              "h5"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:39558eb4c5cc964cae024fc5128a2f8784d6f25dea2a6952ef43adf82721a980",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "e2g3",
+              "f2g3",
+              "h2g3",
+              "g8f6",
+              "d2e1",
+              "g7g5",
+              "d3e2",
+              "g5f4",
+              "g3f4",
+              "f6g4"
+            ],
+            "san": [
+              "Ng8",
+              "Ng3",
+              "Bxg3",
+              "hxg3",
+              "Nf6",
+              "Be1",
+              "g5",
+              "Qe2",
+              "gxf4",
+              "gxf4",
+              "Ng4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:6bad6caa9efab61faa487a52f9b8cb6d1d858bbc86af12b3b2c9cb08cedf45f0",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b1f1",
+              "f2h4",
+              "g2h3",
+              "g7g6",
+              "d2b4",
+              "g8f6",
+              "e2g1",
+              "f6g4",
+              "d3e2",
+              "g4e3",
+              "f1b1",
+              "e3g4"
+            ],
+            "san": [
+              "Ng8",
+              "Rf1",
+              "Bh4",
+              "Bh3",
+              "g6",
+              "Bb4",
+              "Nf6",
+              "Ng1",
+              "Ng4",
+              "Qe2",
+              "Ngxe3",
+              "Rfb1",
+              "Ng4"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:d0e98686205547ceb401fc5a8e145b5e60a27cfeddbf403c9a6593e348aee52b",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "e2c3",
+              "g8f6",
+              "b1f1",
+              "f2e3",
+              "d2e3",
+              "c4e3",
+              "f1e1",
+              "f6g4",
+              "c3d1"
+            ],
+            "san": [
+              "Ng8",
+              "Nc3",
+              "Nf6",
+              "Rf1",
+              "Bxe3",
+              "Bxe3",
+              "Nxe3",
+              "Re1",
+              "Nfg4",
+              "Nd1"
+            ]
+          },
+          {
+            "id": "move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:line:2cff7848c09a63829a853b96c89751b1808b5cbbb407b1b24ddd9f7fc00cc8ef",
+            "kind": "analysis",
+            "moves": [
+              "e7g8",
+              "b3b5",
+              "g8f6",
+              "d2c1",
+              "f2e3",
+              "e2g3",
+              "e3c1",
+              "b1c1",
+              "c4e3",
+              "c1c6",
+              "c8c6"
+            ],
+            "san": [
+              "Ng8",
+              "Rb5",
+              "Nf6",
+              "Bc1",
+              "Bxe3",
+              "Ng3",
+              "Bxc1",
+              "Rxc1",
+              "Ne3",
+              "Rxc6",
+              "Rxc6"
+            ]
+          },
+          {
+            "id": "history:move-review:c4e6d87a4c21db5359846476cff17e17ce9cb63a568d502355f862b5af5e4b01:71:e7g8:evidence:transition:c964ca041f1bd7c84898475cdce1d9dba682de5f4d5f5ca9870c1e478b69177d",
+            "kind": "history",
+            "moves": [
+              "b5b3",
+              "e7g8"
+            ],
+            "san": [
+              "R5b3",
+              "Ng8"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "R8c7 — Places the rook on the open c-file. Ng8 — Gives up the knight's guard of Black's pawn on d5 and Black's pawn on f5.  R8c7 and Ng8 both meet Rf1: the reply newly attacks Black's bishop on f2. Up to the checkpoints below, in both lines 1 pair of bishops is exchanged. R8c7 additionally: 1 pair of knights and 1 pair of queens are exchanged. White gives up the original e3 pawn. In the R8c7 line: After Rf1, White's rook on f1 now targets Black's bishop on f2. Bxe3 moves the bishop out of the attack from White's rook on f1. Qd3 clears d2; later Rxe2: Black's rook on e2 passes through that square in this line.",
+            "ko": "R8c7 — 룩을 열린 c 파일에 배치합니다. Ng8 — 흑 d5 폰, 흑 f5 폰에 대한 나이트의 방어를 놓습니다.  R8c7와 Ng8 모두 Rf1 응수에서 흑 f2 비숍을 새로 공격합니다. 아래 비교 시점까지 두 수순 모두 비숍 한 쌍을 교환합니다. R8c7에서는 그 밖에 나이트 한 쌍·퀸 한 쌍을 교환합니다. 백의 e3 폰을 내줍니다. R8c7 수순에서: Rf1 뒤 백 f1 룩이 흑 f2 비숍을 새로 공격합니다. Bxe3 수로 흑 e3 비숍이 백 f1 룩의 공격을 피합니다. Qd3 수로 d2 칸을 비워 길을 엽니다. 제시된 수순에서 Rxe2 수로 흑 룩이 그 길을 지나 e2에 진출합니다.",
+            "english_only": false,
+            "covered_count": 9,
+            "required_count": 17,
+            "proof_count": 17,
+            "action_count": 17
+          },
+          {
+            "en": "Ng8 has the observed reply Nc3; the same piece follows Nf6 and guards Black's pawn on d5.",
+            "ko": "Ng8 뒤 조사한 Nc3 응수에서는 같은 기물이 Nf6로 재배치되어 흑 d5 폰을 지킵니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 4
+          },
+          {
+            "en": "R8c7 — after Rf1, Rxe6: in this continuation, Black's rook on c7 works on the open c-file. Black's knight on e7 guards Black's pawn on d5 and Black's pawn on f5. Black's rook on e6 works on the open e-file.",
+            "ko": "R8c7 — Rf1 뒤, Rxe6까지의 수순에서는 흑 c7 룩은 열린 c 파일에서 활동합니다. 흑 e7 나이트는 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 e6 룩은 열린 e 파일에서 활동합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "Ng8 — after Rf1, Rxe1: in this continuation, Black's rook on c6 works on the open c-file. Black's queen on e6 guards Black's pawn on d5 and Black's pawn on f5. Black's rook on c8 and Black's knight on g8 and Black's knight on c4 remain. The checkpoints have different lengths, so this does not establish a tempo advantage.",
+            "ko": "Ng8 — Rf1 뒤, Rxe1까지의 수순에서는 흑 c6 룩은 열린 c 파일에서 활동합니다. 흑 e6 퀸은 흑 d5 폰, 흑 f5 폰을 지킵니다. 흑 c8 룩, 흑 g8 나이트, 흑 c4 나이트를 남깁니다. 두 비교 지점의 길이가 달라 진행 속도의 우열을 뜻하지는 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "nb1-heldout-first",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nb1-isolated-network.json",
+      "raw_network_sha256": "3952b6376176a0bf273994d338d560ef666cab42e179f5e6105e3870f7b9aba2",
+      "screenshot_sha256": "aa7549410c8ee1bc2065192dcfa8bfd4544b8938f2405c1d09ac7c9307107a9a",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-5ba1daf9-9bcb-461c-946a-8be3866bc2a6",
+        "variant": "standard",
+        "initial_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "move_prefix_uci": [],
+        "current_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c3b1",
+          "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19745,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c3b1"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 2.28,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:1538ceb9426277041d14b1c01349a4527cad6b5fa2a3a3d463afb237a2a40c20",
+            "kind": "played",
+            "moves": [
+              "c3b1"
+            ],
+            "san": [
+              "Nb1"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:90b4eec7dfcc8ef04bfabe9d120be11f00fbc74b608a4140a849e8724c5abc01",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "e7e6",
+              "b1d2",
+              "g7f8",
+              "d2b3",
+              "e8c8",
+              "c2c3",
+              "d7e8",
+              "b3c5",
+              "c8b8",
+              "f3g5"
+            ],
+            "san": [
+              "Nb1",
+              "e6",
+              "Nbd2",
+              "Bf8",
+              "Nb3",
+              "O-O-O",
+              "c3",
+              "Qe8",
+              "Nc5",
+              "Kb8",
+              "Ng5"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:024d2ab429cd017bd3ea0b7d819d2b2c65e952fe90ae79821cc224d0dca6e510",
+            "kind": "analysis",
+            "moves": [
+              "b2b3",
+              "g7h6",
+              "e2d2",
+              "e8c8",
+              "c3e2",
+              "e7e6",
+              "h2h3",
+              "h6f8",
+              "g2g4",
+              "h5g4",
+              "h3g4"
+            ],
+            "san": [
+              "b3",
+              "Bh6",
+              "Qd2",
+              "O-O-O",
+              "Ne2",
+              "e6",
+              "h3",
+              "Bf8",
+              "g4",
+              "hxg4",
+              "hxg4"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:028dfe6009e6abdab88fedef076df4c77ad8037423fa9b4646dbde61c2d71622",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "e7e6",
+              "b1d2",
+              "g7h6",
+              "g2g3",
+              "b6c4",
+              "d2b3",
+              "h6f8",
+              "h2h3",
+              "h5h4",
+              "g3g4"
+            ],
+            "san": [
+              "Nb1",
+              "e6",
+              "Nbd2",
+              "Bh6",
+              "g3",
+              "Nc4",
+              "Nb3",
+              "Bf8",
+              "h3",
+              "h4",
+              "g4"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:722c9f11f262e47ab6a89f9fbeb37652eda4dcd33df44f414cb4808fc258662a",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "b6c4",
+              "b1d2",
+              "d7c6",
+              "d2b3",
+              "g7h6",
+              "c1b1",
+              "h6f4"
+            ],
+            "san": [
+              "Nb1",
+              "Nc4",
+              "Nbd2",
+              "Qc6",
+              "Nb3",
+              "Bh6",
+              "Kb1",
+              "Bxf4"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "b3 — This move's longer-term purpose is not established by the shown continuation. The same white knight originally on c3 follows Nb1 … Nbd2 … Nb3 in the recorded line. After Nb3, White's knight on b3 adds support to White's pawn on d4, which is under attack from Black's knight on f5. Nb1 clears c3; c3 later occupies that square in this line.  b3 through its checkpoint: 1 pair of pawns is exchanged. In the b3 line: hxg4 leaves Black's rook on h8 attacking White's pawn on h3; hxg4 moves that piece out of the attack.",
+            "ko": "b3 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다. 제시된 수순에서 원래 c3의 나이트가 Nb1 … Nbd2 … Nb3로 재배치됩니다. Nb3 뒤 백 b3 나이트가 흑 f5 나이트에게 공격받는 백 d4 폰을 지킵니다. Nb1 수로 c3 칸을 비우고, 이후 c3 수로 그 칸을 차지합니다.  b3 수순의 비교 시점까지 폰 한 쌍을 교환합니다. b3 수순에서: hxg4 뒤 흑 h8 룩이 백 h3 폰을 공격하지만, hxg4 수로 피합니다.",
+            "english_only": false,
+            "covered_count": 2,
+            "required_count": 15,
+            "proof_count": 15,
+            "action_count": 15
+          },
+          {
+            "en": "b3 — after Bh6: newly attacks White's pawn on f4. hxg4: in this continuation, The original h2 pawn remains on g4. The g4 pawn currently has no defender. No further reply is recorded.",
+            "ko": "b3 — Bh6: 백 f4 폰을 새로 공격합니다. hxg4까지의 수순에서는 원래 h2 폰이 g4에 남습니다. g4 폰에는 현재 방어자가 없습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 1
+          },
+          {
+            "en": "Nb1 — after e6, Ng5: in this continuation, White's knight on c5 attacks Black's pawn on a6 and Black's bishop on b7 and Black's pawn on e6. The original h5 pawn remains on h5. No further reply is recorded.",
+            "ko": "Nb1 — e6 뒤, Ng5까지의 수순에서는 백 c5 나이트는 흑 a6 폰, 흑 b7 비숍, 흑 e6 폰을 공격합니다. 원래 h5 폰이 h5에 남습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 1
+          },
+          {
+            "en": "In the Nb1 line: Nc4 is met by Nbd2; White's knight on d2 realizes the entry on d2. Black's knight on c4 now control d2.",
+            "ko": "Nb1 수순에서: Nc4 응수에는 Nbd2 뒤 백 d2 나이트가 d2 진출을 실현합니다. 흑 c4 나이트가 d2를 새로 통제합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 2,
+            "proof_count": 3,
+            "action_count": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "nb1-post-fix",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nb1-post-fix-network.json",
+      "raw_network_sha256": "65a3f87d2cb23660121c718b18e6c5335f8e9c95b2d7c81350b8b42a049db60d",
+      "screenshot_sha256": "dfcefe77ef2ad5a71f99664ce83911a83fb9709b5d10678c751d3bd0eb7290c3",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-a98a8e60-75f6-4685-b3cd-5f0668198d8a",
+        "variant": "standard",
+        "initial_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "move_prefix_uci": [],
+        "current_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c3b1",
+          "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19741,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c3b1"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 3.82,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:1538ceb9426277041d14b1c01349a4527cad6b5fa2a3a3d463afb237a2a40c20",
+            "kind": "played",
+            "moves": [
+              "c3b1"
+            ],
+            "san": [
+              "Nb1"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:f495644504561a0826a32b0e71c9580ff7cb993edb2099151fc3176589ffdbd5",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "g7h6",
+              "g2g3",
+              "e7e6",
+              "b1d2",
+              "d7c6"
+            ],
+            "san": [
+              "Nb1",
+              "Bh6",
+              "g3",
+              "e6",
+              "Nbd2",
+              "Qc6"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:7d6b3087127a02ae7a8e729663d68afb225eecf54658c6506c511161e076139c",
+            "kind": "analysis",
+            "moves": [
+              "g2g3",
+              "g7h6",
+              "e2e1",
+              "e7e6",
+              "c3e2",
+              "b6c4",
+              "c1b1"
+            ],
+            "san": [
+              "g3",
+              "Bh6",
+              "Qe1",
+              "e6",
+              "Ne2",
+              "Nc4",
+              "Kb1"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:2d7adbabbed295132ad67460eeb75f221c1e5cf25f244dc2f2493a238f054c98",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "g7h6",
+              "g2g3",
+              "e7e6",
+              "b1d2",
+              "b6c4",
+              "d2b3",
+              "d7c6",
+              "b3c5",
+              "h6f8",
+              "h2h3",
+              "e8c8",
+              "g3g4",
+              "f8c5",
+              "d4c5",
+              "d5d4"
+            ],
+            "san": [
+              "Nb1",
+              "Bh6",
+              "g3",
+              "e6",
+              "Nbd2",
+              "Nc4",
+              "Nb3",
+              "Qc6",
+              "Nc5",
+              "Bf8",
+              "h3",
+              "O-O-O",
+              "g4",
+              "Bxc5",
+              "dxc5",
+              "d4"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:a40ac17c5bbc60500cbbd6c4c1ed33db48d804170ad5f4e64e7b525cf7d9bab4",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "b6c4",
+              "b2b3",
+              "c4b6",
+              "g2g3",
+              "e7e6",
+              "h2h3",
+              "g7h6",
+              "a2a3",
+              "f5e7",
+              "b1c3",
+              "e8d8",
+              "c3a2",
+              "h6f8"
+            ],
+            "san": [
+              "Nb1",
+              "Nc4",
+              "b3",
+              "Nb6",
+              "g3",
+              "e6",
+              "h3",
+              "Bh6",
+              "a3",
+              "Ne7",
+              "Nc3",
+              "Kd8",
+              "Na2",
+              "Bf8"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:f1ab75c4064ee3acf17819ab8371abf51ebd156797d032a24b19c854f2b8c452",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "b5b4",
+              "b1d2",
+              "b7c6",
+              "h2h3",
+              "h5h4",
+              "d2b3",
+              "c6b5",
+              "b3c5",
+              "b5d3",
+              "d1d3",
+              "d7b5",
+              "e5e6",
+              "g7f6"
+            ],
+            "san": [
+              "Nb1",
+              "b4",
+              "Nbd2",
+              "Bc6",
+              "h3",
+              "h4",
+              "Nb3",
+              "Bb5",
+              "Nc5",
+              "Bxd3",
+              "Rxd3",
+              "Qb5",
+              "e6",
+              "Bf6"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "After g3, White's bishop on f2 adds support to White's pawn on g3, which is under attack from Black's knight on f5. After g3, White's pawn on h2 adds support to White's pawn on g3, which is under attack from Black's knight on f5.",
+            "ko": "After g3, White's bishop on f2 adds support to White's pawn on g3, which is under attack from Black's knight on f5. After g3, White's pawn on h2 adds support to White's pawn on g3, which is under attack from Black's knight on f5.",
+            "english_only": true,
+            "covered_count": 0,
+            "required_count": 1,
+            "proof_count": 1,
+            "action_count": 1
+          },
+          {
+            "en": "The recorded continuation is Nb1.",
+            "ko": "The recorded continuation is Nb1.",
+            "english_only": true,
+            "covered_count": 0,
+            "required_count": 1,
+            "proof_count": 1,
+            "action_count": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "nb1-refined",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nb1-refined-network.json",
+      "raw_network_sha256": "3a3d58949dd3f0bcf9ec7415aade4cb0a716b0e1c77420ece0dec2a54fd80a80",
+      "screenshot_sha256": "c1807859b85966870b12b901163bc5b398976ae2abbdedd8332bd93fa728f322",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-2d192f88-0d84-49e0-bbaf-4f4ef731e313",
+        "variant": "standard",
+        "initial_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "move_prefix_uci": [],
+        "current_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c3b1",
+          "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19736,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c3b1"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": null,
+      "state": "awaiting_engine_work",
+      "summary": null
+    },
+    {
+      "id": "nb1-survey-final",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nb1-survey-final-network.json",
+      "raw_network_sha256": "3b1a59351b6a4dd3829539e6e8637483b5025bb10c55cd6a8722ea7461080f7b",
+      "screenshot_sha256": "e16d1fa028a4d02a48c4cd02ba45fb2d3fa0c7d0a1b278404579dc4b9069a5d8",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-ba55c848-ebce-40a2-b092-792964822561",
+        "variant": "standard",
+        "initial_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "move_prefix_uci": [],
+        "current_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/2NB1N2/PPP1QBPP/2KR3R w kq - 0 14",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c3b1",
+          "resulting_fen": "r3k2r/1bpqppb1/pn4p1/1p1pPn1p/3P1P2/3B1N2/PPP1QBPP/1NKR3R b kq - 1 14"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19742,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c3b1"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 3.42,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:1538ceb9426277041d14b1c01349a4527cad6b5fa2a3a3d463afb237a2a40c20",
+            "kind": "played",
+            "moves": [
+              "c3b1"
+            ],
+            "san": [
+              "Nb1"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:9f14f2a366a3d2b3ca9d4847669f75dba2cde81d1dd80467fb65fee4e593e304",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "b6c4",
+              "b1d2",
+              "g7h6",
+              "g2g3",
+              "a6a5",
+              "d2b3",
+              "e7e6"
+            ],
+            "san": [
+              "Nb1",
+              "Nc4",
+              "Nbd2",
+              "Bh6",
+              "g3",
+              "a5",
+              "Nb3",
+              "e6"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:6a1f0be32eb0a92f631d377e53341787962b25a08b0cca85adfd01f07ff4d6de",
+            "kind": "analysis",
+            "moves": [
+              "d1g1",
+              "e7e6",
+              "h2h3",
+              "g7f8",
+              "g2g4",
+              "f5e7",
+              "c3b1"
+            ],
+            "san": [
+              "Rdg1",
+              "e6",
+              "h3",
+              "Bf8",
+              "g4",
+              "Ne7",
+              "Nb1"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:0d0518ec4c0e0638291223ade6b286b46df2231adfabc9969361988f4598fa1c",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "g7h6",
+              "g2g3",
+              "e7e6",
+              "b1d2",
+              "b6c4",
+              "d2b3",
+              "d7c6",
+              "a2a3",
+              "h6f8"
+            ],
+            "san": [
+              "Nb1",
+              "Bh6",
+              "g3",
+              "e6",
+              "Nbd2",
+              "Nc4",
+              "Nb3",
+              "Qc6",
+              "a3",
+              "Bf8"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:c7a627a3151487906e51dc3cc74170f409a2eb04bc43bd83504770ec8cae39eb",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "d7c6",
+              "b1d2",
+              "g7h6",
+              "g2g3",
+              "e7e6",
+              "d2b3",
+              "b6c4",
+              "b3c5",
+              "h6f8",
+              "c2c3"
+            ],
+            "san": [
+              "Nb1",
+              "Qc6",
+              "Nbd2",
+              "Bh6",
+              "g3",
+              "e6",
+              "Nb3",
+              "Nc4",
+              "Nc5",
+              "Bf8",
+              "c3"
+            ]
+          },
+          {
+            "id": "move-review:6e0472a5580e37c6e16e44a03c65093e5ce18ab3264994388227ed869a853bad:26:c3b1:line:267187589bb48e3ee83786e8ff8675e01a045106f104d965754fb20c48f0f81e",
+            "kind": "analysis",
+            "moves": [
+              "c3b1",
+              "e7e6",
+              "b1d2",
+              "g7h6",
+              "g2g3",
+              "b6c4",
+              "d2b3",
+              "d7c6",
+              "b3c5",
+              "h6f8",
+              "c2c3",
+              "e8c8",
+              "b2b3",
+              "f8c5",
+              "d4c5",
+              "d5d4",
+              "f3d4"
+            ],
+            "san": [
+              "Nb1",
+              "e6",
+              "Nbd2",
+              "Bh6",
+              "g3",
+              "Nc4",
+              "Nb3",
+              "Qc6",
+              "Nc5",
+              "Bf8",
+              "c3",
+              "O-O-O",
+              "b3",
+              "Bxc5",
+              "dxc5",
+              "d4",
+              "Nxd4"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Rdg1 — This move's longer-term purpose is not established by the shown continuation.  In the Nb1 line: After Nbd2, Black's knight on c4 now targets White's knight on d2. Nb3 moves the knight out of the attack from Black's knight on c4. The same white knight originally on c3 follows Nb1 … Nbd2 … Nb3 in the recorded line. After Nb3, White's knight on b3 adds support to White's pawn on d4, which is under attack from Black's knight on f5, and now targets Black's pawn on a5.",
+            "ko": "Rdg1 — 이 수의 장기 목적은 제시된 수순에서 드러나지 않습니다.  Nb1 수순에서: Nbd2 뒤 흑 c4 나이트가 백 d2 나이트를 새로 공격합니다. Nb3 수로 백 b3 나이트가 흑 c4 나이트의 공격을 피합니다. 제시된 수순에서 원래 c3의 나이트가 Nb1 … Nbd2 … Nb3로 재배치됩니다. Nb3 뒤 백 b3 나이트가 흑 f5 나이트에게 공격받는 백 d4 폰을 새로 지킵니다; 흑 a5 폰을 새로 공격합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 4
+          },
+          {
+            "en": "Nb1 has the observed reply Qc6; the same piece follows Nbd2 … Nb3 … Nc5 and attacks Black's bishop on b7 and Black's pawn on a6.",
+            "ko": "Nb1 뒤 조사한 Qc6 응수에서는 같은 기물이 Nbd2 … Nb3 … Nc5로 재배치되어 흑 b7 비숍, 흑 a6 폰을 공격합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 10,
+            "proof_count": 10,
+            "action_count": 10
+          },
+          {
+            "en": "Rdg1 — after e6, Nb1 is the observed checkpoint. No further reply is recorded.",
+            "ko": "Rdg1 — e6 뒤, Nb1까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 1
+          },
+          {
+            "en": "Nb1 — after Nc4: newly attacks White's pawn on b2 and White's pawn on e5. Nb3 is the observed checkpoint.",
+            "ko": "Nb1 — Nc4: 백 b2 폰, 백 e5 폰을 새로 공격합니다. Nb3까지 기록되어 있습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "nxd4-independent",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nxd4-independent-network.json",
+      "raw_network_sha256": "ef76c363d3d104b40332929828f06b642f26f768597e3b60262a2198523d4904",
+      "screenshot_sha256": "5f8a9ca1318a4be5d411ae421e58c74932c8ec6a26d0294a310c455d1b70176f",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-e49cbb59-fe46-4bd7-a939-cb972d083152",
+        "variant": "standard",
+        "initial_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "move_prefix_uci": [],
+        "current_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c6d4",
+          "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19741,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c6d4"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": null,
+      "state": "awaiting_engine_work",
+      "summary": null
+    },
+    {
+      "id": "nxd4-after-delivery-fix",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nxd4-after-delivery-fix-network.json",
+      "raw_network_sha256": "bd9a913e1452da7c666dcd6c2dd5c8d1e9c7e91767daf4c710fa75423f9724ba",
+      "screenshot_sha256": "2b534ea2fc9a422182a00eb04c3f5865dfae3a0c39c23450d3edcdceb99085c2",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-17b3eae2-934d-4d8e-b8c4-3e9430c52b9e",
+        "variant": "standard",
+        "initial_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "move_prefix_uci": [],
+        "current_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c6d4",
+          "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19733,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c6d4"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 2.2,
+      "state": "completed",
+      "summary": {
+        "question": "first_target_response",
+        "paths": [
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:9710f7d58579b7375db14f9bafd5d166df9588bd236c0cb407658009130f7b87",
+            "kind": "played",
+            "moves": [
+              "c6d4"
+            ],
+            "san": [
+              "Nxd4"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:f3ae0fab8b1e08908bd7a4ec1f004e9acfce11c1e560dde877841e10d282dfd5",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "e7e5",
+              "d4e3",
+              "c5e6",
+              "d1d5"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "e5",
+              "Qe3",
+              "Ne6",
+              "Rd5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:981e2bb56d39d64dc7a69537442c3d93d51576cebd2a843f2fc208706f335c9a",
+            "kind": "analysis",
+            "moves": [
+              "g7d4",
+              "e3d4",
+              "c6d4",
+              "d2d4",
+              "e7e5",
+              "d4e3",
+              "c5e6",
+              "d1d5"
+            ],
+            "san": [
+              "Bxd4",
+              "Bxd4",
+              "Nxd4",
+              "Qxd4",
+              "e5",
+              "Qe3",
+              "Ne6",
+              "Rd5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:5f950e39154e625ed3842d52d690198f18f72d3e70b173f6fe51d5f74ed29dcb",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "e7e5",
+              "d4e3",
+              "c5e6",
+              "b2b4",
+              "b8c7",
+              "d1d5",
+              "e6d4",
+              "a2a3",
+              "d8c8"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "e5",
+              "Qe3",
+              "Ne6",
+              "b4",
+              "Qc7",
+              "Rd5",
+              "Nd4",
+              "a3",
+              "Rc8"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:67c97b838e667bbf9973f10f040aace5380cad928c6e618147dcb4205a28097b",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "b2b4",
+              "d4e2",
+              "d2e2",
+              "c5d7",
+              "f3f4",
+              "d7f6",
+              "c4c5",
+              "g7h6",
+              "c5c6",
+              "b7c6"
+            ],
+            "san": [
+              "Nxd4",
+              "b4",
+              "Nxe2+",
+              "Qxe2",
+              "Nd7",
+              "f4",
+              "Nf6",
+              "c5",
+              "Bh6",
+              "c6",
+              "bxc6"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:cac97922ef1c20d47da248c609faf6d9785cdf6887495d0c847a07e0bc8d934f",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "g1h1",
+              "d4e2",
+              "d2e2",
+              "d8c8",
+              "b2b4",
+              "c5d7"
+            ],
+            "san": [
+              "Nxd4",
+              "Kh1",
+              "Nxe2",
+              "Qxe2",
+              "Rc8",
+              "b4",
+              "Nd7"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Nxd4 captures the white knight on d4. After Nxd4, Black's knight on d4 now targets White's bishop on e2 and White's pawn on f3. After Nxd4, Black's knight on d4 is under attack from White's queen on d2 and White's bishop on e3; it is supported by Black's bishop on g7.",
+            "ko": "Nxd4 captures the white knight on d4. After Nxd4, Black's knight on d4 now targets White's bishop on e2 and White's pawn on f3. After Nxd4, Black's knight on d4 is under attack from White's queen on d2 and White's bishop on e3; it is supported by Black's bishop on g7.",
+            "english_only": true,
+            "covered_count": 1,
+            "required_count": 1,
+            "proof_count": 1,
+            "action_count": 1
+          },
+          {
+            "en": "After Nxd4, Bxd4 is the stronger tested reply than b4.",
+            "ko": "Nxd4 이후 별도로 조사한 응수에서는 Bxd4가 b4보다 더 높게 평가됩니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 0
+          },
+          {
+            "en": "In the Nxd4 line: In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. Bxd4 recaptures the black knight on d4. Bxd4+ recaptures the white bishop on d4. Qxd4 recaptures the black bishop on d4. After Bxd4+, Black's bishop on d4 now targets White's pawn on b2.",
+            "ko": "In the Nxd4 line: In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. Bxd4 recaptures the black knight on d4. Bxd4+ recaptures the white bishop on d4. Qxd4 recaptures the black bishop on d4. After Bxd4+, Black's bishop on d4 now targets White's pawn on b2.",
+            "english_only": true,
+            "covered_count": 3,
+            "required_count": 3,
+            "proof_count": 4,
+            "action_count": 3
+          },
+          {
+            "en": "After Nxd4, White's bishop on e3 now targets Black's knight on d4. In the provided Nxe2+ line: Nxe2+ gives check to the White king on g1 with Black's knight on e2; Qxe2 captures the checking knight on e2. The recorded continuation is b4 Nxe2+ Qxe2. Nxe2+ captures the white bishop on e2. Qxe2 recaptures the black knight on e2. Nxe2+ moves the knight out of the attack from White's bishop on e3. After Nxe2+, Black's knight on e2 now targets White's rook on c1. After Nxe2+, Black's bishop on g7 does not support Black's knight on e2. No other black piece supports Black's knight on e2.",
+            "ko": "After Nxd4, White's bishop on e3 now targets Black's knight on d4. In the provided Nxe2+ line: Nxe2+ gives check to the White king on g1 with Black's knight on e2; Qxe2 captures the checking knight on e2. The recorded continuation is b4 Nxe2+ Qxe2. Nxe2+ captures the white bishop on e2. Qxe2 recaptures the black knight on e2. Nxe2+ moves the knight out of the attack from White's bishop on e3. After Nxe2+, Black's knight on e2 now targets White's rook on c1. After Nxe2+, Black's bishop on g7 does not support Black's knight on e2. No other black piece supports Black's knight on e2.",
+            "english_only": true,
+            "covered_count": 2,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 4
+          },
+          {
+            "en": "The compared root choices are Nxd4 and Bxd4.",
+            "ko": "The compared root choices are Nxd4 and Bxd4.",
+            "english_only": true,
+            "covered_count": 0,
+            "required_count": 2,
+            "proof_count": 2,
+            "action_count": 2
+          },
+          {
+            "en": "Nxd4 captures the white knight on d4. Bxd4 recaptures the black knight on d4. Bxd4+ recaptures the white bishop on d4. Qxd4 recaptures the black bishop on d4.",
+            "ko": "Nxd4 captures the white knight on d4. Bxd4 recaptures the black knight on d4. Bxd4+ recaptures the white bishop on d4. Qxd4 recaptures the black bishop on d4.",
+            "english_only": true,
+            "covered_count": 4,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 4
+          },
+          {
+            "en": "Bxd4 … Qxd4: 1 pair of knights and 1 pair of bishops are exchanged. White's queen recaptures on d4.",
+            "ko": "Bxd4 … Qxd4: 1 pair of knights and 1 pair of bishops are exchanged. White's queen recaptures on d4.",
+            "english_only": true,
+            "covered_count": 4,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 4
+          },
+          {
+            "en": "Nxd4 captures the white knight on d4.",
+            "ko": "Nxd4 captures the white knight on d4.",
+            "english_only": true,
+            "covered_count": 1,
+            "required_count": 1,
+            "proof_count": 1,
+            "action_count": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "nxd4-final-common",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nxd4-final-common-network.json",
+      "raw_network_sha256": "ff79866b6908053f2d178c92239da4df6c83c2ef6c1b98340223e7049399cfc0",
+      "screenshot_sha256": "8643c76aa472125a6dcf9562ad54b52475e26216b14add70cef0e0c071667673",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-43052366-2d45-40ee-8c00-4b6b5c842712",
+        "variant": "standard",
+        "initial_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "move_prefix_uci": [],
+        "current_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c6d4",
+          "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19744,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c6d4"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 3.92,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:9710f7d58579b7375db14f9bafd5d166df9588bd236c0cb407658009130f7b87",
+            "kind": "played",
+            "moves": [
+              "c6d4"
+            ],
+            "san": [
+              "Nxd4"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:c5e92ccf08144e65a8bf6edb15991b07eb7530967cfc25565fa3dc3bb540b932",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "e7e5",
+              "d4f2",
+              "d8c8",
+              "e2f1",
+              "c5e6",
+              "d1d5",
+              "b7b5",
+              "c1d1",
+              "e6d4",
+              "c4b5",
+              "a6b5"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "e5",
+              "Qf2",
+              "Rc8",
+              "Bf1",
+              "Ne6",
+              "Rd5",
+              "b5",
+              "Rcd1",
+              "Nd4",
+              "cxb5",
+              "axb5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:9ecf7abfcd9f359943aedb046e7339b8e5e061b77328d8b8a2486769b6fa7332",
+            "kind": "analysis",
+            "moves": [
+              "g7d4",
+              "e3d4",
+              "c6d4",
+              "d2d4",
+              "e7e5",
+              "d4f2",
+              "d8c8",
+              "d1d5",
+              "c5e6",
+              "c1d1",
+              "e6d4",
+              "e2f1"
+            ],
+            "san": [
+              "Bxd4",
+              "Bxd4",
+              "Nxd4",
+              "Qxd4",
+              "e5",
+              "Qf2",
+              "Rc8",
+              "Rd5",
+              "Ne6",
+              "Rcd1",
+              "Nd4",
+              "Bf1"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:cf18b31db0e37d62813f8511244a1cdca38c507b0784fae04e8a2702894006d0",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "e7e5",
+              "d4d2",
+              "b8a7",
+              "g1h1",
+              "a6a5",
+              "e2f1",
+              "e8e6",
+              "c1b1",
+              "h7h5"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "e5",
+              "Qd2",
+              "Qa7",
+              "Kh1",
+              "a5",
+              "Bf1",
+              "Re6",
+              "Rb1",
+              "h5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:7ef043afdf7846cd504b0eeab6cad3ff28e45ee33242cae2522fc58364b819ab",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e2f1",
+              "e7e5",
+              "g1h1",
+              "a6a5",
+              "d2a5"
+            ],
+            "san": [
+              "Nxd4",
+              "Bf1",
+              "e5",
+              "Kh1",
+              "a5",
+              "Qxa5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:f5f1486ac9929c303cf4d9e53ebce560b3e016cd10db21782421b2c4576428c5",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "b2b4",
+              "d4e2",
+              "d2e2",
+              "c5d7",
+              "g1h1",
+              "d8c8",
+              "f3f4",
+              "b7b6"
+            ],
+            "san": [
+              "Nxd4",
+              "b4",
+              "Nxe2+",
+              "Qxe2",
+              "Nd7",
+              "Kh1",
+              "Rc8",
+              "f4",
+              "b6"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Bxd4 — Offers a bishop exchange. Nxd4 clears c6; later Rc8: Black's rook on c8 uses the cleared line to target Black's knight on c5 in this line.  Up to the checkpoints below, in both lines 1 pair of knights and 1 pair of bishops are exchanged.",
+            "ko": "Bxd4 — 비숍 교환을 제안합니다. Nxd4 수로 c6 칸을 비워 길을 엽니다. 제시된 수순에서 Rc8 뒤 흑 c8 룩이 열린 길로 흑 c5 나이트를 지킵니다.  아래 비교 시점까지 두 수순 모두 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+            "english_only": false,
+            "covered_count": 8,
+            "required_count": 18,
+            "proof_count": 18,
+            "action_count": 18
+          },
+          {
+            "en": "Bxd4 — after Bxd4: accepts the offered exchange. Ne6 is the observed checkpoint. Bxd4 exchanges White's knight on d4, removing its control of e6; Ne6 brings the original c5 knight to that square.",
+            "ko": "Bxd4 — Bxd4: 교환을 받아들입니다. Ne6까지 기록되어 있습니다. Bxd4에서 원래 d4의 나이트가 교환되어 e6 통제가 사라집니다. Ne6에서 남아 있는 원래 c5의 나이트가 그 칸을 실제로 사용합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 2
+          },
+          {
+            "en": "Nxd4 — after Bxd4: recaptures in the exchange. Bxd4+ is answered by Qxd4, which captures the checking bishop. Ne6: in this continuation, Black's rook on c8 attacks White's pawn on c4. Nxd4 exchanges White's knight on d4, removing its control of e6; Ne6 brings the original c5 knight to that square.",
+            "ko": "Nxd4 — Bxd4: 되잡기로 교환에 응합니다. Bxd4+에는 Qxd4로 체크한 비숍을 잡습니다. Ne6까지의 수순에서는 흑 c8 룩은 백 c4 폰을 공격합니다. Nxd4에서 원래 d4의 나이트가 교환되어 e6 통제가 사라집니다. Ne6에서 남아 있는 원래 c5의 나이트가 그 칸을 실제로 사용합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 5,
+            "proof_count": 5,
+            "action_count": 4
+          },
+          {
+            "en": "After Nxd4, Bxd4 is the stronger tested reply than Bf1. In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. In the Nxd4 line, both sides exchange one knight and one bishop. The recorded continuation is Bf1 e5. After e5, Black's bishop on g7 does not support Black's knight on d4. After e5, Black's pawn on e5 supports Black's knight on d4.",
+            "ko": "After Nxd4, Bxd4 is the stronger tested reply than Bf1. In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. In the Nxd4 line, both sides exchange one knight and one bishop. The recorded continuation is Bf1 e5. After e5, Black's bishop on g7 does not support Black's knight on d4. After e5, Black's pawn on e5 supports Black's knight on d4.",
+            "english_only": true,
+            "covered_count": 4,
+            "required_count": 6,
+            "proof_count": 6,
+            "action_count": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "nxd4-final-delivered",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/nxd4-final-delivered-network.json",
+      "raw_network_sha256": "3735f74e8a04865dbddf8b696696404a2ffff320126e49879515de58c5af9053",
+      "screenshot_sha256": "1b8a9816ac0a75f5a40af88e8d81aa0f4f1ef7e178ae4ce1d449605836b80c9b",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-28b1b14a-e25d-463a-b5d3-5d839d9c48fc",
+        "variant": "standard",
+        "initial_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "move_prefix_uci": [],
+        "current_fen": "1q1rr1k1/1p2ppbp/p1np2p1/2n5/2PNP3/4BP2/PP1QB1PP/2RR2K1 b - - 0 20",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "c6d4",
+          "resulting_fen": "1q1rr1k1/1p2ppbp/p2p2p1/2n5/2PnP3/4BP2/PP1QB1PP/2RR2K1 w - - 0 21"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19743,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "c6d4"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 5.24,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:9710f7d58579b7375db14f9bafd5d166df9588bd236c0cb407658009130f7b87",
+            "kind": "played",
+            "moves": [
+              "c6d4"
+            ],
+            "san": [
+              "Nxd4"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:5a296fd0ff5bc38772dffc1a5bcfc9cabd8e2c159b653010dd33a5634d4e3aca",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "e7e5",
+              "d4d2",
+              "c5e6"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "e5",
+              "Qd2",
+              "Ne6"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:c7240736c2d5e52eae0138bbfb117783d998b447c20b84edac3dc2ddf43c5e9e",
+            "kind": "analysis",
+            "moves": [
+              "g7d4",
+              "e3d4",
+              "c6d4",
+              "d2d4",
+              "e7e5",
+              "d4f2",
+              "c5e6",
+              "d1d5",
+              "d8c8",
+              "c1d1",
+              "c8c6"
+            ],
+            "san": [
+              "Bxd4",
+              "Bxd4",
+              "Nxd4",
+              "Qxd4",
+              "e5",
+              "Qf2",
+              "Ne6",
+              "Rd5",
+              "Rc8",
+              "Rcd1",
+              "Rc6"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:e67533a1420fdf39d0e17c4ca2fd66cfec52cf086c469a38263922de997f627e",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e3d4",
+              "g7d4",
+              "d2d4",
+              "b8c7",
+              "d4e3",
+              "e7e5",
+              "d1d5",
+              "c5e6",
+              "e2f1"
+            ],
+            "san": [
+              "Nxd4",
+              "Bxd4",
+              "Bxd4+",
+              "Qxd4",
+              "Qc7",
+              "Qe3",
+              "e5",
+              "Rd5",
+              "Ne6",
+              "Bf1"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:017da55d4e3da23241207f32dcf704b89fa03dac1e3b9d05feb3d00c59233150",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "e2f1",
+              "d4c6",
+              "b2b4",
+              "c5d7",
+              "g1h1",
+              "c6e5",
+              "f3f4",
+              "e5g4",
+              "e3g1",
+              "a6a5"
+            ],
+            "san": [
+              "Nxd4",
+              "Bf1",
+              "Nc6",
+              "b4",
+              "Nd7",
+              "Kh1",
+              "Nce5",
+              "f4",
+              "Ng4",
+              "Bg1",
+              "a5"
+            ]
+          },
+          {
+            "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:03eeca7003f749d785ca37029f06c8080741ef28cabadf1be5deac07eb220ea4",
+            "kind": "analysis",
+            "moves": [
+              "c6d4",
+              "g1h1",
+              "d4e2",
+              "d2e2",
+              "c5d7"
+            ],
+            "san": [
+              "Nxd4",
+              "Kh1",
+              "Nxe2",
+              "Qxe2",
+              "Nd7"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Bxd4 — Offers a bishop exchange.  Both choices exchange White's knight on d4, removing its control of e6. Ne6 and Ne6 then bring the original c5 knight to that square. Up to the checkpoints below, in both lines 1 pair of knights and 1 pair of bishops are exchanged.",
+            "ko": "Bxd4 — 비숍 교환을 제안합니다.  두 선택 모두 원래 d4의 나이트를 교환해 e6에 대한 그 기물의 통제를 없앱니다. Ne6와 Ne6에서 남은 원래 c5의 나이트가 그 칸을 실제로 사용합니다. 아래 비교 시점까지 두 수순 모두 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+            "english_only": false,
+            "covered_count": 8,
+            "required_count": 14,
+            "proof_count": 14,
+            "action_count": 14
+          },
+          {
+            "en": "Bxd4 — after Bxd4: accepts the offered exchange. Ne6 is the observed checkpoint.",
+            "ko": "Bxd4 — Bxd4: 교환을 받아들입니다. Ne6까지 기록되어 있습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 3,
+            "proof_count": 3,
+            "action_count": 2
+          },
+          {
+            "en": "Nxd4 — after Bxd4: recaptures in the exchange. Bxd4+ is answered by Qxd4, which captures the checking bishop. Ne6 is the observed checkpoint. No further reply is recorded.",
+            "ko": "Nxd4 — Bxd4: 되잡기로 교환에 응합니다. Bxd4+에는 Qxd4로 체크한 비숍을 잡습니다. Ne6까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 5,
+            "proof_count": 5,
+            "action_count": 4
+          },
+          {
+            "en": "After Nxd4, Bxd4 is the stronger tested reply than Bf1. In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. In the Nxd4 line, both sides exchange one knight and one bishop. After Nxd4, White's queen on d2 now targets Black's knight on d4. After Nxd4, White's bishop on e3 now targets Black's knight on d4. The recorded continuation is Bf1 Nc6. Nc6 moves the knight out of the attacks from White's queen on d2 and White's bishop on e3. After Nc6, Black's bishop on g7 does not support Black's knight on c6. After Nc6, Black's pawn on b7 supports Black's knight on c6.",
+            "ko": "After Nxd4, Bxd4 is the stronger tested reply than Bf1. In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. In the Nxd4 line, both sides exchange one knight and one bishop. After Nxd4, White's queen on d2 now targets Black's knight on d4. After Nxd4, White's bishop on e3 now targets Black's knight on d4. The recorded continuation is Bf1 Nc6. Nc6 moves the knight out of the attacks from White's queen on d2 and White's bishop on e3. After Nc6, Black's bishop on g7 does not support Black's knight on c6. After Nc6, Black's pawn on b7 supports Black's knight on c6.",
+            "english_only": true,
+            "covered_count": 4,
+            "required_count": 7,
+            "proof_count": 7,
+            "action_count": 7
+          },
+          {
+            "en": "Nxd4 captures the white knight on d4.",
+            "ko": "Nxd4 captures the white knight on d4.",
+            "english_only": true,
+            "covered_count": 1,
+            "required_count": 1,
+            "proof_count": 1,
+            "action_count": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "be7-independent",
+      "raw_network_path": "target/research-runs/idea-generalization-20261016/be7-independent-network.json",
+      "raw_network_sha256": "156848f39e3e3e7042b8ae636e006372d765ec8db28d91b306695cc2d285a295",
+      "screenshot_sha256": "9a607200886c574e9373bf411f19024d45cb1a98830959cdde91d71b6e94a5b4",
+      "request": {
+        "schema_version": "chesstory.position-commentary.job-request.v6",
+        "request_id": "move-review-59ed559a-27c0-4f48-b830-c35405e1b0a3",
+        "variant": "standard",
+        "initial_fen": "r1q1rbk1/2p2ppp/p4Bb1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 w - - 0 26",
+        "move_prefix_uci": [],
+        "current_fen": "r1q1rbk1/2p2ppp/p4Bb1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 w - - 0 26",
+        "focus": {
+          "kind": "played_move",
+          "played_move_uci": "f6e7",
+          "resulting_fen": "r1q1rbk1/2p1Bppp/p5b1/2p3Q1/N1P5/1P3P2/P5PP/R3R1K1 b - - 1 26"
+        },
+        "engine_profile": "sf18-smallnet-t2-h16-v1",
+        "remaining_budget_ms": 19746,
+        "input_lines": [
+          {
+            "source": "pgn_record",
+            "moves": [
+              "f6e7"
+            ]
+          }
+        ]
+      },
+      "depths": [
+        11
+      ],
+      "recorded_time_seconds": 5.1,
+      "state": "completed",
+      "summary": {
+        "question": "selected_comparison",
+        "paths": [
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:d203070c7c794adefc7c87eb5294143a6ee60e43663f3564cfbbf708e80299fb",
+            "kind": "played",
+            "moves": [
+              "f6e7"
+            ],
+            "san": [
+              "Be7"
+            ]
+          },
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:47a5e389e5f0fcf5af64cc1b76e4566242603c833a0eb0f0908b054b3705b00f",
+            "kind": "analysis",
+            "moves": [
+              "f6e7",
+              "e8e7",
+              "e1e7",
+              "c8d8",
+              "a1e1",
+              "f8e7",
+              "g5e7",
+              "d8d4",
+              "g1h1",
+              "h7h6",
+              "a4c5",
+              "d4f2",
+              "h2h3",
+              "a6a5"
+            ],
+            "san": [
+              "Be7",
+              "Rxe7",
+              "Rxe7",
+              "Qd8",
+              "Rae1",
+              "Bxe7",
+              "Qxe7",
+              "Qd4+",
+              "Kh1",
+              "h6",
+              "Nxc5",
+              "Qf2",
+              "h3",
+              "a5"
+            ]
+          },
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:8ab997151e93e31b8f63b5f8ea3c8e3168bcf178c835e8ca66caf6ae77c5cfef",
+            "kind": "analysis",
+            "moves": [
+              "f6c3",
+              "e8e1",
+              "c3e1",
+              "f7f6",
+              "g5d5",
+              "g6f7",
+              "d5d2",
+              "c8e8",
+              "e1f2",
+              "a8d8",
+              "d2e3",
+              "e8c6",
+              "a4c5",
+              "d8e8"
+            ],
+            "san": [
+              "Bc3",
+              "Rxe1+",
+              "Bxe1",
+              "f6",
+              "Qd5+",
+              "Bf7",
+              "Qd2",
+              "Qe8",
+              "Bf2",
+              "Rd8",
+              "Qe3",
+              "Qc6",
+              "Nxc5",
+              "Re8"
+            ]
+          },
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:af15b649a745c132949bf49377aac3e7422b4e96117d24dc9a18c2c33edbb3cf",
+            "kind": "analysis",
+            "moves": [
+              "f6e7",
+              "e8e7",
+              "e1e7",
+              "c8d8",
+              "a1e1",
+              "h7h6",
+              "g5c5",
+              "f8e7",
+              "c5e7",
+              "d8d2",
+              "e7e2",
+              "a8d8",
+              "e2d2",
+              "d8d2",
+              "e1e8",
+              "g8h7",
+              "e8c8",
+              "d2a2",
+              "c8c7",
+              "a6a5"
+            ],
+            "san": [
+              "Be7",
+              "Rxe7",
+              "Rxe7",
+              "Qd8",
+              "Rae1",
+              "h6",
+              "Qxc5",
+              "Bxe7",
+              "Qxe7",
+              "Qd2",
+              "Qe2",
+              "Rd8",
+              "Qxd2",
+              "Rxd2",
+              "Re8+",
+              "Kh7",
+              "Rc8",
+              "Rxa2",
+              "Rxc7",
+              "a5"
+            ]
+          },
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:85ce8afa44be3b7a665e035d0d4441de5b1c3216e8ca78456b866d99a35dc1fd",
+            "kind": "analysis",
+            "moves": [
+              "f6e7",
+              "h7h6",
+              "g5c5",
+              "e8e7",
+              "e1e7",
+              "c8d8",
+              "a1e1",
+              "f8e7",
+              "c5e7",
+              "d8d2",
+              "e7e2",
+              "a8d8",
+              "e2d2",
+              "d8d2",
+              "e1e8",
+              "g8h7",
+              "e8c8",
+              "g6b1",
+              "a4c3",
+              "b1a2",
+              "c3a2",
+              "d2a2",
+              "c8c7",
+              "a2b2",
+              "c7f7",
+              "b2b3",
+              "g1f2"
+            ],
+            "san": [
+              "Be7",
+              "h6",
+              "Qxc5",
+              "Rxe7",
+              "Rxe7",
+              "Qd8",
+              "Rae1",
+              "Bxe7",
+              "Qxe7",
+              "Qd2",
+              "Qe2",
+              "Rd8",
+              "Qxd2",
+              "Rxd2",
+              "Re8+",
+              "Kh7",
+              "Rc8",
+              "Bb1",
+              "Nc3",
+              "Bxa2",
+              "Nxa2",
+              "Rxa2",
+              "Rxc7",
+              "Rb2",
+              "Rxf7",
+              "Rxb3",
+              "Kf2"
+            ]
+          },
+          {
+            "id": "move-review:a5f37022dc8e68c285bc2eca3d82665c0bac46a285a2bd8f57521c863920a04d:50:f6e7:line:c201f504d98de909842e133ae76cfcda335d955e54c804eb9ddc60795cb5aeb7",
+            "kind": "analysis",
+            "moves": [
+              "f6e7",
+              "f7f6",
+              "g5c5",
+              "e8e7",
+              "e1e7",
+              "c8d8",
+              "a1e1",
+              "f8e7",
+              "e1e7",
+              "d8d1",
+              "g1f2",
+              "a8e8",
+              "c5d5"
+            ],
+            "san": [
+              "Be7",
+              "f6",
+              "Qxc5",
+              "Rxe7",
+              "Rxe7",
+              "Qd8",
+              "Rae1",
+              "Bxe7",
+              "Rxe7",
+              "Qd1+",
+              "Kf2",
+              "Re8",
+              "Qd5+"
+            ]
+          }
+        ],
+        "units": [
+          {
+            "en": "Bc3 — Moves the bishop out of the attack from Black's pawn on g7. Uses White's bishop on c3 to guard White's rook on e1 against Black's rook on e8. The same white bishop originally on f6 follows Bc3 … Bxe1 … Bf2 in the recorded line. After Bf2, White's bishop on f2 now targets Black's pawn on c5. Be7 — Moves the bishop out of the attack from Black's pawn on g7. Interposes White's bishop on e7 on the line from Black's rook on e8 to White's rook on e1. Newly attacks Black's pawn on c5. Offers a bishop exchange. Be7 clears f6; later Qxe7: White's queen on e7 passes through that square in this line.  Up to the checkpoints below, in both lines 1 pair of rooks is exchanged. Be7 additionally: 1 pair of bishops is exchanged. In the Bc3 line: Qe8 attacks White's bishop on e1; Bf2 moves that piece out of the attack. f6 attacks White's queen on g5; Qd5+ moves that piece out of the attack. In the Be7 line: Qxe7 attacks Black's queen on d8; Qd4+ moves that piece out of the attack.",
+            "ko": "Bc3 — 원래 f6의 비숍을 옮겨 흑 g7 폰의 공격을 피합니다. 백 c3 비숍이 흑 e8 룩에게 공격받는 백 e1 룩을 지킵니다. 제시된 수순에서 원래 f6의 비숍이 Bc3 … Bxe1 … Bf2로 재배치됩니다. Bf2 뒤 백 f2 비숍이 흑 c5 폰을 새로 공격합니다. Be7 — 원래 f6의 비숍을 옮겨 흑 g7 폰의 공격을 피합니다. 백 e7 비숍이 흑 e8 룩에서 백 e1 룩 쪽으로 이어지는 공격선을 막습니다. 흑 c5 폰을 새로 공격합니다. 비숍 교환을 제안합니다. Be7 수로 f6 칸을 비워 길을 엽니다. 제시된 수순에서 Qxe7 수로 백 퀸이 그 길을 지나 e7에 진출합니다.  아래 비교 시점까지 두 수순 모두 룩 한 쌍을 교환합니다. Be7에서는 그 밖에 비숍 한 쌍을 교환합니다. Bc3 수순에서: Qe8의 백 e1 비숍 공격을 Bf2 수로 피합니다. f6의 백 g5 퀸 공격을 Qd5+ 수로 피합니다. Be7 수순에서: Qxe7의 흑 d8 퀸 공격을 Qd4+ 수로 피합니다.",
+            "english_only": false,
+            "covered_count": 6,
+            "required_count": 18,
+            "proof_count": 18,
+            "action_count": 18
+          },
+          {
+            "en": "Bc3 — Rxe1+ is answered by Bxe1, which captures the checking rook; then Qd5+ is answered by Bf7, which interposes the bishop against the check. That first reply captures White's rook on e1. Bf2: in this continuation, White's bishop on f2 and White's rook on a1 remain.",
+            "ko": "Bc3 — Rxe1+에는 Bxe1로 체크한 룩을 잡습니다; 이어 Qd5+에는 Bf7로 비숍을 끼워 체크를 막습니다. 이 첫 응수는 백 e1 룩을 잡습니다. Bf2까지의 수순에서는 백 f2 비숍, 백 a1 룩을 남깁니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 6,
+            "proof_count": 6,
+            "action_count": 5
+          },
+          {
+            "en": "Be7 — after Rxe7: captures White's bishop on e7. Qd4+ is answered by Kh1, which moves the king out of check. Kh1: in this continuation, White's rook on e1 works on the open e-file. White's queen on e7 attacks Black's pawn on c5 and Black's pawn on c7 and Black's pawn on f7.",
+            "ko": "Be7 — Rxe7: 백 e7 비숍을 잡습니다. Qd4+에는 Kh1로 킹이 체크를 피합니다. Kh1까지의 수순에서는 백 e1 룩은 열린 e 파일에서 활동합니다. 백 e7 퀸은 흑 c5 폰, 흑 c7 폰, 흑 f7 폰을 공격합니다.",
+            "english_only": false,
+            "covered_count": 0,
+            "required_count": 4,
+            "proof_count": 4,
+            "action_count": 3
+          },
+          {
+            "en": "After Be7, Rxe7 and h6 are competitive replies. The recorded continuation is Rxe7 Rxe7. In the Be7 continuation through Rxe7, White gives up one bishop for one rook. After Rxe7, White's rook on e7 now targets Black's pawn on c7 and Black's pawn on f7. h6 attacks White's queen on g5; Qxc5 moves that piece out of the attack. The recorded continuation is h6 Qxc5 Rxe7 Rxe7. After Qxc5, White's queen on c5 now targets Black's pawn on c7. After Rxe7, White's rook on e7 now targets Black's pawn on c7 and Black's pawn on f7. In the Be7 continuation through Bxe7, both sides exchange one rook; White gives up one bishop for one pawn.",
+            "ko": "Be7 이후 별도로 조사한 응수에서는 Rxe7와 h6가 비슷한 수준입니다. 제시된 수순은 Rxe7 Rxe7입니다. 제시된 Be7 수순의 Rxe7까지는 백은 비숍 한 개를 내주고 룩 한 개를 얻습니다. Rxe7 뒤 백 e7 룩이 흑 c7 폰·흑 f7 폰을 새로 공격합니다. h6의 백 g5 퀸 공격을 Qxc5 수로 피합니다. 제시된 수순은 h6 Qxc5 Rxe7 Rxe7입니다. Qxc5 뒤 백 c5 퀸이 흑 c7 폰을 새로 공격합니다. Rxe7 뒤 백 e7 룩이 흑 c7 폰·흑 f7 폰을 새로 공격합니다. 제시된 Be7 수순의 Bxe7까지는 양쪽이 룩 한 개씩 교환합니다. 백은 비숍 한 개를 내주고 폰 한 개를 얻습니다.",
+            "english_only": false,
+            "covered_count": 6,
+            "required_count": 9,
+            "proof_count": 9,
+            "action_count": 9
+          },
+          {
+            "en": "In the Be7 line: Qxe7 recaptures the black bishop on e7.",
+            "ko": "In the Be7 line: Qxe7 recaptures the black bishop on e7.",
+            "english_only": true,
+            "covered_count": 1,
+            "required_count": 1,
+            "proof_count": 2,
+            "action_count": 1
+          }
+        ]
+      }
+    }
+  ],
+  "latest_nxd4_exact_report_replay": {
+    "source": "nxd4-final-delivered-network.json",
+    "source_sha256": "3735f74e8a04865dbddf8b696696404a2ffff320126e49879515de58c5af9053",
+    "replay_sha256": "bfe8ad054bbf79676a0459a2b5acf7f2583e9e6212f0a9d0dcb7ff59fe2c8f81",
+    "note": "The last grouped-evasion/root-price fix was checked against this exact owned report, not another live engine run.",
+    "summary": {
+      "question": "selected_comparison",
+      "paths": [
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:9710f7d58579b7375db14f9bafd5d166df9588bd236c0cb407658009130f7b87",
+          "kind": "played",
+          "moves": [
+            "c6d4"
+          ],
+          "san": [
+            "Nxd4"
+          ]
+        },
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:5a296fd0ff5bc38772dffc1a5bcfc9cabd8e2c159b653010dd33a5634d4e3aca",
+          "kind": "analysis",
+          "moves": [
+            "c6d4",
+            "e3d4",
+            "g7d4",
+            "d2d4",
+            "e7e5",
+            "d4d2",
+            "c5e6"
+          ],
+          "san": [
+            "Nxd4",
+            "Bxd4",
+            "Bxd4+",
+            "Qxd4",
+            "e5",
+            "Qd2",
+            "Ne6"
+          ]
+        },
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:c7240736c2d5e52eae0138bbfb117783d998b447c20b84edac3dc2ddf43c5e9e",
+          "kind": "analysis",
+          "moves": [
+            "g7d4",
+            "e3d4",
+            "c6d4",
+            "d2d4",
+            "e7e5",
+            "d4f2",
+            "c5e6",
+            "d1d5",
+            "d8c8",
+            "c1d1",
+            "c8c6"
+          ],
+          "san": [
+            "Bxd4",
+            "Bxd4",
+            "Nxd4",
+            "Qxd4",
+            "e5",
+            "Qf2",
+            "Ne6",
+            "Rd5",
+            "Rc8",
+            "Rcd1",
+            "Rc6"
+          ]
+        },
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:e67533a1420fdf39d0e17c4ca2fd66cfec52cf086c469a38263922de997f627e",
+          "kind": "analysis",
+          "moves": [
+            "c6d4",
+            "e3d4",
+            "g7d4",
+            "d2d4",
+            "b8c7",
+            "d4e3",
+            "e7e5",
+            "d1d5",
+            "c5e6",
+            "e2f1"
+          ],
+          "san": [
+            "Nxd4",
+            "Bxd4",
+            "Bxd4+",
+            "Qxd4",
+            "Qc7",
+            "Qe3",
+            "e5",
+            "Rd5",
+            "Ne6",
+            "Bf1"
+          ]
+        },
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:017da55d4e3da23241207f32dcf704b89fa03dac1e3b9d05feb3d00c59233150",
+          "kind": "analysis",
+          "moves": [
+            "c6d4",
+            "e2f1",
+            "d4c6",
+            "b2b4",
+            "c5d7",
+            "g1h1",
+            "c6e5",
+            "f3f4",
+            "e5g4",
+            "e3g1",
+            "a6a5"
+          ],
+          "san": [
+            "Nxd4",
+            "Bf1",
+            "Nc6",
+            "b4",
+            "Nd7",
+            "Kh1",
+            "Nce5",
+            "f4",
+            "Ng4",
+            "Bg1",
+            "a5"
+          ]
+        },
+        {
+          "id": "move-review:7af657601ebfdb90de8887d228732140975623be100f0628c036f89733242b25:39:c6d4:line:03eeca7003f749d785ca37029f06c8080741ef28cabadf1be5deac07eb220ea4",
+          "kind": "analysis",
+          "moves": [
+            "c6d4",
+            "g1h1",
+            "d4e2",
+            "d2e2",
+            "c5d7"
+          ],
+          "san": [
+            "Nxd4",
+            "Kh1",
+            "Nxe2",
+            "Qxe2",
+            "Nd7"
+          ]
+        }
+      ],
+      "units": [
+        {
+          "en": "Bxd4 — Offers a bishop exchange.  Both choices exchange White's knight on d4, removing its control of e6. Ne6 and Ne6 then bring the original c5 knight to that square. Up to the checkpoints below, in both lines 1 pair of knights and 1 pair of bishops are exchanged.",
+          "ko": "Bxd4 — 비숍 교환을 제안합니다.  두 선택 모두 원래 d4의 나이트를 교환해 e6에 대한 그 기물의 통제를 없앱니다. Ne6와 Ne6에서 남은 원래 c5의 나이트가 그 칸을 실제로 사용합니다. 아래 비교 시점까지 두 수순 모두 나이트 한 쌍·비숍 한 쌍을 교환합니다.",
+          "english_only": false,
+          "covered_count": 8,
+          "required_count": 14,
+          "proof_count": 14,
+          "action_count": 14
+        },
+        {
+          "en": "Bxd4 — after Bxd4: accepts the offered exchange. Ne6 is the observed checkpoint.",
+          "ko": "Bxd4 — Bxd4: 교환을 받아들입니다. Ne6까지 기록되어 있습니다.",
+          "english_only": false,
+          "covered_count": 0,
+          "required_count": 3,
+          "proof_count": 3,
+          "action_count": 2
+        },
+        {
+          "en": "Nxd4 — after Bxd4: recaptures in the exchange. Bxd4+ is answered by Qxd4, which captures the checking bishop. Ne6 is the observed checkpoint. No further reply is recorded.",
+          "ko": "Nxd4 — Bxd4: 되잡기로 교환에 응합니다. Bxd4+에는 Qxd4로 체크한 비숍을 잡습니다. Ne6까지 기록되어 있습니다. 이 뒤의 응수는 기록되어 있지 않습니다.",
+          "english_only": false,
+          "covered_count": 0,
+          "required_count": 5,
+          "proof_count": 5,
+          "action_count": 4
+        },
+        {
+          "en": "After Nxd4, Bxd4 is the stronger tested reply than Bf1. In the provided Bxd4+ line: Bxd4+ gives check to the White king on g1 with Black's bishop on d4; Qxd4 captures the checking bishop on d4. The recorded continuation is Bxd4 Bxd4+ Qxd4. In the Nxd4 line, both sides exchange one knight and one bishop. After Nxd4, White's queen on d2 now targets Black's knight on d4. After Nxd4, White's bishop on e3 now targets Black's knight on d4. The recorded continuation is Bf1 Nc6. In the Nxd4 line, White loses one knight. Nc6 moves the knight out of the attacks from White's queen on d2 and White's bishop on e3. After Nc6, Black's bishop on g7 does not support Black's knight on c6. After Nc6, Black's pawn on b7 supports Black's knight on c6.",
+          "ko": "Nxd4 이후 별도로 조사한 응수에서는 Bxd4가 Bf1보다 더 높게 평가됩니다. 제시된 Bxd4+ 수순에서: Bxd4+ d4 비숍으로 백 킹을 체크합니다; Qxd4 d4의 체크 기물(비숍)을 잡습니다. 제시된 수순은 Bxd4 Bxd4+ Qxd4입니다. 제시된 Nxd4 수순에서 양쪽이 나이트 한 개와 비숍 한 개씩 교환합니다. Nxd4 뒤 백 d2 퀸이 흑 d4 나이트를 새로 공격합니다. Nxd4 뒤 백 e3 비숍이 흑 d4 나이트를 새로 공격합니다. 제시된 수순은 Bf1 Nc6입니다. 제시된 Nxd4 수순에서 백은 나이트 한 개를 내줍니다. Nc6 수로 나이트가 백 d2 퀸·백 e3 비숍의 공격을 피합니다. Nc6 뒤 흑 g7 비숍이 흑 c6 나이트를 지원하지 않습니다. Nc6 뒤 흑 b7 폰이 흑 c6 나이트를 지원합니다.",
+          "english_only": false,
+          "covered_count": 5,
+          "required_count": 7,
+          "proof_count": 7,
+          "action_count": 7
+        }
+      ]
+    }
+  },
+  "independent_be7_missing_connection": {
+    "fact_already_present": [
+      "Blocks the line from Black rook on e8 to White rook on e1. Blocks the line from Black bishop on f8 to Black pawn on c5. Blocks the line from White rook on e1 to Black rook on e8."
+    ],
+    "failure": "The basic purpose lists the rook interposition, c5 attack and exchange offer, but does not connect blocking the f8 bishop guard to the observed h6/Qxc5 resource. A final Qxe7 capture remains separate and English-only.",
+    "inference": "This is a selection/composition bottleneck even though the relation is available; it cannot be fixed merely by deeper search or another target label."
+  },
+  "remaining_scope": "No more positions or retries of Be7 were used. Four distinct live positions total; first failed/partial holdouts are retained. No independence claim for later Nb1/Nxd4 results."
+}

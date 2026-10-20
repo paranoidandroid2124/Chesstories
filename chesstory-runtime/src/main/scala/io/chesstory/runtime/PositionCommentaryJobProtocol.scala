@@ -441,9 +441,9 @@ object PositionCommentaryJobProtocol:
       state.deferObservationDelivery).map(packet => Json.obj("observations" ->
       (state match
         case pending: AwaitingEngineWork if pending.issuedWork.purpose == EngineWorkPurpose.ResponseComparison &&
-            pending.issuedWork.searchAnchor.exists(_.plyOffset == 1) && pending.issuedWork.proposalRefs.isEmpty &&
+            pending.issuedWork.searchAnchor.nonEmpty && pending.issuedWork.proposalRefs.isEmpty &&
             state.proposalEntries.isEmpty => RuntimeProtocol.responseWorkObservationsJson(packet,
-          state.preparedPaths.get, state.responseInquiries, state.responseSearches)
+          state.preparedPaths.get, state.responseInquiries, state.responseSearches, pending.issuedWork.searchAnchor)
         case _ => RuntimeProtocol.observationsJson(packet, state.inquiries, state.pvComparisons,
         state.responseInquiries, state.preparedPaths, state.responseSearches,
         state.continuationReadings, state.continuationInquiries, state.rootSearches,

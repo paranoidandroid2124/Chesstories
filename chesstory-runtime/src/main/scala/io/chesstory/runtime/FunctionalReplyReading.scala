@@ -222,6 +222,24 @@ private[runtime] object FunctionalReplyReading:
       .flatMap(_.originalVictim)
     val sameRecapture = capturedFriendly(value.reference).nonEmpty &&
       capturedFriendly(value.reference) == capturedFriendly(value.alternative)
+    val quietArrival = count == 2 && proof.action.target.exists(target => target.role != "king" &&
+      proof.action.subject.exists(_.side != target.side) && List(value.reference, value.alternative).forall(path =>
+        paths.positionView(path, 1).flatMap(_.legalRows).exists(_.exists(row =>
+          row.move == proof.reference.last && row.capture.isEmpty && row.promotionRole.isEmpty &&
+            paths.trackedPieceAfter(path, target.witness, 1).flatten.contains(row.actor)))))
+    val exposedPin = count == 2 && proof.action.kind == "legal_capture" && (for
+      actor <- proof.action.subject
+      victim <- proof.action.target
+      before <- paths.purposePosition(value.reference, 0)
+      front <- before.relativeAlignments(actor.witness).collectFirst {
+        case (_, front, rear) if rear == victim.witness => front
+      }
+      if List(value.reference, value.alternative).forall(path =>
+        paths.positionView(path, 1).flatMap(_.legalRows).exists(_.exists(row =>
+          row.move == proof.reference.last && paths.trackedPieceAfter(path, front, 1).flatten.contains(row.actor))) &&
+          (0 to count).forall(at => paths.trackedPieceAfter(path, actor.witness, at).contains(Some(actor.witness)) &&
+            paths.trackedPieceAfter(path, victim.witness, at).contains(Some(victim.witness))))
+    yield true).contains(true)
     val shared = owned(value.reference, proof.reference) && owned(value.alternative, proof.alternative) &&
       owned(value.available, proof.option) && count >= 2 && count == proof.alternative.size &&
       proof.reference.head == root.referenceMove && proof.alternative.head == root.alternativeMove &&
@@ -267,7 +285,7 @@ private[runtime] object FunctionalReplyReading:
         read(value.alternative, count, proof.effect).contains("illegal") &&
         proof.effect.target.exists(target => paths.trackedPieceAfter(value.reference, target.witness, count).flatten
           .exists(piece => proof.condition.square.contains(piece.square.key))) &&
-        (sameRecapture ||
+        (sameRecapture || quietArrival ||
           List(value.reference, value.alternative).forall(path => paths.positionView(path, count).exists(view =>
             view.currentCheckSources(proof.action.subject.get.witness.side).nonEmpty)))
       case "check" => proof.condition.kind == "location" && proof.condition.subject.exists(_.role == "king") &&
@@ -278,7 +296,7 @@ private[runtime] object FunctionalReplyReading:
           paths.trackedPieceAfter(value.reference, piece.witness, count).flatten.nonEmpty &&
             paths.trackedPieceAfter(value.reference, piece.witness, count) ==
               paths.trackedPieceAfter(value.alternative, piece.witness, count)) &&
-        read(value.reference, 0, proof.action).contains("legal")
+        (read(value.reference, 0, proof.action).contains("legal") || exposedPin)
       case _ => false)
 
   def relevant(paths: PreparedPaths, pair: List[PreparedPath], value: LegalReplyOption): Boolean =
@@ -330,7 +348,10 @@ private[runtime] object FunctionalReplyReading:
         value = withRemainingCaptures(paths, LegalReplyOption(reference, alternative, available, proof, price))
         if valid(paths, value) && relevant(paths, pair, value)
       yield value
-    }.distinct.sortBy(value => (value.proof.reference.size, value.proof.effect.json.toString,
+    }.distinct.sortBy(value => (if pair.exists(_.moves.head == value.proof.owner.comparison.alternativeMove) then 0 else 1,
+      value.proof.reference.size,
+      if value.proof.effect.kind == "check" && value.proof.action.kind == "legal_capture" then 0 else 1,
+      value.proof.effect.json.toString,
       value.proof.action.json.toString, value.proof.reference.mkString(" "),
       value.reference.moves.size + value.alternative.moves.size + value.available.moves.size))
     // The new guard orientation is a specific factual difference. Neither an
@@ -349,7 +370,57 @@ private[runtime] object FunctionalReplyReading:
     // not disappear behind a shorter one. Keep them available when choosing a
     // single representative cannot faithfully answer the selected question.
     val conditions = values.groupBy(value => (value.proof.condition, value.proof.effect.kind))
-    val central = if conditions.size != 1 then previous else
+    // Each actual root owns its missing purpose. An unrelated condition for
+    // the other root cannot veto an independently certified conditional idea.
+    val previousPurpose = previous.core.flatMap(_.statements).collectFirst {
+      case ReferencePurpose(reading) => reading
+    }
+    val supplementedPurpose = previousPurpose.flatMap { reading =>
+      val selected = reading.arms.flatMap { arm =>
+        val options = values.filter(value => value.proof.owner.comparison.referenceMove == arm.path.moves.head &&
+          (!reading.hasPurpose(arm) || reading.rootUses.exists {
+            case Action(move, MoveWorkProjection.Detail.OpenedRay(_, user, end)) =>
+              (move.path eq arm.path) && move.offset == 0 && value.proof.condition.kind == "control" &&
+                value.proof.condition.subject.exists(_.witness == user) && value.proof.condition.square.contains(end)
+            case _ => false
+          }))
+        val groups = options.groupBy(value => (value.proof.condition, value.proof.effect.kind))
+        Option.when(groups.size == 1)(options.head).map { value =>
+          val shared = value.copy(reference = value.available)
+          if valid(paths, shared) && relevant(paths, pair, shared) then shared else value
+        }
+      }
+      Option.when(selected.nonEmpty)(selected).flatMap { options =>
+        val enriched = reading.withConditionalPurposes(options)
+        def replace(statement: Statement): Statement = statement match
+          case ReferencePurpose(value) if value eq reading => ReferencePurpose(enriched)
+          case ReferencePosition(value, arm) if value eq reading => ReferencePosition(enriched, arm)
+          case ReferenceContrast(value) if value eq reading => ReferenceContrast(enriched)
+          case ReferenceExchangeReply(value, purpose, branch) if value eq reading =>
+            ReferenceExchangeReply(enriched, purpose, branch)
+          case value => value
+        val core = previous.core.map(section => section.copy(statements = section.statements.map(replace)))
+        val added = options.map { value =>
+          // The illustrative branch owns its own complete local price; it
+          // neither borrows the main PV's exchanges nor changes its forecast.
+          val end = value.proof.option.size - 1
+          val prices = value.available.certified.flatMap(_._2.material).toList.flatMap { material =>
+            val events = material.events.filter(_.plyOffset <= end)
+            Option.when(events.nonEmpty)(CommentaryMaterialAccount.calculate(material,
+              events.map(_.plyOffset), (0 to end).toList, value.available.moves.size)
+              .fold[Statement](MaterialEvents(value.available, events))(Material(value.available, _))).toList
+          }
+          Section(value :: prices)
+        }
+        val lead = core.take(1) ++ added ++ core.drop(1)
+        RootQuestionSummary.completePairAnswer(packet, paths, pair, "functional_response", lead, previous.details)
+          .map(answer => answer.copy(evidence = (previous.evidence ++ answer.evidence ++
+            options.flatMap(_.proof.evidence)).distinct,
+            completionSources = Some(lead.flatMap(_.statements))))
+          .filter(answer => RootQuestionSummary.realize(paths, pair, answer).nonEmpty)
+      }
+    }
+    val central = supplementedPurpose.getOrElse(if previousPurpose.nonEmpty || conditions.size != 1 then previous else
       val value = values.head
       val recorded = previous.core ++ previous.details
       val detail = Section(recorded.flatMap(_.statements).distinct,
@@ -362,7 +433,7 @@ private[runtime] object FunctionalReplyReading:
         Section(List(value)) :: Option.when(immediate.nonEmpty)(Section(List(Continuation(immediate)))).toList,
         List(detail)).map(answer => protect(answer.copy(
           evidence = (answer.evidence ++ previous.evidence ++ value.proof.evidence).distinct), previous.core))
-        .getOrElse(previous)
+        .getOrElse(previous))
     // Supplement an existing judgment with a checked conditional example.
     // If its complete proof cannot fit the unchanged delivery contract, it
     // remains internal rather than suppressing the already deliverable core.

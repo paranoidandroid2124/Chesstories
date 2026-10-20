@@ -1,0 +1,137 @@
+Browser tab: 1, Title: "Chesstories · 기보와 해설", URL: "http://127.0.0.1:8787/".
+0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
+	1 container app
+		2 container
+			3 text Chesstories 기보와 해설
+			4 pop up button (collapsed, settable) Description: Language, Value: 한국어, Secondary Actions: Expand
+				5 menu
+					6 (selected) 한국어
+					7 English
+			8 button 어둡게
+		9 container
+			10 container 체스판과 기보
+				11 heading 분석 기보, Value: 1
+					12 text 분석 기보
+				82 text 22. h3
+				14 container
+					15 image
+					16 image
+					17 image
+					18 image
+					19 text 1
+					20 text 2
+					21 text 3
+					22 text 4
+					23 text 5
+					24 text 6
+					25 text 7
+					26 text 8
+					27 text A
+					28 text B
+					29 text C
+					30 text D
+					31 text E
+					32 text F
+					33 text G
+					34 text H
+				35 container 기보 이동
+					36 button 처음
+					37 button 이전 수
+					38 button (disabled) 다음 수
+					39 button (disabled) 마지막
+					40 button 방향 전환
+				41 container
+					42 text field (settable) 수 입력
+					43 button 두기
+				44 container
+					45 heading Engine reference, Value: 2
+						46 text Engine reference
+					47 checkbox Engine / Off, Value: 0
+					48 text Off · Stockfish 18 · 2 threads
+				49 container
+					50 heading 기보, Value: 2
+						51 text 기보
+					52 button PGN 저장
+					53 button 22. h3
+				83 button (collapsed) PGN · FEN 불러오기, Secondary Actions: Expand
+					84 text PGN · FEN 불러오기
+				56 container
+					57 button (collapsed) 현재 FEN, Secondary Actions: Expand
+						58 text 현재 FEN
+			59 container 해설
+				60 heading 이 수의 의미, Value: 2
+					61 text 이 수의 의미
+				62 button 해설 · 20초
+				87 text completed · 4.64s
+				64 container 직전 수 리뷰
+					65 container
+						66 heading 직전 수 리뷰, Value: 2, ID: analyse-move-review-title
+							67 text 직전 수 리뷰
+						86 text 직전 수 리뷰가 완료되었습니다.
+					88 container 이번 분석에서 가장 높게 평가한 수입니다: h3
+						89 text h3
+						90 heading 이번 분석에서 가장 높게 평가한 수입니다, Value: 3
+							91 text 이번 분석에서 가장 높게 평가한 수입니다
+					92 button (collapsed) 평가 수치 +, Secondary Actions: Expand
+						93 text 평가 수치
+						150 text +
+					95 container
+						96 heading 두 선택의 비교, Value: 3
+							97 text 두 선택의 비교
+						98 text In the 
+						99 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-1
+						100 text  line, 
+						101 pop up button (collapsed) Description: Rhd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-3
+						102 text  attacks the d1-rook. 
+						103 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-5
+						104 text  moves that rook out of the attack. In the 
+						105 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-7
+						106 text  line, 
+						107 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-9
+						108 text  attacks the c8-rook. 
+						109 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-0-11
+						110 text  moves that rook out of the attack. In the 
+						111 pop up button (collapsed) Description: h3 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-1-1
+						112 text  continuation through 
+						113 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-1-3
+						114 text , both sides exchange one pawn and one rook. 
+						115 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-1-5
+						116 text  … 
+						117 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-1-7
+						118 text : 1 pair of rooks is exchanged. Black's rook recaptures on d8. In the provided 
+						119 pop up button (collapsed) Description: Rd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-1
+						120 text  line, the same rook next moves with 
+						121 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-3
+						122 text  to d8. In the 
+						123 pop up button (collapsed) Description: Rd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-5
+						124 text  line, 
+						125 pop up button (collapsed) Description: Rcd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-7
+						126 text  attacks the d2-rook. 
+						127 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-9
+						128 text  moves that rook out of the attack. In the 
+						129 pop up button (collapsed) Description: Rd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-11
+						130 text  line, 
+						131 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-13
+						132 text  attacks the h8-rook. 
+						133 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-2-15
+						134 text  moves that rook out of the attack. In the 
+						135 pop up button (collapsed) Description: Rd2 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-3-1
+						136 text  continuation through 
+						137 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-3-3
+						138 text , both sides exchange one pawn and one rook. 
+						139 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-3-5
+						140 text  … 
+						141 pop up button (collapsed) Description: Rxd8 · 위치 살펴보기, Secondary Actions: Expand, ID: review-text-comparison:move-review:7d5db9877a13a6a929f0c1cdbaee9b2791a8ae5232f4fcdab99404f2bf40986d:42:h2h3:evidence:candidate-comparison:4f3ac7b1a663d1e5f087b98e58a56b19f2422c957d04d0ccf9db7eaf0ea28c89-question-basic-3-7
+						142 text : 1 pair of rooks is exchanged. Black's rook recaptures on d8.
+						143 button (collapsed) 이어지는 변화 +, Secondary Actions: Expand
+							144 text 이어지는 변화
+							151 text +
+						146 button 둔 수 · h3 · 재생
+						147 button 대안 수 · Rd2 · 재생
+					148 button (collapsed) 평가 근거와 관찰 기록 +, Secondary Actions: Expand
+						149 text 평가 근거와 관찰 기록
+						152 text +
+		71 container
+			81 text 기보를 불러왔습니다. 이 브라우저에 자동 저장됩니다. 기보를 보관하려면 PGN 저장을 사용하세요.
+
+The focused UI element is 0 AXWebArea Chesstories · 기보와 해설, URL: 127.0.0.1:8787/
