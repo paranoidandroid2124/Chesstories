@@ -2598,7 +2598,13 @@ object CommentaryJobReducer:
   private def finishInvestigation(before: ActiveCommentaryJob, completed: CompletedCommentaryJobRecord,
       questions: List[CommentaryInquiry], responses: List[CommentaryResponseInquiry],
       needsRefresh: Boolean = false): CompletedCommentaryJobRecord =
-    val active = refreshProposalReadings(before)
+    // Early purpose completion can bypass the general agenda refresh. Bind every
+    // existing question to its returned receipt before delivering a final snapshot.
+    val observed = before.preparedPaths.filter(_ => before.continuationInquiries.nonEmpty).fold(before) { paths =>
+      before.copy(continuationInquiries = refreshContinuationInquiries(before.packet, paths, Nil,
+        before.continuationInquiries, before.responseSearches))
+    }
+    val active = refreshProposalReadings(observed)
     val result = completed.result match
       case CompletedPositionCommentary.FocusedMoveReview(claims, review: CompletedMoveReviewRecord) =>
         // A failed upper assembly may still retain new lower observations. Keep the

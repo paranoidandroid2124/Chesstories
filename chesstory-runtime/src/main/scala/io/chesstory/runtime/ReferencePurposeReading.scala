@@ -105,15 +105,25 @@ private[runtime] object ReferencePurposeReading:
       val other = arms.find(_ ne arm).get
       val prepared = preparation.filter(value => (value.root eq arm.path) && value.investigated)
       val task = functional.filter(_.question.rootMove == arm.path.moves.head)
-      val conditional = conditionalPurposes.filter(_.proof.owner.comparison.referenceMove == arm.path.moves.head)
+      // A direct answer to an opposing resource need not be played to explain
+      // prevention. Its preceding own setup must belong to the actual line.
+      // Merely changing the price of an unchosen own action proves no purpose.
+      val conditional = conditionalPurposes.filter(value =>
+        value.proof.owner.comparison.referenceMove == arm.path.moves.head &&
+          (arm.path.moves.startsWith(value.proof.option) ||
+            value.proof.price.isEmpty && arm.path.moves.startsWith(value.proof.reference.init)))
       val escapedOption = conditionalPurposes.filter(value =>
         value.proof.owner.comparison.alternativeMove == arm.path.moves.head && arm.escaped.nonEmpty &&
+          value.proof.price.isEmpty && arm.path.moves.startsWith(value.proof.alternative.init) &&
+          other.path.moves.startsWith(value.proof.reference.init) &&
           owner.trackedPieceAfter(value.reference, arm.actor, value.proof.reference.size).contains(None) &&
           owner.trackedPieceAfter(value.alternative, arm.actor, value.proof.alternative.size).flatten.nonEmpty)
       val uses = realizedUses(owner, arm, rootUses) ++
         prepared.toList.flatMap(value => value.branches.flatMap(branch =>
           branch.realization.map(MoveRef(branch.path, _)))) ++ task.toList.flatMap(_.explanation.uses) ++
-        conditional.map(_.option) ++ escapedOption.map(value => MoveRef(value.alternative, value.proof.alternative.size - 1))
+        conditional.map(value => if arm.path.moves.startsWith(value.proof.option) then
+          MoveRef(arm.path, value.proof.option.size - 1) else value.option) ++
+        escapedOption.map(value => MoveRef(value.alternative, value.proof.alternative.size - 1))
       val users = purposeUsers(arm) ++ Set(arm.actor) ++ arm.supportedArrival.map(_.original)
       val changedFunction = arm.functions.exists(left => users(left.original) &&
         other.functions.exists(right => right.original == left.original &&

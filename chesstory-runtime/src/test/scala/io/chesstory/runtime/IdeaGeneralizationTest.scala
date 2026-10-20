@@ -263,6 +263,16 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       MoveWorkProjection.select(packet, paths).rootUses(pair)).get
     val previous = ReferencePurposeReading.answer(packet, paths, pair, reading, Some(_)).get
     val result = FunctionalReplyReading.withAnswer(packet, paths, pair, proofs, previous)
+    val supplemented = result.core.flatMap(_.statements).collectFirst {
+      case ReferencePurpose(value) => value
+    }.get
+    val directPrevention = supplemented.conditionalPurposes.filter(value =>
+      value.proof.price.isEmpty && value.proof.reference.size == 2 &&
+        !pair.exists(_.moves.startsWith(value.proof.option)))
+    assert(directPrevention.nonEmpty,
+      "the opponent need not actually choose a prevented check for its immediate response to explain the root")
+    assert(supplemented.completePurpose,
+      "distinguishing an unvalued own choice must not discard a direct, certified prevention")
     val row = screenCases.find(r => (r \ "id").as[String] == "ivanchuk-kh1-first-independent").get
     val snapshot = PositionCommentaryJobProtocol.projectJobSnapshot(CommentaryJobSnapshot(
       (row \ "job_id").as[String], (row \ "request" \ "request_id").as[String], 20001L, state))

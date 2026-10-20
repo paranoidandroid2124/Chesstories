@@ -14,7 +14,8 @@
     "commits": "Coherent intermediate outcomes, never claim goal completion from tests.",
     "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin.",
     "development_retry": "Two Qg2 development outputs have been preserved as failures. The final verification will use one Qg2 request after the remaining common sufficiency defects are fixed, followed by the first unused Rfe1 request with the same frozen source. The final Qg2 run is development verification, never a heldout result; there will be no further output-driven retuning in this goal.",
-    "delivery_repair": "The preregistered final Qg2 request had empty basic UI. Its unchanged wire and freeze remain failed. Only the common frontend ownership gate was repaired after this output; no backend purpose tuning followed. One delivery recheck and first unused Rfe1 will use the corrected frozen source. The first repair recheck exposed a second existing pending-work gate mismatch. Its first fault is retained; only the frontend request/receipt gate was corrected, with no backend purpose tuning."
+    "delivery_repair": "The preregistered final Qg2 request had empty basic UI. Its unchanged wire and freeze remain failed. Only the common frontend ownership gate was repaired after this output; no backend purpose tuning followed. One delivery recheck and first unused Rfe1 will use the corrected frozen source. The first repair recheck exposed a second existing pending-work gate mismatch. Its first fault is retained; only the frontend request/receipt gate was corrected, with no backend purpose tuning.",
+    "post_validation_repair": "The frozen independent screen failed. Subsequent common receipt/semantic repairs were informed by that failure and checked on older inputs; this is a departure from the initial no-retuning freeze, not an independent pass. The first Rfe1 output stays failed and immutable. No new Rfe1 search, replay under changed source, or Rfe1-specific detector/test is used. Any later common development remains unverified on a fresh independent position in this goal."
   },
   "baseline": "target/research-runs/purpose-explanation-20261020/baseline.json",
   "heldout_preregistration": {
@@ -167,6 +168,17 @@
         "heldout_used": false
       },
       "evidence": "purpose-explanation-20261020/stage6-evidence.json.gz"
+    },
+    {
+      "stage": 7,
+      "status": "common_failure_repairs_not_independent_validation",
+      "changes": [
+        "Refresh existing continuation inquiries against returned receipts before final delivery, without discovering new questions or changing the search agenda.",
+        "A legal optional own continuation needs a witness in the actual arm before completing purpose. Direct prevention can remain conditional when its preceding own setup is actually observed. Preserve its essential costs in the answer."
+      ],
+      "validation": "All 35 IdeaGeneralizationTest checks passed with current semantic/final-receipt changes. All 10 PurposeComparisonTest checks passed after removing the scheduling guard. No fresh engine/UI verification after these changes.",
+      "known_extra_check_failure": "One additional LineContinuationJobTest recapture-agenda expectation failed on both c2c8192b03 and this stage. It was not weakened or relabeled as passing; it is outside the 45 focused purpose checks.",
+      "evidence": "purpose-explanation-20261020/stage7-evidence.json.gz"
     }
   ],
   "verification": {
@@ -229,6 +241,39 @@
       "retained_wire": "purpose-explanation-20261020/qg2-delivery-wire.json.gz",
       "retained_ui": "purpose-explanation-20261020/qg2-delivery-screen.txt",
       "original_freeze": "purpose-explanation-20261020/delivery-freeze.json"
+    },
+    "qg2_verified_delivery": {
+      "status": "delivered_but_explanation_partial",
+      "commit": "c2c8192b03",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 4.32,
+      "actual_pair": [
+        "e2g2",
+        "d3b3"
+      ],
+      "engine_reports": 3,
+      "max_issued_depth": 11,
+      "finding": "Basic summary is visible and preserves both actual roots, delayed support and material prices. The issued R4f7/Qf7 reply pair is absent from the selected explanation; functional discovery is not a sufficient answer.",
+      "retained_wire": "purpose-explanation-20261020/qg2-verified-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-verified-screen.txt"
+    },
+    "rfe1_first": {
+      "status": "failed_first_unused_screen",
+      "commit": "c2c8192b03",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 10.0,
+      "actual_pair": [
+        "f1d1",
+        "f1e1"
+      ],
+      "engine_reports": 3,
+      "max_issued_depth": 11,
+      "failure": "Basic UI is empty. A returned continuation receipt is still marked awaiting_engine without its work ID. The frozen backend also treats an unvalued, unchosen own move's changed capture price as complete purpose; it does not explain the actual development/response choice sufficiently.",
+      "retained_wire": "purpose-explanation-20261020/rfe1-first-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/rfe1-first-screen.txt",
+      "diagnostic_replay": "purpose-explanation-20261020/rfe1-first-replay.json.gz",
+      "capture_limit": "All original requests/reports were recovered. The final two HTTP response bodies had been evicted from the inspector; the c2 source replay is explicitly diagnostic, not an original response capture.",
+      "fresh_reruns": 0
     }
   },
   "cleanup": [
@@ -268,6 +313,12 @@
       "bytes": 6603.0,
       "receipt": "purpose-explanation-20261020/stage6-recycled.json.gz",
       "method": "Windows Recycle Bin after exact log retention, resolved task paths and SHA256 verification."
+    },
+    {
+      "files": 15,
+      "bytes": 954773.0,
+      "receipt": "purpose-explanation-20261020/stage7-recycled.json.gz",
+      "method": "Windows Recycle Bin; exact base64 retention, decoded SHA256, absolute task paths verified."
     }
   ],
   "studied_failures": [
