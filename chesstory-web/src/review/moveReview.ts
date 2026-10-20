@@ -2015,7 +2015,8 @@ function projectIssuedEngineWork(
           [reading.reference_move, reading.alternative_move].every(move =>
             position.legal_moves.moves.some(row => row.uci === move)))));
   const purposeQuestion = observations?.selection?.purpose_question;
-  const purposePool = !!purposeQuestion && isObject(anchor) && Array.isArray(anchorPrefix) &&
+  const purposeDepth = limits.depth;
+  const purposePool = !!purposeQuestion && purposeDepth !== undefined && isObject(anchor) && Array.isArray(anchorPrefix) &&
     anchorPrefix.length === 1 && anchorPrefix[0] === subject.played.uci &&
     purposeQuestion.root_move === subject.played.uci &&
     purposeQuestion.root_occurrence_id === anchor.root_occurrence_id &&
@@ -2023,7 +2024,11 @@ function projectIssuedEngineWork(
     observations?.positions?.some(position => position.id === anchor.position_id && position.legal_moves.complete &&
       (unrestricted ? limits.multiPv === Math.min(3, position.legal_moves.moves.length) :
         restrictedMoves && restrictedMoves.length >= 2 && limits.multiPv === Math.min(3, restrictedMoves.length) &&
-        purposeResponseMovesMatch(purposeQuestion, restrictedMoves, position.legal_moves.moves.map(row => row.uci))));
+        purposeResponseMovesMatch(purposeQuestion, restrictedMoves, position.legal_moves.moves.map(row => row.uci), {
+          observations, searches: observations.selection?.response_searches ?? [],
+          roots: observations.selection?.root_searches, workId: value.work_id as string,
+          engineProfile: profile, requiredDepth: purposeDepth,
+        })));
   const responsePosition =
     value.purpose === 'response_comparison' &&
     isObject(anchor) &&

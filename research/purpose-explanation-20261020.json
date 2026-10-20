@@ -14,7 +14,7 @@
     "commits": "Coherent intermediate outcomes, never claim goal completion from tests.",
     "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin.",
     "development_retry": "Two Qg2 development outputs have been preserved as failures. The final verification will use one Qg2 request after the remaining common sufficiency defects are fixed, followed by the first unused Rfe1 request with the same frozen source. The final Qg2 run is development verification, never a heldout result; there will be no further output-driven retuning in this goal.",
-    "delivery_repair": "The preregistered final Qg2 request had empty basic UI. Its unchanged wire and freeze remain failed. Only the common frontend ownership gate was repaired after this output; no backend purpose tuning followed. One delivery recheck and first unused Rfe1 will use the corrected frozen source."
+    "delivery_repair": "The preregistered final Qg2 request had empty basic UI. Its unchanged wire and freeze remain failed. Only the common frontend ownership gate was repaired after this output; no backend purpose tuning followed. One delivery recheck and first unused Rfe1 will use the corrected frozen source. The first repair recheck exposed a second existing pending-work gate mismatch. Its first fault is retained; only the frontend request/receipt gate was corrected, with no backend purpose tuning."
   },
   "baseline": "target/research-runs/purpose-explanation-20261020/baseline.json",
   "heldout_preregistration": {
@@ -156,6 +156,17 @@
         "heldout_used": false
       },
       "evidence": "purpose-explanation-20261020/stage5-evidence.json.gz"
+    },
+    {
+      "stage": 6,
+      "change": "Pending and returned response work use one independent validator for witnessed purpose versus strongest other reply. Require earlier matching full survey, witnessed actual use, legal exact pair, same child/root/engine/depth ownership. Preserve existing geometric-class admission.",
+      "verification": {
+        "frontend_checks": 24,
+        "typescript": "passed",
+        "new_searches": 0,
+        "heldout_used": false
+      },
+      "evidence": "purpose-explanation-20261020/stage6-evidence.json.gz"
     }
   ],
   "verification": {
@@ -206,6 +217,18 @@
       "retained_wire": "purpose-explanation-20261020/qg2-final-wire.json.gz",
       "retained_ui": "purpose-explanation-20261020/qg2-final-screen.txt",
       "original_freeze": "purpose-explanation-20261020/final-freeze.json"
+    },
+    "qg2_delivery_pending_failure": {
+      "status": "failed_pending_delivery",
+      "commit": "19284ba9eb",
+      "request_ms": 20000,
+      "elapsed_ui_seconds": 3.01,
+      "engine_reports": 2,
+      "max_issued_depth": 11,
+      "failure": "Frontend only admitted geometric challenge classes for a pending response restriction. The legitimate witnessed reply versus strongest independent other reply was rejected, so the real job faulted.",
+      "retained_wire": "purpose-explanation-20261020/qg2-delivery-wire.json.gz",
+      "retained_ui": "purpose-explanation-20261020/qg2-delivery-screen.txt",
+      "original_freeze": "purpose-explanation-20261020/delivery-freeze.json"
     }
   },
   "cleanup": [
@@ -239,6 +262,12 @@
       "bytes": 592942.0,
       "receipt": "purpose-explanation-20261020/stage5-recycled.json.gz",
       "method": "Windows Recycle Bin, retained exact diagnostic logs and script, discarded reproducible generated bundle; resolved paths and SHA256 verified."
+    },
+    {
+      "files": 3,
+      "bytes": 6603.0,
+      "receipt": "purpose-explanation-20261020/stage6-recycled.json.gz",
+      "method": "Windows Recycle Bin after exact log retention, resolved task paths and SHA256 verification."
     }
   ],
   "studied_failures": [

@@ -627,10 +627,41 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
 }
 
 export function purposeResponseMovesMatch(question: CommentaryPurposeQuestion, moves: readonly Uci[],
-  legalMoves: readonly Uci[]): boolean {
-  return moves.length >= 2 && moves.every(move => legalMoves.includes(move)) &&
-    [question.challenge_moves, legalMoves.filter(move => !question.challenge_moves.includes(move))].some(group =>
-      group.length > 0 && group.every(move => moves.includes(move)) && moves.some(move => !group.includes(move)));
+  legalMoves: readonly Uci[], context?: {
+    observations: MoveReviewObservations; searches: CommentaryResponseSearch[]; roots?: CommentaryRootSearch[];
+    workId: string; engineProfile: string; requiredDepth: number;
+  }): boolean {
+  if (moves.length < 2 || !moves.every(move => legalMoves.includes(move))) return false;
+  if ([question.challenge_moves, legalMoves.filter(move => !question.challenge_moves.includes(move))].some(group =>
+    group.length > 0 && group.every(move => moves.includes(move)) && moves.some(move => !group.includes(move))))
+    return true;
+  if (!context || moves.length !== 2) return false;
+  const earlier = (workId: string) => Number(workId.slice(5)) < Number(context.workId.slice(5));
+  const pool = [...context.searches].reverse().find(search => earlier(search.work_id) &&
+    search.root_restriction.kind === 'unrestricted' && search.root_move === question.root_move &&
+    search.root_move_occurrence_id === question.root_occurrence_id &&
+    search.child_position_id === question.child_position_id && search.prefix_moves_uci?.length === 1 &&
+    search.engine_profile === context.engineProfile && search.required_depth >= context.requiredDepth);
+  const source = context.observations.paths.find(path => path.id ===
+    (question.plan?.line_id ?? question.source_line_id) && path.moves[0]?.uci === question.root_move &&
+    path.occurrenceIds[0] === question.root_occurrence_id && path.positionIds?.[1] === question.child_position_id &&
+    path.moves.slice(2).some(move => move.uci === question.use_move));
+  if (!pool || !source) return false;
+  const rootWitness = source.evaluations?.some(value => ['root_search', 'focus_comparison'].includes(value.source)) ||
+    context.roots?.some(work => earlier(work.work_id) && work.purpose === 'investigation_comparison' &&
+      work.state === 'completed' && work.stop_reason === null && work.engine_profile === context.engineProfile &&
+      work.required_depth >= context.requiredDepth && work.root_occurrence_id === question.root_occurrence_id &&
+      work.candidates.some(candidate => candidate.line_id === source.id &&
+        candidate.move_uci === question.root_move && candidate.occurrence_id === source.occurrenceIds[0]));
+  const present = pool.candidates.map(candidate => candidate.move_uci);
+  const classesReturned = present.some(move => question.challenge_moves.includes(move)) &&
+    present.some(move => !question.challenge_moves.includes(move));
+  if (!rootWitness && !classesReturned) return false;
+  // The witnessed response is compared with the strongest independent other reply.
+  // This is a purpose question even when both replies share the same geometric class.
+  const witness = source.moves[1]?.uci;
+  const other = present.find(move => move !== witness);
+  return !!witness && !!other && sameIds([...moves], [witness, other]);
 }
 
 export interface CommentaryDiscovery {
@@ -7338,7 +7369,10 @@ export function decodeCommentarySelection(
           search.root_move_occurrence_id === purposeQuestion.root_occurrence_id &&
           search.child_position_id === purposeQuestion.child_position_id && search.prefix_moves_uci?.length === 1 &&
           purposeResponseMovesMatch(purposeQuestion, search.root_restriction.moves_uci,
-            positions.get(search.child_position_id)?.legal_moves.moves.map(row => row.uci) ?? []) &&
+            positions.get(search.child_position_id)?.legal_moves.moves.map(row => row.uci) ?? [], {
+              observations, searches: responseSearches, roots: rootSearches, workId: search.work_id,
+              engineProfile: search.engine_profile, requiredDepth: search.required_depth,
+            }) &&
           (observations.paths.some(path => path.id === purposeQuestion.source_line_id &&
             (path.evaluations?.some(value => ['root_search', 'focus_comparison'].includes(value.source)) ||
               rootSearches?.some(work => work.purpose === 'investigation_comparison' && work.state === 'completed' &&

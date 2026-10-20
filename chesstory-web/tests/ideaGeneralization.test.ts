@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { test } from 'node:test';
 import { decodeMoveReviewSnapshot, type MoveReviewSubject } from '../src/review/moveReview';
+import { purposeResponseMovesMatch } from '../src/review/moveReviewSelection';
 
 // First real Ng8 screen failed before submitting this correctly owned task.
 const row = JSON.parse(gunzipSync(readFileSync(new URL(
@@ -14,6 +15,33 @@ function contextFor(r: any) { return { requestId: r.request_id, engineProfile: r
   after: { path: 'aa', fen: r.focus.resulting_fen }, played: { uci: r.focus.played_move_uci, san: 'Ng8' },
 } as MoveReviewSubject }; }
 const context = contextFor(row.request);
+
+test('a witnessed purpose can request the strongest other reply in the same geometric class', () => {
+  const { wire } = JSON.parse(gunzipSync(readFileSync(new URL(
+    '../../research/purpose-explanation-20261020/qg2-delivery-wire.json.gz', import.meta.url,
+  ))).toString('utf8'));
+  const source = wire.at(-1).response;
+  const decoded = decodeMoveReviewSnapshot(source, contextFor(wire[0].request));
+  assert.equal(decoded?.kind, 'awaiting-evidence');
+  assert.deepEqual(decoded?.issuedEngineWork?.rootRestriction,
+    { kind: 'restricted', movesUci: ['f4f7', 'g7g6'] });
+  const observations = decoded!.observations!;
+  const question = observations.selection!.purpose_question!;
+  const work = source.issued_engine_work;
+  const owned = { observations, searches: observations.selection!.response_searches!,
+    roots: observations.selection!.root_searches, workId: work.work_id,
+    engineProfile: work.engine_profile, requiredDepth: work.search_limits.depth };
+  const legal = observations.positions!.find(p => p.id === question.child_position_id)!.legal_moves.moves.map(m => m.uci);
+  assert.ok(['f4f7', 'g7g6'].every(move => !question.challenge_moves.includes(move)));
+  assert.ok(purposeResponseMovesMatch(question, ['f4f7', 'g7g6'], legal, owned));
+  assert.equal(purposeResponseMovesMatch(question, ['h5h6', 'g7g6'], legal, owned), false,
+    'a weaker returned reply cannot replace the strongest independent reply');
+  assert.equal(purposeResponseMovesMatch(question, ['f4f7', 'g7g6'], legal, { ...owned, searches: [] }), false);
+  assert.equal(purposeResponseMovesMatch(question, ['f4f7', 'g7g6'], legal,
+    { ...owned, workId: 'work:1' }), false, 'a future or same-work report cannot justify a request');
+  assert.equal(purposeResponseMovesMatch({ ...question, use_move: 'g3g4' }, ['f4f7', 'g7g6'], legal, owned),
+    false, 'the root path must actually witness the purpose being investigated');
+});
 
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {
   // This is the unchanged first empty-screen response, not a regenerated success fixture.
