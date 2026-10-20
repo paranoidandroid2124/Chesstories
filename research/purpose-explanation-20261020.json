@@ -772,7 +772,7 @@
   "last_run": {
     "outcome": "unachieved",
     "product_commit": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
-    "reported_utc": "2026-10-20T20:28:02.697280+00:00",
+    "reported_utc": "2026-10-20T20:32:44.279340+00:00",
     "fresh_position_count": 2,
     "qg2_development_requests": 9,
     "rfe1_first_requests": 1,
@@ -803,7 +803,7 @@
       "final_frozen_product_files_unchanged": 113
     },
     "evidence": "purpose-explanation-20261020/closing-evidence.json.gz",
-    "elapsed_seconds": 24537,
+    "elapsed_seconds": 24819,
     "final_app_startup_confirmed": true,
     "cleanup_totals": {
       "files": 513,
@@ -818,7 +818,121 @@
       "current_evidence_links_valid": 19,
       "product_sources_unchanged_after_final_ui": 113,
       "original_ax_trailing_spaces": "Preserved verbatim. Default git whitespace check flags these capture lines; source and record changes are checked separately."
-    }
+    },
+    "product_change_size": {
+      "base": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
+      "head": "ce7866fc4da9c2fec4fff20d665b897792840d5c",
+      "files": 15,
+      "added_lines": 1031,
+      "removed_lines": 237,
+      "net_lines": 794,
+      "files_detail": [
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryAnswer.scala",
+          "added": 6,
+          "removed": 2
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryDiscovery.scala",
+          "added": 8,
+          "removed": 3
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryEnglish.scala",
+          "added": 2,
+          "removed": 1
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/CommentaryJobReducer.scala",
+          "added": 91,
+          "removed": 44
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/FunctionalReplyReading.scala",
+          "added": 23,
+          "removed": 2
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveIntent.scala",
+          "added": 73,
+          "removed": 35
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MovePurpose.scala",
+          "added": 270,
+          "removed": 66
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/MoveWorkProjection.scala",
+          "added": 31,
+          "removed": 16
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeActivityReading.scala",
+          "added": 2,
+          "removed": 1
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/PurposeEvidence.scala",
+          "added": 64,
+          "removed": 0
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeReading.scala",
+          "added": 193,
+          "removed": 19
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/ReferencePurposeText.scala",
+          "added": 100,
+          "removed": 30
+        },
+        {
+          "path": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RootQuestionSummary.scala",
+          "added": 3,
+          "removed": 1
+        },
+        {
+          "path": "chesstory-web/src/review/moveReview.ts",
+          "added": 7,
+          "removed": 2
+        },
+        {
+          "path": "chesstory-web/src/review/moveReviewSelection.ts",
+          "added": 158,
+          "removed": 15
+        }
+      ],
+      "interpretation": "Artifact cleanup is not a claim of code simplification. PurposeEvidence consolidates admission/ranking/stop inputs, but the weak sufficiency condition and 794 net added product lines mean the core explanatory abstraction is not yet successful. Subsequent work must replace insufficient comparison admission rather than add another family-specific function rule."
+    },
+    "criteria_result": [
+      {
+        "criterion": 1,
+        "status": "not_met",
+        "reason": "Bare arrivals and transient contacts are filtered, but changed endpoint function still certifies complete purpose on the final actual pair."
+      },
+      {
+        "criterion": 2,
+        "status": "partial",
+        "reason": "Actual roots, returned replies, delayed use and prices are preserved; their core significance is not sufficiently unified."
+      },
+      {
+        "criterion": 3,
+        "status": "partial",
+        "reason": "Candidates share actual comparison/reply evidence, but weak admission permits fact-driven ranking."
+      },
+      {
+        "criterion": 4,
+        "status": "partial",
+        "reason": "Scheduler and selected answer share the same result; final false positive means they still stop too soon."
+      },
+      {
+        "criterion": 5,
+        "status": "met_as_integrity_constraint_only",
+        "reason": "First unused Rfe1 is unchanged, failed, not trained on or rerun under changed source."
+      }
+    ],
+    "run_closure": "This bounded run is closed below seven hours with the objective unachieved. No automatic work may extend the original 2026-10-20 20:39:05 UTC deadline. The active goal is not marked complete; another investigation would require a renewed time allocation."
   },
   "remaining_bottlenecks": [
     {
