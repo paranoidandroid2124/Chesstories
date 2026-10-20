@@ -140,12 +140,29 @@ test('both negative replies survive deadline delivery without claiming a realize
   assert.equal(answer.move_purpose?.work_id, 'work:2');
   assert.ok(answer.units.every(u => !u.english_only));
   assert.equal((JSON.stringify(answer.units).match(/실현은 확인되지 않습니다/g) ?? []).length, 2);
+  assert.equal(answer.move_purpose?.reply_activities?.length, 1,
+    'an owned recheck may explain a different activity on only one returned path');
+  assert.deepEqual(answer.move_purpose?.reply_activities?.[0].user,
+    { side: 'white', role: 'rook', square: 'g3' });
   const namedReplies = answer.units.flatMap(u => u.ko ?? []).filter(p => typeof p !== 'string')
     .map(p => {
       const path = decoded!.observations!.paths.find(path => path.id === p.line_id);
       return path?.moves[path.occurrenceIds.indexOf(p.occurrence_id)]?.uci;
     });
   assert.ok(namedReplies.includes('h5h6') && namedReplies.includes('h5f7'));
+  assert.ok(namedReplies.includes('g3h3'), 'the actual supported rook activity must reach the basic account');
+  const missingSurvey = structuredClone(replay.snapshot);
+  missingSurvey.observations.selection.response_searches =
+    missingSurvey.observations.selection.response_searches.filter((s: any) => s.work_id !== 'work:1');
+  assert.equal(decodeMoveReviewSnapshot(missingSurvey, contextFor(replay.request))?.observations?.selection,
+    undefined, 'a returned activity does not replace the original independent survey');
+  const wrongBeneficiary = structuredClone(replay.snapshot);
+  const selection = wrongBeneficiary.observations.selection;
+  for (const purpose of [selection.purpose_question,
+    selection.candidates.find((c: any) => c.selection === 'selected').detail.summary_question.move_purpose])
+    purpose.reply_activities[0].user.square = 'd3';
+  assert.equal(decodeMoveReviewSnapshot(wrongBeneficiary, contextFor(replay.request))?.observations?.selection,
+    undefined, 'the other rook cannot borrow this support and route');
 });
 
 test('actual root purpose and independently surveyed reply activities reach the basic account together', () => {

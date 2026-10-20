@@ -491,7 +491,7 @@ private[runtime] object MovePurpose:
       notes: List[LocalCandidate] = Nil, roots: List[CommentaryInvestigation.EngineCandidates] = Nil)
       : List[(Question, Option[Reading], PurposeEvidence)] =
     val questions = candidates(packet, paths, values)
-    val activityPaths = values.filter(s => s.belongsTo(packet) && s.coversAllLegalMoves &&
+    val activityPaths = values.filter(s => s.belongsTo(packet) &&
       questions.exists(q => s.anchor.scopeKey == q.anchor.scopeKey)).flatMap(_.pathsByMove.values).distinct
     val mechanisms = MoveWorkProjection.select(packet, paths).rootUses(activityPaths)
     val activities = activityPaths.map(path => path ->
@@ -661,9 +661,17 @@ private[runtime] object MovePurpose:
         val replyActivities = PurposeActivityReading.replyPair(packet, search, activities, q.purposeActivity)
         val paired = replyActivities.map(_.map(_.path)).orElse(surveyed).orElse(witnessed).orElse(contrasted)
         paired.flatMap { pair =>
+          // A valid recheck may return a different activity from its original
+          // witness. Read that activity from the returned paths, without using
+          // a restricted search to invent a new purpose or choose its replies.
+          val returnedActivities = if witnessed.nonEmpty && q.activity.isEmpty && q.support.isEmpty then
+            pair.flatMap(path => PurposeActivityReading.choose(activities.getOrElse(path, Nil)
+              .filter(a => !a.incidentalDuty && a.seed.cause.nonEmpty)))
+          else Nil
+          val branchActivities = replyActivities.getOrElse(returnedActivities)
           val branches = pair.map { path =>
             val exact = useOf(path)
-            val replyActivity = replyActivities.flatMap(_.find(_.path eq path))
+            val replyActivity = branchActivities.find(_.path eq path)
             val differentUse = q.plan.flatMap(_ => (2 until math.min(path.moves.size, 18) by 2).find(offset =>
               q.plan.get.targets.exists(target => (2 to offset).forall(count =>
                 paths.trackedPieceAfter(path, target, count).flatten.contains(target))) &&
@@ -745,7 +753,7 @@ private[runtime] object MovePurpose:
                 .exists(_.at == b.path.moves(b.use).take(2)))).flatten
             val witnessed = realized.fold(supported.fold(q)(b => q.copy(path = b.path, use = b.use)))(
               plan => q.copy(use = plan.use, plan = Some(plan)))
-              .copy(replyActivities = replyActivities.getOrElse(Nil))
+              .copy(replyActivities = branchActivities)
             val root = position(paths, q.path, 1).get
             val guards = notes.filter(note => note.edge.evidence.id == q.path.ids.head && (note.note.detail match
               case Detail.Support(_, target, opposition, _) => opposition.nonEmpty &&
@@ -790,8 +798,10 @@ private[runtime] object MovePurpose:
               PurposeActivityReading.discover(packet, paths, move.path, activityMechanisms).exists(a =>
                 a.original == q.user && a.entry == move.offset && a.use == a.entry && !a.incidentalDuty)
             val uses = (actualUses ++ observed.flatMap(b => useOf(b.path).map(MoveRef(b.path, _)))).filter(useful)
+            // A different activity in a restricted recheck is useful evidence,
+            // but cannot alone answer the original purpose being tested.
             val answeredReplies = observed.size == 2 && observed.forall(b => b.realizes ||
-              b.purposeActivity.nonEmpty || b.controllers.nonEmpty || b.occupant.nonEmpty ||
+              (b.purposeActivity.nonEmpty && search.coversAllLegalMoves) || b.controllers.nonEmpty || b.occupant.nonEmpty ||
               b.relocated.nonEmpty || b.activity.nonEmpty || b.support.exists(_.sameDuty))
             val strongest = search.lines.headOption.map(_.evaluation.moves.head)
             val leading = observed.filter(b => strongest.contains(b.path.moves(1))).flatMap { b =>

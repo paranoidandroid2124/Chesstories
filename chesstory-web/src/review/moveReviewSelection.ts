@@ -435,8 +435,8 @@ function decodePurposeQuestion(raw: unknown, observations: MoveReviewObservation
     return Boolean(meaningful || resource(use)?.legal_moves?.moves.find(row => row.uci === useMove)?.captured_square);
   }
   if (raw.reply_activities !== undefined) {
-    if (!Array.isArray(raw.reply_activities) || raw.reply_activities.length !== 2 ||
-      new Set(raw.reply_activities.map(a => object(a) && a.line_id)).size !== 2 ||
+    if (!Array.isArray(raw.reply_activities) || raw.reply_activities.length < 1 || raw.reply_activities.length > 2 ||
+      new Set(raw.reply_activities.map(a => object(a) && a.line_id)).size !== raw.reply_activities.length ||
       !raw.reply_activities.every(a => {
         if (!object(a) || !Array.isArray(a.route)) return false;
         const line = observations.paths.find(p => p.id === a.line_id && p.moves[0]?.uci === playedMove &&
@@ -659,8 +659,7 @@ function purposeWitnessMovesMatch(question: CommentaryPurposeQuestion, moves: re
   // physical action. Validate an earlier request against its earlier owned
   // witness, not the new PV's first reply. Rebuild the support proof and match
   // the original beneficiary; a matching move string alone is insufficient.
-  if (question.kind === 'supported_advance' && !question.plan && !question.activity_plan &&
-    !question.reply_activities) {
+  if (question.kind === 'supported_advance' && !question.plan && !question.activity_plan) {
     const beneficiary = (path: ObservationPath) => {
       const use = path.moves.findIndex(move => move.uci === question.use_move);
       return use >= 2 ? trackedPieces(path, use)?.find(piece =>
@@ -2031,12 +2030,12 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
     const surveyed = value.question === 'selected_comparison' && fullSurvey && search.candidates.length >= 2 &&
       search.candidates.some(c => c.line_id === witness && observations.paths.some(path =>
         path.id === c.line_id && path.moves.slice(2).some(move => move.uci === purpose.use_move)));
-    // The independently checked reply activities can use different entries.
-    // Their strongest reply and both line owners must still come from this full survey.
-    const activitiesOwned = Boolean(fullSurvey &&
-      purpose.reply_activities && purpose.reply_activities[0].line_id === search.candidates[0]?.line_id &&
+    // A full survey can select different activities for its strongest pair.
+    // An already owned recheck can also report an activity on just one path.
+    const activitiesOwned = Boolean(purpose.reply_activities &&
       purpose.reply_activities.every(a => search.candidates.some(c => c.line_id === a.line_id)));
-    const activitiesSurveyed = value.question === 'selected_comparison' && activitiesOwned;
+    const activitiesSurveyed = value.question === 'selected_comparison' && fullSurvey && activitiesOwned &&
+      purpose.reply_activities?.length === 2 && purpose.reply_activities[0].line_id === search.candidates[0]?.line_id;
     const witnessed = value.question === 'selected_comparison' && search.root_restriction.kind === 'restricted' &&
       search.candidates.length === 2 &&
       sameIds(search.candidates.map(candidate => candidate.move_uci), search.root_restriction.moves_uci) &&
@@ -2046,7 +2045,9 @@ function decodeQuestionSummary(value: unknown, usedPaths: ObservationPath[], evi
       });
     if (!contrasted && !surveyed && !activitiesSurveyed && !witnessed ||
       purpose.kind === 'enabled_activity' && !surveyed && !activitiesSurveyed && !witnessed) return;
-    if (purpose.reply_activities && !activitiesOwned) return;
+    // Returned activities keep their exact recheck owner. They cannot replace
+    // the independent survey and original witness that authorized this pair.
+    if (purpose.reply_activities && !(activitiesOwned && (activitiesSurveyed || witnessed))) return;
     for (const candidate of search.candidates) conditionalPaths.add(candidate.line_id);
     if (owner.choice !== undefined) {
       const choice = owner.choice;

@@ -372,6 +372,27 @@
         "independent_success": false
       },
       "evidence": "purpose-explanation-20261020/stage13-evidence.json.gz"
+    },
+    {
+      "stage": 14,
+      "status": "returned_activity_kept_separate_from_original_purpose",
+      "changes": [
+        "Read activities from owned restricted recheck reports as well as full surveys. A valid independent survey and original witness still choose and authorize the exact reply pair.",
+        "Preserve the witnessed causal activity on one returned branch even when the other branch has no useful activity. Do not replace the other branch or mark the original purpose answered just because the returned line contains another activity.",
+        "Frontend independently verifies the original physical beneficiary, support, route and exact recheck owner for one or two returned activities. Missing original survey and a replacement rook are rejected.",
+        "Keep the explicit bounded non-realization of the original plan alongside the different observed activity and all original root comparison costs."
+      ],
+      "validation": {
+        "affected_backend": "2/2",
+        "delayed_purpose_preservation": "1/1",
+        "re2_qa4": "10/10",
+        "frontend": "28/28",
+        "typescript": "passed",
+        "fresh_engine_so_far": 0,
+        "independent_success": false
+      },
+      "evidence": "purpose-explanation-20261020/stage14-evidence.json.gz",
+      "scope": "Common returned-report dataflow and ownership repair; no purpose detector or ranking rule added. First Rfe1 remains frozen. One additional final Qg2 UI request is planned because frontend delivery changed; this is development validation, not an independent result."
     }
   ],
   "verification": {
@@ -600,6 +621,13 @@
       "receipt": "purpose-explanation-20261020/stage13-recycled.json.gz",
       "retained": "purpose-explanation-20261020/stage13-evidence.json.gz",
       "method": "Windows Recycle Bin after resolved target/ancestor/retained-path and SHA256 checks. Seven diagnostic files retained byte-for-byte; four regenerated outputs retain their committed fixed inputs and producers."
+    },
+    {
+      "files": 11,
+      "bytes": 3739189,
+      "receipt": "purpose-explanation-20261020/stage14-recycled.json.gz",
+      "retained": "purpose-explanation-20261020/stage14-evidence.json.gz",
+      "method": "Windows Recycle Bin after byte-for-byte archive roundtrip, resolved target and ancestor checks, and SHA256 verification."
     }
   ],
   "studied_failures": [
@@ -650,6 +678,7 @@
       "file_bytes": 141959798,
       "temporary_directories": 1,
       "directory_bytes": 34102718
-    }
+    },
+    "continuation": "Additional owned returned-activity repair in progress; first heldout result and previous real screens retain their recorded verdicts."
   }
 }

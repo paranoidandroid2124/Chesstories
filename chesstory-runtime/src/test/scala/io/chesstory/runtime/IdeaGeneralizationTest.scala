@@ -241,7 +241,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     val words = ReferencePurposeText.purpose(reading, ko = false).collect { case s: String => s }.mkString
     assert(words.contains("Both shown lines bring the original h2 pawn to h3") &&
       words.contains("has no support from that same queen") &&
-      !words.contains("Newly guards h3"), words)
+      !words.toLowerCase.contains("newly guards h3"), words)
 
   test("moving support outranks bare pawn arrival and gets a comparison with the strongest independent reply"):
     val state = replay("qg2-purpose-retry-screen", 2).last
@@ -373,6 +373,12 @@ class IdeaGeneralizationTest extends munit.FunSuite:
       state.rootSearches.flatMap(_.receipt)).get
     assertEquals(reading.search.work.workId, "work:2")
     assertEquals(reading.branches.map(_.path.moves(1)).toSet, Set("h5h6", "h5f7"))
+    val returned = reading.branches.find(_.path.moves(1) == "h5h6").get.purposeActivity.get
+    assertEquals((returned.original.at, returned.entry, returned.use), ("g3", 6, 6))
+    assertEquals(returned.seed.cause, Some("new_support"))
+    assertEquals(returned.attacks.map(_.at), List("h4"))
+    assertEquals(reading.question.replyActivities, List(returned))
+    assert(reading.branches.find(_.path.moves(1) == "h5f7").get.purposeActivity.isEmpty)
     assert(reading.branches.forall(!_.realizes))
     assert(!reading.explanation.answered && !reading.explanation.repliesExplained)
     assert(MovePurpose.read(packet, paths, List(reading.search), Nil).isEmpty,
@@ -395,7 +401,7 @@ class IdeaGeneralizationTest extends munit.FunSuite:
     assertEquals((selected \ "detail" \ "summary_question" \ "move_purpose" \ "work_id").asOpt[String],
       Some("work:2"), "deadline delivery must not erase both negative response witnesses")
     val summary = (selected \ "detail" \ "summary").as[String]
-    assertEquals("the plan is not realized in this segment".r.findAllIn(summary).size, 2)
+    assertEquals("the plan is not realized in this segment".r.findAllIn(summary.toLowerCase).size, 2)
     assert(summary.contains("using different pieces") && !summary.contains("has no support from that same"))
     assert(!summary.contains("supports the rook's arrival") && summary.contains("the queen recaptures"),
       "the shared support is stated once while its actual recapture remains explicit")

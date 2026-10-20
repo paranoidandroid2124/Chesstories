@@ -107,11 +107,14 @@ private[runtime] object ReferencePurposeText:
         else s"Clears ${route.before.at} for ${original(value.original, ko)} to become active. ")
       case _: CommentaryAnswer.PieceRoute => Nil
       case _ => Nil
-    } ++ Option.when(includeCause && value.seed.provider.nonEmpty)(if value.seed.followingSupport then
-      if ko then s"${original(value.original, ko)}을 새로 지원하며 $entry 진출 뒤에도 지원을 이어갑니다. "
-      else s"Newly supports ${original(value.original, ko)}, maintaining support as it advances to $entry. "
+    } ++ value.seed.provider.filter(_ => includeCause).toList.map { provider =>
+      val subjectName = if ko then s"${roles(provider.role.name)}${subject(provider)} " else s"The ${provider.role.name} "
+      subjectName + (if value.seed.followingSupport then
+        if ko then s"${original(value.original, ko)}을 새로 지원하며 $entry 진출 뒤에도 지원을 이어갑니다. "
+        else s"newly supports ${original(value.original, ko)}, maintaining support as it advances to $entry. "
       else if ko then s"$entry 칸을 새로 지원하여 ${original(value.original, ko)}의 진출을 받칩니다. "
-      else s"Newly guards $entry for ${original(value.original, ko)} to arrive. ").toList
+      else s"newly guards $entry for ${original(value.original, ko)} to arrive. ")
+    }
     val route = value.route.filter(n => includeCause || n > 0).zipWithIndex.flatMap((offset, index) =>
       (if index == 0 then Nil else List[Part]("–")) :+ MoveRef(value.path, offset))
     val action: List[Part] = route ++ List[Part](if ko then
@@ -880,11 +883,15 @@ private[runtime] object ReferencePurposeText:
           else s" to redeploy the ${q.user.role.name}. This line does not yet show its activity on ${q.square}.")
     if branch.purposeActivity.nonEmpty then
       val use = branch.purposeActivity.get
+      val unconfirmed: List[Part] = if !value.search.coversAllLegalMoves && !branch.realizes && q.use >= 0 then
+        List(if ko then "이 구간에서 계획의 실현은 확인되지 않습니다. "
+          else "The plan is not realized in this segment. ")
+      else Nil
       val alreadyShown = announced.exists(_.arms.flatMap(_.activity).exists(previous =>
         previous.entry == use.entry && previous.use == use.use && previous.through == use.through &&
           previous.sameActivity(use) && previous.path.moves.take(use.through + 1) == use.path.moves.take(use.through + 1) &&
           previous.path.positions.take(use.through + 2) == use.path.positions.take(use.through + 2)))
-      if alreadyShown then return List[Part](MoveRef(use.path, 1),
+      if alreadyShown then return unconfirmed ++ List[Part](MoveRef(use.path, 1),
         if ko then " 응수에서는 앞서 설명한 " else " realizes the previously described activity through ",
         MoveRef(use.path, use.use), if ko then s"까지의 ${roles(use.original.role.name)} 활동을 실현합니다." else ".")
       val shared = value.branches.takeWhile(_ ne branch).flatMap(_.purposeActivity)
@@ -892,9 +899,9 @@ private[runtime] object ReferencePurposeText:
       val cause = use.preparations.nonEmpty ||
         q.replyActivities.nonEmpty && use.seed.cause.nonEmpty && !q.purposeActivity.exists(_.sameTask(use))
       val conditional = if cause && !use.seed.control.exists(_.change == 1) then
-        List[Part](MoveRef(use.path, 1), if ko then " 응수에서는 " else " permits ") else Nil
+        List[Part](MoveRef(use.path, 1), if ko then " 응수에서는 " else ": ") else Nil
       val retained = if use.original != q.user && progress.nonEmpty then progress :+ " " else Nil
-      return retained ++ conditional ++ activity(use, ko, includeCause = cause, shared)
+      return unconfirmed ++ retained ++ conditional ++ activity(use, ko, includeCause = cause, shared)
     if progress.nonEmpty then return progress
     def contact(actor: Piece, targets: List[Piece]): String =
       val (own, enemy) = targets.partition(_.side == actor.side)
