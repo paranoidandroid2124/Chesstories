@@ -1,0 +1,79 @@
+{
+  "status": "active_unachieved",
+  "started_utc": "2026-10-20T13:39:05Z",
+  "deadline_utc": "2026-10-20T20:39:05Z",
+  "objective": "Distinguish observed functional facts from a supported explanation of the actual two choices; use the same explanatory sufficiency for purpose admission, candidate selection and investigation termination.",
+  "constraints": {
+    "max_depth": 18,
+    "screen_request_ms": 20000,
+    "fresh_screens": [
+      "development Qg2",
+      "unused Leko Rfe1"
+    ],
+    "preserve_previous_failures": true,
+    "commits": "Coherent intermediate outcomes, never claim goal completion from tests.",
+    "cleanup": "Only redundant temporary outputs after preserving source, first failures, fixtures and final evidence; verify exact paths then use Windows Recycle Bin."
+  },
+  "baseline": "target/research-runs/purpose-explanation-20261020/baseline.json",
+  "heldout_preregistration": {
+    "game": "Leko - Korchnoi, Wijk aan Zee 2000",
+    "fen_before": "r4rk1/pp3ppp/4pn2/2bqN1B1/8/8/PPP1QPPP/R4RK1 w - - 0 14",
+    "played_uci": "f1e1",
+    "diagram_pdf_page": 143,
+    "diagram_and_solution_inspected": true,
+    "legal_book_line": [
+      "f1e1",
+      "f6d7",
+      "e5f3",
+      "f7f6",
+      "a1d1",
+      "d5c6",
+      "e2e6",
+      "c6e6",
+      "e1e6",
+      "f6g5",
+      "d1d7",
+      "g5g4",
+      "e6e5"
+    ],
+    "position_valid": true,
+    "transcription_note": "Initial OCR-derived Rae1 was rejected by legal replay of Rad1; PDF144 visually confirms Rfe1. Corrected before product edits or any engine output.",
+    "expected_concepts": "Rfe1 combines development with changing the cost of the opponent's Qe4 simplification. Actual engine comparison and returned replies remain authoritative; do not force Nd7 or the book continuation.",
+    "selected_before_product_edits_and_engine_output": true,
+    "first_failure_must_be_retained": true
+  },
+  "criteria": [
+    "An attack, guard, open file or isolated later contact cannot by itself establish a complete purpose explanation.",
+    "The selected account must tie the actual played/reference choices to their returned replies and distinguish supported realization, prevention or tradeoff; essential prices and delayed uses stay attached.",
+    "Choose between available purposes by evidence connecting the actual comparison and reply outcomes, not a fixed preference for attack/piece type or the first returned contact.",
+    "Scheduling and basic delivery share this sufficiency; incomplete explanation remains explicit and uses only bounded remaining investigation.",
+    "First unused Rfe1 output is recorded unchanged after a source freeze and never becomes a development case within this goal."
+  ],
+  "commits": [
+    {
+      "sha": "a2b735cdcd3e3462743139e48cecfff7c109ff12",
+      "meaning": "Preservation checkpoint of all 446 inherited modified/untracked files; no new goal success claimed."
+    }
+  ],
+  "implementation": [],
+  "verification": {},
+  "cleanup": [
+    {
+      "files": 237,
+      "bytes": 18615894.0,
+      "receipt": "purpose-explanation-20261020/recycled-duplicates.json.gz",
+      "method": "Windows Recycle Bin, exact SHA256 matches against committed retained files; baseline/backups/source libraries excluded."
+    }
+  ],
+  "studied_failures": [
+    "core-idea-20261014.json",
+    "idea-generalization-priority-20261016.json",
+    "idea-generalization-resources-20261016.json",
+    "idea-generalization-quiet-resources-20261016.json"
+  ],
+  "initial_findings": [
+    "The October 14 record already identified first-candidate priority, purposeKnown accepting contacts and unequal scheduler/renderer inputs. Later relation readers did not replace those admission and stop conditions.",
+    "Preserve all candidates until comparing owned actual choices and reply outcomes. A legal destination or a delayed attack alone cannot certify the core explanation.",
+    "Early development checks exposed that simply tightening booleans loses valid defensive/quiet continuations and equates arrival with useful activity. These failures remain development failures, not a completed goal."
+  ]
+}
